@@ -62,8 +62,11 @@ jobs:
       - name: Core — análise
         working-directory: packages/fotoatlas_core
         run: dart analyze --fatal-infos
-      - name: Core — testes (inclui falha por kill e 50 mil arquivos)
+      - name: Core — testes (inclui falha por kill, 50 mil arquivos e VHD)
         working-directory: packages/fotoatlas_core
+        env:
+          # Runners do GitHub são administradores: VHD com troca de letra (NTFS e FAT32).
+          FOTOATLAS_VHD_TESTS: "1"
         run: dart test --reporter expanded
 
   app:
