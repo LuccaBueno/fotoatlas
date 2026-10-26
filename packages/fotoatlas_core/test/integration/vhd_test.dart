@@ -15,10 +15,11 @@ import '../support/temp.dart';
 /// liga isso; na máquina do desenvolvedor fica desligado por padrão (ADR 0007).
 final bool _enabled = Platform.environment['FOTOATLAS_VHD_TESTS'] == '1';
 
-Future<void> diskpart(Directory temp, String script) async {
+Future<void> diskpart(Directory temp, String script, {String? alsoOk}) async {
   final file = File(p.join(temp.path, 'diskpart_${DateTime.now().microsecondsSinceEpoch}.txt'))
     ..writeAsStringSync(script);
   final r = await Process.run('diskpart', ['/s', file.path]);
+  if (alsoOk != null && '${r.stdout}'.contains(alsoOk)) return;
   expect(r.exitCode, 0, reason: 'diskpart falhou:\n$script\n${r.stdout}\n${r.stderr}');
 }
 
@@ -77,7 +78,10 @@ assign letter=$first
 
         await diskpart(temp, 'select volume $second\nremove letter=$second\n');
         // Sem letra o volume continua acessível pelo GUID; desmonta de vez.
-        await diskpart(temp, 'select vdisk file="$vhd"\ndetach vdisk\n');
+        // Na CI o VDS às vezes já desanexou neste ponto ("already detached"):
+        // o objetivo (unidade fora do sistema) foi atingido do mesmo jeito.
+        await diskpart(temp, 'select vdisk file="$vhd"\ndetach vdisk\n', alsoOk: 'already detached');
+        expect(Directory('$second:\\').existsSync(), isFalse);
         await core.sources.refreshConnectivity();
         view = (await core.sources.list()).single;
         expect(view.state, SourceState.disconnected);
