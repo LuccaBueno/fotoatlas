@@ -1,0 +1,79 @@
+# ===== DADOS PESSOAIS — NUNCA VERSIONAR (repositório público) =====
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.fotoatlas-backup
+thumbnails/
+thumb_cache/
+.fotoatlas-tmp/
+*.part
+.fotoatlas-id
+logs/
+*.log
+# mídia em geral (fixtures são gerados, não versionados)
+*.jpg
+*.jpeg
+*.heic
+*.heif
+*.png
+*.webp
+*.dng
+*.cr2
+*.cr3
+*.nef
+*.arw
+*.mp4
+*.mov
+*.avi
+*.mkv
+# exceções: imagens de documentação e ícones do app
+!docs/assets/**
+!app/assets/**
+!app/windows/runner/resources/**
+
+# ===== Fixtures gerados =====
+tools/fixtures/out/
+tools/fixtures/generated/
+
+# ===== Binários de terceiros (baixados por script) =====
+third_party/bin/
+exiftool*/
+ffmpeg*/
+*.exe
+*.dll
+!app/windows/**/*.dll.manifest
+
+# ===== Dart / Flutter =====
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec_overrides.yaml
+coverage/
+*.g.dart.bak
+app/windows/flutter/ephemeral/
+
+# ===== .NET =====
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+
+# ===== IDEs / SO =====
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ===== Segredos =====
+.env
+*.pem
+*.key
