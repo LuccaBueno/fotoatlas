@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.47.7"
+  DOTNET_VERSION: "10.0.x"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  helper:
+    name: Helper (.NET)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Build (avisos = erro)
+        run: dotnet build native/fotoatlas_helper/fotoatlas_helper.slnx -warnaserror
+      - name: Testes
+        run: dotnet test native/fotoatlas_helper/fotoatlas_helper.slnx --no-build
+
+  core:
+    name: Core (Dart) + fixtures
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Build do helper (para o teste com o helper real)
+        run: dotnet build native/fotoatlas_helper/fotoatlas_helper.slnx
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Fixtures — pub get, formato, análise, testes
+        working-directory: tools/fixtures
+        run: |
+          dart pub get
+          dart format --set-exit-if-changed -o none .
+          dart analyze --fatal-infos
+          dart test
+      - name: Core — pub get
+        working-directory: packages/fotoatlas_core
+        run: dart pub get
+      - name: Core — código gerado e formatação atualizados
+        working-directory: packages/fotoatlas_core
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          dart format .
+          git diff --exit-code
+      - name: Core — análise
+        working-directory: packages/fotoatlas_core
+        run: dart analyze --fatal-infos
+      - name: Core — testes (inclui falha por kill e 50 mil arquivos)
+        working-directory: packages/fotoatlas_core
+        run: dart test --reporter expanded
+
+  app:
+    name: App (Flutter Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: pub get
+        working-directory: app
+        run: flutter pub get
+      - name: Formatação
+        working-directory: app
+        run: dart format --set-exit-if-changed -o none .
+      - name: Análise
+        working-directory: app
+        run: flutter analyze --fatal-infos
+      - name: Testes
+        working-directory: app
+        run: flutter test
+      - name: Build Windows
+        working-directory: app
+        run: flutter build windows --debug
