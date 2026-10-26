@@ -66,3 +66,5 @@
 | ❓Q4 | Aceitar o ExifTool (Artistic/GPL, executável separado) | Aceitar. Não há alternativa com cobertura equivalente de HEIC/RAW/vídeo, e o uso como processo separado não afeta a licença MIT. |
 
 Se a resposta for só "aprovado", as recomendações acima passam a valer.
+
+**Decisão (2026-10-26):** o usuário respondeu "pode seguir direto" sem objeções → Q1–Q4 seguem as recomendações.

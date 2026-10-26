@@ -23,7 +23,7 @@ Modelo:
 | [0001](0001-flutter-e-core-dart-puro.md) | Flutter para a interface e core em Dart puro com CLI | aceita |
 | [0002](0002-sqlite-drift.md) | SQLite via `sqlite3` + `drift` | aceita |
 | [0003](0003-helper-csharp-dotnet10.md) | Helper nativo em C# .NET 10, processo separado com JSON-lines | aceita |
-| [0004](0004-exiftool.md) | ExifTool para metadados de foto | proposta (licença a confirmar) |
+| [0004](0004-exiftool.md) | ExifTool para metadados de foto | aceita |
 | [0005](0005-ffmpeg-lgpl.md) | FFprobe/FFmpeg em build LGPL | aceita |
 | [0006](0006-riverpod.md) | Riverpod para o estado da interface | aceita |
 | [0007](0007-testes-de-falha.md) | Estratégia de testes, incluindo testes de falha (kill) | aceita |

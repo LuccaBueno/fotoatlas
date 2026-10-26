@@ -1,6 +1,6 @@
 # 0004 — ExifTool para metadados de foto
 
-- Status: **proposta** (aguarda a confirmação do usuário sobre a licença — ❓Q4 em `analise-spec.md`)
+- Status: aceita (2026-10-26: usuário aprovou o plano com "pode seguir direto"; Q4 sem objeção → recomendação aceita)
 - Data: 2026-10-26
 
 ## Contexto
@@ -12,7 +12,7 @@
 - **LibRaw/libheif via FFI**: muito trabalho e cobertura parcial de metadados.
 - **Windows Property System (Shell)**: depende dos codecs instalados (HEIC exige extensão da Store) e cobre só parte dos metadados.
 
-## Decisão (proposta)
+## Decisão
 - ExifTool (Phil Harvey) como **executável separado**, em modo `-stay_open True -@ -` com lotes e saída `-json -n -G1`, sempre só leitura. Nenhuma opção de escrita é usada, e um teste garante que nenhum argumento de escrita é montado.
 - Binário baixado por `tools/scripts/get-tools.ps1`, com versão e SHA-256 fixados; não versionado (`.gitignore`).
 

@@ -1,0 +1,272 @@
+-- Schema do catálogo v1. Fonte da verdade: docs/schema-v1.md.
+-- Datas do app: ms Unix UTC. mtime/ctime: FILETIME bruto (100 ns desde 1601).
+
+CREATE TABLE app_meta (
+  "key"  TEXT NOT NULL PRIMARY KEY,
+  value  TEXT NOT NULL
+) WITHOUT ROWID AS AppMetaRow;
+
+CREATE TABLE settings (
+  "key"      TEXT NOT NULL PRIMARY KEY,
+  value_json TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+) WITHOUT ROWID AS SettingRow;
+
+CREATE TABLE physical_disks (
+  id                  INTEGER NOT NULL PRIMARY KEY,
+  serial              TEXT,
+  model               TEXT,
+  size_bytes          INTEGER,
+  bus_type            TEXT,
+  identity_confidence TEXT NOT NULL CHECK (identity_confidence IN ('reliable','weak','unknown')),
+  user_confirmed      BOOLEAN NOT NULL DEFAULT 0,
+  first_seen_at       INTEGER NOT NULL,
+  last_seen_at        INTEGER NOT NULL
+) AS PhysicalDiskRow;
+
+CREATE TABLE sources (
+  id                 TEXT NOT NULL PRIMARY KEY,
+  name               TEXT NOT NULL,
+  kind               TEXT NOT NULL CHECK (kind IN
+                       ('external_hd','internal','usb_stick','memory_card','phone','folder')),
+  volume_guid        TEXT,
+  volume_serial      INTEGER,
+  volume_label       TEXT,
+  filesystem         TEXT,
+  volume_size_bytes  INTEGER,
+  physical_disk_id   INTEGER REFERENCES physical_disks(id),
+  marker_id          TEXT,
+  device_id          TEXT,
+  device_model       TEXT,
+  root_rel_path      TEXT NOT NULL DEFAULT '',
+  last_mount_path    TEXT,
+  connected          BOOLEAN NOT NULL DEFAULT 0,
+  last_connected_at  INTEGER,
+  total_bytes_last   INTEGER,
+  free_bytes_last    INTEGER,
+  created_at         INTEGER NOT NULL,
+  updated_at         INTEGER NOT NULL,
+  forgotten_at       INTEGER
+) AS SourceRow;
+CREATE INDEX ix_sources_volume_guid   ON sources(volume_guid);
+CREATE INDEX ix_sources_volume_serial ON sources(volume_serial);
+CREATE INDEX ix_sources_device_id     ON sources(device_id);
+
+CREATE TABLE scans (
+  id              INTEGER NOT NULL PRIMARY KEY,
+  source_id       TEXT NOT NULL REFERENCES sources(id),
+  kind            TEXT NOT NULL CHECK (kind IN ('full','incremental')),
+  status          TEXT NOT NULL CHECK (status IN
+                    ('running','paused','interrupted','completed','cancelled','failed')),
+  coverage        TEXT CHECK (coverage IN ('complete','partial')),
+  mount_path_used TEXT,
+  started_at      INTEGER NOT NULL,
+  finished_at     INTEGER,
+  dirs_done       INTEGER NOT NULL DEFAULT 0,
+  files_seen      INTEGER NOT NULL DEFAULT 0,
+  bytes_seen      INTEGER NOT NULL DEFAULT 0,
+  error_count     INTEGER NOT NULL DEFAULT 0
+) AS ScanRow;
+CREATE INDEX ix_scans_source ON scans(source_id, started_at DESC);
+
+CREATE TABLE scan_dirs (
+  scan_id   INTEGER NOT NULL REFERENCES scans(id) ON DELETE CASCADE,
+  rel_path  TEXT NOT NULL,
+  status    TEXT NOT NULL CHECK (status IN ('pending','done','error','excluded')),
+  PRIMARY KEY (scan_id, rel_path)
+) WITHOUT ROWID AS ScanDirRow;
+CREATE INDEX ix_scan_dirs_pending ON scan_dirs(scan_id) WHERE status = 'pending';
+
+CREATE TABLE scan_errors (
+  id         INTEGER NOT NULL PRIMARY KEY,
+  scan_id    INTEGER NOT NULL REFERENCES scans(id) ON DELETE CASCADE,
+  rel_path   TEXT NOT NULL,
+  kind       TEXT NOT NULL CHECK (kind IN
+               ('access_denied','path_too_long','io_error','reparse_point_skipped',
+                'device_disconnected','other')),
+  win32_code INTEGER,
+  message    TEXT,
+  at         INTEGER NOT NULL
+) AS ScanErrorRow;
+
+CREATE TABLE contents (
+  id         INTEGER NOT NULL PRIMARY KEY,
+  sha256     BLOB    NOT NULL CHECK (length(sha256) = 32),
+  size_bytes INTEGER NOT NULL,
+  media_type TEXT    NOT NULL DEFAULT 'unknown'
+               CHECK (media_type IN ('photo','video','raw','sidecar','other','unknown')),
+  created_at INTEGER NOT NULL,
+  UNIQUE (sha256, size_bytes)
+) AS ContentRow;
+
+CREATE TABLE file_instances (
+  id                   INTEGER NOT NULL PRIMARY KEY,
+  source_id            TEXT    NOT NULL REFERENCES sources(id),
+  rel_path             TEXT    NOT NULL,
+  dir_rel_path         TEXT    NOT NULL,
+  name                 TEXT    NOT NULL,
+  ext                  TEXT    NOT NULL,
+  size_bytes           INTEGER NOT NULL,
+  mtime                INTEGER,
+  ctime                INTEGER,
+  attributes           INTEGER,
+  content_id           INTEGER REFERENCES contents(id),
+  hash_status          TEXT NOT NULL DEFAULT 'pending' CHECK (hash_status IN
+                         ('pending','done','changed_during_read','error','not_applicable')),
+  hashed_size          INTEGER,
+  hashed_mtime         INTEGER,
+  hashed_at            INTEGER,
+  last_verified_at     INTEGER,
+  availability         TEXT NOT NULL DEFAULT 'present' CHECK (availability IN
+                         ('present','cloud_only','unreadable','missing')),
+  integrity            TEXT NOT NULL DEFAULT 'unknown' CHECK (integrity IN
+                         ('unknown','ok','changed','possibly_corrupt')),
+  first_seen_scan_id   INTEGER REFERENCES scans(id),
+  last_seen_scan_id    INTEGER REFERENCES scans(id),
+  missing_confirmed_at INTEGER,
+  UNIQUE (source_id, rel_path)
+) AS FileInstanceRow;
+CREATE INDEX ix_fi_content      ON file_instances(content_id);
+CREATE INDEX ix_fi_source_dir   ON file_instances(source_id, dir_rel_path);
+CREATE INDEX ix_fi_size         ON file_instances(size_bytes);
+CREATE INDEX ix_fi_hash_pending ON file_instances(source_id) WHERE hash_status = 'pending';
+CREATE INDEX ix_fi_last_seen    ON file_instances(source_id, last_seen_scan_id);
+CREATE INDEX ix_fi_ext          ON file_instances(ext);
+
+CREATE TABLE media_metadata (
+  content_id        INTEGER NOT NULL PRIMARY KEY REFERENCES contents(id),
+  capture_utc_ms    INTEGER,
+  capture_local     TEXT,
+  tz_offset_min     INTEGER,
+  date_source       TEXT CHECK (date_source IN
+                      ('manual','exif_original','video_internal','filename','filesystem','none')),
+  date_confidence   TEXT CHECK (date_confidence IN ('high','medium','low','none')),
+  date_conflict     BOOLEAN NOT NULL DEFAULT 0,
+  candidates_json   TEXT,
+  make TEXT, model TEXT, lens TEXT,
+  iso INTEGER, aperture REAL, exposure_s REAL, focal_mm REAL,
+  width INTEGER, height INTEGER, orientation INTEGER,
+  lat REAL, lon REAL,
+  duration_ms INTEGER, fps REAL, video_codec TEXT, audio_codec TEXT, bitrate INTEGER,
+  software TEXT,
+  extractor         TEXT,
+  extracted_at      INTEGER
+) AS MediaMetadataRow;
+CREATE INDEX ix_mm_capture ON media_metadata(capture_utc_ms);
+CREATE INDEX ix_mm_camera  ON media_metadata(make, model);
+
+CREATE TABLE date_corrections (
+  id             INTEGER NOT NULL PRIMARY KEY,
+  content_id     INTEGER NOT NULL REFERENCES contents(id),
+  capture_local  TEXT NOT NULL,
+  tz_offset_min  INTEGER,
+  note           TEXT,
+  created_at     INTEGER NOT NULL,
+  superseded_at  INTEGER
+) AS DateCorrectionRow;
+CREATE INDEX ix_dc_content ON date_corrections(content_id) WHERE superseded_at IS NULL;
+
+CREATE TABLE operations (
+  id               TEXT NOT NULL PRIMARY KEY,
+  kind             TEXT NOT NULL CHECK (kind IN
+                     ('copy','reorganize_move','undo','restore','catalog_backup_copy')),
+  status           TEXT NOT NULL CHECK (status IN
+                     ('planned','confirmed','running','paused','completed',
+                      'completed_with_errors','cancelled','needs_attention')),
+  dest_source_id   TEXT REFERENCES sources(id),
+  dest_root_rel    TEXT,
+  template         TEXT,
+  conflict_policy  TEXT CHECK (conflict_policy IN ('suffix','ask')),
+  params_json      TEXT,
+  summary_json     TEXT,
+  undo_of          TEXT REFERENCES operations(id),
+  created_at       INTEGER NOT NULL,
+  confirmed_at     INTEGER,
+  started_at       INTEGER,
+  finished_at      INTEGER
+) AS OperationRow;
+
+CREATE TABLE operation_items (
+  id                   INTEGER NOT NULL PRIMARY KEY,
+  operation_id         TEXT NOT NULL REFERENCES operations(id),
+  seq                  INTEGER NOT NULL,
+  src_source_id        TEXT NOT NULL REFERENCES sources(id),
+  src_rel_path         TEXT NOT NULL,
+  src_instance_id      INTEGER REFERENCES file_instances(id),
+  expected_size        INTEGER NOT NULL,
+  expected_sha256      BLOB,
+  dst_source_id        TEXT NOT NULL REFERENCES sources(id),
+  dst_rel_path_planned TEXT NOT NULL,
+  dst_rel_path_final   TEXT,
+  tmp_rel_path         TEXT,
+  original_name        TEXT,
+  state                TEXT NOT NULL CHECK (state IN
+                         ('pending','copying','copied','verifying','verified',
+                          'publishing','published','skipped_identical',
+                          'failed','needs_attention','undone')),
+  src_sha256           BLOB,
+  dst_sha256           BLOB,
+  bytes_copied         INTEGER NOT NULL DEFAULT 0,
+  attempts             INTEGER NOT NULL DEFAULT 0,
+  last_error_code      TEXT,
+  last_error_message   TEXT,
+  updated_at           INTEGER NOT NULL,
+  UNIQUE (operation_id, seq)
+) AS OperationItemRow;
+CREATE INDEX ix_oi_open ON operation_items(operation_id, state)
+  WHERE state NOT IN ('published','skipped_identical','undone');
+
+CREATE TABLE operation_events (
+  id           INTEGER NOT NULL PRIMARY KEY,
+  operation_id TEXT NOT NULL REFERENCES operations(id),
+  item_id      INTEGER REFERENCES operation_items(id),
+  at           INTEGER NOT NULL,
+  from_state   TEXT,
+  to_state     TEXT,
+  message      TEXT
+) AS OperationEventRow;
+CREATE INDEX ix_oe_op ON operation_events(operation_id, at);
+
+CREATE TABLE saved_filters (
+  id              INTEGER NOT NULL PRIMARY KEY,
+  name            TEXT NOT NULL UNIQUE,
+  definition_json TEXT NOT NULL,
+  created_at      INTEGER NOT NULL,
+  updated_at      INTEGER NOT NULL
+) AS SavedFilterRow;
+
+CREATE TABLE selection_sets (
+  id         INTEGER NOT NULL PRIMARY KEY,
+  name       TEXT NOT NULL UNIQUE,
+  created_at INTEGER NOT NULL
+) AS SelectionSetRow;
+
+CREATE TABLE selection_set_items (
+  set_id      INTEGER NOT NULL REFERENCES selection_sets(id) ON DELETE CASCADE,
+  instance_id INTEGER NOT NULL REFERENCES file_instances(id),
+  PRIMARY KEY (set_id, instance_id)
+) WITHOUT ROWID AS SelectionSetItemRow;
+
+CREATE TABLE tags (
+  id   INTEGER NOT NULL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE COLLATE NOCASE
+) AS TagRow;
+
+CREATE TABLE content_tags (
+  content_id INTEGER NOT NULL REFERENCES contents(id),
+  tag_id     INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (content_id, tag_id)
+) WITHOUT ROWID AS ContentTagRow;
+
+CREATE TABLE integrity_checks (
+  id               INTEGER NOT NULL PRIMARY KEY,
+  instance_id      INTEGER NOT NULL REFERENCES file_instances(id),
+  operation_id     TEXT REFERENCES operations(id),
+  checked_at       INTEGER NOT NULL,
+  result           TEXT NOT NULL CHECK (result IN
+                     ('unchanged','changed_legit','possibly_corrupt','unreadable','missing')),
+  observed_sha256  BLOB,
+  observed_size    INTEGER,
+  observed_mtime   INTEGER
+) AS IntegrityCheckRow;
+CREATE INDEX ix_ic_instance ON integrity_checks(instance_id, checked_at DESC);

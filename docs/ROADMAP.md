@@ -4,7 +4,7 @@ Estado do projeto. O Claude Code lê este arquivo no início de cada sessão, ex
 
 Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluída · `[!]` bloqueada (ver observação)
 
-**Modo de aprovação:** pedir aprovação no início de cada fase.
+**Modo de aprovação:** seguir direto, sem pedir aprovação por fase (usuário disse "pode seguir direto" em 2026-10-26).
 <!-- Se o usuário disser "pode seguir direto", troque a linha acima por: "seguir direto, sem pedir aprovação por fase". -->
 
 ---
@@ -17,7 +17,7 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluída · `[!]` bloqu
 - [x] ADRs iniciais em `docs/adr/` (0001–0009; a 0004, do ExifTool, aguarda confirmação da licença) (2026-10-26)
 - [x] Plano da Fase 1 com tarefas (sub-itens abaixo) (2026-10-26)
 - [x] Commit `docs: planejamento inicial` + push (2026-10-26)
-- [ ] **Aguardar "aprovado" do usuário**, com as respostas de Q1–Q4 (`docs/analise-spec.md` §4). Sem resposta, valem as recomendações.
+- [x] **Aguardar "aprovado" do usuário** — "pode seguir direto" (2026-10-26). Q1–Q4 sem resposta → valem as recomendações: `{ano}/{ano}-{mes}/`, sufixo automático, Inno Setup, ExifTool aceito.
 
 ## Fase 1 — Fundação
 - [ ] Monorepo (core, app, helper, tools), `.gitignore`, README, LICENSE, CHANGELOG

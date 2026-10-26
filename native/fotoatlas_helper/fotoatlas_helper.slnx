@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="FotoAtlas.Helper.Tests/FotoAtlas.Helper.Tests.csproj" />
+  <Project Path="FotoAtlas.Helper/FotoAtlas.Helper.csproj" />
+</Solution>
