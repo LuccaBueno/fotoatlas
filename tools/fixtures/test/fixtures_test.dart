@@ -1,0 +1,40 @@
+import 'dart:io';
+
+import 'package:fotoatlas_fixtures/fotoatlas_fixtures.dart';
+import 'package:path/path.dart' as p;
+import 'package:test/test.dart';
+
+void main() {
+  late Directory temp;
+  setUp(() async => temp = await Directory.systemTemp.createTemp('fotoatlas_fixtures_'));
+  tearDown(() async => temp.delete(recursive: true));
+
+  test('gera a quantidade pedida de forma determinística', () {
+    final a = generateTree(p.join(temp.path, 'a'), const FixtureOptions(files: 300, seed: 7));
+    final b = generateTree(p.join(temp.path, 'b'), const FixtureOptions(files: 300, seed: 7));
+    expect(a.files, 301, reason: '300 + 1 arquivo de caminho longo');
+    expect(a.relPaths, b.relPaths);
+    expect(a.bytes, b.bytes);
+    // Prefixo \\?\ porque o listSync do Dart falha acima de 260 caracteres.
+    final onDisk = Directory('\\\\?\\${a.root}').listSync(recursive: true).whereType<File>().length;
+    expect(onDisk, a.files);
+  });
+
+  test('inclui caminho longo, Unicode e cópias idênticas', () {
+    final m = generateTree(p.join(temp.path, 'c'), const FixtureOptions(files: 200));
+    expect(p.join(m.root, m.longPathFile!).length, greaterThan(260));
+    expect(m.relPaths.any((r) => r.contains('日本旅行')), isTrue);
+    expect(m.identicalPairs, isNotEmpty);
+    final (x, y) = m.identicalPairs.first;
+    expect(File(p.join(m.root, x)).readAsBytesSync(), File(p.join(m.root, y)).readAsBytesSync());
+  });
+
+  test('recusa pasta fora das áreas permitidas', () {
+    expect(() => generateTree(r'C:\NaoPermitido\fixtures'), throwsStateError);
+  });
+
+  test('recusa pasta de saída não vazia', () {
+    File(p.join(temp.path, 'existente.txt')).writeAsStringSync('x');
+    expect(() => generateTree(temp.path), throwsStateError);
+  });
+}

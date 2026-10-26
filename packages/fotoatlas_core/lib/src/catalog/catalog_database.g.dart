@@ -34,25 +34,16 @@ class AppMeta extends Table with TableInfo<AppMeta, AppMetaRow> {
   String get actualTableName => $name;
   static const String $name = 'app_meta';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<AppMetaRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<AppMetaRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('key')) {
-      context.handle(
-        _keyMeta,
-        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
-      );
+      context.handle(_keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
     } else if (isInserting) {
       context.missing(_keyMeta);
     }
     if (data.containsKey('value')) {
-      context.handle(
-        _valueMeta,
-        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
-      );
+      context.handle(_valueMeta, value.isAcceptableOrUnknown(data['value']!, _valueMeta));
     } else if (isInserting) {
       context.missing(_valueMeta);
     }
@@ -65,14 +56,8 @@ class AppMeta extends Table with TableInfo<AppMeta, AppMetaRow> {
   AppMetaRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AppMetaRow(
-      key: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}key'],
-      )!,
-      value: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}value'],
-      )!,
+      key: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      value: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}value'])!,
     );
   }
 
@@ -103,27 +88,17 @@ class AppMetaRow extends DataClass implements Insertable<AppMetaRow> {
     return AppMetaCompanion(key: Value(key), value: Value(value));
   }
 
-  factory AppMetaRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory AppMetaRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return AppMetaRow(
-      key: serializer.fromJson<String>(json['key']),
-      value: serializer.fromJson<String>(json['value']),
-    );
+    return AppMetaRow(key: serializer.fromJson<String>(json['key']), value: serializer.fromJson<String>(json['value']));
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'key': serializer.toJson<String>(key),
-      'value': serializer.toJson<String>(value),
-    };
+    return <String, dynamic>{'key': serializer.toJson<String>(key), 'value': serializer.toJson<String>(value)};
   }
 
-  AppMetaRow copyWith({String? key, String? value}) =>
-      AppMetaRow(key: key ?? this.key, value: value ?? this.value);
+  AppMetaRow copyWith({String? key, String? value}) => AppMetaRow(key: key ?? this.key, value: value ?? this.value);
   AppMetaRow copyWithCompanion(AppMetaCompanion data) {
     return AppMetaRow(
       key: data.key.present ? data.key.value : this.key,
@@ -144,30 +119,16 @@ class AppMetaRow extends DataClass implements Insertable<AppMetaRow> {
   int get hashCode => Object.hash(key, value);
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is AppMetaRow &&
-          other.key == this.key &&
-          other.value == this.value);
+      identical(this, other) || (other is AppMetaRow && other.key == this.key && other.value == this.value);
 }
 
 class AppMetaCompanion extends UpdateCompanion<AppMetaRow> {
   final Value<String> key;
   final Value<String> value;
-  const AppMetaCompanion({
-    this.key = const Value.absent(),
-    this.value = const Value.absent(),
-  });
-  AppMetaCompanion.insert({required String key, required String value})
-    : key = Value(key),
-      value = Value(value);
-  static Insertable<AppMetaRow> custom({
-    Expression<String>? key,
-    Expression<String>? value,
-  }) {
-    return RawValuesInsertable({
-      if (key != null) 'key': key,
-      if (value != null) 'value': value,
-    });
+  const AppMetaCompanion({this.key = const Value.absent(), this.value = const Value.absent()});
+  AppMetaCompanion.insert({required String key, required String value}) : key = Value(key), value = Value(value);
+  static Insertable<AppMetaRow> custom({Expression<String>? key, Expression<String>? value}) {
+    return RawValuesInsertable({if (key != null) 'key': key, if (value != null) 'value': value});
   }
 
   AppMetaCompanion copyWith({Value<String>? key, Value<String>? value}) {
@@ -210,9 +171,7 @@ class Settings extends Table with TableInfo<Settings, SettingRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL PRIMARY KEY',
   );
-  static const VerificationMeta _valueJsonMeta = const VerificationMeta(
-    'valueJson',
-  );
+  static const VerificationMeta _valueJsonMeta = const VerificationMeta('valueJson');
   late final GeneratedColumn<String> valueJson = GeneratedColumn<String>(
     'value_json',
     aliasedName,
@@ -221,9 +180,7 @@ class Settings extends Table with TableInfo<Settings, SettingRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -240,33 +197,21 @@ class Settings extends Table with TableInfo<Settings, SettingRow> {
   String get actualTableName => $name;
   static const String $name = 'settings';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SettingRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SettingRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('key')) {
-      context.handle(
-        _keyMeta,
-        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
-      );
+      context.handle(_keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
     } else if (isInserting) {
       context.missing(_keyMeta);
     }
     if (data.containsKey('value_json')) {
-      context.handle(
-        _valueJsonMeta,
-        valueJson.isAcceptableOrUnknown(data['value_json']!, _valueJsonMeta),
-      );
+      context.handle(_valueJsonMeta, valueJson.isAcceptableOrUnknown(data['value_json']!, _valueJsonMeta));
     } else if (isInserting) {
       context.missing(_valueJsonMeta);
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
@@ -279,18 +224,9 @@ class Settings extends Table with TableInfo<Settings, SettingRow> {
   SettingRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SettingRow(
-      key: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}key'],
-      )!,
-      valueJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}value_json'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      key: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      valueJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}value_json'])!,
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
     );
   }
 
@@ -309,11 +245,7 @@ class SettingRow extends DataClass implements Insertable<SettingRow> {
   final String key;
   final String valueJson;
   final int updatedAt;
-  const SettingRow({
-    required this.key,
-    required this.valueJson,
-    required this.updatedAt,
-  });
+  const SettingRow({required this.key, required this.valueJson, required this.updatedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -324,17 +256,10 @@ class SettingRow extends DataClass implements Insertable<SettingRow> {
   }
 
   SettingsCompanion toCompanion(bool nullToAbsent) {
-    return SettingsCompanion(
-      key: Value(key),
-      valueJson: Value(valueJson),
-      updatedAt: Value(updatedAt),
-    );
+    return SettingsCompanion(key: Value(key), valueJson: Value(valueJson), updatedAt: Value(updatedAt));
   }
 
-  factory SettingRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SettingRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SettingRow(
       key: serializer.fromJson<String>(json['key']),
@@ -353,11 +278,7 @@ class SettingRow extends DataClass implements Insertable<SettingRow> {
   }
 
   SettingRow copyWith({String? key, String? valueJson, int? updatedAt}) =>
-      SettingRow(
-        key: key ?? this.key,
-        valueJson: valueJson ?? this.valueJson,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+      SettingRow(key: key ?? this.key, valueJson: valueJson ?? this.valueJson, updatedAt: updatedAt ?? this.updatedAt);
   SettingRow copyWithCompanion(SettingsCompanion data) {
     return SettingRow(
       key: data.key.present ? data.key.value : this.key,
@@ -396,13 +317,10 @@ class SettingsCompanion extends UpdateCompanion<SettingRow> {
     this.valueJson = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
-  SettingsCompanion.insert({
-    required String key,
-    required String valueJson,
-    required int updatedAt,
-  }) : key = Value(key),
-       valueJson = Value(valueJson),
-       updatedAt = Value(updatedAt);
+  SettingsCompanion.insert({required String key, required String valueJson, required int updatedAt})
+    : key = Value(key),
+      valueJson = Value(valueJson),
+      updatedAt = Value(updatedAt);
   static Insertable<SettingRow> custom({
     Expression<String>? key,
     Expression<String>? valueJson,
@@ -415,11 +333,7 @@ class SettingsCompanion extends UpdateCompanion<SettingRow> {
     });
   }
 
-  SettingsCompanion copyWith({
-    Value<String>? key,
-    Value<String>? valueJson,
-    Value<int>? updatedAt,
-  }) {
+  SettingsCompanion copyWith({Value<String>? key, Value<String>? valueJson, Value<int>? updatedAt}) {
     return SettingsCompanion(
       key: key ?? this.key,
       valueJson: valueJson ?? this.valueJson,
@@ -453,8 +367,7 @@ class SettingsCompanion extends UpdateCompanion<SettingRow> {
   }
 }
 
-class PhysicalDisks extends Table
-    with TableInfo<PhysicalDisks, PhysicalDiskRow> {
+class PhysicalDisks extends Table with TableInfo<PhysicalDisks, PhysicalDiskRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -486,9 +399,7 @@ class PhysicalDisks extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
-    'sizeBytes',
-  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta('sizeBytes');
   late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
     'size_bytes',
     aliasedName,
@@ -497,9 +408,7 @@ class PhysicalDisks extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _busTypeMeta = const VerificationMeta(
-    'busType',
-  );
+  static const VerificationMeta _busTypeMeta = const VerificationMeta('busType');
   late final GeneratedColumn<String> busType = GeneratedColumn<String>(
     'bus_type',
     aliasedName,
@@ -508,20 +417,16 @@ class PhysicalDisks extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _identityConfidenceMeta =
-      const VerificationMeta('identityConfidence');
-  late final GeneratedColumn<String> identityConfidence =
-      GeneratedColumn<String>(
-        'identity_confidence',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-        $customConstraints: 'NOT NULL CHECK (identity_confidence IN (\'reliable\', \'weak\', \'unknown\'))',
-      );
-  static const VerificationMeta _userConfirmedMeta = const VerificationMeta(
-    'userConfirmed',
+  static const VerificationMeta _identityConfidenceMeta = const VerificationMeta('identityConfidence');
+  late final GeneratedColumn<String> identityConfidence = GeneratedColumn<String>(
+    'identity_confidence',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (identity_confidence IN (\'reliable\', \'weak\', \'unknown\'))',
   );
+  static const VerificationMeta _userConfirmedMeta = const VerificationMeta('userConfirmed');
   late final GeneratedColumn<bool> userConfirmed = GeneratedColumn<bool>(
     'user_confirmed',
     aliasedName,
@@ -531,9 +436,7 @@ class PhysicalDisks extends Table
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
-  static const VerificationMeta _firstSeenAtMeta = const VerificationMeta(
-    'firstSeenAt',
-  );
+  static const VerificationMeta _firstSeenAtMeta = const VerificationMeta('firstSeenAt');
   late final GeneratedColumn<int> firstSeenAt = GeneratedColumn<int>(
     'first_seen_at',
     aliasedName,
@@ -542,9 +445,7 @@ class PhysicalDisks extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _lastSeenAtMeta = const VerificationMeta(
-    'lastSeenAt',
-  );
+  static const VerificationMeta _lastSeenAtMeta = const VerificationMeta('lastSeenAt');
   late final GeneratedColumn<int> lastSeenAt = GeneratedColumn<int>(
     'last_seen_at',
     aliasedName,
@@ -571,46 +472,28 @@ class PhysicalDisks extends Table
   String get actualTableName => $name;
   static const String $name = 'physical_disks';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<PhysicalDiskRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<PhysicalDiskRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('serial')) {
-      context.handle(
-        _serialMeta,
-        serial.isAcceptableOrUnknown(data['serial']!, _serialMeta),
-      );
+      context.handle(_serialMeta, serial.isAcceptableOrUnknown(data['serial']!, _serialMeta));
     }
     if (data.containsKey('model')) {
-      context.handle(
-        _modelMeta,
-        model.isAcceptableOrUnknown(data['model']!, _modelMeta),
-      );
+      context.handle(_modelMeta, model.isAcceptableOrUnknown(data['model']!, _modelMeta));
     }
     if (data.containsKey('size_bytes')) {
-      context.handle(
-        _sizeBytesMeta,
-        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
-      );
+      context.handle(_sizeBytesMeta, sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta));
     }
     if (data.containsKey('bus_type')) {
-      context.handle(
-        _busTypeMeta,
-        busType.isAcceptableOrUnknown(data['bus_type']!, _busTypeMeta),
-      );
+      context.handle(_busTypeMeta, busType.isAcceptableOrUnknown(data['bus_type']!, _busTypeMeta));
     }
     if (data.containsKey('identity_confidence')) {
       context.handle(
         _identityConfidenceMeta,
-        identityConfidence.isAcceptableOrUnknown(
-          data['identity_confidence']!,
-          _identityConfidenceMeta,
-        ),
+        identityConfidence.isAcceptableOrUnknown(data['identity_confidence']!, _identityConfidenceMeta),
       );
     } else if (isInserting) {
       context.missing(_identityConfidenceMeta);
@@ -618,31 +501,16 @@ class PhysicalDisks extends Table
     if (data.containsKey('user_confirmed')) {
       context.handle(
         _userConfirmedMeta,
-        userConfirmed.isAcceptableOrUnknown(
-          data['user_confirmed']!,
-          _userConfirmedMeta,
-        ),
+        userConfirmed.isAcceptableOrUnknown(data['user_confirmed']!, _userConfirmedMeta),
       );
     }
     if (data.containsKey('first_seen_at')) {
-      context.handle(
-        _firstSeenAtMeta,
-        firstSeenAt.isAcceptableOrUnknown(
-          data['first_seen_at']!,
-          _firstSeenAtMeta,
-        ),
-      );
+      context.handle(_firstSeenAtMeta, firstSeenAt.isAcceptableOrUnknown(data['first_seen_at']!, _firstSeenAtMeta));
     } else if (isInserting) {
       context.missing(_firstSeenAtMeta);
     }
     if (data.containsKey('last_seen_at')) {
-      context.handle(
-        _lastSeenAtMeta,
-        lastSeenAt.isAcceptableOrUnknown(
-          data['last_seen_at']!,
-          _lastSeenAtMeta,
-        ),
-      );
+      context.handle(_lastSeenAtMeta, lastSeenAt.isAcceptableOrUnknown(data['last_seen_at']!, _lastSeenAtMeta));
     } else if (isInserting) {
       context.missing(_lastSeenAtMeta);
     }
@@ -655,42 +523,18 @@ class PhysicalDisks extends Table
   PhysicalDiskRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PhysicalDiskRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      serial: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}serial'],
-      ),
-      model: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}model'],
-      ),
-      sizeBytes: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}size_bytes'],
-      ),
-      busType: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}bus_type'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      serial: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}serial']),
+      model: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}model']),
+      sizeBytes: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}size_bytes']),
+      busType: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}bus_type']),
       identityConfidence: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}identity_confidence'],
       )!,
-      userConfirmed: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}user_confirmed'],
-      )!,
-      firstSeenAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}first_seen_at'],
-      )!,
-      lastSeenAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}last_seen_at'],
-      )!,
+      userConfirmed: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}user_confirmed'])!,
+      firstSeenAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}first_seen_at'])!,
+      lastSeenAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}last_seen_at'])!,
     );
   }
 
@@ -750,18 +594,10 @@ class PhysicalDiskRow extends DataClass implements Insertable<PhysicalDiskRow> {
   PhysicalDisksCompanion toCompanion(bool nullToAbsent) {
     return PhysicalDisksCompanion(
       id: Value(id),
-      serial: serial == null && nullToAbsent
-          ? const Value.absent()
-          : Value(serial),
-      model: model == null && nullToAbsent
-          ? const Value.absent()
-          : Value(model),
-      sizeBytes: sizeBytes == null && nullToAbsent
-          ? const Value.absent()
-          : Value(sizeBytes),
-      busType: busType == null && nullToAbsent
-          ? const Value.absent()
-          : Value(busType),
+      serial: serial == null && nullToAbsent ? const Value.absent() : Value(serial),
+      model: model == null && nullToAbsent ? const Value.absent() : Value(model),
+      sizeBytes: sizeBytes == null && nullToAbsent ? const Value.absent() : Value(sizeBytes),
+      busType: busType == null && nullToAbsent ? const Value.absent() : Value(busType),
       identityConfidence: Value(identityConfidence),
       userConfirmed: Value(userConfirmed),
       firstSeenAt: Value(firstSeenAt),
@@ -769,10 +605,7 @@ class PhysicalDiskRow extends DataClass implements Insertable<PhysicalDiskRow> {
     );
   }
 
-  factory PhysicalDiskRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory PhysicalDiskRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PhysicalDiskRow(
       id: serializer.fromJson<int>(json['id']),
@@ -780,9 +613,7 @@ class PhysicalDiskRow extends DataClass implements Insertable<PhysicalDiskRow> {
       model: serializer.fromJson<String?>(json['model']),
       sizeBytes: serializer.fromJson<int?>(json['size_bytes']),
       busType: serializer.fromJson<String?>(json['bus_type']),
-      identityConfidence: serializer.fromJson<String>(
-        json['identity_confidence'],
-      ),
+      identityConfidence: serializer.fromJson<String>(json['identity_confidence']),
       userConfirmed: serializer.fromJson<bool>(json['user_confirmed']),
       firstSeenAt: serializer.fromJson<int>(json['first_seen_at']),
       lastSeenAt: serializer.fromJson<int>(json['last_seen_at']),
@@ -832,18 +663,10 @@ class PhysicalDiskRow extends DataClass implements Insertable<PhysicalDiskRow> {
       model: data.model.present ? data.model.value : this.model,
       sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
       busType: data.busType.present ? data.busType.value : this.busType,
-      identityConfidence: data.identityConfidence.present
-          ? data.identityConfidence.value
-          : this.identityConfidence,
-      userConfirmed: data.userConfirmed.present
-          ? data.userConfirmed.value
-          : this.userConfirmed,
-      firstSeenAt: data.firstSeenAt.present
-          ? data.firstSeenAt.value
-          : this.firstSeenAt,
-      lastSeenAt: data.lastSeenAt.present
-          ? data.lastSeenAt.value
-          : this.lastSeenAt,
+      identityConfidence: data.identityConfidence.present ? data.identityConfidence.value : this.identityConfidence,
+      userConfirmed: data.userConfirmed.present ? data.userConfirmed.value : this.userConfirmed,
+      firstSeenAt: data.firstSeenAt.present ? data.firstSeenAt.value : this.firstSeenAt,
+      lastSeenAt: data.lastSeenAt.present ? data.lastSeenAt.value : this.lastSeenAt,
     );
   }
 
@@ -864,17 +687,8 @@ class PhysicalDiskRow extends DataClass implements Insertable<PhysicalDiskRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    serial,
-    model,
-    sizeBytes,
-    busType,
-    identityConfidence,
-    userConfirmed,
-    firstSeenAt,
-    lastSeenAt,
-  );
+  int get hashCode =>
+      Object.hash(id, serial, model, sizeBytes, busType, identityConfidence, userConfirmed, firstSeenAt, lastSeenAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1054,9 +868,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL CHECK (kind IN (\'external_hd\', \'internal\', \'usb_stick\', \'memory_card\', \'phone\', \'folder\'))',
   );
-  static const VerificationMeta _volumeGuidMeta = const VerificationMeta(
-    'volumeGuid',
-  );
+  static const VerificationMeta _volumeGuidMeta = const VerificationMeta('volumeGuid');
   late final GeneratedColumn<String> volumeGuid = GeneratedColumn<String>(
     'volume_guid',
     aliasedName,
@@ -1065,9 +877,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _volumeSerialMeta = const VerificationMeta(
-    'volumeSerial',
-  );
+  static const VerificationMeta _volumeSerialMeta = const VerificationMeta('volumeSerial');
   late final GeneratedColumn<int> volumeSerial = GeneratedColumn<int>(
     'volume_serial',
     aliasedName,
@@ -1076,9 +886,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _volumeLabelMeta = const VerificationMeta(
-    'volumeLabel',
-  );
+  static const VerificationMeta _volumeLabelMeta = const VerificationMeta('volumeLabel');
   late final GeneratedColumn<String> volumeLabel = GeneratedColumn<String>(
     'volume_label',
     aliasedName,
@@ -1087,9 +895,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _filesystemMeta = const VerificationMeta(
-    'filesystem',
-  );
+  static const VerificationMeta _filesystemMeta = const VerificationMeta('filesystem');
   late final GeneratedColumn<String> filesystem = GeneratedColumn<String>(
     'filesystem',
     aliasedName,
@@ -1098,9 +904,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _volumeSizeBytesMeta = const VerificationMeta(
-    'volumeSizeBytes',
-  );
+  static const VerificationMeta _volumeSizeBytesMeta = const VerificationMeta('volumeSizeBytes');
   late final GeneratedColumn<int> volumeSizeBytes = GeneratedColumn<int>(
     'volume_size_bytes',
     aliasedName,
@@ -1109,9 +913,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _physicalDiskIdMeta = const VerificationMeta(
-    'physicalDiskId',
-  );
+  static const VerificationMeta _physicalDiskIdMeta = const VerificationMeta('physicalDiskId');
   late final GeneratedColumn<int> physicalDiskId = GeneratedColumn<int>(
     'physical_disk_id',
     aliasedName,
@@ -1120,9 +922,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: 'REFERENCES physical_disks(id)',
   );
-  static const VerificationMeta _markerIdMeta = const VerificationMeta(
-    'markerId',
-  );
+  static const VerificationMeta _markerIdMeta = const VerificationMeta('markerId');
   late final GeneratedColumn<String> markerId = GeneratedColumn<String>(
     'marker_id',
     aliasedName,
@@ -1131,9 +931,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
-    'deviceId',
-  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta('deviceId');
   late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
     'device_id',
     aliasedName,
@@ -1142,9 +940,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _deviceModelMeta = const VerificationMeta(
-    'deviceModel',
-  );
+  static const VerificationMeta _deviceModelMeta = const VerificationMeta('deviceModel');
   late final GeneratedColumn<String> deviceModel = GeneratedColumn<String>(
     'device_model',
     aliasedName,
@@ -1153,9 +949,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _rootRelPathMeta = const VerificationMeta(
-    'rootRelPath',
-  );
+  static const VerificationMeta _rootRelPathMeta = const VerificationMeta('rootRelPath');
   late final GeneratedColumn<String> rootRelPath = GeneratedColumn<String>(
     'root_rel_path',
     aliasedName,
@@ -1165,9 +959,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     $customConstraints: 'NOT NULL DEFAULT \'\'',
     defaultValue: const CustomExpression('\'\''),
   );
-  static const VerificationMeta _lastMountPathMeta = const VerificationMeta(
-    'lastMountPath',
-  );
+  static const VerificationMeta _lastMountPathMeta = const VerificationMeta('lastMountPath');
   late final GeneratedColumn<String> lastMountPath = GeneratedColumn<String>(
     'last_mount_path',
     aliasedName,
@@ -1176,9 +968,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _connectedMeta = const VerificationMeta(
-    'connected',
-  );
+  static const VerificationMeta _connectedMeta = const VerificationMeta('connected');
   late final GeneratedColumn<bool> connected = GeneratedColumn<bool>(
     'connected',
     aliasedName,
@@ -1188,9 +978,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
-  static const VerificationMeta _lastConnectedAtMeta = const VerificationMeta(
-    'lastConnectedAt',
-  );
+  static const VerificationMeta _lastConnectedAtMeta = const VerificationMeta('lastConnectedAt');
   late final GeneratedColumn<int> lastConnectedAt = GeneratedColumn<int>(
     'last_connected_at',
     aliasedName,
@@ -1199,9 +987,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _totalBytesLastMeta = const VerificationMeta(
-    'totalBytesLast',
-  );
+  static const VerificationMeta _totalBytesLastMeta = const VerificationMeta('totalBytesLast');
   late final GeneratedColumn<int> totalBytesLast = GeneratedColumn<int>(
     'total_bytes_last',
     aliasedName,
@@ -1210,9 +996,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _freeBytesLastMeta = const VerificationMeta(
-    'freeBytesLast',
-  );
+  static const VerificationMeta _freeBytesLastMeta = const VerificationMeta('freeBytesLast');
   late final GeneratedColumn<int> freeBytesLast = GeneratedColumn<int>(
     'free_bytes_last',
     aliasedName,
@@ -1221,9 +1005,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
     'created_at',
     aliasedName,
@@ -1232,9 +1014,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -1243,9 +1023,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _forgottenAtMeta = const VerificationMeta(
-    'forgottenAt',
-  );
+  static const VerificationMeta _forgottenAtMeta = const VerificationMeta('forgottenAt');
   late final GeneratedColumn<int> forgottenAt = GeneratedColumn<int>(
     'forgotten_at',
     aliasedName,
@@ -1284,10 +1062,7 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
   String get actualTableName => $name;
   static const String $name = 'sources';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SourceRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SourceRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -1296,165 +1071,90 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
       context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
+      context.handle(_nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('kind')) {
-      context.handle(
-        _kindMeta,
-        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
-      );
+      context.handle(_kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
     } else if (isInserting) {
       context.missing(_kindMeta);
     }
     if (data.containsKey('volume_guid')) {
-      context.handle(
-        _volumeGuidMeta,
-        volumeGuid.isAcceptableOrUnknown(data['volume_guid']!, _volumeGuidMeta),
-      );
+      context.handle(_volumeGuidMeta, volumeGuid.isAcceptableOrUnknown(data['volume_guid']!, _volumeGuidMeta));
     }
     if (data.containsKey('volume_serial')) {
-      context.handle(
-        _volumeSerialMeta,
-        volumeSerial.isAcceptableOrUnknown(
-          data['volume_serial']!,
-          _volumeSerialMeta,
-        ),
-      );
+      context.handle(_volumeSerialMeta, volumeSerial.isAcceptableOrUnknown(data['volume_serial']!, _volumeSerialMeta));
     }
     if (data.containsKey('volume_label')) {
-      context.handle(
-        _volumeLabelMeta,
-        volumeLabel.isAcceptableOrUnknown(
-          data['volume_label']!,
-          _volumeLabelMeta,
-        ),
-      );
+      context.handle(_volumeLabelMeta, volumeLabel.isAcceptableOrUnknown(data['volume_label']!, _volumeLabelMeta));
     }
     if (data.containsKey('filesystem')) {
-      context.handle(
-        _filesystemMeta,
-        filesystem.isAcceptableOrUnknown(data['filesystem']!, _filesystemMeta),
-      );
+      context.handle(_filesystemMeta, filesystem.isAcceptableOrUnknown(data['filesystem']!, _filesystemMeta));
     }
     if (data.containsKey('volume_size_bytes')) {
       context.handle(
         _volumeSizeBytesMeta,
-        volumeSizeBytes.isAcceptableOrUnknown(
-          data['volume_size_bytes']!,
-          _volumeSizeBytesMeta,
-        ),
+        volumeSizeBytes.isAcceptableOrUnknown(data['volume_size_bytes']!, _volumeSizeBytesMeta),
       );
     }
     if (data.containsKey('physical_disk_id')) {
       context.handle(
         _physicalDiskIdMeta,
-        physicalDiskId.isAcceptableOrUnknown(
-          data['physical_disk_id']!,
-          _physicalDiskIdMeta,
-        ),
+        physicalDiskId.isAcceptableOrUnknown(data['physical_disk_id']!, _physicalDiskIdMeta),
       );
     }
     if (data.containsKey('marker_id')) {
-      context.handle(
-        _markerIdMeta,
-        markerId.isAcceptableOrUnknown(data['marker_id']!, _markerIdMeta),
-      );
+      context.handle(_markerIdMeta, markerId.isAcceptableOrUnknown(data['marker_id']!, _markerIdMeta));
     }
     if (data.containsKey('device_id')) {
-      context.handle(
-        _deviceIdMeta,
-        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
-      );
+      context.handle(_deviceIdMeta, deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta));
     }
     if (data.containsKey('device_model')) {
-      context.handle(
-        _deviceModelMeta,
-        deviceModel.isAcceptableOrUnknown(
-          data['device_model']!,
-          _deviceModelMeta,
-        ),
-      );
+      context.handle(_deviceModelMeta, deviceModel.isAcceptableOrUnknown(data['device_model']!, _deviceModelMeta));
     }
     if (data.containsKey('root_rel_path')) {
-      context.handle(
-        _rootRelPathMeta,
-        rootRelPath.isAcceptableOrUnknown(
-          data['root_rel_path']!,
-          _rootRelPathMeta,
-        ),
-      );
+      context.handle(_rootRelPathMeta, rootRelPath.isAcceptableOrUnknown(data['root_rel_path']!, _rootRelPathMeta));
     }
     if (data.containsKey('last_mount_path')) {
       context.handle(
         _lastMountPathMeta,
-        lastMountPath.isAcceptableOrUnknown(
-          data['last_mount_path']!,
-          _lastMountPathMeta,
-        ),
+        lastMountPath.isAcceptableOrUnknown(data['last_mount_path']!, _lastMountPathMeta),
       );
     }
     if (data.containsKey('connected')) {
-      context.handle(
-        _connectedMeta,
-        connected.isAcceptableOrUnknown(data['connected']!, _connectedMeta),
-      );
+      context.handle(_connectedMeta, connected.isAcceptableOrUnknown(data['connected']!, _connectedMeta));
     }
     if (data.containsKey('last_connected_at')) {
       context.handle(
         _lastConnectedAtMeta,
-        lastConnectedAt.isAcceptableOrUnknown(
-          data['last_connected_at']!,
-          _lastConnectedAtMeta,
-        ),
+        lastConnectedAt.isAcceptableOrUnknown(data['last_connected_at']!, _lastConnectedAtMeta),
       );
     }
     if (data.containsKey('total_bytes_last')) {
       context.handle(
         _totalBytesLastMeta,
-        totalBytesLast.isAcceptableOrUnknown(
-          data['total_bytes_last']!,
-          _totalBytesLastMeta,
-        ),
+        totalBytesLast.isAcceptableOrUnknown(data['total_bytes_last']!, _totalBytesLastMeta),
       );
     }
     if (data.containsKey('free_bytes_last')) {
       context.handle(
         _freeBytesLastMeta,
-        freeBytesLast.isAcceptableOrUnknown(
-          data['free_bytes_last']!,
-          _freeBytesLastMeta,
-        ),
+        freeBytesLast.isAcceptableOrUnknown(data['free_bytes_last']!, _freeBytesLastMeta),
       );
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
     if (data.containsKey('forgotten_at')) {
-      context.handle(
-        _forgottenAtMeta,
-        forgottenAt.isAcceptableOrUnknown(
-          data['forgotten_at']!,
-          _forgottenAtMeta,
-        ),
-      );
+      context.handle(_forgottenAtMeta, forgottenAt.isAcceptableOrUnknown(data['forgotten_at']!, _forgottenAtMeta));
     }
     return context;
   }
@@ -1465,90 +1165,27 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
   SourceRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SourceRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      kind: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}kind'],
-      )!,
-      volumeGuid: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}volume_guid'],
-      ),
-      volumeSerial: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}volume_serial'],
-      ),
-      volumeLabel: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}volume_label'],
-      ),
-      filesystem: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}filesystem'],
-      ),
-      volumeSizeBytes: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}volume_size_bytes'],
-      ),
-      physicalDiskId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}physical_disk_id'],
-      ),
-      markerId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}marker_id'],
-      ),
-      deviceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}device_id'],
-      ),
-      deviceModel: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}device_model'],
-      ),
-      rootRelPath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}root_rel_path'],
-      )!,
-      lastMountPath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}last_mount_path'],
-      ),
-      connected: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}connected'],
-      )!,
-      lastConnectedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}last_connected_at'],
-      ),
-      totalBytesLast: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}total_bytes_last'],
-      ),
-      freeBytesLast: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}free_bytes_last'],
-      ),
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}updated_at'],
-      )!,
-      forgottenAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}forgotten_at'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      kind: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
+      volumeGuid: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}volume_guid']),
+      volumeSerial: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}volume_serial']),
+      volumeLabel: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}volume_label']),
+      filesystem: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}filesystem']),
+      volumeSizeBytes: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}volume_size_bytes']),
+      physicalDiskId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}physical_disk_id']),
+      markerId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}marker_id']),
+      deviceId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}device_id']),
+      deviceModel: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}device_model']),
+      rootRelPath: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}root_rel_path'])!,
+      lastMountPath: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}last_mount_path']),
+      connected: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}connected'])!,
+      lastConnectedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}last_connected_at']),
+      totalBytesLast: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}total_bytes_last']),
+      freeBytesLast: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}free_bytes_last']),
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+      forgottenAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}forgotten_at']),
     );
   }
 
@@ -1666,59 +1303,28 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
       id: Value(id),
       name: Value(name),
       kind: Value(kind),
-      volumeGuid: volumeGuid == null && nullToAbsent
-          ? const Value.absent()
-          : Value(volumeGuid),
-      volumeSerial: volumeSerial == null && nullToAbsent
-          ? const Value.absent()
-          : Value(volumeSerial),
-      volumeLabel: volumeLabel == null && nullToAbsent
-          ? const Value.absent()
-          : Value(volumeLabel),
-      filesystem: filesystem == null && nullToAbsent
-          ? const Value.absent()
-          : Value(filesystem),
-      volumeSizeBytes: volumeSizeBytes == null && nullToAbsent
-          ? const Value.absent()
-          : Value(volumeSizeBytes),
-      physicalDiskId: physicalDiskId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(physicalDiskId),
-      markerId: markerId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(markerId),
-      deviceId: deviceId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deviceId),
-      deviceModel: deviceModel == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deviceModel),
+      volumeGuid: volumeGuid == null && nullToAbsent ? const Value.absent() : Value(volumeGuid),
+      volumeSerial: volumeSerial == null && nullToAbsent ? const Value.absent() : Value(volumeSerial),
+      volumeLabel: volumeLabel == null && nullToAbsent ? const Value.absent() : Value(volumeLabel),
+      filesystem: filesystem == null && nullToAbsent ? const Value.absent() : Value(filesystem),
+      volumeSizeBytes: volumeSizeBytes == null && nullToAbsent ? const Value.absent() : Value(volumeSizeBytes),
+      physicalDiskId: physicalDiskId == null && nullToAbsent ? const Value.absent() : Value(physicalDiskId),
+      markerId: markerId == null && nullToAbsent ? const Value.absent() : Value(markerId),
+      deviceId: deviceId == null && nullToAbsent ? const Value.absent() : Value(deviceId),
+      deviceModel: deviceModel == null && nullToAbsent ? const Value.absent() : Value(deviceModel),
       rootRelPath: Value(rootRelPath),
-      lastMountPath: lastMountPath == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastMountPath),
+      lastMountPath: lastMountPath == null && nullToAbsent ? const Value.absent() : Value(lastMountPath),
       connected: Value(connected),
-      lastConnectedAt: lastConnectedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastConnectedAt),
-      totalBytesLast: totalBytesLast == null && nullToAbsent
-          ? const Value.absent()
-          : Value(totalBytesLast),
-      freeBytesLast: freeBytesLast == null && nullToAbsent
-          ? const Value.absent()
-          : Value(freeBytesLast),
+      lastConnectedAt: lastConnectedAt == null && nullToAbsent ? const Value.absent() : Value(lastConnectedAt),
+      totalBytesLast: totalBytesLast == null && nullToAbsent ? const Value.absent() : Value(totalBytesLast),
+      freeBytesLast: freeBytesLast == null && nullToAbsent ? const Value.absent() : Value(freeBytesLast),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
-      forgottenAt: forgottenAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(forgottenAt),
+      forgottenAt: forgottenAt == null && nullToAbsent ? const Value.absent() : Value(forgottenAt),
     );
   }
 
-  factory SourceRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SourceRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SourceRow(
       id: serializer.fromJson<String>(json['id']),
@@ -1802,29 +1408,17 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
     volumeSerial: volumeSerial.present ? volumeSerial.value : this.volumeSerial,
     volumeLabel: volumeLabel.present ? volumeLabel.value : this.volumeLabel,
     filesystem: filesystem.present ? filesystem.value : this.filesystem,
-    volumeSizeBytes: volumeSizeBytes.present
-        ? volumeSizeBytes.value
-        : this.volumeSizeBytes,
-    physicalDiskId: physicalDiskId.present
-        ? physicalDiskId.value
-        : this.physicalDiskId,
+    volumeSizeBytes: volumeSizeBytes.present ? volumeSizeBytes.value : this.volumeSizeBytes,
+    physicalDiskId: physicalDiskId.present ? physicalDiskId.value : this.physicalDiskId,
     markerId: markerId.present ? markerId.value : this.markerId,
     deviceId: deviceId.present ? deviceId.value : this.deviceId,
     deviceModel: deviceModel.present ? deviceModel.value : this.deviceModel,
     rootRelPath: rootRelPath ?? this.rootRelPath,
-    lastMountPath: lastMountPath.present
-        ? lastMountPath.value
-        : this.lastMountPath,
+    lastMountPath: lastMountPath.present ? lastMountPath.value : this.lastMountPath,
     connected: connected ?? this.connected,
-    lastConnectedAt: lastConnectedAt.present
-        ? lastConnectedAt.value
-        : this.lastConnectedAt,
-    totalBytesLast: totalBytesLast.present
-        ? totalBytesLast.value
-        : this.totalBytesLast,
-    freeBytesLast: freeBytesLast.present
-        ? freeBytesLast.value
-        : this.freeBytesLast,
+    lastConnectedAt: lastConnectedAt.present ? lastConnectedAt.value : this.lastConnectedAt,
+    totalBytesLast: totalBytesLast.present ? totalBytesLast.value : this.totalBytesLast,
+    freeBytesLast: freeBytesLast.present ? freeBytesLast.value : this.freeBytesLast,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     forgottenAt: forgottenAt.present ? forgottenAt.value : this.forgottenAt,
@@ -1834,50 +1428,24 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       kind: data.kind.present ? data.kind.value : this.kind,
-      volumeGuid: data.volumeGuid.present
-          ? data.volumeGuid.value
-          : this.volumeGuid,
-      volumeSerial: data.volumeSerial.present
-          ? data.volumeSerial.value
-          : this.volumeSerial,
-      volumeLabel: data.volumeLabel.present
-          ? data.volumeLabel.value
-          : this.volumeLabel,
-      filesystem: data.filesystem.present
-          ? data.filesystem.value
-          : this.filesystem,
-      volumeSizeBytes: data.volumeSizeBytes.present
-          ? data.volumeSizeBytes.value
-          : this.volumeSizeBytes,
-      physicalDiskId: data.physicalDiskId.present
-          ? data.physicalDiskId.value
-          : this.physicalDiskId,
+      volumeGuid: data.volumeGuid.present ? data.volumeGuid.value : this.volumeGuid,
+      volumeSerial: data.volumeSerial.present ? data.volumeSerial.value : this.volumeSerial,
+      volumeLabel: data.volumeLabel.present ? data.volumeLabel.value : this.volumeLabel,
+      filesystem: data.filesystem.present ? data.filesystem.value : this.filesystem,
+      volumeSizeBytes: data.volumeSizeBytes.present ? data.volumeSizeBytes.value : this.volumeSizeBytes,
+      physicalDiskId: data.physicalDiskId.present ? data.physicalDiskId.value : this.physicalDiskId,
       markerId: data.markerId.present ? data.markerId.value : this.markerId,
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
-      deviceModel: data.deviceModel.present
-          ? data.deviceModel.value
-          : this.deviceModel,
-      rootRelPath: data.rootRelPath.present
-          ? data.rootRelPath.value
-          : this.rootRelPath,
-      lastMountPath: data.lastMountPath.present
-          ? data.lastMountPath.value
-          : this.lastMountPath,
+      deviceModel: data.deviceModel.present ? data.deviceModel.value : this.deviceModel,
+      rootRelPath: data.rootRelPath.present ? data.rootRelPath.value : this.rootRelPath,
+      lastMountPath: data.lastMountPath.present ? data.lastMountPath.value : this.lastMountPath,
       connected: data.connected.present ? data.connected.value : this.connected,
-      lastConnectedAt: data.lastConnectedAt.present
-          ? data.lastConnectedAt.value
-          : this.lastConnectedAt,
-      totalBytesLast: data.totalBytesLast.present
-          ? data.totalBytesLast.value
-          : this.totalBytesLast,
-      freeBytesLast: data.freeBytesLast.present
-          ? data.freeBytesLast.value
-          : this.freeBytesLast,
+      lastConnectedAt: data.lastConnectedAt.present ? data.lastConnectedAt.value : this.lastConnectedAt,
+      totalBytesLast: data.totalBytesLast.present ? data.totalBytesLast.value : this.totalBytesLast,
+      freeBytesLast: data.freeBytesLast.present ? data.freeBytesLast.value : this.freeBytesLast,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      forgottenAt: data.forgottenAt.present
-          ? data.forgottenAt.value
-          : this.forgottenAt,
+      forgottenAt: data.forgottenAt.present ? data.forgottenAt.value : this.forgottenAt,
     );
   }
 
@@ -2251,9 +1819,7 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
     requiredDuringInsert: false,
     $customConstraints: 'NOT NULL PRIMARY KEY',
   );
-  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
-    'sourceId',
-  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta('sourceId');
   late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
     'source_id',
     aliasedName,
@@ -2280,9 +1846,7 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL CHECK (status IN (\'running\', \'paused\', \'interrupted\', \'completed\', \'cancelled\', \'failed\'))',
   );
-  static const VerificationMeta _coverageMeta = const VerificationMeta(
-    'coverage',
-  );
+  static const VerificationMeta _coverageMeta = const VerificationMeta('coverage');
   late final GeneratedColumn<String> coverage = GeneratedColumn<String>(
     'coverage',
     aliasedName,
@@ -2291,9 +1855,7 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
     requiredDuringInsert: false,
     $customConstraints: 'CHECK (coverage IN (\'complete\', \'partial\'))',
   );
-  static const VerificationMeta _mountPathUsedMeta = const VerificationMeta(
-    'mountPathUsed',
-  );
+  static const VerificationMeta _mountPathUsedMeta = const VerificationMeta('mountPathUsed');
   late final GeneratedColumn<String> mountPathUsed = GeneratedColumn<String>(
     'mount_path_used',
     aliasedName,
@@ -2302,9 +1864,7 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _startedAtMeta = const VerificationMeta(
-    'startedAt',
-  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta('startedAt');
   late final GeneratedColumn<int> startedAt = GeneratedColumn<int>(
     'started_at',
     aliasedName,
@@ -2313,9 +1873,7 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _finishedAtMeta = const VerificationMeta(
-    'finishedAt',
-  );
+  static const VerificationMeta _finishedAtMeta = const VerificationMeta('finishedAt');
   late final GeneratedColumn<int> finishedAt = GeneratedColumn<int>(
     'finished_at',
     aliasedName,
@@ -2324,9 +1882,7 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _dirsDoneMeta = const VerificationMeta(
-    'dirsDone',
-  );
+  static const VerificationMeta _dirsDoneMeta = const VerificationMeta('dirsDone');
   late final GeneratedColumn<int> dirsDone = GeneratedColumn<int>(
     'dirs_done',
     aliasedName,
@@ -2336,9 +1892,7 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
-  static const VerificationMeta _filesSeenMeta = const VerificationMeta(
-    'filesSeen',
-  );
+  static const VerificationMeta _filesSeenMeta = const VerificationMeta('filesSeen');
   late final GeneratedColumn<int> filesSeen = GeneratedColumn<int>(
     'files_seen',
     aliasedName,
@@ -2348,9 +1902,7 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
-  static const VerificationMeta _bytesSeenMeta = const VerificationMeta(
-    'bytesSeen',
-  );
+  static const VerificationMeta _bytesSeenMeta = const VerificationMeta('bytesSeen');
   late final GeneratedColumn<int> bytesSeen = GeneratedColumn<int>(
     'bytes_seen',
     aliasedName,
@@ -2360,9 +1912,7 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
-  static const VerificationMeta _errorCountMeta = const VerificationMeta(
-    'errorCount',
-  );
+  static const VerificationMeta _errorCountMeta = const VerificationMeta('errorCount');
   late final GeneratedColumn<int> errorCount = GeneratedColumn<int>(
     'error_count',
     aliasedName,
@@ -2393,91 +1943,55 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
   String get actualTableName => $name;
   static const String $name = 'scans';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ScanRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ScanRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('source_id')) {
-      context.handle(
-        _sourceIdMeta,
-        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
-      );
+      context.handle(_sourceIdMeta, sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta));
     } else if (isInserting) {
       context.missing(_sourceIdMeta);
     }
     if (data.containsKey('kind')) {
-      context.handle(
-        _kindMeta,
-        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
-      );
+      context.handle(_kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
     } else if (isInserting) {
       context.missing(_kindMeta);
     }
     if (data.containsKey('status')) {
-      context.handle(
-        _statusMeta,
-        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
-      );
+      context.handle(_statusMeta, status.isAcceptableOrUnknown(data['status']!, _statusMeta));
     } else if (isInserting) {
       context.missing(_statusMeta);
     }
     if (data.containsKey('coverage')) {
-      context.handle(
-        _coverageMeta,
-        coverage.isAcceptableOrUnknown(data['coverage']!, _coverageMeta),
-      );
+      context.handle(_coverageMeta, coverage.isAcceptableOrUnknown(data['coverage']!, _coverageMeta));
     }
     if (data.containsKey('mount_path_used')) {
       context.handle(
         _mountPathUsedMeta,
-        mountPathUsed.isAcceptableOrUnknown(
-          data['mount_path_used']!,
-          _mountPathUsedMeta,
-        ),
+        mountPathUsed.isAcceptableOrUnknown(data['mount_path_used']!, _mountPathUsedMeta),
       );
     }
     if (data.containsKey('started_at')) {
-      context.handle(
-        _startedAtMeta,
-        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
-      );
+      context.handle(_startedAtMeta, startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta));
     } else if (isInserting) {
       context.missing(_startedAtMeta);
     }
     if (data.containsKey('finished_at')) {
-      context.handle(
-        _finishedAtMeta,
-        finishedAt.isAcceptableOrUnknown(data['finished_at']!, _finishedAtMeta),
-      );
+      context.handle(_finishedAtMeta, finishedAt.isAcceptableOrUnknown(data['finished_at']!, _finishedAtMeta));
     }
     if (data.containsKey('dirs_done')) {
-      context.handle(
-        _dirsDoneMeta,
-        dirsDone.isAcceptableOrUnknown(data['dirs_done']!, _dirsDoneMeta),
-      );
+      context.handle(_dirsDoneMeta, dirsDone.isAcceptableOrUnknown(data['dirs_done']!, _dirsDoneMeta));
     }
     if (data.containsKey('files_seen')) {
-      context.handle(
-        _filesSeenMeta,
-        filesSeen.isAcceptableOrUnknown(data['files_seen']!, _filesSeenMeta),
-      );
+      context.handle(_filesSeenMeta, filesSeen.isAcceptableOrUnknown(data['files_seen']!, _filesSeenMeta));
     }
     if (data.containsKey('bytes_seen')) {
-      context.handle(
-        _bytesSeenMeta,
-        bytesSeen.isAcceptableOrUnknown(data['bytes_seen']!, _bytesSeenMeta),
-      );
+      context.handle(_bytesSeenMeta, bytesSeen.isAcceptableOrUnknown(data['bytes_seen']!, _bytesSeenMeta));
     }
     if (data.containsKey('error_count')) {
-      context.handle(
-        _errorCountMeta,
-        errorCount.isAcceptableOrUnknown(data['error_count']!, _errorCountMeta),
-      );
+      context.handle(_errorCountMeta, errorCount.isAcceptableOrUnknown(data['error_count']!, _errorCountMeta));
     }
     return context;
   }
@@ -2488,54 +2002,18 @@ class Scans extends Table with TableInfo<Scans, ScanRow> {
   ScanRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ScanRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      sourceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source_id'],
-      )!,
-      kind: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}kind'],
-      )!,
-      status: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}status'],
-      )!,
-      coverage: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}coverage'],
-      ),
-      mountPathUsed: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}mount_path_used'],
-      ),
-      startedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}started_at'],
-      )!,
-      finishedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}finished_at'],
-      ),
-      dirsDone: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}dirs_done'],
-      )!,
-      filesSeen: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}files_seen'],
-      )!,
-      bytesSeen: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}bytes_seen'],
-      )!,
-      errorCount: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}error_count'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      sourceId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source_id'])!,
+      kind: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
+      status: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      coverage: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}coverage']),
+      mountPathUsed: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}mount_path_used']),
+      startedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}started_at'])!,
+      finishedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}finished_at']),
+      dirsDone: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}dirs_done'])!,
+      filesSeen: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}files_seen'])!,
+      bytesSeen: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}bytes_seen'])!,
+      errorCount: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}error_count'])!,
     );
   }
 
@@ -2605,16 +2083,10 @@ class ScanRow extends DataClass implements Insertable<ScanRow> {
       sourceId: Value(sourceId),
       kind: Value(kind),
       status: Value(status),
-      coverage: coverage == null && nullToAbsent
-          ? const Value.absent()
-          : Value(coverage),
-      mountPathUsed: mountPathUsed == null && nullToAbsent
-          ? const Value.absent()
-          : Value(mountPathUsed),
+      coverage: coverage == null && nullToAbsent ? const Value.absent() : Value(coverage),
+      mountPathUsed: mountPathUsed == null && nullToAbsent ? const Value.absent() : Value(mountPathUsed),
       startedAt: Value(startedAt),
-      finishedAt: finishedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(finishedAt),
+      finishedAt: finishedAt == null && nullToAbsent ? const Value.absent() : Value(finishedAt),
       dirsDone: Value(dirsDone),
       filesSeen: Value(filesSeen),
       bytesSeen: Value(bytesSeen),
@@ -2622,10 +2094,7 @@ class ScanRow extends DataClass implements Insertable<ScanRow> {
     );
   }
 
-  factory ScanRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ScanRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ScanRow(
       id: serializer.fromJson<int>(json['id']),
@@ -2680,9 +2149,7 @@ class ScanRow extends DataClass implements Insertable<ScanRow> {
     kind: kind ?? this.kind,
     status: status ?? this.status,
     coverage: coverage.present ? coverage.value : this.coverage,
-    mountPathUsed: mountPathUsed.present
-        ? mountPathUsed.value
-        : this.mountPathUsed,
+    mountPathUsed: mountPathUsed.present ? mountPathUsed.value : this.mountPathUsed,
     startedAt: startedAt ?? this.startedAt,
     finishedAt: finishedAt.present ? finishedAt.value : this.finishedAt,
     dirsDone: dirsDone ?? this.dirsDone,
@@ -2697,19 +2164,13 @@ class ScanRow extends DataClass implements Insertable<ScanRow> {
       kind: data.kind.present ? data.kind.value : this.kind,
       status: data.status.present ? data.status.value : this.status,
       coverage: data.coverage.present ? data.coverage.value : this.coverage,
-      mountPathUsed: data.mountPathUsed.present
-          ? data.mountPathUsed.value
-          : this.mountPathUsed,
+      mountPathUsed: data.mountPathUsed.present ? data.mountPathUsed.value : this.mountPathUsed,
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
-      finishedAt: data.finishedAt.present
-          ? data.finishedAt.value
-          : this.finishedAt,
+      finishedAt: data.finishedAt.present ? data.finishedAt.value : this.finishedAt,
       dirsDone: data.dirsDone.present ? data.dirsDone.value : this.dirsDone,
       filesSeen: data.filesSeen.present ? data.filesSeen.value : this.filesSeen,
       bytesSeen: data.bytesSeen.present ? data.bytesSeen.value : this.bytesSeen,
-      errorCount: data.errorCount.present
-          ? data.errorCount.value
-          : this.errorCount,
+      errorCount: data.errorCount.present ? data.errorCount.value : this.errorCount,
     );
   }
 
@@ -2945,9 +2406,7 @@ class ScanDirs extends Table with TableInfo<ScanDirs, ScanDirRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL REFERENCES scans(id)ON DELETE CASCADE',
   );
-  static const VerificationMeta _relPathMeta = const VerificationMeta(
-    'relPath',
-  );
+  static const VerificationMeta _relPathMeta = const VerificationMeta('relPath');
   late final GeneratedColumn<String> relPath = GeneratedColumn<String>(
     'rel_path',
     aliasedName,
@@ -2973,33 +2432,21 @@ class ScanDirs extends Table with TableInfo<ScanDirs, ScanDirRow> {
   String get actualTableName => $name;
   static const String $name = 'scan_dirs';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ScanDirRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ScanDirRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('scan_id')) {
-      context.handle(
-        _scanIdMeta,
-        scanId.isAcceptableOrUnknown(data['scan_id']!, _scanIdMeta),
-      );
+      context.handle(_scanIdMeta, scanId.isAcceptableOrUnknown(data['scan_id']!, _scanIdMeta));
     } else if (isInserting) {
       context.missing(_scanIdMeta);
     }
     if (data.containsKey('rel_path')) {
-      context.handle(
-        _relPathMeta,
-        relPath.isAcceptableOrUnknown(data['rel_path']!, _relPathMeta),
-      );
+      context.handle(_relPathMeta, relPath.isAcceptableOrUnknown(data['rel_path']!, _relPathMeta));
     } else if (isInserting) {
       context.missing(_relPathMeta);
     }
     if (data.containsKey('status')) {
-      context.handle(
-        _statusMeta,
-        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
-      );
+      context.handle(_statusMeta, status.isAcceptableOrUnknown(data['status']!, _statusMeta));
     } else if (isInserting) {
       context.missing(_statusMeta);
     }
@@ -3012,18 +2459,9 @@ class ScanDirs extends Table with TableInfo<ScanDirs, ScanDirRow> {
   ScanDirRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ScanDirRow(
-      scanId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}scan_id'],
-      )!,
-      relPath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}rel_path'],
-      )!,
-      status: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}status'],
-      )!,
+      scanId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}scan_id'])!,
+      relPath: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}rel_path'])!,
+      status: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}status'])!,
     );
   }
 
@@ -3035,9 +2473,7 @@ class ScanDirs extends Table with TableInfo<ScanDirs, ScanDirRow> {
   @override
   bool get withoutRowId => true;
   @override
-  List<String> get customConstraints => const [
-    'PRIMARY KEY(scan_id, rel_path)',
-  ];
+  List<String> get customConstraints => const ['PRIMARY KEY(scan_id, rel_path)'];
   @override
   bool get dontWriteConstraints => true;
 }
@@ -3046,11 +2482,7 @@ class ScanDirRow extends DataClass implements Insertable<ScanDirRow> {
   final int scanId;
   final String relPath;
   final String status;
-  const ScanDirRow({
-    required this.scanId,
-    required this.relPath,
-    required this.status,
-  });
+  const ScanDirRow({required this.scanId, required this.relPath, required this.status});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3061,17 +2493,10 @@ class ScanDirRow extends DataClass implements Insertable<ScanDirRow> {
   }
 
   ScanDirsCompanion toCompanion(bool nullToAbsent) {
-    return ScanDirsCompanion(
-      scanId: Value(scanId),
-      relPath: Value(relPath),
-      status: Value(status),
-    );
+    return ScanDirsCompanion(scanId: Value(scanId), relPath: Value(relPath), status: Value(status));
   }
 
-  factory ScanDirRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ScanDirRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ScanDirRow(
       scanId: serializer.fromJson<int>(json['scan_id']),
@@ -3090,11 +2515,7 @@ class ScanDirRow extends DataClass implements Insertable<ScanDirRow> {
   }
 
   ScanDirRow copyWith({int? scanId, String? relPath, String? status}) =>
-      ScanDirRow(
-        scanId: scanId ?? this.scanId,
-        relPath: relPath ?? this.relPath,
-        status: status ?? this.status,
-      );
+      ScanDirRow(scanId: scanId ?? this.scanId, relPath: relPath ?? this.relPath, status: status ?? this.status);
   ScanDirRow copyWithCompanion(ScanDirsCompanion data) {
     return ScanDirRow(
       scanId: data.scanId.present ? data.scanId.value : this.scanId,
@@ -3133,13 +2554,10 @@ class ScanDirsCompanion extends UpdateCompanion<ScanDirRow> {
     this.relPath = const Value.absent(),
     this.status = const Value.absent(),
   });
-  ScanDirsCompanion.insert({
-    required int scanId,
-    required String relPath,
-    required String status,
-  }) : scanId = Value(scanId),
-       relPath = Value(relPath),
-       status = Value(status);
+  ScanDirsCompanion.insert({required int scanId, required String relPath, required String status})
+    : scanId = Value(scanId),
+      relPath = Value(relPath),
+      status = Value(status);
   static Insertable<ScanDirRow> custom({
     Expression<int>? scanId,
     Expression<String>? relPath,
@@ -3152,11 +2570,7 @@ class ScanDirsCompanion extends UpdateCompanion<ScanDirRow> {
     });
   }
 
-  ScanDirsCompanion copyWith({
-    Value<int>? scanId,
-    Value<String>? relPath,
-    Value<String>? status,
-  }) {
+  ScanDirsCompanion copyWith({Value<int>? scanId, Value<String>? relPath, Value<String>? status}) {
     return ScanDirsCompanion(
       scanId: scanId ?? this.scanId,
       relPath: relPath ?? this.relPath,
@@ -3213,9 +2627,7 @@ class ScanErrors extends Table with TableInfo<ScanErrors, ScanErrorRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL REFERENCES scans(id)ON DELETE CASCADE',
   );
-  static const VerificationMeta _relPathMeta = const VerificationMeta(
-    'relPath',
-  );
+  static const VerificationMeta _relPathMeta = const VerificationMeta('relPath');
   late final GeneratedColumn<String> relPath = GeneratedColumn<String>(
     'rel_path',
     aliasedName,
@@ -3233,9 +2645,7 @@ class ScanErrors extends Table with TableInfo<ScanErrors, ScanErrorRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL CHECK (kind IN (\'access_denied\', \'path_too_long\', \'io_error\', \'reparse_point_skipped\', \'device_disconnected\', \'other\'))',
   );
-  static const VerificationMeta _win32CodeMeta = const VerificationMeta(
-    'win32Code',
-  );
+  static const VerificationMeta _win32CodeMeta = const VerificationMeta('win32Code');
   late final GeneratedColumn<int> win32Code = GeneratedColumn<int>(
     'win32_code',
     aliasedName,
@@ -3244,9 +2654,7 @@ class ScanErrors extends Table with TableInfo<ScanErrors, ScanErrorRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _messageMeta = const VerificationMeta(
-    'message',
-  );
+  static const VerificationMeta _messageMeta = const VerificationMeta('message');
   late final GeneratedColumn<String> message = GeneratedColumn<String>(
     'message',
     aliasedName,
@@ -3265,65 +2673,39 @@ class ScanErrors extends Table with TableInfo<ScanErrors, ScanErrorRow> {
     $customConstraints: 'NOT NULL',
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    scanId,
-    relPath,
-    kind,
-    win32Code,
-    message,
-    at,
-  ];
+  List<GeneratedColumn> get $columns => [id, scanId, relPath, kind, win32Code, message, at];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'scan_errors';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ScanErrorRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ScanErrorRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('scan_id')) {
-      context.handle(
-        _scanIdMeta,
-        scanId.isAcceptableOrUnknown(data['scan_id']!, _scanIdMeta),
-      );
+      context.handle(_scanIdMeta, scanId.isAcceptableOrUnknown(data['scan_id']!, _scanIdMeta));
     } else if (isInserting) {
       context.missing(_scanIdMeta);
     }
     if (data.containsKey('rel_path')) {
-      context.handle(
-        _relPathMeta,
-        relPath.isAcceptableOrUnknown(data['rel_path']!, _relPathMeta),
-      );
+      context.handle(_relPathMeta, relPath.isAcceptableOrUnknown(data['rel_path']!, _relPathMeta));
     } else if (isInserting) {
       context.missing(_relPathMeta);
     }
     if (data.containsKey('kind')) {
-      context.handle(
-        _kindMeta,
-        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
-      );
+      context.handle(_kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
     } else if (isInserting) {
       context.missing(_kindMeta);
     }
     if (data.containsKey('win32_code')) {
-      context.handle(
-        _win32CodeMeta,
-        win32Code.isAcceptableOrUnknown(data['win32_code']!, _win32CodeMeta),
-      );
+      context.handle(_win32CodeMeta, win32Code.isAcceptableOrUnknown(data['win32_code']!, _win32CodeMeta));
     }
     if (data.containsKey('message')) {
-      context.handle(
-        _messageMeta,
-        message.isAcceptableOrUnknown(data['message']!, _messageMeta),
-      );
+      context.handle(_messageMeta, message.isAcceptableOrUnknown(data['message']!, _messageMeta));
     }
     if (data.containsKey('at')) {
       context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
@@ -3339,34 +2721,13 @@ class ScanErrors extends Table with TableInfo<ScanErrors, ScanErrorRow> {
   ScanErrorRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ScanErrorRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      scanId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}scan_id'],
-      )!,
-      relPath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}rel_path'],
-      )!,
-      kind: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}kind'],
-      )!,
-      win32Code: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}win32_code'],
-      ),
-      message: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}message'],
-      ),
-      at: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}at'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      scanId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}scan_id'])!,
+      relPath: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}rel_path'])!,
+      kind: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
+      win32Code: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}win32_code']),
+      message: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}message']),
+      at: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}at'])!,
     );
   }
 
@@ -3419,20 +2780,13 @@ class ScanErrorRow extends DataClass implements Insertable<ScanErrorRow> {
       scanId: Value(scanId),
       relPath: Value(relPath),
       kind: Value(kind),
-      win32Code: win32Code == null && nullToAbsent
-          ? const Value.absent()
-          : Value(win32Code),
-      message: message == null && nullToAbsent
-          ? const Value.absent()
-          : Value(message),
+      win32Code: win32Code == null && nullToAbsent ? const Value.absent() : Value(win32Code),
+      message: message == null && nullToAbsent ? const Value.absent() : Value(message),
       at: Value(at),
     );
   }
 
-  factory ScanErrorRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ScanErrorRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ScanErrorRow(
       id: serializer.fromJson<int>(json['id']),
@@ -3502,8 +2856,7 @@ class ScanErrorRow extends DataClass implements Insertable<ScanErrorRow> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, scanId, relPath, kind, win32Code, message, at);
+  int get hashCode => Object.hash(id, scanId, relPath, kind, win32Code, message, at);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3651,9 +3004,7 @@ class Contents extends Table with TableInfo<Contents, ContentRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL CHECK (length(sha256) = 32)',
   );
-  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
-    'sizeBytes',
-  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta('sizeBytes');
   late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
     'size_bytes',
     aliasedName,
@@ -3662,9 +3013,7 @@ class Contents extends Table with TableInfo<Contents, ContentRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _mediaTypeMeta = const VerificationMeta(
-    'mediaType',
-  );
+  static const VerificationMeta _mediaTypeMeta = const VerificationMeta('mediaType');
   late final GeneratedColumn<String> mediaType = GeneratedColumn<String>(
     'media_type',
     aliasedName,
@@ -3674,9 +3023,7 @@ class Contents extends Table with TableInfo<Contents, ContentRow> {
     $customConstraints: 'NOT NULL DEFAULT \'unknown\' CHECK (media_type IN (\'photo\', \'video\', \'raw\', \'sidecar\', \'other\', \'unknown\'))',
     defaultValue: const CustomExpression('\'unknown\''),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
     'created_at',
     aliasedName,
@@ -3686,55 +3033,34 @@ class Contents extends Table with TableInfo<Contents, ContentRow> {
     $customConstraints: 'NOT NULL',
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    sha256,
-    sizeBytes,
-    mediaType,
-    createdAt,
-  ];
+  List<GeneratedColumn> get $columns => [id, sha256, sizeBytes, mediaType, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'contents';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ContentRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ContentRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('sha256')) {
-      context.handle(
-        _sha256Meta,
-        sha256.isAcceptableOrUnknown(data['sha256']!, _sha256Meta),
-      );
+      context.handle(_sha256Meta, sha256.isAcceptableOrUnknown(data['sha256']!, _sha256Meta));
     } else if (isInserting) {
       context.missing(_sha256Meta);
     }
     if (data.containsKey('size_bytes')) {
-      context.handle(
-        _sizeBytesMeta,
-        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
-      );
+      context.handle(_sizeBytesMeta, sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta));
     } else if (isInserting) {
       context.missing(_sizeBytesMeta);
     }
     if (data.containsKey('media_type')) {
-      context.handle(
-        _mediaTypeMeta,
-        mediaType.isAcceptableOrUnknown(data['media_type']!, _mediaTypeMeta),
-      );
+      context.handle(_mediaTypeMeta, mediaType.isAcceptableOrUnknown(data['media_type']!, _mediaTypeMeta));
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
@@ -3751,26 +3077,11 @@ class Contents extends Table with TableInfo<Contents, ContentRow> {
   ContentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ContentRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      sha256: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}sha256'],
-      )!,
-      sizeBytes: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}size_bytes'],
-      )!,
-      mediaType: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}media_type'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}created_at'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      sha256: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}sha256'])!,
+      sizeBytes: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}size_bytes'])!,
+      mediaType: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}media_type'])!,
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
     );
   }
 
@@ -3819,10 +3130,7 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
     );
   }
 
-  factory ContentRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ContentRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ContentRow(
       id: serializer.fromJson<int>(json['id']),
@@ -3844,13 +3152,7 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
     };
   }
 
-  ContentRow copyWith({
-    int? id,
-    Uint8List? sha256,
-    int? sizeBytes,
-    String? mediaType,
-    int? createdAt,
-  }) => ContentRow(
+  ContentRow copyWith({int? id, Uint8List? sha256, int? sizeBytes, String? mediaType, int? createdAt}) => ContentRow(
     id: id ?? this.id,
     sha256: sha256 ?? this.sha256,
     sizeBytes: sizeBytes ?? this.sizeBytes,
@@ -3880,13 +3182,7 @@ class ContentRow extends DataClass implements Insertable<ContentRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    $driftBlobEquality.hash(sha256),
-    sizeBytes,
-    mediaType,
-    createdAt,
-  );
+  int get hashCode => Object.hash(id, $driftBlobEquality.hash(sha256), sizeBytes, mediaType, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3986,8 +3282,7 @@ class ContentsCompanion extends UpdateCompanion<ContentRow> {
   }
 }
 
-class FileInstances extends Table
-    with TableInfo<FileInstances, FileInstanceRow> {
+class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -4001,9 +3296,7 @@ class FileInstances extends Table
     requiredDuringInsert: false,
     $customConstraints: 'NOT NULL PRIMARY KEY',
   );
-  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
-    'sourceId',
-  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta('sourceId');
   late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
     'source_id',
     aliasedName,
@@ -4012,9 +3305,7 @@ class FileInstances extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL REFERENCES sources(id)',
   );
-  static const VerificationMeta _relPathMeta = const VerificationMeta(
-    'relPath',
-  );
+  static const VerificationMeta _relPathMeta = const VerificationMeta('relPath');
   late final GeneratedColumn<String> relPath = GeneratedColumn<String>(
     'rel_path',
     aliasedName,
@@ -4023,9 +3314,7 @@ class FileInstances extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _dirRelPathMeta = const VerificationMeta(
-    'dirRelPath',
-  );
+  static const VerificationMeta _dirRelPathMeta = const VerificationMeta('dirRelPath');
   late final GeneratedColumn<String> dirRelPath = GeneratedColumn<String>(
     'dir_rel_path',
     aliasedName,
@@ -4052,9 +3341,7 @@ class FileInstances extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
-    'sizeBytes',
-  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta('sizeBytes');
   late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
     'size_bytes',
     aliasedName,
@@ -4081,9 +3368,7 @@ class FileInstances extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _attributesMeta = const VerificationMeta(
-    'attributes',
-  );
+  static const VerificationMeta _attributesMeta = const VerificationMeta('attributes');
   late final GeneratedColumn<int> attributes = GeneratedColumn<int>(
     'attributes',
     aliasedName,
@@ -4092,9 +3377,7 @@ class FileInstances extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _contentIdMeta = const VerificationMeta(
-    'contentId',
-  );
+  static const VerificationMeta _contentIdMeta = const VerificationMeta('contentId');
   late final GeneratedColumn<int> contentId = GeneratedColumn<int>(
     'content_id',
     aliasedName,
@@ -4103,9 +3386,7 @@ class FileInstances extends Table
     requiredDuringInsert: false,
     $customConstraints: 'REFERENCES contents(id)',
   );
-  static const VerificationMeta _hashStatusMeta = const VerificationMeta(
-    'hashStatus',
-  );
+  static const VerificationMeta _hashStatusMeta = const VerificationMeta('hashStatus');
   late final GeneratedColumn<String> hashStatus = GeneratedColumn<String>(
     'hash_status',
     aliasedName,
@@ -4115,9 +3396,7 @@ class FileInstances extends Table
     $customConstraints: 'NOT NULL DEFAULT \'pending\' CHECK (hash_status IN (\'pending\', \'done\', \'changed_during_read\', \'error\', \'not_applicable\'))',
     defaultValue: const CustomExpression('\'pending\''),
   );
-  static const VerificationMeta _hashedSizeMeta = const VerificationMeta(
-    'hashedSize',
-  );
+  static const VerificationMeta _hashedSizeMeta = const VerificationMeta('hashedSize');
   late final GeneratedColumn<int> hashedSize = GeneratedColumn<int>(
     'hashed_size',
     aliasedName,
@@ -4126,9 +3405,7 @@ class FileInstances extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _hashedMtimeMeta = const VerificationMeta(
-    'hashedMtime',
-  );
+  static const VerificationMeta _hashedMtimeMeta = const VerificationMeta('hashedMtime');
   late final GeneratedColumn<int> hashedMtime = GeneratedColumn<int>(
     'hashed_mtime',
     aliasedName,
@@ -4137,9 +3414,7 @@ class FileInstances extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _hashedAtMeta = const VerificationMeta(
-    'hashedAt',
-  );
+  static const VerificationMeta _hashedAtMeta = const VerificationMeta('hashedAt');
   late final GeneratedColumn<int> hashedAt = GeneratedColumn<int>(
     'hashed_at',
     aliasedName,
@@ -4148,9 +3423,7 @@ class FileInstances extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _lastVerifiedAtMeta = const VerificationMeta(
-    'lastVerifiedAt',
-  );
+  static const VerificationMeta _lastVerifiedAtMeta = const VerificationMeta('lastVerifiedAt');
   late final GeneratedColumn<int> lastVerifiedAt = GeneratedColumn<int>(
     'last_verified_at',
     aliasedName,
@@ -4159,9 +3432,7 @@ class FileInstances extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _availabilityMeta = const VerificationMeta(
-    'availability',
-  );
+  static const VerificationMeta _availabilityMeta = const VerificationMeta('availability');
   late final GeneratedColumn<String> availability = GeneratedColumn<String>(
     'availability',
     aliasedName,
@@ -4171,21 +3442,18 @@ class FileInstances extends Table
     $customConstraints: 'NOT NULL DEFAULT \'present\' CHECK (availability IN (\'present\', \'cloud_only\', \'unreadable\', \'missing\'))',
     defaultValue: const CustomExpression('\'present\''),
   );
-  static const VerificationMeta _integrityMeta = const VerificationMeta(
-    'integrity',
-  );
+  static const VerificationMeta _integrityMeta = const VerificationMeta('integrity');
   late final GeneratedColumn<String> integrity = GeneratedColumn<String>(
     'integrity',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL DEFAULT \'unknown\' CHECK (integrity IN (\'unknown\', \'ok\', \'changed\', \'possibly_corrupt\'))',
+    $customConstraints:
+        'NOT NULL DEFAULT \'unknown\' CHECK (integrity IN (\'unknown\', \'ok\', \'changed\', \'possibly_corrupt\'))',
     defaultValue: const CustomExpression('\'unknown\''),
   );
-  static const VerificationMeta _firstSeenScanIdMeta = const VerificationMeta(
-    'firstSeenScanId',
-  );
+  static const VerificationMeta _firstSeenScanIdMeta = const VerificationMeta('firstSeenScanId');
   late final GeneratedColumn<int> firstSeenScanId = GeneratedColumn<int>(
     'first_seen_scan_id',
     aliasedName,
@@ -4194,9 +3462,7 @@ class FileInstances extends Table
     requiredDuringInsert: false,
     $customConstraints: 'REFERENCES scans(id)',
   );
-  static const VerificationMeta _lastSeenScanIdMeta = const VerificationMeta(
-    'lastSeenScanId',
-  );
+  static const VerificationMeta _lastSeenScanIdMeta = const VerificationMeta('lastSeenScanId');
   late final GeneratedColumn<int> lastSeenScanId = GeneratedColumn<int>(
     'last_seen_scan_id',
     aliasedName,
@@ -4205,8 +3471,7 @@ class FileInstances extends Table
     requiredDuringInsert: false,
     $customConstraints: 'REFERENCES scans(id)',
   );
-  static const VerificationMeta _missingConfirmedAtMeta =
-      const VerificationMeta('missingConfirmedAt');
+  static const VerificationMeta _missingConfirmedAtMeta = const VerificationMeta('missingConfirmedAt');
   late final GeneratedColumn<int> missingConfirmedAt = GeneratedColumn<int>(
     'missing_confirmed_at',
     aliasedName,
@@ -4245,166 +3510,94 @@ class FileInstances extends Table
   String get actualTableName => $name;
   static const String $name = 'file_instances';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<FileInstanceRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<FileInstanceRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('source_id')) {
-      context.handle(
-        _sourceIdMeta,
-        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
-      );
+      context.handle(_sourceIdMeta, sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta));
     } else if (isInserting) {
       context.missing(_sourceIdMeta);
     }
     if (data.containsKey('rel_path')) {
-      context.handle(
-        _relPathMeta,
-        relPath.isAcceptableOrUnknown(data['rel_path']!, _relPathMeta),
-      );
+      context.handle(_relPathMeta, relPath.isAcceptableOrUnknown(data['rel_path']!, _relPathMeta));
     } else if (isInserting) {
       context.missing(_relPathMeta);
     }
     if (data.containsKey('dir_rel_path')) {
-      context.handle(
-        _dirRelPathMeta,
-        dirRelPath.isAcceptableOrUnknown(
-          data['dir_rel_path']!,
-          _dirRelPathMeta,
-        ),
-      );
+      context.handle(_dirRelPathMeta, dirRelPath.isAcceptableOrUnknown(data['dir_rel_path']!, _dirRelPathMeta));
     } else if (isInserting) {
       context.missing(_dirRelPathMeta);
     }
     if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
+      context.handle(_nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('ext')) {
-      context.handle(
-        _extMeta,
-        ext.isAcceptableOrUnknown(data['ext']!, _extMeta),
-      );
+      context.handle(_extMeta, ext.isAcceptableOrUnknown(data['ext']!, _extMeta));
     } else if (isInserting) {
       context.missing(_extMeta);
     }
     if (data.containsKey('size_bytes')) {
-      context.handle(
-        _sizeBytesMeta,
-        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
-      );
+      context.handle(_sizeBytesMeta, sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta));
     } else if (isInserting) {
       context.missing(_sizeBytesMeta);
     }
     if (data.containsKey('mtime')) {
-      context.handle(
-        _mtimeMeta,
-        mtime.isAcceptableOrUnknown(data['mtime']!, _mtimeMeta),
-      );
+      context.handle(_mtimeMeta, mtime.isAcceptableOrUnknown(data['mtime']!, _mtimeMeta));
     }
     if (data.containsKey('ctime')) {
-      context.handle(
-        _ctimeMeta,
-        ctime.isAcceptableOrUnknown(data['ctime']!, _ctimeMeta),
-      );
+      context.handle(_ctimeMeta, ctime.isAcceptableOrUnknown(data['ctime']!, _ctimeMeta));
     }
     if (data.containsKey('attributes')) {
-      context.handle(
-        _attributesMeta,
-        attributes.isAcceptableOrUnknown(data['attributes']!, _attributesMeta),
-      );
+      context.handle(_attributesMeta, attributes.isAcceptableOrUnknown(data['attributes']!, _attributesMeta));
     }
     if (data.containsKey('content_id')) {
-      context.handle(
-        _contentIdMeta,
-        contentId.isAcceptableOrUnknown(data['content_id']!, _contentIdMeta),
-      );
+      context.handle(_contentIdMeta, contentId.isAcceptableOrUnknown(data['content_id']!, _contentIdMeta));
     }
     if (data.containsKey('hash_status')) {
-      context.handle(
-        _hashStatusMeta,
-        hashStatus.isAcceptableOrUnknown(data['hash_status']!, _hashStatusMeta),
-      );
+      context.handle(_hashStatusMeta, hashStatus.isAcceptableOrUnknown(data['hash_status']!, _hashStatusMeta));
     }
     if (data.containsKey('hashed_size')) {
-      context.handle(
-        _hashedSizeMeta,
-        hashedSize.isAcceptableOrUnknown(data['hashed_size']!, _hashedSizeMeta),
-      );
+      context.handle(_hashedSizeMeta, hashedSize.isAcceptableOrUnknown(data['hashed_size']!, _hashedSizeMeta));
     }
     if (data.containsKey('hashed_mtime')) {
-      context.handle(
-        _hashedMtimeMeta,
-        hashedMtime.isAcceptableOrUnknown(
-          data['hashed_mtime']!,
-          _hashedMtimeMeta,
-        ),
-      );
+      context.handle(_hashedMtimeMeta, hashedMtime.isAcceptableOrUnknown(data['hashed_mtime']!, _hashedMtimeMeta));
     }
     if (data.containsKey('hashed_at')) {
-      context.handle(
-        _hashedAtMeta,
-        hashedAt.isAcceptableOrUnknown(data['hashed_at']!, _hashedAtMeta),
-      );
+      context.handle(_hashedAtMeta, hashedAt.isAcceptableOrUnknown(data['hashed_at']!, _hashedAtMeta));
     }
     if (data.containsKey('last_verified_at')) {
       context.handle(
         _lastVerifiedAtMeta,
-        lastVerifiedAt.isAcceptableOrUnknown(
-          data['last_verified_at']!,
-          _lastVerifiedAtMeta,
-        ),
+        lastVerifiedAt.isAcceptableOrUnknown(data['last_verified_at']!, _lastVerifiedAtMeta),
       );
     }
     if (data.containsKey('availability')) {
-      context.handle(
-        _availabilityMeta,
-        availability.isAcceptableOrUnknown(
-          data['availability']!,
-          _availabilityMeta,
-        ),
-      );
+      context.handle(_availabilityMeta, availability.isAcceptableOrUnknown(data['availability']!, _availabilityMeta));
     }
     if (data.containsKey('integrity')) {
-      context.handle(
-        _integrityMeta,
-        integrity.isAcceptableOrUnknown(data['integrity']!, _integrityMeta),
-      );
+      context.handle(_integrityMeta, integrity.isAcceptableOrUnknown(data['integrity']!, _integrityMeta));
     }
     if (data.containsKey('first_seen_scan_id')) {
       context.handle(
         _firstSeenScanIdMeta,
-        firstSeenScanId.isAcceptableOrUnknown(
-          data['first_seen_scan_id']!,
-          _firstSeenScanIdMeta,
-        ),
+        firstSeenScanId.isAcceptableOrUnknown(data['first_seen_scan_id']!, _firstSeenScanIdMeta),
       );
     }
     if (data.containsKey('last_seen_scan_id')) {
       context.handle(
         _lastSeenScanIdMeta,
-        lastSeenScanId.isAcceptableOrUnknown(
-          data['last_seen_scan_id']!,
-          _lastSeenScanIdMeta,
-        ),
+        lastSeenScanId.isAcceptableOrUnknown(data['last_seen_scan_id']!, _lastSeenScanIdMeta),
       );
     }
     if (data.containsKey('missing_confirmed_at')) {
       context.handle(
         _missingConfirmedAtMeta,
-        missingConfirmedAt.isAcceptableOrUnknown(
-          data['missing_confirmed_at']!,
-          _missingConfirmedAtMeta,
-        ),
+        missingConfirmedAt.isAcceptableOrUnknown(data['missing_confirmed_at']!, _missingConfirmedAtMeta),
       );
     }
     return context;
@@ -4420,86 +3613,29 @@ class FileInstances extends Table
   FileInstanceRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return FileInstanceRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      sourceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source_id'],
-      )!,
-      relPath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}rel_path'],
-      )!,
-      dirRelPath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}dir_rel_path'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      ext: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}ext'],
-      )!,
-      sizeBytes: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}size_bytes'],
-      )!,
-      mtime: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}mtime'],
-      ),
-      ctime: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}ctime'],
-      ),
-      attributes: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}attributes'],
-      ),
-      contentId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}content_id'],
-      ),
-      hashStatus: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}hash_status'],
-      )!,
-      hashedSize: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}hashed_size'],
-      ),
-      hashedMtime: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}hashed_mtime'],
-      ),
-      hashedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}hashed_at'],
-      ),
-      lastVerifiedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}last_verified_at'],
-      ),
-      availability: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}availability'],
-      )!,
-      integrity: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}integrity'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      sourceId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source_id'])!,
+      relPath: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}rel_path'])!,
+      dirRelPath: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}dir_rel_path'])!,
+      name: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      ext: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}ext'])!,
+      sizeBytes: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}size_bytes'])!,
+      mtime: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}mtime']),
+      ctime: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}ctime']),
+      attributes: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}attributes']),
+      contentId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}content_id']),
+      hashStatus: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hash_status'])!,
+      hashedSize: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}hashed_size']),
+      hashedMtime: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}hashed_mtime']),
+      hashedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}hashed_at']),
+      lastVerifiedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}last_verified_at']),
+      availability: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}availability'])!,
+      integrity: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}integrity'])!,
       firstSeenScanId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}first_seen_scan_id'],
       ),
-      lastSeenScanId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}last_seen_scan_id'],
-      ),
+      lastSeenScanId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}last_seen_scan_id']),
       missingConfirmedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}missing_confirmed_at'],
@@ -4621,49 +3757,24 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       name: Value(name),
       ext: Value(ext),
       sizeBytes: Value(sizeBytes),
-      mtime: mtime == null && nullToAbsent
-          ? const Value.absent()
-          : Value(mtime),
-      ctime: ctime == null && nullToAbsent
-          ? const Value.absent()
-          : Value(ctime),
-      attributes: attributes == null && nullToAbsent
-          ? const Value.absent()
-          : Value(attributes),
-      contentId: contentId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(contentId),
+      mtime: mtime == null && nullToAbsent ? const Value.absent() : Value(mtime),
+      ctime: ctime == null && nullToAbsent ? const Value.absent() : Value(ctime),
+      attributes: attributes == null && nullToAbsent ? const Value.absent() : Value(attributes),
+      contentId: contentId == null && nullToAbsent ? const Value.absent() : Value(contentId),
       hashStatus: Value(hashStatus),
-      hashedSize: hashedSize == null && nullToAbsent
-          ? const Value.absent()
-          : Value(hashedSize),
-      hashedMtime: hashedMtime == null && nullToAbsent
-          ? const Value.absent()
-          : Value(hashedMtime),
-      hashedAt: hashedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(hashedAt),
-      lastVerifiedAt: lastVerifiedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastVerifiedAt),
+      hashedSize: hashedSize == null && nullToAbsent ? const Value.absent() : Value(hashedSize),
+      hashedMtime: hashedMtime == null && nullToAbsent ? const Value.absent() : Value(hashedMtime),
+      hashedAt: hashedAt == null && nullToAbsent ? const Value.absent() : Value(hashedAt),
+      lastVerifiedAt: lastVerifiedAt == null && nullToAbsent ? const Value.absent() : Value(lastVerifiedAt),
       availability: Value(availability),
       integrity: Value(integrity),
-      firstSeenScanId: firstSeenScanId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(firstSeenScanId),
-      lastSeenScanId: lastSeenScanId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastSeenScanId),
-      missingConfirmedAt: missingConfirmedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(missingConfirmedAt),
+      firstSeenScanId: firstSeenScanId == null && nullToAbsent ? const Value.absent() : Value(firstSeenScanId),
+      lastSeenScanId: lastSeenScanId == null && nullToAbsent ? const Value.absent() : Value(lastSeenScanId),
+      missingConfirmedAt: missingConfirmedAt == null && nullToAbsent ? const Value.absent() : Value(missingConfirmedAt),
     );
   }
 
-  factory FileInstanceRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory FileInstanceRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return FileInstanceRow(
       id: serializer.fromJson<int>(json['id']),
@@ -4686,9 +3797,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       integrity: serializer.fromJson<String>(json['integrity']),
       firstSeenScanId: serializer.fromJson<int?>(json['first_seen_scan_id']),
       lastSeenScanId: serializer.fromJson<int?>(json['last_seen_scan_id']),
-      missingConfirmedAt: serializer.fromJson<int?>(
-        json['missing_confirmed_at'],
-      ),
+      missingConfirmedAt: serializer.fromJson<int?>(json['missing_confirmed_at']),
     );
   }
   @override
@@ -4757,64 +3866,36 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     hashedSize: hashedSize.present ? hashedSize.value : this.hashedSize,
     hashedMtime: hashedMtime.present ? hashedMtime.value : this.hashedMtime,
     hashedAt: hashedAt.present ? hashedAt.value : this.hashedAt,
-    lastVerifiedAt: lastVerifiedAt.present
-        ? lastVerifiedAt.value
-        : this.lastVerifiedAt,
+    lastVerifiedAt: lastVerifiedAt.present ? lastVerifiedAt.value : this.lastVerifiedAt,
     availability: availability ?? this.availability,
     integrity: integrity ?? this.integrity,
-    firstSeenScanId: firstSeenScanId.present
-        ? firstSeenScanId.value
-        : this.firstSeenScanId,
-    lastSeenScanId: lastSeenScanId.present
-        ? lastSeenScanId.value
-        : this.lastSeenScanId,
-    missingConfirmedAt: missingConfirmedAt.present
-        ? missingConfirmedAt.value
-        : this.missingConfirmedAt,
+    firstSeenScanId: firstSeenScanId.present ? firstSeenScanId.value : this.firstSeenScanId,
+    lastSeenScanId: lastSeenScanId.present ? lastSeenScanId.value : this.lastSeenScanId,
+    missingConfirmedAt: missingConfirmedAt.present ? missingConfirmedAt.value : this.missingConfirmedAt,
   );
   FileInstanceRow copyWithCompanion(FileInstancesCompanion data) {
     return FileInstanceRow(
       id: data.id.present ? data.id.value : this.id,
       sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
       relPath: data.relPath.present ? data.relPath.value : this.relPath,
-      dirRelPath: data.dirRelPath.present
-          ? data.dirRelPath.value
-          : this.dirRelPath,
+      dirRelPath: data.dirRelPath.present ? data.dirRelPath.value : this.dirRelPath,
       name: data.name.present ? data.name.value : this.name,
       ext: data.ext.present ? data.ext.value : this.ext,
       sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
       mtime: data.mtime.present ? data.mtime.value : this.mtime,
       ctime: data.ctime.present ? data.ctime.value : this.ctime,
-      attributes: data.attributes.present
-          ? data.attributes.value
-          : this.attributes,
+      attributes: data.attributes.present ? data.attributes.value : this.attributes,
       contentId: data.contentId.present ? data.contentId.value : this.contentId,
-      hashStatus: data.hashStatus.present
-          ? data.hashStatus.value
-          : this.hashStatus,
-      hashedSize: data.hashedSize.present
-          ? data.hashedSize.value
-          : this.hashedSize,
-      hashedMtime: data.hashedMtime.present
-          ? data.hashedMtime.value
-          : this.hashedMtime,
+      hashStatus: data.hashStatus.present ? data.hashStatus.value : this.hashStatus,
+      hashedSize: data.hashedSize.present ? data.hashedSize.value : this.hashedSize,
+      hashedMtime: data.hashedMtime.present ? data.hashedMtime.value : this.hashedMtime,
       hashedAt: data.hashedAt.present ? data.hashedAt.value : this.hashedAt,
-      lastVerifiedAt: data.lastVerifiedAt.present
-          ? data.lastVerifiedAt.value
-          : this.lastVerifiedAt,
-      availability: data.availability.present
-          ? data.availability.value
-          : this.availability,
+      lastVerifiedAt: data.lastVerifiedAt.present ? data.lastVerifiedAt.value : this.lastVerifiedAt,
+      availability: data.availability.present ? data.availability.value : this.availability,
       integrity: data.integrity.present ? data.integrity.value : this.integrity,
-      firstSeenScanId: data.firstSeenScanId.present
-          ? data.firstSeenScanId.value
-          : this.firstSeenScanId,
-      lastSeenScanId: data.lastSeenScanId.present
-          ? data.lastSeenScanId.value
-          : this.lastSeenScanId,
-      missingConfirmedAt: data.missingConfirmedAt.present
-          ? data.missingConfirmedAt.value
-          : this.missingConfirmedAt,
+      firstSeenScanId: data.firstSeenScanId.present ? data.firstSeenScanId.value : this.firstSeenScanId,
+      lastSeenScanId: data.lastSeenScanId.present ? data.lastSeenScanId.value : this.lastSeenScanId,
+      missingConfirmedAt: data.missingConfirmedAt.present ? data.missingConfirmedAt.value : this.missingConfirmedAt,
     );
   }
 
@@ -5014,8 +4095,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
       if (integrity != null) 'integrity': integrity,
       if (firstSeenScanId != null) 'first_seen_scan_id': firstSeenScanId,
       if (lastSeenScanId != null) 'last_seen_scan_id': lastSeenScanId,
-      if (missingConfirmedAt != null)
-        'missing_confirmed_at': missingConfirmedAt,
+      if (missingConfirmedAt != null) 'missing_confirmed_at': missingConfirmedAt,
     });
   }
 
@@ -5165,15 +4245,12 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
   }
 }
 
-class MediaMetadata extends Table
-    with TableInfo<MediaMetadata, MediaMetadataRow> {
+class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   MediaMetadata(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _contentIdMeta = const VerificationMeta(
-    'contentId',
-  );
+  static const VerificationMeta _contentIdMeta = const VerificationMeta('contentId');
   late final GeneratedColumn<int> contentId = GeneratedColumn<int>(
     'content_id',
     aliasedName,
@@ -5182,9 +4259,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: 'NOT NULL PRIMARY KEY REFERENCES contents(id)',
   );
-  static const VerificationMeta _captureUtcMsMeta = const VerificationMeta(
-    'captureUtcMs',
-  );
+  static const VerificationMeta _captureUtcMsMeta = const VerificationMeta('captureUtcMs');
   late final GeneratedColumn<int> captureUtcMs = GeneratedColumn<int>(
     'capture_utc_ms',
     aliasedName,
@@ -5193,9 +4268,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _captureLocalMeta = const VerificationMeta(
-    'captureLocal',
-  );
+  static const VerificationMeta _captureLocalMeta = const VerificationMeta('captureLocal');
   late final GeneratedColumn<String> captureLocal = GeneratedColumn<String>(
     'capture_local',
     aliasedName,
@@ -5204,9 +4277,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _tzOffsetMinMeta = const VerificationMeta(
-    'tzOffsetMin',
-  );
+  static const VerificationMeta _tzOffsetMinMeta = const VerificationMeta('tzOffsetMin');
   late final GeneratedColumn<int> tzOffsetMin = GeneratedColumn<int>(
     'tz_offset_min',
     aliasedName,
@@ -5215,9 +4286,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _dateSourceMeta = const VerificationMeta(
-    'dateSource',
-  );
+  static const VerificationMeta _dateSourceMeta = const VerificationMeta('dateSource');
   late final GeneratedColumn<String> dateSource = GeneratedColumn<String>(
     'date_source',
     aliasedName,
@@ -5226,21 +4295,16 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: 'CHECK (date_source IN (\'manual\', \'exif_original\', \'video_internal\', \'filename\', \'filesystem\', \'none\'))',
   );
-  static const VerificationMeta _dateConfidenceMeta = const VerificationMeta(
-    'dateConfidence',
-  );
+  static const VerificationMeta _dateConfidenceMeta = const VerificationMeta('dateConfidence');
   late final GeneratedColumn<String> dateConfidence = GeneratedColumn<String>(
     'date_confidence',
     aliasedName,
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    $customConstraints:
-        'CHECK (date_confidence IN (\'high\', \'medium\', \'low\', \'none\'))',
+    $customConstraints: 'CHECK (date_confidence IN (\'high\', \'medium\', \'low\', \'none\'))',
   );
-  static const VerificationMeta _dateConflictMeta = const VerificationMeta(
-    'dateConflict',
-  );
+  static const VerificationMeta _dateConflictMeta = const VerificationMeta('dateConflict');
   late final GeneratedColumn<bool> dateConflict = GeneratedColumn<bool>(
     'date_conflict',
     aliasedName,
@@ -5250,9 +4314,7 @@ class MediaMetadata extends Table
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
-  static const VerificationMeta _candidatesJsonMeta = const VerificationMeta(
-    'candidatesJson',
-  );
+  static const VerificationMeta _candidatesJsonMeta = const VerificationMeta('candidatesJson');
   late final GeneratedColumn<String> candidatesJson = GeneratedColumn<String>(
     'candidates_json',
     aliasedName,
@@ -5297,9 +4359,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _apertureMeta = const VerificationMeta(
-    'aperture',
-  );
+  static const VerificationMeta _apertureMeta = const VerificationMeta('aperture');
   late final GeneratedColumn<double> aperture = GeneratedColumn<double>(
     'aperture',
     aliasedName,
@@ -5308,9 +4368,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _exposureSMeta = const VerificationMeta(
-    'exposureS',
-  );
+  static const VerificationMeta _exposureSMeta = const VerificationMeta('exposureS');
   late final GeneratedColumn<double> exposureS = GeneratedColumn<double>(
     'exposure_s',
     aliasedName,
@@ -5319,9 +4377,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _focalMmMeta = const VerificationMeta(
-    'focalMm',
-  );
+  static const VerificationMeta _focalMmMeta = const VerificationMeta('focalMm');
   late final GeneratedColumn<double> focalMm = GeneratedColumn<double>(
     'focal_mm',
     aliasedName,
@@ -5348,9 +4404,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _orientationMeta = const VerificationMeta(
-    'orientation',
-  );
+  static const VerificationMeta _orientationMeta = const VerificationMeta('orientation');
   late final GeneratedColumn<int> orientation = GeneratedColumn<int>(
     'orientation',
     aliasedName,
@@ -5377,9 +4431,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _durationMsMeta = const VerificationMeta(
-    'durationMs',
-  );
+  static const VerificationMeta _durationMsMeta = const VerificationMeta('durationMs');
   late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
     'duration_ms',
     aliasedName,
@@ -5397,9 +4449,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _videoCodecMeta = const VerificationMeta(
-    'videoCodec',
-  );
+  static const VerificationMeta _videoCodecMeta = const VerificationMeta('videoCodec');
   late final GeneratedColumn<String> videoCodec = GeneratedColumn<String>(
     'video_codec',
     aliasedName,
@@ -5408,9 +4458,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _audioCodecMeta = const VerificationMeta(
-    'audioCodec',
-  );
+  static const VerificationMeta _audioCodecMeta = const VerificationMeta('audioCodec');
   late final GeneratedColumn<String> audioCodec = GeneratedColumn<String>(
     'audio_codec',
     aliasedName,
@@ -5419,9 +4467,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _bitrateMeta = const VerificationMeta(
-    'bitrate',
-  );
+  static const VerificationMeta _bitrateMeta = const VerificationMeta('bitrate');
   late final GeneratedColumn<int> bitrate = GeneratedColumn<int>(
     'bitrate',
     aliasedName,
@@ -5430,9 +4476,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _softwareMeta = const VerificationMeta(
-    'software',
-  );
+  static const VerificationMeta _softwareMeta = const VerificationMeta('software');
   late final GeneratedColumn<String> software = GeneratedColumn<String>(
     'software',
     aliasedName,
@@ -5441,9 +4485,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _extractorMeta = const VerificationMeta(
-    'extractor',
-  );
+  static const VerificationMeta _extractorMeta = const VerificationMeta('extractor');
   late final GeneratedColumn<String> extractor = GeneratedColumn<String>(
     'extractor',
     aliasedName,
@@ -5452,9 +4494,7 @@ class MediaMetadata extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _extractedAtMeta = const VerificationMeta(
-    'extractedAt',
-  );
+  static const VerificationMeta _extractedAtMeta = const VerificationMeta('extractedAt');
   late final GeneratedColumn<int> extractedAt = GeneratedColumn<int>(
     'extracted_at',
     aliasedName,
@@ -5500,203 +4540,98 @@ class MediaMetadata extends Table
   String get actualTableName => $name;
   static const String $name = 'media_metadata';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<MediaMetadataRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<MediaMetadataRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('content_id')) {
-      context.handle(
-        _contentIdMeta,
-        contentId.isAcceptableOrUnknown(data['content_id']!, _contentIdMeta),
-      );
+      context.handle(_contentIdMeta, contentId.isAcceptableOrUnknown(data['content_id']!, _contentIdMeta));
     }
     if (data.containsKey('capture_utc_ms')) {
-      context.handle(
-        _captureUtcMsMeta,
-        captureUtcMs.isAcceptableOrUnknown(
-          data['capture_utc_ms']!,
-          _captureUtcMsMeta,
-        ),
-      );
+      context.handle(_captureUtcMsMeta, captureUtcMs.isAcceptableOrUnknown(data['capture_utc_ms']!, _captureUtcMsMeta));
     }
     if (data.containsKey('capture_local')) {
-      context.handle(
-        _captureLocalMeta,
-        captureLocal.isAcceptableOrUnknown(
-          data['capture_local']!,
-          _captureLocalMeta,
-        ),
-      );
+      context.handle(_captureLocalMeta, captureLocal.isAcceptableOrUnknown(data['capture_local']!, _captureLocalMeta));
     }
     if (data.containsKey('tz_offset_min')) {
-      context.handle(
-        _tzOffsetMinMeta,
-        tzOffsetMin.isAcceptableOrUnknown(
-          data['tz_offset_min']!,
-          _tzOffsetMinMeta,
-        ),
-      );
+      context.handle(_tzOffsetMinMeta, tzOffsetMin.isAcceptableOrUnknown(data['tz_offset_min']!, _tzOffsetMinMeta));
     }
     if (data.containsKey('date_source')) {
-      context.handle(
-        _dateSourceMeta,
-        dateSource.isAcceptableOrUnknown(data['date_source']!, _dateSourceMeta),
-      );
+      context.handle(_dateSourceMeta, dateSource.isAcceptableOrUnknown(data['date_source']!, _dateSourceMeta));
     }
     if (data.containsKey('date_confidence')) {
       context.handle(
         _dateConfidenceMeta,
-        dateConfidence.isAcceptableOrUnknown(
-          data['date_confidence']!,
-          _dateConfidenceMeta,
-        ),
+        dateConfidence.isAcceptableOrUnknown(data['date_confidence']!, _dateConfidenceMeta),
       );
     }
     if (data.containsKey('date_conflict')) {
-      context.handle(
-        _dateConflictMeta,
-        dateConflict.isAcceptableOrUnknown(
-          data['date_conflict']!,
-          _dateConflictMeta,
-        ),
-      );
+      context.handle(_dateConflictMeta, dateConflict.isAcceptableOrUnknown(data['date_conflict']!, _dateConflictMeta));
     }
     if (data.containsKey('candidates_json')) {
       context.handle(
         _candidatesJsonMeta,
-        candidatesJson.isAcceptableOrUnknown(
-          data['candidates_json']!,
-          _candidatesJsonMeta,
-        ),
+        candidatesJson.isAcceptableOrUnknown(data['candidates_json']!, _candidatesJsonMeta),
       );
     }
     if (data.containsKey('make')) {
-      context.handle(
-        _makeMeta,
-        make.isAcceptableOrUnknown(data['make']!, _makeMeta),
-      );
+      context.handle(_makeMeta, make.isAcceptableOrUnknown(data['make']!, _makeMeta));
     }
     if (data.containsKey('model')) {
-      context.handle(
-        _modelMeta,
-        model.isAcceptableOrUnknown(data['model']!, _modelMeta),
-      );
+      context.handle(_modelMeta, model.isAcceptableOrUnknown(data['model']!, _modelMeta));
     }
     if (data.containsKey('lens')) {
-      context.handle(
-        _lensMeta,
-        lens.isAcceptableOrUnknown(data['lens']!, _lensMeta),
-      );
+      context.handle(_lensMeta, lens.isAcceptableOrUnknown(data['lens']!, _lensMeta));
     }
     if (data.containsKey('iso')) {
-      context.handle(
-        _isoMeta,
-        iso.isAcceptableOrUnknown(data['iso']!, _isoMeta),
-      );
+      context.handle(_isoMeta, iso.isAcceptableOrUnknown(data['iso']!, _isoMeta));
     }
     if (data.containsKey('aperture')) {
-      context.handle(
-        _apertureMeta,
-        aperture.isAcceptableOrUnknown(data['aperture']!, _apertureMeta),
-      );
+      context.handle(_apertureMeta, aperture.isAcceptableOrUnknown(data['aperture']!, _apertureMeta));
     }
     if (data.containsKey('exposure_s')) {
-      context.handle(
-        _exposureSMeta,
-        exposureS.isAcceptableOrUnknown(data['exposure_s']!, _exposureSMeta),
-      );
+      context.handle(_exposureSMeta, exposureS.isAcceptableOrUnknown(data['exposure_s']!, _exposureSMeta));
     }
     if (data.containsKey('focal_mm')) {
-      context.handle(
-        _focalMmMeta,
-        focalMm.isAcceptableOrUnknown(data['focal_mm']!, _focalMmMeta),
-      );
+      context.handle(_focalMmMeta, focalMm.isAcceptableOrUnknown(data['focal_mm']!, _focalMmMeta));
     }
     if (data.containsKey('width')) {
-      context.handle(
-        _widthMeta,
-        width.isAcceptableOrUnknown(data['width']!, _widthMeta),
-      );
+      context.handle(_widthMeta, width.isAcceptableOrUnknown(data['width']!, _widthMeta));
     }
     if (data.containsKey('height')) {
-      context.handle(
-        _heightMeta,
-        height.isAcceptableOrUnknown(data['height']!, _heightMeta),
-      );
+      context.handle(_heightMeta, height.isAcceptableOrUnknown(data['height']!, _heightMeta));
     }
     if (data.containsKey('orientation')) {
-      context.handle(
-        _orientationMeta,
-        orientation.isAcceptableOrUnknown(
-          data['orientation']!,
-          _orientationMeta,
-        ),
-      );
+      context.handle(_orientationMeta, orientation.isAcceptableOrUnknown(data['orientation']!, _orientationMeta));
     }
     if (data.containsKey('lat')) {
-      context.handle(
-        _latMeta,
-        lat.isAcceptableOrUnknown(data['lat']!, _latMeta),
-      );
+      context.handle(_latMeta, lat.isAcceptableOrUnknown(data['lat']!, _latMeta));
     }
     if (data.containsKey('lon')) {
-      context.handle(
-        _lonMeta,
-        lon.isAcceptableOrUnknown(data['lon']!, _lonMeta),
-      );
+      context.handle(_lonMeta, lon.isAcceptableOrUnknown(data['lon']!, _lonMeta));
     }
     if (data.containsKey('duration_ms')) {
-      context.handle(
-        _durationMsMeta,
-        durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta),
-      );
+      context.handle(_durationMsMeta, durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta));
     }
     if (data.containsKey('fps')) {
-      context.handle(
-        _fpsMeta,
-        fps.isAcceptableOrUnknown(data['fps']!, _fpsMeta),
-      );
+      context.handle(_fpsMeta, fps.isAcceptableOrUnknown(data['fps']!, _fpsMeta));
     }
     if (data.containsKey('video_codec')) {
-      context.handle(
-        _videoCodecMeta,
-        videoCodec.isAcceptableOrUnknown(data['video_codec']!, _videoCodecMeta),
-      );
+      context.handle(_videoCodecMeta, videoCodec.isAcceptableOrUnknown(data['video_codec']!, _videoCodecMeta));
     }
     if (data.containsKey('audio_codec')) {
-      context.handle(
-        _audioCodecMeta,
-        audioCodec.isAcceptableOrUnknown(data['audio_codec']!, _audioCodecMeta),
-      );
+      context.handle(_audioCodecMeta, audioCodec.isAcceptableOrUnknown(data['audio_codec']!, _audioCodecMeta));
     }
     if (data.containsKey('bitrate')) {
-      context.handle(
-        _bitrateMeta,
-        bitrate.isAcceptableOrUnknown(data['bitrate']!, _bitrateMeta),
-      );
+      context.handle(_bitrateMeta, bitrate.isAcceptableOrUnknown(data['bitrate']!, _bitrateMeta));
     }
     if (data.containsKey('software')) {
-      context.handle(
-        _softwareMeta,
-        software.isAcceptableOrUnknown(data['software']!, _softwareMeta),
-      );
+      context.handle(_softwareMeta, software.isAcceptableOrUnknown(data['software']!, _softwareMeta));
     }
     if (data.containsKey('extractor')) {
-      context.handle(
-        _extractorMeta,
-        extractor.isAcceptableOrUnknown(data['extractor']!, _extractorMeta),
-      );
+      context.handle(_extractorMeta, extractor.isAcceptableOrUnknown(data['extractor']!, _extractorMeta));
     }
     if (data.containsKey('extracted_at')) {
-      context.handle(
-        _extractedAtMeta,
-        extractedAt.isAcceptableOrUnknown(
-          data['extracted_at']!,
-          _extractedAtMeta,
-        ),
-      );
+      context.handle(_extractedAtMeta, extractedAt.isAcceptableOrUnknown(data['extracted_at']!, _extractedAtMeta));
     }
     return context;
   }
@@ -5707,118 +4642,34 @@ class MediaMetadata extends Table
   MediaMetadataRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MediaMetadataRow(
-      contentId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}content_id'],
-      )!,
-      captureUtcMs: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}capture_utc_ms'],
-      ),
-      captureLocal: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}capture_local'],
-      ),
-      tzOffsetMin: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}tz_offset_min'],
-      ),
-      dateSource: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}date_source'],
-      ),
-      dateConfidence: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}date_confidence'],
-      ),
-      dateConflict: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}date_conflict'],
-      )!,
-      candidatesJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}candidates_json'],
-      ),
-      make: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}make'],
-      ),
-      model: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}model'],
-      ),
-      lens: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}lens'],
-      ),
-      iso: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}iso'],
-      ),
-      aperture: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}aperture'],
-      ),
-      exposureS: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}exposure_s'],
-      ),
-      focalMm: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}focal_mm'],
-      ),
-      width: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}width'],
-      ),
-      height: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}height'],
-      ),
-      orientation: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}orientation'],
-      ),
-      lat: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}lat'],
-      ),
-      lon: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}lon'],
-      ),
-      durationMs: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}duration_ms'],
-      ),
-      fps: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}fps'],
-      ),
-      videoCodec: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}video_codec'],
-      ),
-      audioCodec: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}audio_codec'],
-      ),
-      bitrate: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}bitrate'],
-      ),
-      software: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}software'],
-      ),
-      extractor: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}extractor'],
-      ),
-      extractedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}extracted_at'],
-      ),
+      contentId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}content_id'])!,
+      captureUtcMs: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}capture_utc_ms']),
+      captureLocal: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}capture_local']),
+      tzOffsetMin: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}tz_offset_min']),
+      dateSource: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}date_source']),
+      dateConfidence: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}date_confidence']),
+      dateConflict: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}date_conflict'])!,
+      candidatesJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}candidates_json']),
+      make: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}make']),
+      model: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}model']),
+      lens: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}lens']),
+      iso: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}iso']),
+      aperture: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}aperture']),
+      exposureS: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}exposure_s']),
+      focalMm: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}focal_mm']),
+      width: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}width']),
+      height: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}height']),
+      orientation: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}orientation']),
+      lat: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}lat']),
+      lon: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}lon']),
+      durationMs: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}duration_ms']),
+      fps: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}fps']),
+      videoCodec: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}video_codec']),
+      audioCodec: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}audio_codec']),
+      bitrate: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}bitrate']),
+      software: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}software']),
+      extractor: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}extractor']),
+      extractedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}extracted_at']),
     );
   }
 
@@ -5831,8 +4682,7 @@ class MediaMetadata extends Table
   bool get dontWriteConstraints => true;
 }
 
-class MediaMetadataRow extends DataClass
-    implements Insertable<MediaMetadataRow> {
+class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow> {
   final int contentId;
   final int? captureUtcMs;
   final String? captureLocal;
@@ -5980,80 +4830,37 @@ class MediaMetadataRow extends DataClass
   MediaMetadataCompanion toCompanion(bool nullToAbsent) {
     return MediaMetadataCompanion(
       contentId: Value(contentId),
-      captureUtcMs: captureUtcMs == null && nullToAbsent
-          ? const Value.absent()
-          : Value(captureUtcMs),
-      captureLocal: captureLocal == null && nullToAbsent
-          ? const Value.absent()
-          : Value(captureLocal),
-      tzOffsetMin: tzOffsetMin == null && nullToAbsent
-          ? const Value.absent()
-          : Value(tzOffsetMin),
-      dateSource: dateSource == null && nullToAbsent
-          ? const Value.absent()
-          : Value(dateSource),
-      dateConfidence: dateConfidence == null && nullToAbsent
-          ? const Value.absent()
-          : Value(dateConfidence),
+      captureUtcMs: captureUtcMs == null && nullToAbsent ? const Value.absent() : Value(captureUtcMs),
+      captureLocal: captureLocal == null && nullToAbsent ? const Value.absent() : Value(captureLocal),
+      tzOffsetMin: tzOffsetMin == null && nullToAbsent ? const Value.absent() : Value(tzOffsetMin),
+      dateSource: dateSource == null && nullToAbsent ? const Value.absent() : Value(dateSource),
+      dateConfidence: dateConfidence == null && nullToAbsent ? const Value.absent() : Value(dateConfidence),
       dateConflict: Value(dateConflict),
-      candidatesJson: candidatesJson == null && nullToAbsent
-          ? const Value.absent()
-          : Value(candidatesJson),
+      candidatesJson: candidatesJson == null && nullToAbsent ? const Value.absent() : Value(candidatesJson),
       make: make == null && nullToAbsent ? const Value.absent() : Value(make),
-      model: model == null && nullToAbsent
-          ? const Value.absent()
-          : Value(model),
+      model: model == null && nullToAbsent ? const Value.absent() : Value(model),
       lens: lens == null && nullToAbsent ? const Value.absent() : Value(lens),
       iso: iso == null && nullToAbsent ? const Value.absent() : Value(iso),
-      aperture: aperture == null && nullToAbsent
-          ? const Value.absent()
-          : Value(aperture),
-      exposureS: exposureS == null && nullToAbsent
-          ? const Value.absent()
-          : Value(exposureS),
-      focalMm: focalMm == null && nullToAbsent
-          ? const Value.absent()
-          : Value(focalMm),
-      width: width == null && nullToAbsent
-          ? const Value.absent()
-          : Value(width),
-      height: height == null && nullToAbsent
-          ? const Value.absent()
-          : Value(height),
-      orientation: orientation == null && nullToAbsent
-          ? const Value.absent()
-          : Value(orientation),
+      aperture: aperture == null && nullToAbsent ? const Value.absent() : Value(aperture),
+      exposureS: exposureS == null && nullToAbsent ? const Value.absent() : Value(exposureS),
+      focalMm: focalMm == null && nullToAbsent ? const Value.absent() : Value(focalMm),
+      width: width == null && nullToAbsent ? const Value.absent() : Value(width),
+      height: height == null && nullToAbsent ? const Value.absent() : Value(height),
+      orientation: orientation == null && nullToAbsent ? const Value.absent() : Value(orientation),
       lat: lat == null && nullToAbsent ? const Value.absent() : Value(lat),
       lon: lon == null && nullToAbsent ? const Value.absent() : Value(lon),
-      durationMs: durationMs == null && nullToAbsent
-          ? const Value.absent()
-          : Value(durationMs),
+      durationMs: durationMs == null && nullToAbsent ? const Value.absent() : Value(durationMs),
       fps: fps == null && nullToAbsent ? const Value.absent() : Value(fps),
-      videoCodec: videoCodec == null && nullToAbsent
-          ? const Value.absent()
-          : Value(videoCodec),
-      audioCodec: audioCodec == null && nullToAbsent
-          ? const Value.absent()
-          : Value(audioCodec),
-      bitrate: bitrate == null && nullToAbsent
-          ? const Value.absent()
-          : Value(bitrate),
-      software: software == null && nullToAbsent
-          ? const Value.absent()
-          : Value(software),
-      extractor: extractor == null && nullToAbsent
-          ? const Value.absent()
-          : Value(extractor),
-      extractedAt: extractedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(extractedAt),
+      videoCodec: videoCodec == null && nullToAbsent ? const Value.absent() : Value(videoCodec),
+      audioCodec: audioCodec == null && nullToAbsent ? const Value.absent() : Value(audioCodec),
+      bitrate: bitrate == null && nullToAbsent ? const Value.absent() : Value(bitrate),
+      software: software == null && nullToAbsent ? const Value.absent() : Value(software),
+      extractor: extractor == null && nullToAbsent ? const Value.absent() : Value(extractor),
+      extractedAt: extractedAt == null && nullToAbsent ? const Value.absent() : Value(extractedAt),
     );
   }
 
-  factory MediaMetadataRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory MediaMetadataRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MediaMetadataRow(
       contentId: serializer.fromJson<int>(json['content_id']),
@@ -6156,13 +4963,9 @@ class MediaMetadataRow extends DataClass
     captureLocal: captureLocal.present ? captureLocal.value : this.captureLocal,
     tzOffsetMin: tzOffsetMin.present ? tzOffsetMin.value : this.tzOffsetMin,
     dateSource: dateSource.present ? dateSource.value : this.dateSource,
-    dateConfidence: dateConfidence.present
-        ? dateConfidence.value
-        : this.dateConfidence,
+    dateConfidence: dateConfidence.present ? dateConfidence.value : this.dateConfidence,
     dateConflict: dateConflict ?? this.dateConflict,
-    candidatesJson: candidatesJson.present
-        ? candidatesJson.value
-        : this.candidatesJson,
+    candidatesJson: candidatesJson.present ? candidatesJson.value : this.candidatesJson,
     make: make.present ? make.value : this.make,
     model: model.present ? model.value : this.model,
     lens: lens.present ? lens.value : this.lens,
@@ -6187,27 +4990,13 @@ class MediaMetadataRow extends DataClass
   MediaMetadataRow copyWithCompanion(MediaMetadataCompanion data) {
     return MediaMetadataRow(
       contentId: data.contentId.present ? data.contentId.value : this.contentId,
-      captureUtcMs: data.captureUtcMs.present
-          ? data.captureUtcMs.value
-          : this.captureUtcMs,
-      captureLocal: data.captureLocal.present
-          ? data.captureLocal.value
-          : this.captureLocal,
-      tzOffsetMin: data.tzOffsetMin.present
-          ? data.tzOffsetMin.value
-          : this.tzOffsetMin,
-      dateSource: data.dateSource.present
-          ? data.dateSource.value
-          : this.dateSource,
-      dateConfidence: data.dateConfidence.present
-          ? data.dateConfidence.value
-          : this.dateConfidence,
-      dateConflict: data.dateConflict.present
-          ? data.dateConflict.value
-          : this.dateConflict,
-      candidatesJson: data.candidatesJson.present
-          ? data.candidatesJson.value
-          : this.candidatesJson,
+      captureUtcMs: data.captureUtcMs.present ? data.captureUtcMs.value : this.captureUtcMs,
+      captureLocal: data.captureLocal.present ? data.captureLocal.value : this.captureLocal,
+      tzOffsetMin: data.tzOffsetMin.present ? data.tzOffsetMin.value : this.tzOffsetMin,
+      dateSource: data.dateSource.present ? data.dateSource.value : this.dateSource,
+      dateConfidence: data.dateConfidence.present ? data.dateConfidence.value : this.dateConfidence,
+      dateConflict: data.dateConflict.present ? data.dateConflict.value : this.dateConflict,
+      candidatesJson: data.candidatesJson.present ? data.candidatesJson.value : this.candidatesJson,
       make: data.make.present ? data.make.value : this.make,
       model: data.model.present ? data.model.value : this.model,
       lens: data.lens.present ? data.lens.value : this.lens,
@@ -6217,27 +5006,17 @@ class MediaMetadataRow extends DataClass
       focalMm: data.focalMm.present ? data.focalMm.value : this.focalMm,
       width: data.width.present ? data.width.value : this.width,
       height: data.height.present ? data.height.value : this.height,
-      orientation: data.orientation.present
-          ? data.orientation.value
-          : this.orientation,
+      orientation: data.orientation.present ? data.orientation.value : this.orientation,
       lat: data.lat.present ? data.lat.value : this.lat,
       lon: data.lon.present ? data.lon.value : this.lon,
-      durationMs: data.durationMs.present
-          ? data.durationMs.value
-          : this.durationMs,
+      durationMs: data.durationMs.present ? data.durationMs.value : this.durationMs,
       fps: data.fps.present ? data.fps.value : this.fps,
-      videoCodec: data.videoCodec.present
-          ? data.videoCodec.value
-          : this.videoCodec,
-      audioCodec: data.audioCodec.present
-          ? data.audioCodec.value
-          : this.audioCodec,
+      videoCodec: data.videoCodec.present ? data.videoCodec.value : this.videoCodec,
+      audioCodec: data.audioCodec.present ? data.audioCodec.value : this.audioCodec,
       bitrate: data.bitrate.present ? data.bitrate.value : this.bitrate,
       software: data.software.present ? data.software.value : this.software,
       extractor: data.extractor.present ? data.extractor.value : this.extractor,
-      extractedAt: data.extractedAt.present
-          ? data.extractedAt.value
-          : this.extractedAt,
+      extractedAt: data.extractedAt.present ? data.extractedAt.value : this.extractedAt,
     );
   }
 
@@ -6680,8 +5459,7 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
   }
 }
 
-class DateCorrections extends Table
-    with TableInfo<DateCorrections, DateCorrectionRow> {
+class DateCorrections extends Table with TableInfo<DateCorrections, DateCorrectionRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -6695,9 +5473,7 @@ class DateCorrections extends Table
     requiredDuringInsert: false,
     $customConstraints: 'NOT NULL PRIMARY KEY',
   );
-  static const VerificationMeta _contentIdMeta = const VerificationMeta(
-    'contentId',
-  );
+  static const VerificationMeta _contentIdMeta = const VerificationMeta('contentId');
   late final GeneratedColumn<int> contentId = GeneratedColumn<int>(
     'content_id',
     aliasedName,
@@ -6706,9 +5482,7 @@ class DateCorrections extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL REFERENCES contents(id)',
   );
-  static const VerificationMeta _captureLocalMeta = const VerificationMeta(
-    'captureLocal',
-  );
+  static const VerificationMeta _captureLocalMeta = const VerificationMeta('captureLocal');
   late final GeneratedColumn<String> captureLocal = GeneratedColumn<String>(
     'capture_local',
     aliasedName,
@@ -6717,9 +5491,7 @@ class DateCorrections extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _tzOffsetMinMeta = const VerificationMeta(
-    'tzOffsetMin',
-  );
+  static const VerificationMeta _tzOffsetMinMeta = const VerificationMeta('tzOffsetMin');
   late final GeneratedColumn<int> tzOffsetMin = GeneratedColumn<int>(
     'tz_offset_min',
     aliasedName,
@@ -6737,9 +5509,7 @@ class DateCorrections extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
     'created_at',
     aliasedName,
@@ -6748,9 +5518,7 @@ class DateCorrections extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _supersededAtMeta = const VerificationMeta(
-    'supersededAt',
-  );
+  static const VerificationMeta _supersededAtMeta = const VerificationMeta('supersededAt');
   late final GeneratedColumn<int> supersededAt = GeneratedColumn<int>(
     'superseded_at',
     aliasedName,
@@ -6760,80 +5528,42 @@ class DateCorrections extends Table
     $customConstraints: '',
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    contentId,
-    captureLocal,
-    tzOffsetMin,
-    note,
-    createdAt,
-    supersededAt,
-  ];
+  List<GeneratedColumn> get $columns => [id, contentId, captureLocal, tzOffsetMin, note, createdAt, supersededAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'date_corrections';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<DateCorrectionRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<DateCorrectionRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('content_id')) {
-      context.handle(
-        _contentIdMeta,
-        contentId.isAcceptableOrUnknown(data['content_id']!, _contentIdMeta),
-      );
+      context.handle(_contentIdMeta, contentId.isAcceptableOrUnknown(data['content_id']!, _contentIdMeta));
     } else if (isInserting) {
       context.missing(_contentIdMeta);
     }
     if (data.containsKey('capture_local')) {
-      context.handle(
-        _captureLocalMeta,
-        captureLocal.isAcceptableOrUnknown(
-          data['capture_local']!,
-          _captureLocalMeta,
-        ),
-      );
+      context.handle(_captureLocalMeta, captureLocal.isAcceptableOrUnknown(data['capture_local']!, _captureLocalMeta));
     } else if (isInserting) {
       context.missing(_captureLocalMeta);
     }
     if (data.containsKey('tz_offset_min')) {
-      context.handle(
-        _tzOffsetMinMeta,
-        tzOffsetMin.isAcceptableOrUnknown(
-          data['tz_offset_min']!,
-          _tzOffsetMinMeta,
-        ),
-      );
+      context.handle(_tzOffsetMinMeta, tzOffsetMin.isAcceptableOrUnknown(data['tz_offset_min']!, _tzOffsetMinMeta));
     }
     if (data.containsKey('note')) {
-      context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
+      context.handle(_noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
     if (data.containsKey('superseded_at')) {
-      context.handle(
-        _supersededAtMeta,
-        supersededAt.isAcceptableOrUnknown(
-          data['superseded_at']!,
-          _supersededAtMeta,
-        ),
-      );
+      context.handle(_supersededAtMeta, supersededAt.isAcceptableOrUnknown(data['superseded_at']!, _supersededAtMeta));
     }
     return context;
   }
@@ -6844,34 +5574,13 @@ class DateCorrections extends Table
   DateCorrectionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return DateCorrectionRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      contentId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}content_id'],
-      )!,
-      captureLocal: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}capture_local'],
-      )!,
-      tzOffsetMin: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}tz_offset_min'],
-      ),
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      ),
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}created_at'],
-      )!,
-      supersededAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}superseded_at'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      contentId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}content_id'])!,
+      captureLocal: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}capture_local'])!,
+      tzOffsetMin: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}tz_offset_min']),
+      note: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}note']),
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      supersededAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}superseded_at']),
     );
   }
 
@@ -6884,8 +5593,7 @@ class DateCorrections extends Table
   bool get dontWriteConstraints => true;
 }
 
-class DateCorrectionRow extends DataClass
-    implements Insertable<DateCorrectionRow> {
+class DateCorrectionRow extends DataClass implements Insertable<DateCorrectionRow> {
   final int id;
   final int contentId;
   final String captureLocal;
@@ -6926,21 +5634,14 @@ class DateCorrectionRow extends DataClass
       id: Value(id),
       contentId: Value(contentId),
       captureLocal: Value(captureLocal),
-      tzOffsetMin: tzOffsetMin == null && nullToAbsent
-          ? const Value.absent()
-          : Value(tzOffsetMin),
+      tzOffsetMin: tzOffsetMin == null && nullToAbsent ? const Value.absent() : Value(tzOffsetMin),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       createdAt: Value(createdAt),
-      supersededAt: supersededAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(supersededAt),
+      supersededAt: supersededAt == null && nullToAbsent ? const Value.absent() : Value(supersededAt),
     );
   }
 
-  factory DateCorrectionRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory DateCorrectionRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return DateCorrectionRow(
       id: serializer.fromJson<int>(json['id']),
@@ -6987,17 +5688,11 @@ class DateCorrectionRow extends DataClass
     return DateCorrectionRow(
       id: data.id.present ? data.id.value : this.id,
       contentId: data.contentId.present ? data.contentId.value : this.contentId,
-      captureLocal: data.captureLocal.present
-          ? data.captureLocal.value
-          : this.captureLocal,
-      tzOffsetMin: data.tzOffsetMin.present
-          ? data.tzOffsetMin.value
-          : this.tzOffsetMin,
+      captureLocal: data.captureLocal.present ? data.captureLocal.value : this.captureLocal,
+      tzOffsetMin: data.tzOffsetMin.present ? data.tzOffsetMin.value : this.tzOffsetMin,
       note: data.note.present ? data.note.value : this.note,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      supersededAt: data.supersededAt.present
-          ? data.supersededAt.value
-          : this.supersededAt,
+      supersededAt: data.supersededAt.present ? data.supersededAt.value : this.supersededAt,
     );
   }
 
@@ -7016,15 +5711,7 @@ class DateCorrectionRow extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    contentId,
-    captureLocal,
-    tzOffsetMin,
-    note,
-    createdAt,
-    supersededAt,
-  );
+  int get hashCode => Object.hash(id, contentId, captureLocal, tzOffsetMin, note, createdAt, supersededAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -7169,7 +5856,8 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL CHECK (kind IN (\'copy\', \'reorganize_move\', \'undo\', \'restore\', \'catalog_backup_copy\'))',
+    $customConstraints:
+        'NOT NULL CHECK (kind IN (\'copy\', \'reorganize_move\', \'undo\', \'restore\', \'catalog_backup_copy\'))',
   );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   late final GeneratedColumn<String> status = GeneratedColumn<String>(
@@ -7180,9 +5868,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL CHECK (status IN (\'planned\', \'confirmed\', \'running\', \'paused\', \'completed\', \'completed_with_errors\', \'cancelled\', \'needs_attention\'))',
   );
-  static const VerificationMeta _destSourceIdMeta = const VerificationMeta(
-    'destSourceId',
-  );
+  static const VerificationMeta _destSourceIdMeta = const VerificationMeta('destSourceId');
   late final GeneratedColumn<String> destSourceId = GeneratedColumn<String>(
     'dest_source_id',
     aliasedName,
@@ -7191,9 +5877,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     requiredDuringInsert: false,
     $customConstraints: 'REFERENCES sources(id)',
   );
-  static const VerificationMeta _destRootRelMeta = const VerificationMeta(
-    'destRootRel',
-  );
+  static const VerificationMeta _destRootRelMeta = const VerificationMeta('destRootRel');
   late final GeneratedColumn<String> destRootRel = GeneratedColumn<String>(
     'dest_root_rel',
     aliasedName,
@@ -7202,9 +5886,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _templateMeta = const VerificationMeta(
-    'template',
-  );
+  static const VerificationMeta _templateMeta = const VerificationMeta('template');
   late final GeneratedColumn<String> template = GeneratedColumn<String>(
     'template',
     aliasedName,
@@ -7213,9 +5895,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _conflictPolicyMeta = const VerificationMeta(
-    'conflictPolicy',
-  );
+  static const VerificationMeta _conflictPolicyMeta = const VerificationMeta('conflictPolicy');
   late final GeneratedColumn<String> conflictPolicy = GeneratedColumn<String>(
     'conflict_policy',
     aliasedName,
@@ -7224,9 +5904,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     requiredDuringInsert: false,
     $customConstraints: 'CHECK (conflict_policy IN (\'suffix\', \'ask\'))',
   );
-  static const VerificationMeta _paramsJsonMeta = const VerificationMeta(
-    'paramsJson',
-  );
+  static const VerificationMeta _paramsJsonMeta = const VerificationMeta('paramsJson');
   late final GeneratedColumn<String> paramsJson = GeneratedColumn<String>(
     'params_json',
     aliasedName,
@@ -7235,9 +5913,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _summaryJsonMeta = const VerificationMeta(
-    'summaryJson',
-  );
+  static const VerificationMeta _summaryJsonMeta = const VerificationMeta('summaryJson');
   late final GeneratedColumn<String> summaryJson = GeneratedColumn<String>(
     'summary_json',
     aliasedName,
@@ -7255,9 +5931,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     requiredDuringInsert: false,
     $customConstraints: 'REFERENCES operations(id)',
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
     'created_at',
     aliasedName,
@@ -7266,9 +5940,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _confirmedAtMeta = const VerificationMeta(
-    'confirmedAt',
-  );
+  static const VerificationMeta _confirmedAtMeta = const VerificationMeta('confirmedAt');
   late final GeneratedColumn<int> confirmedAt = GeneratedColumn<int>(
     'confirmed_at',
     aliasedName,
@@ -7277,9 +5949,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _startedAtMeta = const VerificationMeta(
-    'startedAt',
-  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta('startedAt');
   late final GeneratedColumn<int> startedAt = GeneratedColumn<int>(
     'started_at',
     aliasedName,
@@ -7288,9 +5958,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _finishedAtMeta = const VerificationMeta(
-    'finishedAt',
-  );
+  static const VerificationMeta _finishedAtMeta = const VerificationMeta('finishedAt');
   late final GeneratedColumn<int> finishedAt = GeneratedColumn<int>(
     'finished_at',
     aliasedName,
@@ -7322,10 +5990,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
   String get actualTableName => $name;
   static const String $name = 'operations';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<OperationRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<OperationRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -7334,103 +5999,52 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
       context.missing(_idMeta);
     }
     if (data.containsKey('kind')) {
-      context.handle(
-        _kindMeta,
-        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
-      );
+      context.handle(_kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
     } else if (isInserting) {
       context.missing(_kindMeta);
     }
     if (data.containsKey('status')) {
-      context.handle(
-        _statusMeta,
-        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
-      );
+      context.handle(_statusMeta, status.isAcceptableOrUnknown(data['status']!, _statusMeta));
     } else if (isInserting) {
       context.missing(_statusMeta);
     }
     if (data.containsKey('dest_source_id')) {
-      context.handle(
-        _destSourceIdMeta,
-        destSourceId.isAcceptableOrUnknown(
-          data['dest_source_id']!,
-          _destSourceIdMeta,
-        ),
-      );
+      context.handle(_destSourceIdMeta, destSourceId.isAcceptableOrUnknown(data['dest_source_id']!, _destSourceIdMeta));
     }
     if (data.containsKey('dest_root_rel')) {
-      context.handle(
-        _destRootRelMeta,
-        destRootRel.isAcceptableOrUnknown(
-          data['dest_root_rel']!,
-          _destRootRelMeta,
-        ),
-      );
+      context.handle(_destRootRelMeta, destRootRel.isAcceptableOrUnknown(data['dest_root_rel']!, _destRootRelMeta));
     }
     if (data.containsKey('template')) {
-      context.handle(
-        _templateMeta,
-        template.isAcceptableOrUnknown(data['template']!, _templateMeta),
-      );
+      context.handle(_templateMeta, template.isAcceptableOrUnknown(data['template']!, _templateMeta));
     }
     if (data.containsKey('conflict_policy')) {
       context.handle(
         _conflictPolicyMeta,
-        conflictPolicy.isAcceptableOrUnknown(
-          data['conflict_policy']!,
-          _conflictPolicyMeta,
-        ),
+        conflictPolicy.isAcceptableOrUnknown(data['conflict_policy']!, _conflictPolicyMeta),
       );
     }
     if (data.containsKey('params_json')) {
-      context.handle(
-        _paramsJsonMeta,
-        paramsJson.isAcceptableOrUnknown(data['params_json']!, _paramsJsonMeta),
-      );
+      context.handle(_paramsJsonMeta, paramsJson.isAcceptableOrUnknown(data['params_json']!, _paramsJsonMeta));
     }
     if (data.containsKey('summary_json')) {
-      context.handle(
-        _summaryJsonMeta,
-        summaryJson.isAcceptableOrUnknown(
-          data['summary_json']!,
-          _summaryJsonMeta,
-        ),
-      );
+      context.handle(_summaryJsonMeta, summaryJson.isAcceptableOrUnknown(data['summary_json']!, _summaryJsonMeta));
     }
     if (data.containsKey('undo_of')) {
-      context.handle(
-        _undoOfMeta,
-        undoOf.isAcceptableOrUnknown(data['undo_of']!, _undoOfMeta),
-      );
+      context.handle(_undoOfMeta, undoOf.isAcceptableOrUnknown(data['undo_of']!, _undoOfMeta));
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
     if (data.containsKey('confirmed_at')) {
-      context.handle(
-        _confirmedAtMeta,
-        confirmedAt.isAcceptableOrUnknown(
-          data['confirmed_at']!,
-          _confirmedAtMeta,
-        ),
-      );
+      context.handle(_confirmedAtMeta, confirmedAt.isAcceptableOrUnknown(data['confirmed_at']!, _confirmedAtMeta));
     }
     if (data.containsKey('started_at')) {
-      context.handle(
-        _startedAtMeta,
-        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
-      );
+      context.handle(_startedAtMeta, startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta));
     }
     if (data.containsKey('finished_at')) {
-      context.handle(
-        _finishedAtMeta,
-        finishedAt.isAcceptableOrUnknown(data['finished_at']!, _finishedAtMeta),
-      );
+      context.handle(_finishedAtMeta, finishedAt.isAcceptableOrUnknown(data['finished_at']!, _finishedAtMeta));
     }
     return context;
   }
@@ -7441,62 +6055,20 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
   OperationRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return OperationRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      kind: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}kind'],
-      )!,
-      status: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}status'],
-      )!,
-      destSourceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}dest_source_id'],
-      ),
-      destRootRel: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}dest_root_rel'],
-      ),
-      template: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}template'],
-      ),
-      conflictPolicy: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}conflict_policy'],
-      ),
-      paramsJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}params_json'],
-      ),
-      summaryJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}summary_json'],
-      ),
-      undoOf: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}undo_of'],
-      ),
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}created_at'],
-      )!,
-      confirmedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}confirmed_at'],
-      ),
-      startedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}started_at'],
-      ),
-      finishedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}finished_at'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      kind: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
+      status: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      destSourceId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}dest_source_id']),
+      destRootRel: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}dest_root_rel']),
+      template: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}template']),
+      conflictPolicy: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}conflict_policy']),
+      paramsJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}params_json']),
+      summaryJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}summary_json']),
+      undoOf: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}undo_of']),
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      confirmedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}confirmed_at']),
+      startedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}started_at']),
+      finishedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}finished_at']),
     );
   }
 
@@ -7585,44 +6157,21 @@ class OperationRow extends DataClass implements Insertable<OperationRow> {
       id: Value(id),
       kind: Value(kind),
       status: Value(status),
-      destSourceId: destSourceId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(destSourceId),
-      destRootRel: destRootRel == null && nullToAbsent
-          ? const Value.absent()
-          : Value(destRootRel),
-      template: template == null && nullToAbsent
-          ? const Value.absent()
-          : Value(template),
-      conflictPolicy: conflictPolicy == null && nullToAbsent
-          ? const Value.absent()
-          : Value(conflictPolicy),
-      paramsJson: paramsJson == null && nullToAbsent
-          ? const Value.absent()
-          : Value(paramsJson),
-      summaryJson: summaryJson == null && nullToAbsent
-          ? const Value.absent()
-          : Value(summaryJson),
-      undoOf: undoOf == null && nullToAbsent
-          ? const Value.absent()
-          : Value(undoOf),
+      destSourceId: destSourceId == null && nullToAbsent ? const Value.absent() : Value(destSourceId),
+      destRootRel: destRootRel == null && nullToAbsent ? const Value.absent() : Value(destRootRel),
+      template: template == null && nullToAbsent ? const Value.absent() : Value(template),
+      conflictPolicy: conflictPolicy == null && nullToAbsent ? const Value.absent() : Value(conflictPolicy),
+      paramsJson: paramsJson == null && nullToAbsent ? const Value.absent() : Value(paramsJson),
+      summaryJson: summaryJson == null && nullToAbsent ? const Value.absent() : Value(summaryJson),
+      undoOf: undoOf == null && nullToAbsent ? const Value.absent() : Value(undoOf),
       createdAt: Value(createdAt),
-      confirmedAt: confirmedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(confirmedAt),
-      startedAt: startedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(startedAt),
-      finishedAt: finishedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(finishedAt),
+      confirmedAt: confirmedAt == null && nullToAbsent ? const Value.absent() : Value(confirmedAt),
+      startedAt: startedAt == null && nullToAbsent ? const Value.absent() : Value(startedAt),
+      finishedAt: finishedAt == null && nullToAbsent ? const Value.absent() : Value(finishedAt),
     );
   }
 
-  factory OperationRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory OperationRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return OperationRow(
       id: serializer.fromJson<String>(json['id']),
@@ -7684,9 +6233,7 @@ class OperationRow extends DataClass implements Insertable<OperationRow> {
     destSourceId: destSourceId.present ? destSourceId.value : this.destSourceId,
     destRootRel: destRootRel.present ? destRootRel.value : this.destRootRel,
     template: template.present ? template.value : this.template,
-    conflictPolicy: conflictPolicy.present
-        ? conflictPolicy.value
-        : this.conflictPolicy,
+    conflictPolicy: conflictPolicy.present ? conflictPolicy.value : this.conflictPolicy,
     paramsJson: paramsJson.present ? paramsJson.value : this.paramsJson,
     summaryJson: summaryJson.present ? summaryJson.value : this.summaryJson,
     undoOf: undoOf.present ? undoOf.value : this.undoOf,
@@ -7700,31 +6247,17 @@ class OperationRow extends DataClass implements Insertable<OperationRow> {
       id: data.id.present ? data.id.value : this.id,
       kind: data.kind.present ? data.kind.value : this.kind,
       status: data.status.present ? data.status.value : this.status,
-      destSourceId: data.destSourceId.present
-          ? data.destSourceId.value
-          : this.destSourceId,
-      destRootRel: data.destRootRel.present
-          ? data.destRootRel.value
-          : this.destRootRel,
+      destSourceId: data.destSourceId.present ? data.destSourceId.value : this.destSourceId,
+      destRootRel: data.destRootRel.present ? data.destRootRel.value : this.destRootRel,
       template: data.template.present ? data.template.value : this.template,
-      conflictPolicy: data.conflictPolicy.present
-          ? data.conflictPolicy.value
-          : this.conflictPolicy,
-      paramsJson: data.paramsJson.present
-          ? data.paramsJson.value
-          : this.paramsJson,
-      summaryJson: data.summaryJson.present
-          ? data.summaryJson.value
-          : this.summaryJson,
+      conflictPolicy: data.conflictPolicy.present ? data.conflictPolicy.value : this.conflictPolicy,
+      paramsJson: data.paramsJson.present ? data.paramsJson.value : this.paramsJson,
+      summaryJson: data.summaryJson.present ? data.summaryJson.value : this.summaryJson,
       undoOf: data.undoOf.present ? data.undoOf.value : this.undoOf,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      confirmedAt: data.confirmedAt.present
-          ? data.confirmedAt.value
-          : this.confirmedAt,
+      confirmedAt: data.confirmedAt.present ? data.confirmedAt.value : this.confirmedAt,
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
-      finishedAt: data.finishedAt.present
-          ? data.finishedAt.value
-          : this.finishedAt,
+      finishedAt: data.finishedAt.present ? data.finishedAt.value : this.finishedAt,
     );
   }
 
@@ -7985,8 +6518,7 @@ class OperationsCompanion extends UpdateCompanion<OperationRow> {
   }
 }
 
-class OperationItems extends Table
-    with TableInfo<OperationItems, OperationItemRow> {
+class OperationItems extends Table with TableInfo<OperationItems, OperationItemRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -8000,9 +6532,7 @@ class OperationItems extends Table
     requiredDuringInsert: false,
     $customConstraints: 'NOT NULL PRIMARY KEY',
   );
-  static const VerificationMeta _operationIdMeta = const VerificationMeta(
-    'operationId',
-  );
+  static const VerificationMeta _operationIdMeta = const VerificationMeta('operationId');
   late final GeneratedColumn<String> operationId = GeneratedColumn<String>(
     'operation_id',
     aliasedName,
@@ -8020,9 +6550,7 @@ class OperationItems extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _srcSourceIdMeta = const VerificationMeta(
-    'srcSourceId',
-  );
+  static const VerificationMeta _srcSourceIdMeta = const VerificationMeta('srcSourceId');
   late final GeneratedColumn<String> srcSourceId = GeneratedColumn<String>(
     'src_source_id',
     aliasedName,
@@ -8031,9 +6559,7 @@ class OperationItems extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL REFERENCES sources(id)',
   );
-  static const VerificationMeta _srcRelPathMeta = const VerificationMeta(
-    'srcRelPath',
-  );
+  static const VerificationMeta _srcRelPathMeta = const VerificationMeta('srcRelPath');
   late final GeneratedColumn<String> srcRelPath = GeneratedColumn<String>(
     'src_rel_path',
     aliasedName,
@@ -8042,9 +6568,7 @@ class OperationItems extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _srcInstanceIdMeta = const VerificationMeta(
-    'srcInstanceId',
-  );
+  static const VerificationMeta _srcInstanceIdMeta = const VerificationMeta('srcInstanceId');
   late final GeneratedColumn<int> srcInstanceId = GeneratedColumn<int>(
     'src_instance_id',
     aliasedName,
@@ -8053,9 +6577,7 @@ class OperationItems extends Table
     requiredDuringInsert: false,
     $customConstraints: 'REFERENCES file_instances(id)',
   );
-  static const VerificationMeta _expectedSizeMeta = const VerificationMeta(
-    'expectedSize',
-  );
+  static const VerificationMeta _expectedSizeMeta = const VerificationMeta('expectedSize');
   late final GeneratedColumn<int> expectedSize = GeneratedColumn<int>(
     'expected_size',
     aliasedName,
@@ -8064,21 +6586,16 @@ class OperationItems extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _expectedSha256Meta = const VerificationMeta(
-    'expectedSha256',
+  static const VerificationMeta _expectedSha256Meta = const VerificationMeta('expectedSha256');
+  late final GeneratedColumn<Uint8List> expectedSha256 = GeneratedColumn<Uint8List>(
+    'expected_sha256',
+    aliasedName,
+    true,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: false,
+    $customConstraints: '',
   );
-  late final GeneratedColumn<Uint8List> expectedSha256 =
-      GeneratedColumn<Uint8List>(
-        'expected_sha256',
-        aliasedName,
-        true,
-        type: DriftSqlType.blob,
-        requiredDuringInsert: false,
-        $customConstraints: '',
-      );
-  static const VerificationMeta _dstSourceIdMeta = const VerificationMeta(
-    'dstSourceId',
-  );
+  static const VerificationMeta _dstSourceIdMeta = const VerificationMeta('dstSourceId');
   late final GeneratedColumn<String> dstSourceId = GeneratedColumn<String>(
     'dst_source_id',
     aliasedName,
@@ -8087,21 +6604,16 @@ class OperationItems extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL REFERENCES sources(id)',
   );
-  static const VerificationMeta _dstRelPathPlannedMeta = const VerificationMeta(
-    'dstRelPathPlanned',
+  static const VerificationMeta _dstRelPathPlannedMeta = const VerificationMeta('dstRelPathPlanned');
+  late final GeneratedColumn<String> dstRelPathPlanned = GeneratedColumn<String>(
+    'dst_rel_path_planned',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
-  late final GeneratedColumn<String> dstRelPathPlanned =
-      GeneratedColumn<String>(
-        'dst_rel_path_planned',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-        $customConstraints: 'NOT NULL',
-      );
-  static const VerificationMeta _dstRelPathFinalMeta = const VerificationMeta(
-    'dstRelPathFinal',
-  );
+  static const VerificationMeta _dstRelPathFinalMeta = const VerificationMeta('dstRelPathFinal');
   late final GeneratedColumn<String> dstRelPathFinal = GeneratedColumn<String>(
     'dst_rel_path_final',
     aliasedName,
@@ -8110,9 +6622,7 @@ class OperationItems extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _tmpRelPathMeta = const VerificationMeta(
-    'tmpRelPath',
-  );
+  static const VerificationMeta _tmpRelPathMeta = const VerificationMeta('tmpRelPath');
   late final GeneratedColumn<String> tmpRelPath = GeneratedColumn<String>(
     'tmp_rel_path',
     aliasedName,
@@ -8121,9 +6631,7 @@ class OperationItems extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _originalNameMeta = const VerificationMeta(
-    'originalName',
-  );
+  static const VerificationMeta _originalNameMeta = const VerificationMeta('originalName');
   late final GeneratedColumn<String> originalName = GeneratedColumn<String>(
     'original_name',
     aliasedName,
@@ -8141,9 +6649,7 @@ class OperationItems extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL CHECK (state IN (\'pending\', \'copying\', \'copied\', \'verifying\', \'verified\', \'publishing\', \'published\', \'skipped_identical\', \'failed\', \'needs_attention\', \'undone\'))',
   );
-  static const VerificationMeta _srcSha256Meta = const VerificationMeta(
-    'srcSha256',
-  );
+  static const VerificationMeta _srcSha256Meta = const VerificationMeta('srcSha256');
   late final GeneratedColumn<Uint8List> srcSha256 = GeneratedColumn<Uint8List>(
     'src_sha256',
     aliasedName,
@@ -8152,9 +6658,7 @@ class OperationItems extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _dstSha256Meta = const VerificationMeta(
-    'dstSha256',
-  );
+  static const VerificationMeta _dstSha256Meta = const VerificationMeta('dstSha256');
   late final GeneratedColumn<Uint8List> dstSha256 = GeneratedColumn<Uint8List>(
     'dst_sha256',
     aliasedName,
@@ -8163,9 +6667,7 @@ class OperationItems extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _bytesCopiedMeta = const VerificationMeta(
-    'bytesCopied',
-  );
+  static const VerificationMeta _bytesCopiedMeta = const VerificationMeta('bytesCopied');
   late final GeneratedColumn<int> bytesCopied = GeneratedColumn<int>(
     'bytes_copied',
     aliasedName,
@@ -8175,9 +6677,7 @@ class OperationItems extends Table
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
-  static const VerificationMeta _attemptsMeta = const VerificationMeta(
-    'attempts',
-  );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta('attempts');
   late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
     'attempts',
     aliasedName,
@@ -8187,9 +6687,7 @@ class OperationItems extends Table
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
-  static const VerificationMeta _lastErrorCodeMeta = const VerificationMeta(
-    'lastErrorCode',
-  );
+  static const VerificationMeta _lastErrorCodeMeta = const VerificationMeta('lastErrorCode');
   late final GeneratedColumn<String> lastErrorCode = GeneratedColumn<String>(
     'last_error_code',
     aliasedName,
@@ -8198,9 +6696,7 @@ class OperationItems extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _lastErrorMessageMeta = const VerificationMeta(
-    'lastErrorMessage',
-  );
+  static const VerificationMeta _lastErrorMessageMeta = const VerificationMeta('lastErrorMessage');
   late final GeneratedColumn<String> lastErrorMessage = GeneratedColumn<String>(
     'last_error_message',
     aliasedName,
@@ -8209,9 +6705,7 @@ class OperationItems extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -8250,103 +6744,58 @@ class OperationItems extends Table
   String get actualTableName => $name;
   static const String $name = 'operation_items';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<OperationItemRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<OperationItemRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('operation_id')) {
-      context.handle(
-        _operationIdMeta,
-        operationId.isAcceptableOrUnknown(
-          data['operation_id']!,
-          _operationIdMeta,
-        ),
-      );
+      context.handle(_operationIdMeta, operationId.isAcceptableOrUnknown(data['operation_id']!, _operationIdMeta));
     } else if (isInserting) {
       context.missing(_operationIdMeta);
     }
     if (data.containsKey('seq')) {
-      context.handle(
-        _seqMeta,
-        seq.isAcceptableOrUnknown(data['seq']!, _seqMeta),
-      );
+      context.handle(_seqMeta, seq.isAcceptableOrUnknown(data['seq']!, _seqMeta));
     } else if (isInserting) {
       context.missing(_seqMeta);
     }
     if (data.containsKey('src_source_id')) {
-      context.handle(
-        _srcSourceIdMeta,
-        srcSourceId.isAcceptableOrUnknown(
-          data['src_source_id']!,
-          _srcSourceIdMeta,
-        ),
-      );
+      context.handle(_srcSourceIdMeta, srcSourceId.isAcceptableOrUnknown(data['src_source_id']!, _srcSourceIdMeta));
     } else if (isInserting) {
       context.missing(_srcSourceIdMeta);
     }
     if (data.containsKey('src_rel_path')) {
-      context.handle(
-        _srcRelPathMeta,
-        srcRelPath.isAcceptableOrUnknown(
-          data['src_rel_path']!,
-          _srcRelPathMeta,
-        ),
-      );
+      context.handle(_srcRelPathMeta, srcRelPath.isAcceptableOrUnknown(data['src_rel_path']!, _srcRelPathMeta));
     } else if (isInserting) {
       context.missing(_srcRelPathMeta);
     }
     if (data.containsKey('src_instance_id')) {
       context.handle(
         _srcInstanceIdMeta,
-        srcInstanceId.isAcceptableOrUnknown(
-          data['src_instance_id']!,
-          _srcInstanceIdMeta,
-        ),
+        srcInstanceId.isAcceptableOrUnknown(data['src_instance_id']!, _srcInstanceIdMeta),
       );
     }
     if (data.containsKey('expected_size')) {
-      context.handle(
-        _expectedSizeMeta,
-        expectedSize.isAcceptableOrUnknown(
-          data['expected_size']!,
-          _expectedSizeMeta,
-        ),
-      );
+      context.handle(_expectedSizeMeta, expectedSize.isAcceptableOrUnknown(data['expected_size']!, _expectedSizeMeta));
     } else if (isInserting) {
       context.missing(_expectedSizeMeta);
     }
     if (data.containsKey('expected_sha256')) {
       context.handle(
         _expectedSha256Meta,
-        expectedSha256.isAcceptableOrUnknown(
-          data['expected_sha256']!,
-          _expectedSha256Meta,
-        ),
+        expectedSha256.isAcceptableOrUnknown(data['expected_sha256']!, _expectedSha256Meta),
       );
     }
     if (data.containsKey('dst_source_id')) {
-      context.handle(
-        _dstSourceIdMeta,
-        dstSourceId.isAcceptableOrUnknown(
-          data['dst_source_id']!,
-          _dstSourceIdMeta,
-        ),
-      );
+      context.handle(_dstSourceIdMeta, dstSourceId.isAcceptableOrUnknown(data['dst_source_id']!, _dstSourceIdMeta));
     } else if (isInserting) {
       context.missing(_dstSourceIdMeta);
     }
     if (data.containsKey('dst_rel_path_planned')) {
       context.handle(
         _dstRelPathPlannedMeta,
-        dstRelPathPlanned.isAcceptableOrUnknown(
-          data['dst_rel_path_planned']!,
-          _dstRelPathPlannedMeta,
-        ),
+        dstRelPathPlanned.isAcceptableOrUnknown(data['dst_rel_path_planned']!, _dstRelPathPlannedMeta),
       );
     } else if (isInserting) {
       context.missing(_dstRelPathPlannedMeta);
@@ -8354,88 +6803,46 @@ class OperationItems extends Table
     if (data.containsKey('dst_rel_path_final')) {
       context.handle(
         _dstRelPathFinalMeta,
-        dstRelPathFinal.isAcceptableOrUnknown(
-          data['dst_rel_path_final']!,
-          _dstRelPathFinalMeta,
-        ),
+        dstRelPathFinal.isAcceptableOrUnknown(data['dst_rel_path_final']!, _dstRelPathFinalMeta),
       );
     }
     if (data.containsKey('tmp_rel_path')) {
-      context.handle(
-        _tmpRelPathMeta,
-        tmpRelPath.isAcceptableOrUnknown(
-          data['tmp_rel_path']!,
-          _tmpRelPathMeta,
-        ),
-      );
+      context.handle(_tmpRelPathMeta, tmpRelPath.isAcceptableOrUnknown(data['tmp_rel_path']!, _tmpRelPathMeta));
     }
     if (data.containsKey('original_name')) {
-      context.handle(
-        _originalNameMeta,
-        originalName.isAcceptableOrUnknown(
-          data['original_name']!,
-          _originalNameMeta,
-        ),
-      );
+      context.handle(_originalNameMeta, originalName.isAcceptableOrUnknown(data['original_name']!, _originalNameMeta));
     }
     if (data.containsKey('state')) {
-      context.handle(
-        _stateMeta,
-        state.isAcceptableOrUnknown(data['state']!, _stateMeta),
-      );
+      context.handle(_stateMeta, state.isAcceptableOrUnknown(data['state']!, _stateMeta));
     } else if (isInserting) {
       context.missing(_stateMeta);
     }
     if (data.containsKey('src_sha256')) {
-      context.handle(
-        _srcSha256Meta,
-        srcSha256.isAcceptableOrUnknown(data['src_sha256']!, _srcSha256Meta),
-      );
+      context.handle(_srcSha256Meta, srcSha256.isAcceptableOrUnknown(data['src_sha256']!, _srcSha256Meta));
     }
     if (data.containsKey('dst_sha256')) {
-      context.handle(
-        _dstSha256Meta,
-        dstSha256.isAcceptableOrUnknown(data['dst_sha256']!, _dstSha256Meta),
-      );
+      context.handle(_dstSha256Meta, dstSha256.isAcceptableOrUnknown(data['dst_sha256']!, _dstSha256Meta));
     }
     if (data.containsKey('bytes_copied')) {
-      context.handle(
-        _bytesCopiedMeta,
-        bytesCopied.isAcceptableOrUnknown(
-          data['bytes_copied']!,
-          _bytesCopiedMeta,
-        ),
-      );
+      context.handle(_bytesCopiedMeta, bytesCopied.isAcceptableOrUnknown(data['bytes_copied']!, _bytesCopiedMeta));
     }
     if (data.containsKey('attempts')) {
-      context.handle(
-        _attemptsMeta,
-        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
-      );
+      context.handle(_attemptsMeta, attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta));
     }
     if (data.containsKey('last_error_code')) {
       context.handle(
         _lastErrorCodeMeta,
-        lastErrorCode.isAcceptableOrUnknown(
-          data['last_error_code']!,
-          _lastErrorCodeMeta,
-        ),
+        lastErrorCode.isAcceptableOrUnknown(data['last_error_code']!, _lastErrorCodeMeta),
       );
     }
     if (data.containsKey('last_error_message')) {
       context.handle(
         _lastErrorMessageMeta,
-        lastErrorMessage.isAcceptableOrUnknown(
-          data['last_error_message']!,
-          _lastErrorMessageMeta,
-        ),
+        lastErrorMessage.isAcceptableOrUnknown(data['last_error_message']!, _lastErrorMessageMeta),
       );
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
@@ -8452,42 +6859,15 @@ class OperationItems extends Table
   OperationItemRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return OperationItemRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      operationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}operation_id'],
-      )!,
-      seq: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}seq'],
-      )!,
-      srcSourceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}src_source_id'],
-      )!,
-      srcRelPath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}src_rel_path'],
-      )!,
-      srcInstanceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}src_instance_id'],
-      ),
-      expectedSize: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}expected_size'],
-      )!,
-      expectedSha256: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}expected_sha256'],
-      ),
-      dstSourceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}dst_source_id'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      operationId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}operation_id'])!,
+      seq: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}seq'])!,
+      srcSourceId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}src_source_id'])!,
+      srcRelPath: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}src_rel_path'])!,
+      srcInstanceId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}src_instance_id']),
+      expectedSize: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}expected_size'])!,
+      expectedSha256: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}expected_sha256']),
+      dstSourceId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}dst_source_id'])!,
       dstRelPathPlanned: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}dst_rel_path_planned'],
@@ -8496,46 +6876,19 @@ class OperationItems extends Table
         DriftSqlType.string,
         data['${effectivePrefix}dst_rel_path_final'],
       ),
-      tmpRelPath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}tmp_rel_path'],
-      ),
-      originalName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}original_name'],
-      ),
-      state: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}state'],
-      )!,
-      srcSha256: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}src_sha256'],
-      ),
-      dstSha256: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}dst_sha256'],
-      ),
-      bytesCopied: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}bytes_copied'],
-      )!,
-      attempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}attempts'],
-      )!,
-      lastErrorCode: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}last_error_code'],
-      ),
+      tmpRelPath: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}tmp_rel_path']),
+      originalName: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}original_name']),
+      state: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}state'])!,
+      srcSha256: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}src_sha256']),
+      dstSha256: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}dst_sha256']),
+      bytesCopied: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}bytes_copied'])!,
+      attempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}attempts'])!,
+      lastErrorCode: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}last_error_code']),
       lastErrorMessage: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}last_error_message'],
       ),
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
     );
   }
 
@@ -8550,8 +6903,7 @@ class OperationItems extends Table
   bool get dontWriteConstraints => true;
 }
 
-class OperationItemRow extends DataClass
-    implements Insertable<OperationItemRow> {
+class OperationItemRow extends DataClass implements Insertable<OperationItemRow> {
   final int id;
   final String operationId;
   final int seq;
@@ -8648,47 +7000,26 @@ class OperationItemRow extends DataClass
       seq: Value(seq),
       srcSourceId: Value(srcSourceId),
       srcRelPath: Value(srcRelPath),
-      srcInstanceId: srcInstanceId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(srcInstanceId),
+      srcInstanceId: srcInstanceId == null && nullToAbsent ? const Value.absent() : Value(srcInstanceId),
       expectedSize: Value(expectedSize),
-      expectedSha256: expectedSha256 == null && nullToAbsent
-          ? const Value.absent()
-          : Value(expectedSha256),
+      expectedSha256: expectedSha256 == null && nullToAbsent ? const Value.absent() : Value(expectedSha256),
       dstSourceId: Value(dstSourceId),
       dstRelPathPlanned: Value(dstRelPathPlanned),
-      dstRelPathFinal: dstRelPathFinal == null && nullToAbsent
-          ? const Value.absent()
-          : Value(dstRelPathFinal),
-      tmpRelPath: tmpRelPath == null && nullToAbsent
-          ? const Value.absent()
-          : Value(tmpRelPath),
-      originalName: originalName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(originalName),
+      dstRelPathFinal: dstRelPathFinal == null && nullToAbsent ? const Value.absent() : Value(dstRelPathFinal),
+      tmpRelPath: tmpRelPath == null && nullToAbsent ? const Value.absent() : Value(tmpRelPath),
+      originalName: originalName == null && nullToAbsent ? const Value.absent() : Value(originalName),
       state: Value(state),
-      srcSha256: srcSha256 == null && nullToAbsent
-          ? const Value.absent()
-          : Value(srcSha256),
-      dstSha256: dstSha256 == null && nullToAbsent
-          ? const Value.absent()
-          : Value(dstSha256),
+      srcSha256: srcSha256 == null && nullToAbsent ? const Value.absent() : Value(srcSha256),
+      dstSha256: dstSha256 == null && nullToAbsent ? const Value.absent() : Value(dstSha256),
       bytesCopied: Value(bytesCopied),
       attempts: Value(attempts),
-      lastErrorCode: lastErrorCode == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastErrorCode),
-      lastErrorMessage: lastErrorMessage == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastErrorMessage),
+      lastErrorCode: lastErrorCode == null && nullToAbsent ? const Value.absent() : Value(lastErrorCode),
+      lastErrorMessage: lastErrorMessage == null && nullToAbsent ? const Value.absent() : Value(lastErrorMessage),
       updatedAt: Value(updatedAt),
     );
   }
 
-  factory OperationItemRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory OperationItemRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return OperationItemRow(
       id: serializer.fromJson<int>(json['id']),
@@ -8700,9 +7031,7 @@ class OperationItemRow extends DataClass
       expectedSize: serializer.fromJson<int>(json['expected_size']),
       expectedSha256: serializer.fromJson<Uint8List?>(json['expected_sha256']),
       dstSourceId: serializer.fromJson<String>(json['dst_source_id']),
-      dstRelPathPlanned: serializer.fromJson<String>(
-        json['dst_rel_path_planned'],
-      ),
+      dstRelPathPlanned: serializer.fromJson<String>(json['dst_rel_path_planned']),
       dstRelPathFinal: serializer.fromJson<String?>(json['dst_rel_path_final']),
       tmpRelPath: serializer.fromJson<String?>(json['tmp_rel_path']),
       originalName: serializer.fromJson<String?>(json['original_name']),
@@ -8712,9 +7041,7 @@ class OperationItemRow extends DataClass
       bytesCopied: serializer.fromJson<int>(json['bytes_copied']),
       attempts: serializer.fromJson<int>(json['attempts']),
       lastErrorCode: serializer.fromJson<String?>(json['last_error_code']),
-      lastErrorMessage: serializer.fromJson<String?>(
-        json['last_error_message'],
-      ),
+      lastErrorMessage: serializer.fromJson<String?>(json['last_error_message']),
       updatedAt: serializer.fromJson<int>(json['updated_at']),
     );
   }
@@ -8774,18 +7101,12 @@ class OperationItemRow extends DataClass
     seq: seq ?? this.seq,
     srcSourceId: srcSourceId ?? this.srcSourceId,
     srcRelPath: srcRelPath ?? this.srcRelPath,
-    srcInstanceId: srcInstanceId.present
-        ? srcInstanceId.value
-        : this.srcInstanceId,
+    srcInstanceId: srcInstanceId.present ? srcInstanceId.value : this.srcInstanceId,
     expectedSize: expectedSize ?? this.expectedSize,
-    expectedSha256: expectedSha256.present
-        ? expectedSha256.value
-        : this.expectedSha256,
+    expectedSha256: expectedSha256.present ? expectedSha256.value : this.expectedSha256,
     dstSourceId: dstSourceId ?? this.dstSourceId,
     dstRelPathPlanned: dstRelPathPlanned ?? this.dstRelPathPlanned,
-    dstRelPathFinal: dstRelPathFinal.present
-        ? dstRelPathFinal.value
-        : this.dstRelPathFinal,
+    dstRelPathFinal: dstRelPathFinal.present ? dstRelPathFinal.value : this.dstRelPathFinal,
     tmpRelPath: tmpRelPath.present ? tmpRelPath.value : this.tmpRelPath,
     originalName: originalName.present ? originalName.value : this.originalName,
     state: state ?? this.state,
@@ -8793,64 +7114,32 @@ class OperationItemRow extends DataClass
     dstSha256: dstSha256.present ? dstSha256.value : this.dstSha256,
     bytesCopied: bytesCopied ?? this.bytesCopied,
     attempts: attempts ?? this.attempts,
-    lastErrorCode: lastErrorCode.present
-        ? lastErrorCode.value
-        : this.lastErrorCode,
-    lastErrorMessage: lastErrorMessage.present
-        ? lastErrorMessage.value
-        : this.lastErrorMessage,
+    lastErrorCode: lastErrorCode.present ? lastErrorCode.value : this.lastErrorCode,
+    lastErrorMessage: lastErrorMessage.present ? lastErrorMessage.value : this.lastErrorMessage,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   OperationItemRow copyWithCompanion(OperationItemsCompanion data) {
     return OperationItemRow(
       id: data.id.present ? data.id.value : this.id,
-      operationId: data.operationId.present
-          ? data.operationId.value
-          : this.operationId,
+      operationId: data.operationId.present ? data.operationId.value : this.operationId,
       seq: data.seq.present ? data.seq.value : this.seq,
-      srcSourceId: data.srcSourceId.present
-          ? data.srcSourceId.value
-          : this.srcSourceId,
-      srcRelPath: data.srcRelPath.present
-          ? data.srcRelPath.value
-          : this.srcRelPath,
-      srcInstanceId: data.srcInstanceId.present
-          ? data.srcInstanceId.value
-          : this.srcInstanceId,
-      expectedSize: data.expectedSize.present
-          ? data.expectedSize.value
-          : this.expectedSize,
-      expectedSha256: data.expectedSha256.present
-          ? data.expectedSha256.value
-          : this.expectedSha256,
-      dstSourceId: data.dstSourceId.present
-          ? data.dstSourceId.value
-          : this.dstSourceId,
-      dstRelPathPlanned: data.dstRelPathPlanned.present
-          ? data.dstRelPathPlanned.value
-          : this.dstRelPathPlanned,
-      dstRelPathFinal: data.dstRelPathFinal.present
-          ? data.dstRelPathFinal.value
-          : this.dstRelPathFinal,
-      tmpRelPath: data.tmpRelPath.present
-          ? data.tmpRelPath.value
-          : this.tmpRelPath,
-      originalName: data.originalName.present
-          ? data.originalName.value
-          : this.originalName,
+      srcSourceId: data.srcSourceId.present ? data.srcSourceId.value : this.srcSourceId,
+      srcRelPath: data.srcRelPath.present ? data.srcRelPath.value : this.srcRelPath,
+      srcInstanceId: data.srcInstanceId.present ? data.srcInstanceId.value : this.srcInstanceId,
+      expectedSize: data.expectedSize.present ? data.expectedSize.value : this.expectedSize,
+      expectedSha256: data.expectedSha256.present ? data.expectedSha256.value : this.expectedSha256,
+      dstSourceId: data.dstSourceId.present ? data.dstSourceId.value : this.dstSourceId,
+      dstRelPathPlanned: data.dstRelPathPlanned.present ? data.dstRelPathPlanned.value : this.dstRelPathPlanned,
+      dstRelPathFinal: data.dstRelPathFinal.present ? data.dstRelPathFinal.value : this.dstRelPathFinal,
+      tmpRelPath: data.tmpRelPath.present ? data.tmpRelPath.value : this.tmpRelPath,
+      originalName: data.originalName.present ? data.originalName.value : this.originalName,
       state: data.state.present ? data.state.value : this.state,
       srcSha256: data.srcSha256.present ? data.srcSha256.value : this.srcSha256,
       dstSha256: data.dstSha256.present ? data.dstSha256.value : this.dstSha256,
-      bytesCopied: data.bytesCopied.present
-          ? data.bytesCopied.value
-          : this.bytesCopied,
+      bytesCopied: data.bytesCopied.present ? data.bytesCopied.value : this.bytesCopied,
       attempts: data.attempts.present ? data.attempts.value : this.attempts,
-      lastErrorCode: data.lastErrorCode.present
-          ? data.lastErrorCode.value
-          : this.lastErrorCode,
-      lastErrorMessage: data.lastErrorMessage.present
-          ? data.lastErrorMessage.value
-          : this.lastErrorMessage,
+      lastErrorCode: data.lastErrorCode.present ? data.lastErrorCode.value : this.lastErrorCode,
+      lastErrorMessage: data.lastErrorMessage.present ? data.lastErrorMessage.value : this.lastErrorMessage,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -8918,10 +7207,7 @@ class OperationItemRow extends DataClass
           other.srcRelPath == this.srcRelPath &&
           other.srcInstanceId == this.srcInstanceId &&
           other.expectedSize == this.expectedSize &&
-          $driftBlobEquality.equals(
-            other.expectedSha256,
-            this.expectedSha256,
-          ) &&
+          $driftBlobEquality.equals(other.expectedSha256, this.expectedSha256) &&
           other.dstSourceId == this.dstSourceId &&
           other.dstRelPathPlanned == this.dstRelPathPlanned &&
           other.dstRelPathFinal == this.dstRelPathFinal &&
@@ -9207,8 +7493,7 @@ class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
   }
 }
 
-class OperationEvents extends Table
-    with TableInfo<OperationEvents, OperationEventRow> {
+class OperationEvents extends Table with TableInfo<OperationEvents, OperationEventRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -9222,9 +7507,7 @@ class OperationEvents extends Table
     requiredDuringInsert: false,
     $customConstraints: 'NOT NULL PRIMARY KEY',
   );
-  static const VerificationMeta _operationIdMeta = const VerificationMeta(
-    'operationId',
-  );
+  static const VerificationMeta _operationIdMeta = const VerificationMeta('operationId');
   late final GeneratedColumn<String> operationId = GeneratedColumn<String>(
     'operation_id',
     aliasedName,
@@ -9251,9 +7534,7 @@ class OperationEvents extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _fromStateMeta = const VerificationMeta(
-    'fromState',
-  );
+  static const VerificationMeta _fromStateMeta = const VerificationMeta('fromState');
   late final GeneratedColumn<String> fromState = GeneratedColumn<String>(
     'from_state',
     aliasedName,
@@ -9262,9 +7543,7 @@ class OperationEvents extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _toStateMeta = const VerificationMeta(
-    'toState',
-  );
+  static const VerificationMeta _toStateMeta = const VerificationMeta('toState');
   late final GeneratedColumn<String> toState = GeneratedColumn<String>(
     'to_state',
     aliasedName,
@@ -9273,9 +7552,7 @@ class OperationEvents extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _messageMeta = const VerificationMeta(
-    'message',
-  );
+  static const VerificationMeta _messageMeta = const VerificationMeta('message');
   late final GeneratedColumn<String> message = GeneratedColumn<String>(
     'message',
     aliasedName,
@@ -9285,46 +7562,26 @@ class OperationEvents extends Table
     $customConstraints: '',
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    operationId,
-    itemId,
-    at,
-    fromState,
-    toState,
-    message,
-  ];
+  List<GeneratedColumn> get $columns => [id, operationId, itemId, at, fromState, toState, message];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'operation_events';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<OperationEventRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<OperationEventRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('operation_id')) {
-      context.handle(
-        _operationIdMeta,
-        operationId.isAcceptableOrUnknown(
-          data['operation_id']!,
-          _operationIdMeta,
-        ),
-      );
+      context.handle(_operationIdMeta, operationId.isAcceptableOrUnknown(data['operation_id']!, _operationIdMeta));
     } else if (isInserting) {
       context.missing(_operationIdMeta);
     }
     if (data.containsKey('item_id')) {
-      context.handle(
-        _itemIdMeta,
-        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
-      );
+      context.handle(_itemIdMeta, itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta));
     }
     if (data.containsKey('at')) {
       context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
@@ -9332,22 +7589,13 @@ class OperationEvents extends Table
       context.missing(_atMeta);
     }
     if (data.containsKey('from_state')) {
-      context.handle(
-        _fromStateMeta,
-        fromState.isAcceptableOrUnknown(data['from_state']!, _fromStateMeta),
-      );
+      context.handle(_fromStateMeta, fromState.isAcceptableOrUnknown(data['from_state']!, _fromStateMeta));
     }
     if (data.containsKey('to_state')) {
-      context.handle(
-        _toStateMeta,
-        toState.isAcceptableOrUnknown(data['to_state']!, _toStateMeta),
-      );
+      context.handle(_toStateMeta, toState.isAcceptableOrUnknown(data['to_state']!, _toStateMeta));
     }
     if (data.containsKey('message')) {
-      context.handle(
-        _messageMeta,
-        message.isAcceptableOrUnknown(data['message']!, _messageMeta),
-      );
+      context.handle(_messageMeta, message.isAcceptableOrUnknown(data['message']!, _messageMeta));
     }
     return context;
   }
@@ -9358,34 +7606,13 @@ class OperationEvents extends Table
   OperationEventRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return OperationEventRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      operationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}operation_id'],
-      )!,
-      itemId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}item_id'],
-      ),
-      at: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}at'],
-      )!,
-      fromState: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}from_state'],
-      ),
-      toState: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}to_state'],
-      ),
-      message: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}message'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      operationId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}operation_id'])!,
+      itemId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}item_id']),
+      at: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}at'])!,
+      fromState: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}from_state']),
+      toState: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}to_state']),
+      message: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}message']),
     );
   }
 
@@ -9398,8 +7625,7 @@ class OperationEvents extends Table
   bool get dontWriteConstraints => true;
 }
 
-class OperationEventRow extends DataClass
-    implements Insertable<OperationEventRow> {
+class OperationEventRow extends DataClass implements Insertable<OperationEventRow> {
   final int id;
   final String operationId;
   final int? itemId;
@@ -9441,26 +7667,15 @@ class OperationEventRow extends DataClass
     return OperationEventsCompanion(
       id: Value(id),
       operationId: Value(operationId),
-      itemId: itemId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(itemId),
+      itemId: itemId == null && nullToAbsent ? const Value.absent() : Value(itemId),
       at: Value(at),
-      fromState: fromState == null && nullToAbsent
-          ? const Value.absent()
-          : Value(fromState),
-      toState: toState == null && nullToAbsent
-          ? const Value.absent()
-          : Value(toState),
-      message: message == null && nullToAbsent
-          ? const Value.absent()
-          : Value(message),
+      fromState: fromState == null && nullToAbsent ? const Value.absent() : Value(fromState),
+      toState: toState == null && nullToAbsent ? const Value.absent() : Value(toState),
+      message: message == null && nullToAbsent ? const Value.absent() : Value(message),
     );
   }
 
-  factory OperationEventRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory OperationEventRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return OperationEventRow(
       id: serializer.fromJson<int>(json['id']),
@@ -9506,9 +7721,7 @@ class OperationEventRow extends DataClass
   OperationEventRow copyWithCompanion(OperationEventsCompanion data) {
     return OperationEventRow(
       id: data.id.present ? data.id.value : this.id,
-      operationId: data.operationId.present
-          ? data.operationId.value
-          : this.operationId,
+      operationId: data.operationId.present ? data.operationId.value : this.operationId,
       itemId: data.itemId.present ? data.itemId.value : this.itemId,
       at: data.at.present ? data.at.value : this.at,
       fromState: data.fromState.present ? data.fromState.value : this.fromState,
@@ -9532,8 +7745,7 @@ class OperationEventRow extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, operationId, itemId, at, fromState, toState, message);
+  int get hashCode => Object.hash(id, operationId, itemId, at, fromState, toState, message);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -9679,9 +7891,7 @@ class SavedFilters extends Table with TableInfo<SavedFilters, SavedFilterRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL UNIQUE',
   );
-  static const VerificationMeta _definitionJsonMeta = const VerificationMeta(
-    'definitionJson',
-  );
+  static const VerificationMeta _definitionJsonMeta = const VerificationMeta('definitionJson');
   late final GeneratedColumn<String> definitionJson = GeneratedColumn<String>(
     'definition_json',
     aliasedName,
@@ -9690,9 +7900,7 @@ class SavedFilters extends Table with TableInfo<SavedFilters, SavedFilterRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
     'created_at',
     aliasedName,
@@ -9701,9 +7909,7 @@ class SavedFilters extends Table with TableInfo<SavedFilters, SavedFilterRow> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -9713,60 +7919,39 @@ class SavedFilters extends Table with TableInfo<SavedFilters, SavedFilterRow> {
     $customConstraints: 'NOT NULL',
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    name,
-    definitionJson,
-    createdAt,
-    updatedAt,
-  ];
+  List<GeneratedColumn> get $columns => [id, name, definitionJson, createdAt, updatedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'saved_filters';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SavedFilterRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SavedFilterRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
+      context.handle(_nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('definition_json')) {
       context.handle(
         _definitionJsonMeta,
-        definitionJson.isAcceptableOrUnknown(
-          data['definition_json']!,
-          _definitionJsonMeta,
-        ),
+        definitionJson.isAcceptableOrUnknown(data['definition_json']!, _definitionJsonMeta),
       );
     } else if (isInserting) {
       context.missing(_definitionJsonMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
@@ -9779,26 +7964,14 @@ class SavedFilters extends Table with TableInfo<SavedFilters, SavedFilterRow> {
   SavedFilterRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SavedFilterRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       definitionJson: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}definition_json'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
     );
   }
 
@@ -9845,10 +8018,7 @@ class SavedFilterRow extends DataClass implements Insertable<SavedFilterRow> {
     );
   }
 
-  factory SavedFilterRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SavedFilterRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SavedFilterRow(
       id: serializer.fromJson<int>(json['id']),
@@ -9870,26 +8040,19 @@ class SavedFilterRow extends DataClass implements Insertable<SavedFilterRow> {
     };
   }
 
-  SavedFilterRow copyWith({
-    int? id,
-    String? name,
-    String? definitionJson,
-    int? createdAt,
-    int? updatedAt,
-  }) => SavedFilterRow(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    definitionJson: definitionJson ?? this.definitionJson,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-  );
+  SavedFilterRow copyWith({int? id, String? name, String? definitionJson, int? createdAt, int? updatedAt}) =>
+      SavedFilterRow(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        definitionJson: definitionJson ?? this.definitionJson,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
   SavedFilterRow copyWithCompanion(SavedFiltersCompanion data) {
     return SavedFilterRow(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
-      definitionJson: data.definitionJson.present
-          ? data.definitionJson.value
-          : this.definitionJson,
+      definitionJson: data.definitionJson.present ? data.definitionJson.value : this.definitionJson,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -9908,8 +8071,7 @@ class SavedFilterRow extends DataClass implements Insertable<SavedFilterRow> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, definitionJson, createdAt, updatedAt);
+  int get hashCode => Object.hash(id, name, definitionJson, createdAt, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -10010,8 +8172,7 @@ class SavedFiltersCompanion extends UpdateCompanion<SavedFilterRow> {
   }
 }
 
-class SelectionSets extends Table
-    with TableInfo<SelectionSets, SelectionSetRow> {
+class SelectionSets extends Table with TableInfo<SelectionSets, SelectionSetRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -10034,9 +8195,7 @@ class SelectionSets extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL UNIQUE',
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
     'created_at',
     aliasedName,
@@ -10053,28 +8212,19 @@ class SelectionSets extends Table
   String get actualTableName => $name;
   static const String $name = 'selection_sets';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SelectionSetRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SelectionSetRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
+      context.handle(_nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
@@ -10087,18 +8237,9 @@ class SelectionSets extends Table
   SelectionSetRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SelectionSetRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}created_at'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
     );
   }
 
@@ -10115,11 +8256,7 @@ class SelectionSetRow extends DataClass implements Insertable<SelectionSetRow> {
   final int id;
   final String name;
   final int createdAt;
-  const SelectionSetRow({
-    required this.id,
-    required this.name,
-    required this.createdAt,
-  });
+  const SelectionSetRow({required this.id, required this.name, required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -10130,17 +8267,10 @@ class SelectionSetRow extends DataClass implements Insertable<SelectionSetRow> {
   }
 
   SelectionSetsCompanion toCompanion(bool nullToAbsent) {
-    return SelectionSetsCompanion(
-      id: Value(id),
-      name: Value(name),
-      createdAt: Value(createdAt),
-    );
+    return SelectionSetsCompanion(id: Value(id), name: Value(name), createdAt: Value(createdAt));
   }
 
-  factory SelectionSetRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SelectionSetRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SelectionSetRow(
       id: serializer.fromJson<int>(json['id']),
@@ -10159,11 +8289,7 @@ class SelectionSetRow extends DataClass implements Insertable<SelectionSetRow> {
   }
 
   SelectionSetRow copyWith({int? id, String? name, int? createdAt}) =>
-      SelectionSetRow(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        createdAt: createdAt ?? this.createdAt,
-      );
+      SelectionSetRow(id: id ?? this.id, name: name ?? this.name, createdAt: createdAt ?? this.createdAt);
   SelectionSetRow copyWithCompanion(SelectionSetsCompanion data) {
     return SelectionSetRow(
       id: data.id.present ? data.id.value : this.id,
@@ -10187,10 +8313,7 @@ class SelectionSetRow extends DataClass implements Insertable<SelectionSetRow> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is SelectionSetRow &&
-          other.id == this.id &&
-          other.name == this.name &&
-          other.createdAt == this.createdAt);
+      (other is SelectionSetRow && other.id == this.id && other.name == this.name && other.createdAt == this.createdAt);
 }
 
 class SelectionSetsCompanion extends UpdateCompanion<SelectionSetRow> {
@@ -10202,12 +8325,9 @@ class SelectionSetsCompanion extends UpdateCompanion<SelectionSetRow> {
     this.name = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
-  SelectionSetsCompanion.insert({
-    this.id = const Value.absent(),
-    required String name,
-    required int createdAt,
-  }) : name = Value(name),
-       createdAt = Value(createdAt);
+  SelectionSetsCompanion.insert({this.id = const Value.absent(), required String name, required int createdAt})
+    : name = Value(name),
+      createdAt = Value(createdAt);
   static Insertable<SelectionSetRow> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -10220,16 +8340,8 @@ class SelectionSetsCompanion extends UpdateCompanion<SelectionSetRow> {
     });
   }
 
-  SelectionSetsCompanion copyWith({
-    Value<int>? id,
-    Value<String>? name,
-    Value<int>? createdAt,
-  }) {
-    return SelectionSetsCompanion(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      createdAt: createdAt ?? this.createdAt,
-    );
+  SelectionSetsCompanion copyWith({Value<int>? id, Value<String>? name, Value<int>? createdAt}) {
+    return SelectionSetsCompanion(id: id ?? this.id, name: name ?? this.name, createdAt: createdAt ?? this.createdAt);
   }
 
   @override
@@ -10258,8 +8370,7 @@ class SelectionSetsCompanion extends UpdateCompanion<SelectionSetRow> {
   }
 }
 
-class SelectionSetItems extends Table
-    with TableInfo<SelectionSetItems, SelectionSetItemRow> {
+class SelectionSetItems extends Table with TableInfo<SelectionSetItems, SelectionSetItemRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -10271,12 +8382,9 @@ class SelectionSetItems extends Table
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    $customConstraints:
-        'NOT NULL REFERENCES selection_sets(id)ON DELETE CASCADE',
+    $customConstraints: 'NOT NULL REFERENCES selection_sets(id)ON DELETE CASCADE',
   );
-  static const VerificationMeta _instanceIdMeta = const VerificationMeta(
-    'instanceId',
-  );
+  static const VerificationMeta _instanceIdMeta = const VerificationMeta('instanceId');
   late final GeneratedColumn<int> instanceId = GeneratedColumn<int>(
     'instance_id',
     aliasedName,
@@ -10293,25 +8401,16 @@ class SelectionSetItems extends Table
   String get actualTableName => $name;
   static const String $name = 'selection_set_items';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SelectionSetItemRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SelectionSetItemRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('set_id')) {
-      context.handle(
-        _setIdMeta,
-        setId.isAcceptableOrUnknown(data['set_id']!, _setIdMeta),
-      );
+      context.handle(_setIdMeta, setId.isAcceptableOrUnknown(data['set_id']!, _setIdMeta));
     } else if (isInserting) {
       context.missing(_setIdMeta);
     }
     if (data.containsKey('instance_id')) {
-      context.handle(
-        _instanceIdMeta,
-        instanceId.isAcceptableOrUnknown(data['instance_id']!, _instanceIdMeta),
-      );
+      context.handle(_instanceIdMeta, instanceId.isAcceptableOrUnknown(data['instance_id']!, _instanceIdMeta));
     } else if (isInserting) {
       context.missing(_instanceIdMeta);
     }
@@ -10324,14 +8423,8 @@ class SelectionSetItems extends Table
   SelectionSetItemRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SelectionSetItemRow(
-      setId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}set_id'],
-      )!,
-      instanceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}instance_id'],
-      )!,
+      setId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}set_id'])!,
+      instanceId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}instance_id'])!,
     );
   }
 
@@ -10343,15 +8436,12 @@ class SelectionSetItems extends Table
   @override
   bool get withoutRowId => true;
   @override
-  List<String> get customConstraints => const [
-    'PRIMARY KEY(set_id, instance_id)',
-  ];
+  List<String> get customConstraints => const ['PRIMARY KEY(set_id, instance_id)'];
   @override
   bool get dontWriteConstraints => true;
 }
 
-class SelectionSetItemRow extends DataClass
-    implements Insertable<SelectionSetItemRow> {
+class SelectionSetItemRow extends DataClass implements Insertable<SelectionSetItemRow> {
   final int setId;
   final int instanceId;
   const SelectionSetItemRow({required this.setId, required this.instanceId});
@@ -10364,16 +8454,10 @@ class SelectionSetItemRow extends DataClass
   }
 
   SelectionSetItemsCompanion toCompanion(bool nullToAbsent) {
-    return SelectionSetItemsCompanion(
-      setId: Value(setId),
-      instanceId: Value(instanceId),
-    );
+    return SelectionSetItemsCompanion(setId: Value(setId), instanceId: Value(instanceId));
   }
 
-  factory SelectionSetItemRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SelectionSetItemRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SelectionSetItemRow(
       setId: serializer.fromJson<int>(json['set_id']),
@@ -10390,16 +8474,11 @@ class SelectionSetItemRow extends DataClass
   }
 
   SelectionSetItemRow copyWith({int? setId, int? instanceId}) =>
-      SelectionSetItemRow(
-        setId: setId ?? this.setId,
-        instanceId: instanceId ?? this.instanceId,
-      );
+      SelectionSetItemRow(setId: setId ?? this.setId, instanceId: instanceId ?? this.instanceId);
   SelectionSetItemRow copyWithCompanion(SelectionSetItemsCompanion data) {
     return SelectionSetItemRow(
       setId: data.setId.present ? data.setId.value : this.setId,
-      instanceId: data.instanceId.present
-          ? data.instanceId.value
-          : this.instanceId,
+      instanceId: data.instanceId.present ? data.instanceId.value : this.instanceId,
     );
   }
 
@@ -10417,41 +8496,22 @@ class SelectionSetItemRow extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is SelectionSetItemRow &&
-          other.setId == this.setId &&
-          other.instanceId == this.instanceId);
+      (other is SelectionSetItemRow && other.setId == this.setId && other.instanceId == this.instanceId);
 }
 
 class SelectionSetItemsCompanion extends UpdateCompanion<SelectionSetItemRow> {
   final Value<int> setId;
   final Value<int> instanceId;
-  const SelectionSetItemsCompanion({
-    this.setId = const Value.absent(),
-    this.instanceId = const Value.absent(),
-  });
-  SelectionSetItemsCompanion.insert({
-    required int setId,
-    required int instanceId,
-  }) : setId = Value(setId),
-       instanceId = Value(instanceId);
-  static Insertable<SelectionSetItemRow> custom({
-    Expression<int>? setId,
-    Expression<int>? instanceId,
-  }) {
-    return RawValuesInsertable({
-      if (setId != null) 'set_id': setId,
-      if (instanceId != null) 'instance_id': instanceId,
-    });
+  const SelectionSetItemsCompanion({this.setId = const Value.absent(), this.instanceId = const Value.absent()});
+  SelectionSetItemsCompanion.insert({required int setId, required int instanceId})
+    : setId = Value(setId),
+      instanceId = Value(instanceId);
+  static Insertable<SelectionSetItemRow> custom({Expression<int>? setId, Expression<int>? instanceId}) {
+    return RawValuesInsertable({if (setId != null) 'set_id': setId, if (instanceId != null) 'instance_id': instanceId});
   }
 
-  SelectionSetItemsCompanion copyWith({
-    Value<int>? setId,
-    Value<int>? instanceId,
-  }) {
-    return SelectionSetItemsCompanion(
-      setId: setId ?? this.setId,
-      instanceId: instanceId ?? this.instanceId,
-    );
+  SelectionSetItemsCompanion copyWith({Value<int>? setId, Value<int>? instanceId}) {
+    return SelectionSetItemsCompanion(setId: setId ?? this.setId, instanceId: instanceId ?? this.instanceId);
   }
 
   @override
@@ -10507,20 +8567,14 @@ class Tags extends Table with TableInfo<Tags, TagRow> {
   String get actualTableName => $name;
   static const String $name = 'tags';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<TagRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<TagRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
+      context.handle(_nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
@@ -10533,14 +8587,8 @@ class Tags extends Table with TableInfo<Tags, TagRow> {
   TagRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return TagRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name'])!,
     );
   }
 
@@ -10569,32 +8617,19 @@ class TagRow extends DataClass implements Insertable<TagRow> {
     return TagsCompanion(id: Value(id), name: Value(name));
   }
 
-  factory TagRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory TagRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return TagRow(
-      id: serializer.fromJson<int>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-    );
+    return TagRow(id: serializer.fromJson<int>(json['id']), name: serializer.fromJson<String>(json['name']));
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'name': serializer.toJson<String>(name),
-    };
+    return <String, dynamic>{'id': serializer.toJson<int>(id), 'name': serializer.toJson<String>(name)};
   }
 
-  TagRow copyWith({int? id, String? name}) =>
-      TagRow(id: id ?? this.id, name: name ?? this.name);
+  TagRow copyWith({int? id, String? name}) => TagRow(id: id ?? this.id, name: name ?? this.name);
   TagRow copyWithCompanion(TagsCompanion data) {
-    return TagRow(
-      id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-    );
+    return TagRow(id: data.id.present ? data.id.value : this.id, name: data.name.present ? data.name.value : this.name);
   }
 
   @override
@@ -10610,27 +8645,16 @@ class TagRow extends DataClass implements Insertable<TagRow> {
   int get hashCode => Object.hash(id, name);
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is TagRow && other.id == this.id && other.name == this.name);
+      identical(this, other) || (other is TagRow && other.id == this.id && other.name == this.name);
 }
 
 class TagsCompanion extends UpdateCompanion<TagRow> {
   final Value<int> id;
   final Value<String> name;
-  const TagsCompanion({
-    this.id = const Value.absent(),
-    this.name = const Value.absent(),
-  });
-  TagsCompanion.insert({this.id = const Value.absent(), required String name})
-    : name = Value(name);
-  static Insertable<TagRow> custom({
-    Expression<int>? id,
-    Expression<String>? name,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (name != null) 'name': name,
-    });
+  const TagsCompanion({this.id = const Value.absent(), this.name = const Value.absent()});
+  TagsCompanion.insert({this.id = const Value.absent(), required String name}) : name = Value(name);
+  static Insertable<TagRow> custom({Expression<int>? id, Expression<String>? name}) {
+    return RawValuesInsertable({if (id != null) 'id': id, if (name != null) 'name': name});
   }
 
   TagsCompanion copyWith({Value<int>? id, Value<String>? name}) {
@@ -10664,9 +8688,7 @@ class ContentTags extends Table with TableInfo<ContentTags, ContentTagRow> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   ContentTags(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _contentIdMeta = const VerificationMeta(
-    'contentId',
-  );
+  static const VerificationMeta _contentIdMeta = const VerificationMeta('contentId');
   late final GeneratedColumn<int> contentId = GeneratedColumn<int>(
     'content_id',
     aliasedName,
@@ -10692,25 +8714,16 @@ class ContentTags extends Table with TableInfo<ContentTags, ContentTagRow> {
   String get actualTableName => $name;
   static const String $name = 'content_tags';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ContentTagRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ContentTagRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('content_id')) {
-      context.handle(
-        _contentIdMeta,
-        contentId.isAcceptableOrUnknown(data['content_id']!, _contentIdMeta),
-      );
+      context.handle(_contentIdMeta, contentId.isAcceptableOrUnknown(data['content_id']!, _contentIdMeta));
     } else if (isInserting) {
       context.missing(_contentIdMeta);
     }
     if (data.containsKey('tag_id')) {
-      context.handle(
-        _tagIdMeta,
-        tagId.isAcceptableOrUnknown(data['tag_id']!, _tagIdMeta),
-      );
+      context.handle(_tagIdMeta, tagId.isAcceptableOrUnknown(data['tag_id']!, _tagIdMeta));
     } else if (isInserting) {
       context.missing(_tagIdMeta);
     }
@@ -10723,14 +8736,8 @@ class ContentTags extends Table with TableInfo<ContentTags, ContentTagRow> {
   ContentTagRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ContentTagRow(
-      contentId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}content_id'],
-      )!,
-      tagId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}tag_id'],
-      )!,
+      contentId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}content_id'])!,
+      tagId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}tag_id'])!,
     );
   }
 
@@ -10742,9 +8749,7 @@ class ContentTags extends Table with TableInfo<ContentTags, ContentTagRow> {
   @override
   bool get withoutRowId => true;
   @override
-  List<String> get customConstraints => const [
-    'PRIMARY KEY(content_id, tag_id)',
-  ];
+  List<String> get customConstraints => const ['PRIMARY KEY(content_id, tag_id)'];
   @override
   bool get dontWriteConstraints => true;
 }
@@ -10762,16 +8767,10 @@ class ContentTagRow extends DataClass implements Insertable<ContentTagRow> {
   }
 
   ContentTagsCompanion toCompanion(bool nullToAbsent) {
-    return ContentTagsCompanion(
-      contentId: Value(contentId),
-      tagId: Value(tagId),
-    );
+    return ContentTagsCompanion(contentId: Value(contentId), tagId: Value(tagId));
   }
 
-  factory ContentTagRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ContentTagRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ContentTagRow(
       contentId: serializer.fromJson<int>(json['content_id']),
@@ -10781,16 +8780,11 @@ class ContentTagRow extends DataClass implements Insertable<ContentTagRow> {
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'content_id': serializer.toJson<int>(contentId),
-      'tag_id': serializer.toJson<int>(tagId),
-    };
+    return <String, dynamic>{'content_id': serializer.toJson<int>(contentId), 'tag_id': serializer.toJson<int>(tagId)};
   }
 
-  ContentTagRow copyWith({int? contentId, int? tagId}) => ContentTagRow(
-    contentId: contentId ?? this.contentId,
-    tagId: tagId ?? this.tagId,
-  );
+  ContentTagRow copyWith({int? contentId, int? tagId}) =>
+      ContentTagRow(contentId: contentId ?? this.contentId, tagId: tagId ?? this.tagId);
   ContentTagRow copyWithCompanion(ContentTagsCompanion data) {
     return ContentTagRow(
       contentId: data.contentId.present ? data.contentId.value : this.contentId,
@@ -10812,36 +8806,22 @@ class ContentTagRow extends DataClass implements Insertable<ContentTagRow> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is ContentTagRow &&
-          other.contentId == this.contentId &&
-          other.tagId == this.tagId);
+      (other is ContentTagRow && other.contentId == this.contentId && other.tagId == this.tagId);
 }
 
 class ContentTagsCompanion extends UpdateCompanion<ContentTagRow> {
   final Value<int> contentId;
   final Value<int> tagId;
-  const ContentTagsCompanion({
-    this.contentId = const Value.absent(),
-    this.tagId = const Value.absent(),
-  });
+  const ContentTagsCompanion({this.contentId = const Value.absent(), this.tagId = const Value.absent()});
   ContentTagsCompanion.insert({required int contentId, required int tagId})
     : contentId = Value(contentId),
       tagId = Value(tagId);
-  static Insertable<ContentTagRow> custom({
-    Expression<int>? contentId,
-    Expression<int>? tagId,
-  }) {
-    return RawValuesInsertable({
-      if (contentId != null) 'content_id': contentId,
-      if (tagId != null) 'tag_id': tagId,
-    });
+  static Insertable<ContentTagRow> custom({Expression<int>? contentId, Expression<int>? tagId}) {
+    return RawValuesInsertable({if (contentId != null) 'content_id': contentId, if (tagId != null) 'tag_id': tagId});
   }
 
   ContentTagsCompanion copyWith({Value<int>? contentId, Value<int>? tagId}) {
-    return ContentTagsCompanion(
-      contentId: contentId ?? this.contentId,
-      tagId: tagId ?? this.tagId,
-    );
+    return ContentTagsCompanion(contentId: contentId ?? this.contentId, tagId: tagId ?? this.tagId);
   }
 
   @override
@@ -10866,8 +8846,7 @@ class ContentTagsCompanion extends UpdateCompanion<ContentTagRow> {
   }
 }
 
-class IntegrityChecks extends Table
-    with TableInfo<IntegrityChecks, IntegrityCheckRow> {
+class IntegrityChecks extends Table with TableInfo<IntegrityChecks, IntegrityCheckRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -10881,9 +8860,7 @@ class IntegrityChecks extends Table
     requiredDuringInsert: false,
     $customConstraints: 'NOT NULL PRIMARY KEY',
   );
-  static const VerificationMeta _instanceIdMeta = const VerificationMeta(
-    'instanceId',
-  );
+  static const VerificationMeta _instanceIdMeta = const VerificationMeta('instanceId');
   late final GeneratedColumn<int> instanceId = GeneratedColumn<int>(
     'instance_id',
     aliasedName,
@@ -10892,9 +8869,7 @@ class IntegrityChecks extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL REFERENCES file_instances(id)',
   );
-  static const VerificationMeta _operationIdMeta = const VerificationMeta(
-    'operationId',
-  );
+  static const VerificationMeta _operationIdMeta = const VerificationMeta('operationId');
   late final GeneratedColumn<String> operationId = GeneratedColumn<String>(
     'operation_id',
     aliasedName,
@@ -10903,9 +8878,7 @@ class IntegrityChecks extends Table
     requiredDuringInsert: false,
     $customConstraints: 'REFERENCES operations(id)',
   );
-  static const VerificationMeta _checkedAtMeta = const VerificationMeta(
-    'checkedAt',
-  );
+  static const VerificationMeta _checkedAtMeta = const VerificationMeta('checkedAt');
   late final GeneratedColumn<int> checkedAt = GeneratedColumn<int>(
     'checked_at',
     aliasedName,
@@ -10923,21 +8896,16 @@ class IntegrityChecks extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL CHECK (result IN (\'unchanged\', \'changed_legit\', \'possibly_corrupt\', \'unreadable\', \'missing\'))',
   );
-  static const VerificationMeta _observedSha256Meta = const VerificationMeta(
-    'observedSha256',
+  static const VerificationMeta _observedSha256Meta = const VerificationMeta('observedSha256');
+  late final GeneratedColumn<Uint8List> observedSha256 = GeneratedColumn<Uint8List>(
+    'observed_sha256',
+    aliasedName,
+    true,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: false,
+    $customConstraints: '',
   );
-  late final GeneratedColumn<Uint8List> observedSha256 =
-      GeneratedColumn<Uint8List>(
-        'observed_sha256',
-        aliasedName,
-        true,
-        type: DriftSqlType.blob,
-        requiredDuringInsert: false,
-        $customConstraints: '',
-      );
-  static const VerificationMeta _observedSizeMeta = const VerificationMeta(
-    'observedSize',
-  );
+  static const VerificationMeta _observedSizeMeta = const VerificationMeta('observedSize');
   late final GeneratedColumn<int> observedSize = GeneratedColumn<int>(
     'observed_size',
     aliasedName,
@@ -10946,9 +8914,7 @@ class IntegrityChecks extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
-  static const VerificationMeta _observedMtimeMeta = const VerificationMeta(
-    'observedMtime',
-  );
+  static const VerificationMeta _observedMtimeMeta = const VerificationMeta('observedMtime');
   late final GeneratedColumn<int> observedMtime = GeneratedColumn<int>(
     'observed_mtime',
     aliasedName,
@@ -10974,73 +8940,43 @@ class IntegrityChecks extends Table
   String get actualTableName => $name;
   static const String $name = 'integrity_checks';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<IntegrityCheckRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<IntegrityCheckRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('instance_id')) {
-      context.handle(
-        _instanceIdMeta,
-        instanceId.isAcceptableOrUnknown(data['instance_id']!, _instanceIdMeta),
-      );
+      context.handle(_instanceIdMeta, instanceId.isAcceptableOrUnknown(data['instance_id']!, _instanceIdMeta));
     } else if (isInserting) {
       context.missing(_instanceIdMeta);
     }
     if (data.containsKey('operation_id')) {
-      context.handle(
-        _operationIdMeta,
-        operationId.isAcceptableOrUnknown(
-          data['operation_id']!,
-          _operationIdMeta,
-        ),
-      );
+      context.handle(_operationIdMeta, operationId.isAcceptableOrUnknown(data['operation_id']!, _operationIdMeta));
     }
     if (data.containsKey('checked_at')) {
-      context.handle(
-        _checkedAtMeta,
-        checkedAt.isAcceptableOrUnknown(data['checked_at']!, _checkedAtMeta),
-      );
+      context.handle(_checkedAtMeta, checkedAt.isAcceptableOrUnknown(data['checked_at']!, _checkedAtMeta));
     } else if (isInserting) {
       context.missing(_checkedAtMeta);
     }
     if (data.containsKey('result')) {
-      context.handle(
-        _resultMeta,
-        result.isAcceptableOrUnknown(data['result']!, _resultMeta),
-      );
+      context.handle(_resultMeta, result.isAcceptableOrUnknown(data['result']!, _resultMeta));
     } else if (isInserting) {
       context.missing(_resultMeta);
     }
     if (data.containsKey('observed_sha256')) {
       context.handle(
         _observedSha256Meta,
-        observedSha256.isAcceptableOrUnknown(
-          data['observed_sha256']!,
-          _observedSha256Meta,
-        ),
+        observedSha256.isAcceptableOrUnknown(data['observed_sha256']!, _observedSha256Meta),
       );
     }
     if (data.containsKey('observed_size')) {
-      context.handle(
-        _observedSizeMeta,
-        observedSize.isAcceptableOrUnknown(
-          data['observed_size']!,
-          _observedSizeMeta,
-        ),
-      );
+      context.handle(_observedSizeMeta, observedSize.isAcceptableOrUnknown(data['observed_size']!, _observedSizeMeta));
     }
     if (data.containsKey('observed_mtime')) {
       context.handle(
         _observedMtimeMeta,
-        observedMtime.isAcceptableOrUnknown(
-          data['observed_mtime']!,
-          _observedMtimeMeta,
-        ),
+        observedMtime.isAcceptableOrUnknown(data['observed_mtime']!, _observedMtimeMeta),
       );
     }
     return context;
@@ -11052,38 +8988,14 @@ class IntegrityChecks extends Table
   IntegrityCheckRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return IntegrityCheckRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      instanceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}instance_id'],
-      )!,
-      operationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}operation_id'],
-      ),
-      checkedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}checked_at'],
-      )!,
-      result: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}result'],
-      )!,
-      observedSha256: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}observed_sha256'],
-      ),
-      observedSize: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}observed_size'],
-      ),
-      observedMtime: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}observed_mtime'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      instanceId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}instance_id'])!,
+      operationId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}operation_id']),
+      checkedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}checked_at'])!,
+      result: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}result'])!,
+      observedSha256: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}observed_sha256']),
+      observedSize: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}observed_size']),
+      observedMtime: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}observed_mtime']),
     );
   }
 
@@ -11096,8 +9008,7 @@ class IntegrityChecks extends Table
   bool get dontWriteConstraints => true;
 }
 
-class IntegrityCheckRow extends DataClass
-    implements Insertable<IntegrityCheckRow> {
+class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRow> {
   final int id;
   final int instanceId;
   final String? operationId;
@@ -11142,27 +9053,16 @@ class IntegrityCheckRow extends DataClass
     return IntegrityChecksCompanion(
       id: Value(id),
       instanceId: Value(instanceId),
-      operationId: operationId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(operationId),
+      operationId: operationId == null && nullToAbsent ? const Value.absent() : Value(operationId),
       checkedAt: Value(checkedAt),
       result: Value(result),
-      observedSha256: observedSha256 == null && nullToAbsent
-          ? const Value.absent()
-          : Value(observedSha256),
-      observedSize: observedSize == null && nullToAbsent
-          ? const Value.absent()
-          : Value(observedSize),
-      observedMtime: observedMtime == null && nullToAbsent
-          ? const Value.absent()
-          : Value(observedMtime),
+      observedSha256: observedSha256 == null && nullToAbsent ? const Value.absent() : Value(observedSha256),
+      observedSize: observedSize == null && nullToAbsent ? const Value.absent() : Value(observedSize),
+      observedMtime: observedMtime == null && nullToAbsent ? const Value.absent() : Value(observedMtime),
     );
   }
 
-  factory IntegrityCheckRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory IntegrityCheckRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return IntegrityCheckRow(
       id: serializer.fromJson<int>(json['id']),
@@ -11205,34 +9105,20 @@ class IntegrityCheckRow extends DataClass
     operationId: operationId.present ? operationId.value : this.operationId,
     checkedAt: checkedAt ?? this.checkedAt,
     result: result ?? this.result,
-    observedSha256: observedSha256.present
-        ? observedSha256.value
-        : this.observedSha256,
+    observedSha256: observedSha256.present ? observedSha256.value : this.observedSha256,
     observedSize: observedSize.present ? observedSize.value : this.observedSize,
-    observedMtime: observedMtime.present
-        ? observedMtime.value
-        : this.observedMtime,
+    observedMtime: observedMtime.present ? observedMtime.value : this.observedMtime,
   );
   IntegrityCheckRow copyWithCompanion(IntegrityChecksCompanion data) {
     return IntegrityCheckRow(
       id: data.id.present ? data.id.value : this.id,
-      instanceId: data.instanceId.present
-          ? data.instanceId.value
-          : this.instanceId,
-      operationId: data.operationId.present
-          ? data.operationId.value
-          : this.operationId,
+      instanceId: data.instanceId.present ? data.instanceId.value : this.instanceId,
+      operationId: data.operationId.present ? data.operationId.value : this.operationId,
       checkedAt: data.checkedAt.present ? data.checkedAt.value : this.checkedAt,
       result: data.result.present ? data.result.value : this.result,
-      observedSha256: data.observedSha256.present
-          ? data.observedSha256.value
-          : this.observedSha256,
-      observedSize: data.observedSize.present
-          ? data.observedSize.value
-          : this.observedSize,
-      observedMtime: data.observedMtime.present
-          ? data.observedMtime.value
-          : this.observedMtime,
+      observedSha256: data.observedSha256.present ? data.observedSha256.value : this.observedSha256,
+      observedSize: data.observedSize.present ? data.observedSize.value : this.observedSize,
+      observedMtime: data.observedMtime.present ? data.observedMtime.value : this.observedMtime,
     );
   }
 
@@ -11271,10 +9157,7 @@ class IntegrityCheckRow extends DataClass
           other.operationId == this.operationId &&
           other.checkedAt == this.checkedAt &&
           other.result == this.result &&
-          $driftBlobEquality.equals(
-            other.observedSha256,
-            this.observedSha256,
-          ) &&
+          $driftBlobEquality.equals(other.observedSha256, this.observedSha256) &&
           other.observedSize == this.observedSize &&
           other.observedMtime == this.observedMtime);
 }
@@ -11432,18 +9315,12 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
   late final ScanErrors scanErrors = ScanErrors(this);
   late final Contents contents = Contents(this);
   late final FileInstances fileInstances = FileInstances(this);
-  late final Index ixFiContent = Index(
-    'ix_fi_content',
-    'CREATE INDEX ix_fi_content ON file_instances (content_id)',
-  );
+  late final Index ixFiContent = Index('ix_fi_content', 'CREATE INDEX ix_fi_content ON file_instances (content_id)');
   late final Index ixFiSourceDir = Index(
     'ix_fi_source_dir',
     'CREATE INDEX ix_fi_source_dir ON file_instances (source_id, dir_rel_path)',
   );
-  late final Index ixFiSize = Index(
-    'ix_fi_size',
-    'CREATE INDEX ix_fi_size ON file_instances (size_bytes)',
-  );
+  late final Index ixFiSize = Index('ix_fi_size', 'CREATE INDEX ix_fi_size ON file_instances (size_bytes)');
   late final Index ixFiHashPending = Index(
     'ix_fi_hash_pending',
     'CREATE INDEX ix_fi_hash_pending ON file_instances (source_id) WHERE hash_status = \'pending\'',
@@ -11452,19 +9329,13 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     'ix_fi_last_seen',
     'CREATE INDEX ix_fi_last_seen ON file_instances (source_id, last_seen_scan_id)',
   );
-  late final Index ixFiExt = Index(
-    'ix_fi_ext',
-    'CREATE INDEX ix_fi_ext ON file_instances (ext)',
-  );
+  late final Index ixFiExt = Index('ix_fi_ext', 'CREATE INDEX ix_fi_ext ON file_instances (ext)');
   late final MediaMetadata mediaMetadata = MediaMetadata(this);
   late final Index ixMmCapture = Index(
     'ix_mm_capture',
     'CREATE INDEX ix_mm_capture ON media_metadata (capture_utc_ms)',
   );
-  late final Index ixMmCamera = Index(
-    'ix_mm_camera',
-    'CREATE INDEX ix_mm_camera ON media_metadata (make, model)',
-  );
+  late final Index ixMmCamera = Index('ix_mm_camera', 'CREATE INDEX ix_mm_camera ON media_metadata (make, model)');
   late final DateCorrections dateCorrections = DateCorrections(this);
   late final Index ixDcContent = Index(
     'ix_dc_content',
@@ -11477,10 +9348,7 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     'CREATE INDEX ix_oi_open ON operation_items (operation_id, state) WHERE state NOT IN (\'published\', \'skipped_identical\', \'undone\')',
   );
   late final OperationEvents operationEvents = OperationEvents(this);
-  late final Index ixOeOp = Index(
-    'ix_oe_op',
-    'CREATE INDEX ix_oe_op ON operation_events (operation_id, at)',
-  );
+  late final Index ixOeOp = Index('ix_oe_op', 'CREATE INDEX ix_oe_op ON operation_events (operation_id, at)');
   late final SavedFilters savedFilters = SavedFilters(this);
   late final SelectionSets selectionSets = SelectionSets(this);
   late final SelectionSetItems selectionSetItems = SelectionSetItems(this);
@@ -11492,8 +9360,7 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     'CREATE INDEX ix_ic_instance ON integrity_checks (instance_id, checked_at DESC)',
   );
   @override
-  Iterable<TableInfo<Table, Object?>> get allTables =>
-      allSchemaEntities.whereType<TableInfo<Table, Object?>>();
+  Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     appMeta,
@@ -11537,44 +9404,26 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'scans',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('scans', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('scan_dirs', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'scans',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('scans', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('scan_errors', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'selection_sets',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('selection_sets', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('selection_set_items', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'tags',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('tags', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('content_tags', kind: UpdateKind.delete)],
     ),
   ]);
 }
 
-typedef $AppMetaCreateCompanionBuilder = AppMetaCompanion Function({
-  required String key,
-  required String value,
-});
-typedef $AppMetaUpdateCompanionBuilder = AppMetaCompanion Function({
-  Value<String> key,
-  Value<String> value,
-});
+typedef $AppMetaCreateCompanionBuilder = AppMetaCompanion Function({required String key, required String value});
+typedef $AppMetaUpdateCompanionBuilder = AppMetaCompanion Function({Value<String> key, Value<String> value});
 
 class $AppMetaFilterComposer extends Composer<_$CatalogDatabase, AppMeta> {
   $AppMetaFilterComposer({
@@ -11584,15 +9433,10 @@ class $AppMetaFilterComposer extends Composer<_$CatalogDatabase, AppMeta> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get key => $composableBuilder(column: $table.key, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get value => $composableBuilder(
-    column: $table.value,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => ColumnFilters(column));
 }
 
 class $AppMetaOrderingComposer extends Composer<_$CatalogDatabase, AppMeta> {
@@ -11603,15 +9447,11 @@ class $AppMetaOrderingComposer extends Composer<_$CatalogDatabase, AppMeta> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get value => $composableBuilder(
-    column: $table.value,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => ColumnOrderings(column));
 }
 
 class $AppMetaAnnotationComposer extends Composer<_$CatalogDatabase, AppMeta> {
@@ -11622,11 +9462,9 @@ class $AppMetaAnnotationComposer extends Composer<_$CatalogDatabase, AppMeta> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get key =>
-      $composableBuilder(column: $table.key, builder: (column) => column);
+  GeneratedColumn<String> get key => $composableBuilder(column: $table.key, builder: (column) => column);
 
-  GeneratedColumn<String> get value =>
-      $composableBuilder(column: $table.value, builder: (column) => column);
+  GeneratedColumn<String> get value => $composableBuilder(column: $table.value, builder: (column) => column);
 }
 
 class $AppMetaTableManager
@@ -11649,29 +9487,20 @@ class $AppMetaTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $AppMetaFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $AppMetaOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $AppMetaAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $AppMetaFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $AppMetaOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $AppMetaAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<String> key = const Value.absent(),
             Value<String> value = const Value.absent(),
           }) => AppMetaCompanion(key: key, value: value),
-          createCompanionCallback: ({
-            required String key,
-            required String value,
-          }) => AppMetaCompanion.insert(key: key, value: value),
+          createCompanionCallback: ({required String key, required String value}) =>
+              AppMetaCompanion.insert(key: key, value: value),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable<AppMeta, AppMetaRow>(table),
-                  BaseReferences<_$CatalogDatabase, AppMeta, AppMetaRow>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$CatalogDatabase, AppMeta, AppMetaRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -11713,20 +9542,13 @@ class $SettingsFilterComposer extends Composer<_$CatalogDatabase, Settings> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get key => $composableBuilder(column: $table.key, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get valueJson => $composableBuilder(
-    column: $table.valueJson,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get valueJson =>
+      $composableBuilder(column: $table.valueJson, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 }
 
 class $SettingsOrderingComposer extends Composer<_$CatalogDatabase, Settings> {
@@ -11737,24 +9559,17 @@ class $SettingsOrderingComposer extends Composer<_$CatalogDatabase, Settings> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get valueJson => $composableBuilder(
-    column: $table.valueJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get valueJson =>
+      $composableBuilder(column: $table.valueJson, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $SettingsAnnotationComposer
-    extends Composer<_$CatalogDatabase, Settings> {
+class $SettingsAnnotationComposer extends Composer<_$CatalogDatabase, Settings> {
   $SettingsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -11762,14 +9577,11 @@ class $SettingsAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get key =>
-      $composableBuilder(column: $table.key, builder: (column) => column);
+  GeneratedColumn<String> get key => $composableBuilder(column: $table.key, builder: (column) => column);
 
-  GeneratedColumn<String> get valueJson =>
-      $composableBuilder(column: $table.valueJson, builder: (column) => column);
+  GeneratedColumn<String> get valueJson => $composableBuilder(column: $table.valueJson, builder: (column) => column);
 
-  GeneratedColumn<int> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<int> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $SettingsTableManager
@@ -11792,41 +9604,21 @@ class $SettingsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $SettingsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $SettingsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $SettingsAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> key = const Value.absent(),
-                Value<String> valueJson = const Value.absent(),
-                Value<int> updatedAt = const Value.absent(),
-              }) => SettingsCompanion(
-                key: key,
-                valueJson: valueJson,
-                updatedAt: updatedAt,
-              ),
-          createCompanionCallback:
-              ({
-                required String key,
-                required String valueJson,
-                required int updatedAt,
-              }) => SettingsCompanion.insert(
-                key: key,
-                valueJson: valueJson,
-                updatedAt: updatedAt,
-              ),
+          createFilteringComposer: () => $SettingsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $SettingsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $SettingsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> key = const Value.absent(),
+            Value<String> valueJson = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+          }) => SettingsCompanion(key: key, valueJson: valueJson, updatedAt: updatedAt),
+          createCompanionCallback: ({required String key, required String valueJson, required int updatedAt}) =>
+              SettingsCompanion.insert(key: key, valueJson: valueJson, updatedAt: updatedAt),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable<Settings, SettingRow>(table),
-                  BaseReferences<_$CatalogDatabase, Settings, SettingRow>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$CatalogDatabase, Settings, SettingRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -11872,16 +9664,11 @@ typedef $PhysicalDisksUpdateCompanionBuilder = PhysicalDisksCompanion Function({
   Value<int> lastSeenAt,
 });
 
-final class $PhysicalDisksReferences
-    extends BaseReferences<_$CatalogDatabase, PhysicalDisks, PhysicalDiskRow> {
+final class $PhysicalDisksReferences extends BaseReferences<_$CatalogDatabase, PhysicalDisks, PhysicalDiskRow> {
   $PhysicalDisksReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<Sources, List<SourceRow>> _sourcesRefsTable(
-    _$CatalogDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.sources,
-    aliasName: 'physical_disks__id__sources__physical_disk_id',
-  );
+  static MultiTypedResultKey<Sources, List<SourceRow>> _sourcesRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.sources, aliasName: 'physical_disks__id__sources__physical_disk_id');
 
   $SourcesProcessedTableManager get sourcesRefs {
     final manager = $SourcesTableManager(
@@ -11890,14 +9677,11 @@ final class $PhysicalDisksReferences
     ).filter((f) => f.physicalDiskId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_sourcesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
-class $PhysicalDisksFilterComposer
-    extends Composer<_$CatalogDatabase, PhysicalDisks> {
+class $PhysicalDisksFilterComposer extends Composer<_$CatalogDatabase, PhysicalDisks> {
   $PhysicalDisksFilterComposer({
     required super.$db,
     required super.$table,
@@ -11905,79 +9689,52 @@ class $PhysicalDisksFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get serial => $composableBuilder(
-    column: $table.serial,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get serial =>
+      $composableBuilder(column: $table.serial, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get model => $composableBuilder(
-    column: $table.model,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get model =>
+      $composableBuilder(column: $table.model, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sizeBytes => $composableBuilder(
-    column: $table.sizeBytes,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get busType => $composableBuilder(
-    column: $table.busType,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get busType =>
+      $composableBuilder(column: $table.busType, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get identityConfidence => $composableBuilder(
-    column: $table.identityConfidence,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get identityConfidence =>
+      $composableBuilder(column: $table.identityConfidence, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get userConfirmed => $composableBuilder(
-    column: $table.userConfirmed,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get userConfirmed =>
+      $composableBuilder(column: $table.userConfirmed, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get firstSeenAt => $composableBuilder(
-    column: $table.firstSeenAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get firstSeenAt =>
+      $composableBuilder(column: $table.firstSeenAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get lastSeenAt => $composableBuilder(
-    column: $table.lastSeenAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get lastSeenAt =>
+      $composableBuilder(column: $table.lastSeenAt, builder: (column) => ColumnFilters(column));
 
-  Expression<bool> sourcesRefs(
-    Expression<bool> Function($SourcesFilterComposer f) f,
-  ) {
+  Expression<bool> sourcesRefs(Expression<bool> Function($SourcesFilterComposer f) f) {
     final $SourcesFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.physicalDiskId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesFilterComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 }
 
-class $PhysicalDisksOrderingComposer
-    extends Composer<_$CatalogDatabase, PhysicalDisks> {
+class $PhysicalDisksOrderingComposer extends Composer<_$CatalogDatabase, PhysicalDisks> {
   $PhysicalDisksOrderingComposer({
     required super.$db,
     required super.$table,
@@ -11985,54 +9742,34 @@ class $PhysicalDisksOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get serial => $composableBuilder(
-    column: $table.serial,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get serial =>
+      $composableBuilder(column: $table.serial, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get model => $composableBuilder(
-    column: $table.model,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get model =>
+      $composableBuilder(column: $table.model, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sizeBytes => $composableBuilder(
-    column: $table.sizeBytes,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get busType => $composableBuilder(
-    column: $table.busType,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get busType =>
+      $composableBuilder(column: $table.busType, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get identityConfidence => $composableBuilder(
-    column: $table.identityConfidence,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get identityConfidence =>
+      $composableBuilder(column: $table.identityConfidence, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get userConfirmed => $composableBuilder(
-    column: $table.userConfirmed,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get userConfirmed =>
+      $composableBuilder(column: $table.userConfirmed, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get firstSeenAt => $composableBuilder(
-    column: $table.firstSeenAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get firstSeenAt =>
+      $composableBuilder(column: $table.firstSeenAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get lastSeenAt => $composableBuilder(
-    column: $table.lastSeenAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get lastSeenAt =>
+      $composableBuilder(column: $table.lastSeenAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $PhysicalDisksAnnotationComposer
-    extends Composer<_$CatalogDatabase, PhysicalDisks> {
+class $PhysicalDisksAnnotationComposer extends Composer<_$CatalogDatabase, PhysicalDisks> {
   $PhysicalDisksAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -12040,61 +9777,39 @@ class $PhysicalDisksAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get serial =>
-      $composableBuilder(column: $table.serial, builder: (column) => column);
+  GeneratedColumn<String> get serial => $composableBuilder(column: $table.serial, builder: (column) => column);
 
-  GeneratedColumn<String> get model =>
-      $composableBuilder(column: $table.model, builder: (column) => column);
+  GeneratedColumn<String> get model => $composableBuilder(column: $table.model, builder: (column) => column);
 
-  GeneratedColumn<int> get sizeBytes =>
-      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+  GeneratedColumn<int> get sizeBytes => $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
 
-  GeneratedColumn<String> get busType =>
-      $composableBuilder(column: $table.busType, builder: (column) => column);
+  GeneratedColumn<String> get busType => $composableBuilder(column: $table.busType, builder: (column) => column);
 
-  GeneratedColumn<String> get identityConfidence => $composableBuilder(
-    column: $table.identityConfidence,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get identityConfidence =>
+      $composableBuilder(column: $table.identityConfidence, builder: (column) => column);
 
-  GeneratedColumn<bool> get userConfirmed => $composableBuilder(
-    column: $table.userConfirmed,
-    builder: (column) => column,
-  );
+  GeneratedColumn<bool> get userConfirmed =>
+      $composableBuilder(column: $table.userConfirmed, builder: (column) => column);
 
-  GeneratedColumn<int> get firstSeenAt => $composableBuilder(
-    column: $table.firstSeenAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get firstSeenAt => $composableBuilder(column: $table.firstSeenAt, builder: (column) => column);
 
-  GeneratedColumn<int> get lastSeenAt => $composableBuilder(
-    column: $table.lastSeenAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get lastSeenAt => $composableBuilder(column: $table.lastSeenAt, builder: (column) => column);
 
-  Expression<T> sourcesRefs<T extends Object>(
-    Expression<T> Function($SourcesAnnotationComposer a) f,
-  ) {
+  Expression<T> sourcesRefs<T extends Object>(Expression<T> Function($SourcesAnnotationComposer a) f) {
     final $SourcesAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.physicalDiskId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesAnnotationComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -12121,12 +9836,9 @@ class $PhysicalDisksTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $PhysicalDisksFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $PhysicalDisksOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $PhysicalDisksAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $PhysicalDisksFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $PhysicalDisksOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $PhysicalDisksAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -12172,12 +9884,7 @@ class $PhysicalDisksTableManager
                 lastSeenAt: lastSeenAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<PhysicalDisks, PhysicalDiskRow>(table),
-                  $PhysicalDisksReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable<PhysicalDisks, PhysicalDiskRow>(table), $PhysicalDisksReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: ({sourcesRefs = false}) {
             return PrefetchHooks(
@@ -12187,17 +9894,10 @@ class $PhysicalDisksTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (sourcesRefs)
-                    await $_getPrefetchedDataByColumns<
-                      PhysicalDiskRow,
-                      PhysicalDisks,
-                      SourceRow,
-                      Sources
-                    >(
+                    await $_getPrefetchedDataByColumns<PhysicalDiskRow, PhysicalDisks, SourceRow, Sources>(
                       currentTable: table,
-                      referencedTable: $PhysicalDisksReferences
-                          ._sourcesRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $PhysicalDisksReferences(db, table, p0).sourcesRefs,
+                      referencedTable: $PhysicalDisksReferences._sourcesRefsTable(db),
+                      managerFromTypedResult: (p0) => $PhysicalDisksReferences(db, table, p0).sourcesRefs,
                       currentColumn: 'id',
                       referencedColumn: 'physical_disk_id',
                       typedResults: items,
@@ -12273,34 +9973,23 @@ typedef $SourcesUpdateCompanionBuilder = SourcesCompanion Function({
   Value<int> rowid,
 });
 
-final class $SourcesReferences
-    extends BaseReferences<_$CatalogDatabase, Sources, SourceRow> {
+final class $SourcesReferences extends BaseReferences<_$CatalogDatabase, Sources, SourceRow> {
   $SourcesReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static PhysicalDisks _physicalDiskIdTable(_$CatalogDatabase db) => db
-      .physicalDisks
-      .createAlias('sources__physical_disk_id__physical_disks__id');
+  static PhysicalDisks _physicalDiskIdTable(_$CatalogDatabase db) =>
+      db.physicalDisks.createAlias('sources__physical_disk_id__physical_disks__id');
 
   $PhysicalDisksProcessedTableManager? get physicalDiskId {
     final $_column = $_itemColumn<int>('physical_disk_id');
     if ($_column == null) return null;
-    final manager = $PhysicalDisksTableManager(
-      $_db,
-      $_db.physicalDisks,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $PhysicalDisksTableManager($_db, $_db.physicalDisks).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_physicalDiskIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static MultiTypedResultKey<Scans, List<ScanRow>> _scansRefsTable(
-    _$CatalogDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.scans,
-    aliasName: 'sources__id__scans__source_id',
-  );
+  static MultiTypedResultKey<Scans, List<ScanRow>> _scansRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.scans, aliasName: 'sources__id__scans__source_id');
 
   $ScansProcessedTableManager get scansRefs {
     final manager = $ScansTableManager(
@@ -12309,17 +9998,11 @@ final class $SourcesReferences
     ).filter((f) => f.sourceId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_scansRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<FileInstances, List<FileInstanceRow>>
-  _fileInstancesRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.fileInstances,
-        aliasName: 'sources__id__file_instances__source_id',
-      );
+  static MultiTypedResultKey<FileInstances, List<FileInstanceRow>> _fileInstancesRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.fileInstances, aliasName: 'sources__id__file_instances__source_id');
 
   $FileInstancesProcessedTableManager get fileInstancesRefs {
     final manager = $FileInstancesTableManager(
@@ -12328,16 +10011,11 @@ final class $SourcesReferences
     ).filter((f) => f.sourceId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_fileInstancesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<Operations, List<OperationRow>>
-  _operationsRefsTable(_$CatalogDatabase db) => MultiTypedResultKey.fromTable(
-    db.operations,
-    aliasName: 'sources__id__operations__dest_source_id',
-  );
+  static MultiTypedResultKey<Operations, List<OperationRow>> _operationsRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.operations, aliasName: 'sources__id__operations__dest_source_id');
 
   $OperationsProcessedTableManager get operationsRefs {
     final manager = $OperationsTableManager(
@@ -12346,9 +10024,7 @@ final class $SourcesReferences
     ).filter((f) => f.destSourceId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_operationsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
@@ -12360,105 +10036,62 @@ class $SourcesFilterComposer extends Composer<_$CatalogDatabase, Sources> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get name => $composableBuilder(column: $table.name, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get volumeGuid => $composableBuilder(
-    column: $table.volumeGuid,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get volumeGuid =>
+      $composableBuilder(column: $table.volumeGuid, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get volumeSerial => $composableBuilder(
-    column: $table.volumeSerial,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get volumeSerial =>
+      $composableBuilder(column: $table.volumeSerial, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get volumeLabel => $composableBuilder(
-    column: $table.volumeLabel,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get volumeLabel =>
+      $composableBuilder(column: $table.volumeLabel, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get filesystem => $composableBuilder(
-    column: $table.filesystem,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get filesystem =>
+      $composableBuilder(column: $table.filesystem, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get volumeSizeBytes => $composableBuilder(
-    column: $table.volumeSizeBytes,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get volumeSizeBytes =>
+      $composableBuilder(column: $table.volumeSizeBytes, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get markerId => $composableBuilder(
-    column: $table.markerId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get markerId =>
+      $composableBuilder(column: $table.markerId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get deviceId => $composableBuilder(
-    column: $table.deviceId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get deviceModel => $composableBuilder(
-    column: $table.deviceModel,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get deviceModel =>
+      $composableBuilder(column: $table.deviceModel, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get rootRelPath => $composableBuilder(
-    column: $table.rootRelPath,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get rootRelPath =>
+      $composableBuilder(column: $table.rootRelPath, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get lastMountPath => $composableBuilder(
-    column: $table.lastMountPath,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get lastMountPath =>
+      $composableBuilder(column: $table.lastMountPath, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get connected => $composableBuilder(
-    column: $table.connected,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get connected =>
+      $composableBuilder(column: $table.connected, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get lastConnectedAt => $composableBuilder(
-    column: $table.lastConnectedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get lastConnectedAt =>
+      $composableBuilder(column: $table.lastConnectedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get totalBytesLast => $composableBuilder(
-    column: $table.totalBytesLast,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get totalBytesLast =>
+      $composableBuilder(column: $table.totalBytesLast, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get freeBytesLast => $composableBuilder(
-    column: $table.freeBytesLast,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get freeBytesLast =>
+      $composableBuilder(column: $table.freeBytesLast, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get forgottenAt => $composableBuilder(
-    column: $table.forgottenAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get forgottenAt =>
+      $composableBuilder(column: $table.forgottenAt, builder: (column) => ColumnFilters(column));
 
   $PhysicalDisksFilterComposer get physicalDiskId {
     final $PhysicalDisksFilterComposer composer = $composerBuilder(
@@ -12466,93 +10099,67 @@ class $SourcesFilterComposer extends Composer<_$CatalogDatabase, Sources> {
       getCurrentColumn: (t) => t.physicalDiskId,
       referencedTable: $db.physicalDisks,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $PhysicalDisksFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $PhysicalDisksFilterComposer(
             $db: $db,
             $table: $db.physicalDisks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<bool> scansRefs(
-    Expression<bool> Function($ScansFilterComposer f) f,
-  ) {
+  Expression<bool> scansRefs(Expression<bool> Function($ScansFilterComposer f) f) {
     final $ScansFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.sourceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansFilterComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> fileInstancesRefs(
-    Expression<bool> Function($FileInstancesFilterComposer f) f,
-  ) {
+  Expression<bool> fileInstancesRefs(Expression<bool> Function($FileInstancesFilterComposer f) f) {
     final $FileInstancesFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.sourceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesFilterComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> operationsRefs(
-    Expression<bool> Function($OperationsFilterComposer f) f,
-  ) {
+  Expression<bool> operationsRefs(Expression<bool> Function($OperationsFilterComposer f) f) {
     final $OperationsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.destSourceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsFilterComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -12567,105 +10174,64 @@ class $SourcesOrderingComposer extends Composer<_$CatalogDatabase, Sources> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get volumeGuid => $composableBuilder(
-    column: $table.volumeGuid,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get volumeGuid =>
+      $composableBuilder(column: $table.volumeGuid, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get volumeSerial => $composableBuilder(
-    column: $table.volumeSerial,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get volumeSerial =>
+      $composableBuilder(column: $table.volumeSerial, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get volumeLabel => $composableBuilder(
-    column: $table.volumeLabel,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get volumeLabel =>
+      $composableBuilder(column: $table.volumeLabel, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get filesystem => $composableBuilder(
-    column: $table.filesystem,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get filesystem =>
+      $composableBuilder(column: $table.filesystem, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get volumeSizeBytes => $composableBuilder(
-    column: $table.volumeSizeBytes,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get volumeSizeBytes =>
+      $composableBuilder(column: $table.volumeSizeBytes, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get markerId => $composableBuilder(
-    column: $table.markerId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get markerId =>
+      $composableBuilder(column: $table.markerId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get deviceId => $composableBuilder(
-    column: $table.deviceId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get deviceModel => $composableBuilder(
-    column: $table.deviceModel,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get deviceModel =>
+      $composableBuilder(column: $table.deviceModel, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get rootRelPath => $composableBuilder(
-    column: $table.rootRelPath,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get rootRelPath =>
+      $composableBuilder(column: $table.rootRelPath, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get lastMountPath => $composableBuilder(
-    column: $table.lastMountPath,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get lastMountPath =>
+      $composableBuilder(column: $table.lastMountPath, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get connected => $composableBuilder(
-    column: $table.connected,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get connected =>
+      $composableBuilder(column: $table.connected, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get lastConnectedAt => $composableBuilder(
-    column: $table.lastConnectedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get lastConnectedAt =>
+      $composableBuilder(column: $table.lastConnectedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get totalBytesLast => $composableBuilder(
-    column: $table.totalBytesLast,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get totalBytesLast =>
+      $composableBuilder(column: $table.totalBytesLast, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get freeBytesLast => $composableBuilder(
-    column: $table.freeBytesLast,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get freeBytesLast =>
+      $composableBuilder(column: $table.freeBytesLast, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get forgottenAt => $composableBuilder(
-    column: $table.forgottenAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get forgottenAt =>
+      $composableBuilder(column: $table.forgottenAt, builder: (column) => ColumnOrderings(column));
 
   $PhysicalDisksOrderingComposer get physicalDiskId {
     final $PhysicalDisksOrderingComposer composer = $composerBuilder(
@@ -12673,18 +10239,13 @@ class $SourcesOrderingComposer extends Composer<_$CatalogDatabase, Sources> {
       getCurrentColumn: (t) => t.physicalDiskId,
       referencedTable: $db.physicalDisks,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $PhysicalDisksOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $PhysicalDisksOrderingComposer(
             $db: $db,
             $table: $db.physicalDisks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -12699,89 +10260,53 @@ class $SourcesAnnotationComposer extends Composer<_$CatalogDatabase, Sources> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<String> get name => $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<String> get kind =>
-      $composableBuilder(column: $table.kind, builder: (column) => column);
+  GeneratedColumn<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => column);
 
-  GeneratedColumn<String> get volumeGuid => $composableBuilder(
-    column: $table.volumeGuid,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get volumeGuid => $composableBuilder(column: $table.volumeGuid, builder: (column) => column);
 
-  GeneratedColumn<int> get volumeSerial => $composableBuilder(
-    column: $table.volumeSerial,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get volumeSerial => $composableBuilder(column: $table.volumeSerial, builder: (column) => column);
 
-  GeneratedColumn<String> get volumeLabel => $composableBuilder(
-    column: $table.volumeLabel,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get volumeLabel =>
+      $composableBuilder(column: $table.volumeLabel, builder: (column) => column);
 
-  GeneratedColumn<String> get filesystem => $composableBuilder(
-    column: $table.filesystem,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get filesystem => $composableBuilder(column: $table.filesystem, builder: (column) => column);
 
-  GeneratedColumn<int> get volumeSizeBytes => $composableBuilder(
-    column: $table.volumeSizeBytes,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get volumeSizeBytes =>
+      $composableBuilder(column: $table.volumeSizeBytes, builder: (column) => column);
 
-  GeneratedColumn<String> get markerId =>
-      $composableBuilder(column: $table.markerId, builder: (column) => column);
+  GeneratedColumn<String> get markerId => $composableBuilder(column: $table.markerId, builder: (column) => column);
 
-  GeneratedColumn<String> get deviceId =>
-      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+  GeneratedColumn<String> get deviceId => $composableBuilder(column: $table.deviceId, builder: (column) => column);
 
-  GeneratedColumn<String> get deviceModel => $composableBuilder(
-    column: $table.deviceModel,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get deviceModel =>
+      $composableBuilder(column: $table.deviceModel, builder: (column) => column);
 
-  GeneratedColumn<String> get rootRelPath => $composableBuilder(
-    column: $table.rootRelPath,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get rootRelPath =>
+      $composableBuilder(column: $table.rootRelPath, builder: (column) => column);
 
-  GeneratedColumn<String> get lastMountPath => $composableBuilder(
-    column: $table.lastMountPath,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get lastMountPath =>
+      $composableBuilder(column: $table.lastMountPath, builder: (column) => column);
 
-  GeneratedColumn<bool> get connected =>
-      $composableBuilder(column: $table.connected, builder: (column) => column);
+  GeneratedColumn<bool> get connected => $composableBuilder(column: $table.connected, builder: (column) => column);
 
-  GeneratedColumn<int> get lastConnectedAt => $composableBuilder(
-    column: $table.lastConnectedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get lastConnectedAt =>
+      $composableBuilder(column: $table.lastConnectedAt, builder: (column) => column);
 
-  GeneratedColumn<int> get totalBytesLast => $composableBuilder(
-    column: $table.totalBytesLast,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get totalBytesLast =>
+      $composableBuilder(column: $table.totalBytesLast, builder: (column) => column);
 
-  GeneratedColumn<int> get freeBytesLast => $composableBuilder(
-    column: $table.freeBytesLast,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get freeBytesLast =>
+      $composableBuilder(column: $table.freeBytesLast, builder: (column) => column);
 
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<int> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<int> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  GeneratedColumn<int> get forgottenAt => $composableBuilder(
-    column: $table.forgottenAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get forgottenAt => $composableBuilder(column: $table.forgottenAt, builder: (column) => column);
 
   $PhysicalDisksAnnotationComposer get physicalDiskId {
     final $PhysicalDisksAnnotationComposer composer = $composerBuilder(
@@ -12789,93 +10314,67 @@ class $SourcesAnnotationComposer extends Composer<_$CatalogDatabase, Sources> {
       getCurrentColumn: (t) => t.physicalDiskId,
       referencedTable: $db.physicalDisks,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $PhysicalDisksAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $PhysicalDisksAnnotationComposer(
             $db: $db,
             $table: $db.physicalDisks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<T> scansRefs<T extends Object>(
-    Expression<T> Function($ScansAnnotationComposer a) f,
-  ) {
+  Expression<T> scansRefs<T extends Object>(Expression<T> Function($ScansAnnotationComposer a) f) {
     final $ScansAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.sourceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansAnnotationComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<T> fileInstancesRefs<T extends Object>(
-    Expression<T> Function($FileInstancesAnnotationComposer a) f,
-  ) {
+  Expression<T> fileInstancesRefs<T extends Object>(Expression<T> Function($FileInstancesAnnotationComposer a) f) {
     final $FileInstancesAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.sourceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesAnnotationComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<T> operationsRefs<T extends Object>(
-    Expression<T> Function($OperationsAnnotationComposer a) f,
-  ) {
+  Expression<T> operationsRefs<T extends Object>(Expression<T> Function($OperationsAnnotationComposer a) f) {
     final $OperationsAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.destSourceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsAnnotationComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -12895,24 +10394,16 @@ class $SourcesTableManager
           $SourcesUpdateCompanionBuilder,
           (SourceRow, $SourcesReferences),
           SourceRow,
-          PrefetchHooks Function({
-            bool physicalDiskId,
-            bool scansRefs,
-            bool fileInstancesRefs,
-            bool operationsRefs,
-          })
+          PrefetchHooks Function({bool physicalDiskId, bool scansRefs, bool fileInstancesRefs, bool operationsRefs})
         > {
   $SourcesTableManager(_$CatalogDatabase db, Sources table)
     : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $SourcesFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $SourcesOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $SourcesAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $SourcesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $SourcesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $SourcesAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -13009,21 +10500,10 @@ class $SourcesTableManager
                 forgottenAt: forgottenAt,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<Sources, SourceRow>(table),
-                  $SourcesReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable<Sources, SourceRow>(table), $SourcesReferences(db, table, e))).toList(),
           prefetchHooksCallback:
-              ({
-                physicalDiskId = false,
-                scansRefs = false,
-                fileInstancesRefs = false,
-                operationsRefs = false,
-              }) {
+              ({physicalDiskId = false, scansRefs = false, fileInstancesRefs = false, operationsRefs = false}) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
@@ -13051,11 +10531,8 @@ class $SourcesTableManager
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.physicalDiskId,
-                            referencedTable: $SourcesReferences
-                                ._physicalDiskIdTable(db),
-                            referencedColumn: $SourcesReferences
-                                ._physicalDiskIdTable(db)
-                                .id,
+                            referencedTable: $SourcesReferences._physicalDiskIdTable(db),
+                            referencedColumn: $SourcesReferences._physicalDiskIdTable(db).id,
                           ) as T;
                         }
 
@@ -13064,53 +10541,28 @@ class $SourcesTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (scansRefs)
-                        await $_getPrefetchedDataByColumns<
-                          SourceRow,
-                          Sources,
-                          ScanRow,
-                          Scans
-                        >(
+                        await $_getPrefetchedDataByColumns<SourceRow, Sources, ScanRow, Scans>(
                           currentTable: table,
-                          referencedTable: $SourcesReferences._scansRefsTable(
-                            db,
-                          ),
-                          managerFromTypedResult: (p0) =>
-                              $SourcesReferences(db, table, p0).scansRefs,
+                          referencedTable: $SourcesReferences._scansRefsTable(db),
+                          managerFromTypedResult: (p0) => $SourcesReferences(db, table, p0).scansRefs,
                           currentColumn: 'id',
                           referencedColumn: 'source_id',
                           typedResults: items,
                         ),
                       if (fileInstancesRefs)
-                        await $_getPrefetchedDataByColumns<
-                          SourceRow,
-                          Sources,
-                          FileInstanceRow,
-                          FileInstances
-                        >(
+                        await $_getPrefetchedDataByColumns<SourceRow, Sources, FileInstanceRow, FileInstances>(
                           currentTable: table,
-                          referencedTable: $SourcesReferences
-                              ._fileInstancesRefsTable(db),
-                          managerFromTypedResult: (p0) => $SourcesReferences(
-                            db,
-                            table,
-                            p0,
-                          ).fileInstancesRefs,
+                          referencedTable: $SourcesReferences._fileInstancesRefsTable(db),
+                          managerFromTypedResult: (p0) => $SourcesReferences(db, table, p0).fileInstancesRefs,
                           currentColumn: 'id',
                           referencedColumn: 'source_id',
                           typedResults: items,
                         ),
                       if (operationsRefs)
-                        await $_getPrefetchedDataByColumns<
-                          SourceRow,
-                          Sources,
-                          OperationRow,
-                          Operations
-                        >(
+                        await $_getPrefetchedDataByColumns<SourceRow, Sources, OperationRow, Operations>(
                           currentTable: table,
-                          referencedTable: $SourcesReferences
-                              ._operationsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $SourcesReferences(db, table, p0).operationsRefs,
+                          referencedTable: $SourcesReferences._operationsRefsTable(db),
+                          managerFromTypedResult: (p0) => $SourcesReferences(db, table, p0).operationsRefs,
                           currentColumn: 'id',
                           referencedColumn: 'dest_source_id',
                           typedResults: items,
@@ -13135,12 +10587,7 @@ typedef $SourcesProcessedTableManager =
       $SourcesUpdateCompanionBuilder,
       (SourceRow, $SourcesReferences),
       SourceRow,
-      PrefetchHooks Function({
-        bool physicalDiskId,
-        bool scansRefs,
-        bool fileInstancesRefs,
-        bool operationsRefs,
-      })
+      PrefetchHooks Function({bool physicalDiskId, bool scansRefs, bool fileInstancesRefs, bool operationsRefs})
     >;
 typedef $ScansCreateCompanionBuilder = ScansCompanion Function({
   Value<int> id,
@@ -13171,33 +10618,22 @@ typedef $ScansUpdateCompanionBuilder = ScansCompanion Function({
   Value<int> errorCount,
 });
 
-final class $ScansReferences
-    extends BaseReferences<_$CatalogDatabase, Scans, ScanRow> {
+final class $ScansReferences extends BaseReferences<_$CatalogDatabase, Scans, ScanRow> {
   $ScansReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static Sources _sourceIdTable(_$CatalogDatabase db) =>
-      db.sources.createAlias('scans__source_id__sources__id');
+  static Sources _sourceIdTable(_$CatalogDatabase db) => db.sources.createAlias('scans__source_id__sources__id');
 
   $SourcesProcessedTableManager get sourceId {
     final $_column = $_itemColumn<String>('source_id')!;
 
-    final manager = $SourcesTableManager(
-      $_db,
-      $_db.sources,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $SourcesTableManager($_db, $_db.sources).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_sourceIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static MultiTypedResultKey<ScanDirs, List<ScanDirRow>> _scanDirsRefsTable(
-    _$CatalogDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.scanDirs,
-    aliasName: 'scans__id__scan_dirs__scan_id',
-  );
+  static MultiTypedResultKey<ScanDirs, List<ScanDirRow>> _scanDirsRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.scanDirs, aliasName: 'scans__id__scan_dirs__scan_id');
 
   $ScanDirsProcessedTableManager get scanDirsRefs {
     final manager = $ScanDirsTableManager(
@@ -13206,16 +10642,11 @@ final class $ScansReferences
     ).filter((f) => f.scanId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_scanDirsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<ScanErrors, List<ScanErrorRow>>
-  _scanErrorsRefsTable(_$CatalogDatabase db) => MultiTypedResultKey.fromTable(
-    db.scanErrors,
-    aliasName: 'scans__id__scan_errors__scan_id',
-  );
+  static MultiTypedResultKey<ScanErrors, List<ScanErrorRow>> _scanErrorsRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.scanErrors, aliasName: 'scans__id__scan_errors__scan_id');
 
   $ScanErrorsProcessedTableManager get scanErrorsRefs {
     final manager = $ScanErrorsTableManager(
@@ -13224,9 +10655,7 @@ final class $ScansReferences
     ).filter((f) => f.scanId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_scanErrorsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
@@ -13238,60 +10667,36 @@ class $ScansFilterComposer extends Composer<_$CatalogDatabase, Scans> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get coverage => $composableBuilder(
-    column: $table.coverage,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get coverage =>
+      $composableBuilder(column: $table.coverage, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get mountPathUsed => $composableBuilder(
-    column: $table.mountPathUsed,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get mountPathUsed =>
+      $composableBuilder(column: $table.mountPathUsed, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get startedAt => $composableBuilder(
-    column: $table.startedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get finishedAt => $composableBuilder(
-    column: $table.finishedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get finishedAt =>
+      $composableBuilder(column: $table.finishedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get dirsDone => $composableBuilder(
-    column: $table.dirsDone,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get dirsDone =>
+      $composableBuilder(column: $table.dirsDone, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get filesSeen => $composableBuilder(
-    column: $table.filesSeen,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get filesSeen =>
+      $composableBuilder(column: $table.filesSeen, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get bytesSeen => $composableBuilder(
-    column: $table.bytesSeen,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get bytesSeen =>
+      $composableBuilder(column: $table.bytesSeen, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get errorCount => $composableBuilder(
-    column: $table.errorCount,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get errorCount =>
+      $composableBuilder(column: $table.errorCount, builder: (column) => ColumnFilters(column));
 
   $SourcesFilterComposer get sourceId {
     final $SourcesFilterComposer composer = $composerBuilder(
@@ -13299,68 +10704,49 @@ class $ScansFilterComposer extends Composer<_$CatalogDatabase, Scans> {
       getCurrentColumn: (t) => t.sourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesFilterComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<bool> scanDirsRefs(
-    Expression<bool> Function($ScanDirsFilterComposer f) f,
-  ) {
+  Expression<bool> scanDirsRefs(Expression<bool> Function($ScanDirsFilterComposer f) f) {
     final $ScanDirsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.scanDirs,
       getReferencedColumn: (t) => t.scanId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScanDirsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScanDirsFilterComposer(
             $db: $db,
             $table: $db.scanDirs,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> scanErrorsRefs(
-    Expression<bool> Function($ScanErrorsFilterComposer f) f,
-  ) {
+  Expression<bool> scanErrorsRefs(Expression<bool> Function($ScanErrorsFilterComposer f) f) {
     final $ScanErrorsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.scanErrors,
       getReferencedColumn: (t) => t.scanId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScanErrorsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScanErrorsFilterComposer(
             $db: $db,
             $table: $db.scanErrors,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -13375,60 +10761,37 @@ class $ScansOrderingComposer extends Composer<_$CatalogDatabase, Scans> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get coverage => $composableBuilder(
-    column: $table.coverage,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get coverage =>
+      $composableBuilder(column: $table.coverage, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get mountPathUsed => $composableBuilder(
-    column: $table.mountPathUsed,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get mountPathUsed =>
+      $composableBuilder(column: $table.mountPathUsed, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get startedAt => $composableBuilder(
-    column: $table.startedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get finishedAt => $composableBuilder(
-    column: $table.finishedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get finishedAt =>
+      $composableBuilder(column: $table.finishedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get dirsDone => $composableBuilder(
-    column: $table.dirsDone,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get dirsDone =>
+      $composableBuilder(column: $table.dirsDone, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get filesSeen => $composableBuilder(
-    column: $table.filesSeen,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get filesSeen =>
+      $composableBuilder(column: $table.filesSeen, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get bytesSeen => $composableBuilder(
-    column: $table.bytesSeen,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get bytesSeen =>
+      $composableBuilder(column: $table.bytesSeen, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get errorCount => $composableBuilder(
-    column: $table.errorCount,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get errorCount =>
+      $composableBuilder(column: $table.errorCount, builder: (column) => ColumnOrderings(column));
 
   $SourcesOrderingComposer get sourceId {
     final $SourcesOrderingComposer composer = $composerBuilder(
@@ -13436,18 +10799,13 @@ class $ScansOrderingComposer extends Composer<_$CatalogDatabase, Scans> {
       getCurrentColumn: (t) => t.sourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesOrderingComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -13462,44 +10820,28 @@ class $ScansAnnotationComposer extends Composer<_$CatalogDatabase, Scans> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get kind =>
-      $composableBuilder(column: $table.kind, builder: (column) => column);
+  GeneratedColumn<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => column);
 
-  GeneratedColumn<String> get status =>
-      $composableBuilder(column: $table.status, builder: (column) => column);
+  GeneratedColumn<String> get status => $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<String> get coverage =>
-      $composableBuilder(column: $table.coverage, builder: (column) => column);
+  GeneratedColumn<String> get coverage => $composableBuilder(column: $table.coverage, builder: (column) => column);
 
-  GeneratedColumn<String> get mountPathUsed => $composableBuilder(
-    column: $table.mountPathUsed,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get mountPathUsed =>
+      $composableBuilder(column: $table.mountPathUsed, builder: (column) => column);
 
-  GeneratedColumn<int> get startedAt =>
-      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+  GeneratedColumn<int> get startedAt => $composableBuilder(column: $table.startedAt, builder: (column) => column);
 
-  GeneratedColumn<int> get finishedAt => $composableBuilder(
-    column: $table.finishedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get finishedAt => $composableBuilder(column: $table.finishedAt, builder: (column) => column);
 
-  GeneratedColumn<int> get dirsDone =>
-      $composableBuilder(column: $table.dirsDone, builder: (column) => column);
+  GeneratedColumn<int> get dirsDone => $composableBuilder(column: $table.dirsDone, builder: (column) => column);
 
-  GeneratedColumn<int> get filesSeen =>
-      $composableBuilder(column: $table.filesSeen, builder: (column) => column);
+  GeneratedColumn<int> get filesSeen => $composableBuilder(column: $table.filesSeen, builder: (column) => column);
 
-  GeneratedColumn<int> get bytesSeen =>
-      $composableBuilder(column: $table.bytesSeen, builder: (column) => column);
+  GeneratedColumn<int> get bytesSeen => $composableBuilder(column: $table.bytesSeen, builder: (column) => column);
 
-  GeneratedColumn<int> get errorCount => $composableBuilder(
-    column: $table.errorCount,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get errorCount => $composableBuilder(column: $table.errorCount, builder: (column) => column);
 
   $SourcesAnnotationComposer get sourceId {
     final $SourcesAnnotationComposer composer = $composerBuilder(
@@ -13507,68 +10849,49 @@ class $ScansAnnotationComposer extends Composer<_$CatalogDatabase, Scans> {
       getCurrentColumn: (t) => t.sourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesAnnotationComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<T> scanDirsRefs<T extends Object>(
-    Expression<T> Function($ScanDirsAnnotationComposer a) f,
-  ) {
+  Expression<T> scanDirsRefs<T extends Object>(Expression<T> Function($ScanDirsAnnotationComposer a) f) {
     final $ScanDirsAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.scanDirs,
       getReferencedColumn: (t) => t.scanId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScanDirsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScanDirsAnnotationComposer(
             $db: $db,
             $table: $db.scanDirs,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<T> scanErrorsRefs<T extends Object>(
-    Expression<T> Function($ScanErrorsAnnotationComposer a) f,
-  ) {
+  Expression<T> scanErrorsRefs<T extends Object>(Expression<T> Function($ScanErrorsAnnotationComposer a) f) {
     final $ScanErrorsAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.scanErrors,
       getReferencedColumn: (t) => t.scanId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScanErrorsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScanErrorsAnnotationComposer(
             $db: $db,
             $table: $db.scanErrors,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -13588,23 +10911,16 @@ class $ScansTableManager
           $ScansUpdateCompanionBuilder,
           (ScanRow, $ScansReferences),
           ScanRow,
-          PrefetchHooks Function({
-            bool sourceId,
-            bool scanDirsRefs,
-            bool scanErrorsRefs,
-          })
+          PrefetchHooks Function({bool sourceId, bool scanDirsRefs, bool scanErrorsRefs})
         > {
   $ScansTableManager(_$CatalogDatabase db, Scans table)
     : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $ScansFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $ScansOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $ScansAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $ScansFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $ScansOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $ScansAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -13661,96 +10977,63 @@ class $ScansTableManager
                 bytesSeen: bytesSeen,
                 errorCount: errorCount,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<Scans, ScanRow>(table),
-                  $ScansReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback:
-              ({
-                sourceId = false,
-                scanDirsRefs = false,
-                scanErrorsRefs = false,
-              }) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (scanDirsRefs) db.scanDirs,
-                    if (scanErrorsRefs) db.scanErrors,
-                  ],
-                  addJoins:
-                      <
-                        T extends TableManagerState<
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic
-                        >
-                      >(state) {
-                        if (sourceId) {
-                          state = state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.sourceId,
-                            referencedTable: $ScansReferences._sourceIdTable(
-                              db,
-                            ),
-                            referencedColumn: $ScansReferences
-                                ._sourceIdTable(db)
-                                .id,
-                          ) as T;
-                        }
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable<Scans, ScanRow>(table), $ScansReferences(db, table, e))).toList(),
+          prefetchHooksCallback: ({sourceId = false, scanDirsRefs = false, scanErrorsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (scanDirsRefs) db.scanDirs, if (scanErrorsRefs) db.scanErrors],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (sourceId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.sourceId,
+                        referencedTable: $ScansReferences._sourceIdTable(db),
+                        referencedColumn: $ScansReferences._sourceIdTable(db).id,
+                      ) as T;
+                    }
 
-                        return state;
-                      },
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (scanDirsRefs)
-                        await $_getPrefetchedDataByColumns<
-                          ScanRow,
-                          Scans,
-                          ScanDirRow,
-                          ScanDirs
-                        >(
-                          currentTable: table,
-                          referencedTable: $ScansReferences._scanDirsRefsTable(
-                            db,
-                          ),
-                          managerFromTypedResult: (p0) =>
-                              $ScansReferences(db, table, p0).scanDirsRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'scan_id',
-                          typedResults: items,
-                        ),
-                      if (scanErrorsRefs)
-                        await $_getPrefetchedDataByColumns<
-                          ScanRow,
-                          Scans,
-                          ScanErrorRow,
-                          ScanErrors
-                        >(
-                          currentTable: table,
-                          referencedTable: $ScansReferences
-                              ._scanErrorsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $ScansReferences(db, table, p0).scanErrorsRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'scan_id',
-                          typedResults: items,
-                        ),
-                    ];
+                    return state;
                   },
-                );
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (scanDirsRefs)
+                    await $_getPrefetchedDataByColumns<ScanRow, Scans, ScanDirRow, ScanDirs>(
+                      currentTable: table,
+                      referencedTable: $ScansReferences._scanDirsRefsTable(db),
+                      managerFromTypedResult: (p0) => $ScansReferences(db, table, p0).scanDirsRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'scan_id',
+                      typedResults: items,
+                    ),
+                  if (scanErrorsRefs)
+                    await $_getPrefetchedDataByColumns<ScanRow, Scans, ScanErrorRow, ScanErrors>(
+                      currentTable: table,
+                      referencedTable: $ScansReferences._scanErrorsRefsTable(db),
+                      managerFromTypedResult: (p0) => $ScansReferences(db, table, p0).scanErrorsRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'scan_id',
+                      typedResults: items,
+                    ),
+                ];
               },
+            );
+          },
         ),
       );
 }
@@ -13767,11 +11050,7 @@ typedef $ScansProcessedTableManager =
       $ScansUpdateCompanionBuilder,
       (ScanRow, $ScansReferences),
       ScanRow,
-      PrefetchHooks Function({
-        bool sourceId,
-        bool scanDirsRefs,
-        bool scanErrorsRefs,
-      })
+      PrefetchHooks Function({bool sourceId, bool scanDirsRefs, bool scanErrorsRefs})
     >;
 typedef $ScanDirsCreateCompanionBuilder = ScanDirsCompanion Function({
   required int scanId,
@@ -13784,25 +11063,18 @@ typedef $ScanDirsUpdateCompanionBuilder = ScanDirsCompanion Function({
   Value<String> status,
 });
 
-final class $ScanDirsReferences
-    extends BaseReferences<_$CatalogDatabase, ScanDirs, ScanDirRow> {
+final class $ScanDirsReferences extends BaseReferences<_$CatalogDatabase, ScanDirs, ScanDirRow> {
   $ScanDirsReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static Scans _scanIdTable(_$CatalogDatabase db) =>
-      db.scans.createAlias('scan_dirs__scan_id__scans__id');
+  static Scans _scanIdTable(_$CatalogDatabase db) => db.scans.createAlias('scan_dirs__scan_id__scans__id');
 
   $ScansProcessedTableManager get scanId {
     final $_column = $_itemColumn<int>('scan_id')!;
 
-    final manager = $ScansTableManager(
-      $_db,
-      $_db.scans,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $ScansTableManager($_db, $_db.scans).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_scanIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
@@ -13814,15 +11086,11 @@ class $ScanDirsFilterComposer extends Composer<_$CatalogDatabase, ScanDirs> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get relPath => $composableBuilder(
-    column: $table.relPath,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get relPath =>
+      $composableBuilder(column: $table.relPath, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnFilters(column));
 
   $ScansFilterComposer get scanId {
     final $ScansFilterComposer composer = $composerBuilder(
@@ -13830,18 +11098,13 @@ class $ScanDirsFilterComposer extends Composer<_$CatalogDatabase, ScanDirs> {
       getCurrentColumn: (t) => t.scanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansFilterComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -13856,15 +11119,11 @@ class $ScanDirsOrderingComposer extends Composer<_$CatalogDatabase, ScanDirs> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get relPath => $composableBuilder(
-    column: $table.relPath,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get relPath =>
+      $composableBuilder(column: $table.relPath, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnOrderings(column));
 
   $ScansOrderingComposer get scanId {
     final $ScansOrderingComposer composer = $composerBuilder(
@@ -13872,26 +11131,20 @@ class $ScanDirsOrderingComposer extends Composer<_$CatalogDatabase, ScanDirs> {
       getCurrentColumn: (t) => t.scanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansOrderingComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $ScanDirsAnnotationComposer
-    extends Composer<_$CatalogDatabase, ScanDirs> {
+class $ScanDirsAnnotationComposer extends Composer<_$CatalogDatabase, ScanDirs> {
   $ScanDirsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -13899,11 +11152,9 @@ class $ScanDirsAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get relPath =>
-      $composableBuilder(column: $table.relPath, builder: (column) => column);
+  GeneratedColumn<String> get relPath => $composableBuilder(column: $table.relPath, builder: (column) => column);
 
-  GeneratedColumn<String> get status =>
-      $composableBuilder(column: $table.status, builder: (column) => column);
+  GeneratedColumn<String> get status => $composableBuilder(column: $table.status, builder: (column) => column);
 
   $ScansAnnotationComposer get scanId {
     final $ScansAnnotationComposer composer = $composerBuilder(
@@ -13911,18 +11162,13 @@ class $ScanDirsAnnotationComposer
       getCurrentColumn: (t) => t.scanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansAnnotationComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -13949,40 +11195,18 @@ class $ScanDirsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $ScanDirsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $ScanDirsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $ScanDirsAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> scanId = const Value.absent(),
-                Value<String> relPath = const Value.absent(),
-                Value<String> status = const Value.absent(),
-              }) => ScanDirsCompanion(
-                scanId: scanId,
-                relPath: relPath,
-                status: status,
-              ),
-          createCompanionCallback:
-              ({
-                required int scanId,
-                required String relPath,
-                required String status,
-              }) => ScanDirsCompanion.insert(
-                scanId: scanId,
-                relPath: relPath,
-                status: status,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<ScanDirs, ScanDirRow>(table),
-                  $ScanDirsReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          createFilteringComposer: () => $ScanDirsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $ScanDirsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $ScanDirsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> scanId = const Value.absent(),
+            Value<String> relPath = const Value.absent(),
+            Value<String> status = const Value.absent(),
+          }) => ScanDirsCompanion(scanId: scanId, relPath: relPath, status: status),
+          createCompanionCallback: ({required int scanId, required String relPath, required String status}) =>
+              ScanDirsCompanion.insert(scanId: scanId, relPath: relPath, status: status),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable<ScanDirs, ScanDirRow>(table), $ScanDirsReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({scanId = false}) {
             return PrefetchHooks(
               db: db,
@@ -14008,9 +11232,7 @@ class $ScanDirsTableManager
                         currentTable: table,
                         currentColumn: table.scanId,
                         referencedTable: $ScanDirsReferences._scanIdTable(db),
-                        referencedColumn: $ScanDirsReferences
-                            ._scanIdTable(db)
-                            .id,
+                        referencedColumn: $ScanDirsReferences._scanIdTable(db).id,
                       ) as T;
                     }
 
@@ -14058,30 +11280,22 @@ typedef $ScanErrorsUpdateCompanionBuilder = ScanErrorsCompanion Function({
   Value<int> at,
 });
 
-final class $ScanErrorsReferences
-    extends BaseReferences<_$CatalogDatabase, ScanErrors, ScanErrorRow> {
+final class $ScanErrorsReferences extends BaseReferences<_$CatalogDatabase, ScanErrors, ScanErrorRow> {
   $ScanErrorsReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static Scans _scanIdTable(_$CatalogDatabase db) =>
-      db.scans.createAlias('scan_errors__scan_id__scans__id');
+  static Scans _scanIdTable(_$CatalogDatabase db) => db.scans.createAlias('scan_errors__scan_id__scans__id');
 
   $ScansProcessedTableManager get scanId {
     final $_column = $_itemColumn<int>('scan_id')!;
 
-    final manager = $ScansTableManager(
-      $_db,
-      $_db.scans,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $ScansTableManager($_db, $_db.scans).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_scanIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $ScanErrorsFilterComposer
-    extends Composer<_$CatalogDatabase, ScanErrors> {
+class $ScanErrorsFilterComposer extends Composer<_$CatalogDatabase, ScanErrors> {
   $ScanErrorsFilterComposer({
     required super.$db,
     required super.$table,
@@ -14089,35 +11303,20 @@ class $ScanErrorsFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get relPath => $composableBuilder(
-    column: $table.relPath,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get relPath =>
+      $composableBuilder(column: $table.relPath, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get win32Code => $composableBuilder(
-    column: $table.win32Code,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get win32Code =>
+      $composableBuilder(column: $table.win32Code, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get message => $composableBuilder(
-    column: $table.message,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get at => $composableBuilder(
-    column: $table.at,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get at => $composableBuilder(column: $table.at, builder: (column) => ColumnFilters(column));
 
   $ScansFilterComposer get scanId {
     final $ScansFilterComposer composer = $composerBuilder(
@@ -14125,26 +11324,20 @@ class $ScanErrorsFilterComposer
       getCurrentColumn: (t) => t.scanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansFilterComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $ScanErrorsOrderingComposer
-    extends Composer<_$CatalogDatabase, ScanErrors> {
+class $ScanErrorsOrderingComposer extends Composer<_$CatalogDatabase, ScanErrors> {
   $ScanErrorsOrderingComposer({
     required super.$db,
     required super.$table,
@@ -14152,35 +11345,21 @@ class $ScanErrorsOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get relPath => $composableBuilder(
-    column: $table.relPath,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get relPath =>
+      $composableBuilder(column: $table.relPath, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get win32Code => $composableBuilder(
-    column: $table.win32Code,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get win32Code =>
+      $composableBuilder(column: $table.win32Code, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get message => $composableBuilder(
-    column: $table.message,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get at => $composableBuilder(
-    column: $table.at,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get at => $composableBuilder(column: $table.at, builder: (column) => ColumnOrderings(column));
 
   $ScansOrderingComposer get scanId {
     final $ScansOrderingComposer composer = $composerBuilder(
@@ -14188,26 +11367,20 @@ class $ScanErrorsOrderingComposer
       getCurrentColumn: (t) => t.scanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansOrderingComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $ScanErrorsAnnotationComposer
-    extends Composer<_$CatalogDatabase, ScanErrors> {
+class $ScanErrorsAnnotationComposer extends Composer<_$CatalogDatabase, ScanErrors> {
   $ScanErrorsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -14215,23 +11388,17 @@ class $ScanErrorsAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get relPath =>
-      $composableBuilder(column: $table.relPath, builder: (column) => column);
+  GeneratedColumn<String> get relPath => $composableBuilder(column: $table.relPath, builder: (column) => column);
 
-  GeneratedColumn<String> get kind =>
-      $composableBuilder(column: $table.kind, builder: (column) => column);
+  GeneratedColumn<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => column);
 
-  GeneratedColumn<int> get win32Code =>
-      $composableBuilder(column: $table.win32Code, builder: (column) => column);
+  GeneratedColumn<int> get win32Code => $composableBuilder(column: $table.win32Code, builder: (column) => column);
 
-  GeneratedColumn<String> get message =>
-      $composableBuilder(column: $table.message, builder: (column) => column);
+  GeneratedColumn<String> get message => $composableBuilder(column: $table.message, builder: (column) => column);
 
-  GeneratedColumn<int> get at =>
-      $composableBuilder(column: $table.at, builder: (column) => column);
+  GeneratedColumn<int> get at => $composableBuilder(column: $table.at, builder: (column) => column);
 
   $ScansAnnotationComposer get scanId {
     final $ScansAnnotationComposer composer = $composerBuilder(
@@ -14239,18 +11406,13 @@ class $ScanErrorsAnnotationComposer
       getCurrentColumn: (t) => t.scanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansAnnotationComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -14277,12 +11439,9 @@ class $ScanErrorsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $ScanErrorsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $ScanErrorsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $ScanErrorsAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $ScanErrorsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $ScanErrorsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $ScanErrorsAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -14320,12 +11479,7 @@ class $ScanErrorsTableManager
                 at: at,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<ScanErrors, ScanErrorRow>(table),
-                  $ScanErrorsReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable<ScanErrors, ScanErrorRow>(table), $ScanErrorsReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: ({scanId = false}) {
             return PrefetchHooks(
@@ -14352,9 +11506,7 @@ class $ScanErrorsTableManager
                         currentTable: table,
                         currentColumn: table.scanId,
                         referencedTable: $ScanErrorsReferences._scanIdTable(db),
-                        referencedColumn: $ScanErrorsReferences
-                            ._scanIdTable(db)
-                            .id,
+                        referencedColumn: $ScanErrorsReferences._scanIdTable(db).id,
                       ) as T;
                     }
 
@@ -14398,16 +11550,11 @@ typedef $ContentsUpdateCompanionBuilder = ContentsCompanion Function({
   Value<int> createdAt,
 });
 
-final class $ContentsReferences
-    extends BaseReferences<_$CatalogDatabase, Contents, ContentRow> {
+final class $ContentsReferences extends BaseReferences<_$CatalogDatabase, Contents, ContentRow> {
   $ContentsReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<FileInstances, List<FileInstanceRow>>
-  _fileInstancesRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.fileInstances,
-        aliasName: 'contents__id__file_instances__content_id',
-      );
+  static MultiTypedResultKey<FileInstances, List<FileInstanceRow>> _fileInstancesRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.fileInstances, aliasName: 'contents__id__file_instances__content_id');
 
   $FileInstancesProcessedTableManager get fileInstancesRefs {
     final manager = $FileInstancesTableManager(
@@ -14416,17 +11563,11 @@ final class $ContentsReferences
     ).filter((f) => f.contentId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_fileInstancesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<MediaMetadata, List<MediaMetadataRow>>
-  _mediaMetadataRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.mediaMetadata,
-        aliasName: 'contents__id__media_metadata__content_id',
-      );
+  static MultiTypedResultKey<MediaMetadata, List<MediaMetadataRow>> _mediaMetadataRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.mediaMetadata, aliasName: 'contents__id__media_metadata__content_id');
 
   $MediaMetadataProcessedTableManager get mediaMetadataRefs {
     final manager = $MediaMetadataTableManager(
@@ -14435,17 +11576,12 @@ final class $ContentsReferences
     ).filter((f) => f.contentId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_mediaMetadataRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<DateCorrections, List<DateCorrectionRow>>
-  _dateCorrectionsRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.dateCorrections,
-        aliasName: 'contents__id__date_corrections__content_id',
-      );
+  static MultiTypedResultKey<DateCorrections, List<DateCorrectionRow>> _dateCorrectionsRefsTable(
+    _$CatalogDatabase db,
+  ) => MultiTypedResultKey.fromTable(db.dateCorrections, aliasName: 'contents__id__date_corrections__content_id');
 
   $DateCorrectionsProcessedTableManager get dateCorrectionsRefs {
     final manager = $DateCorrectionsTableManager(
@@ -14453,19 +11589,12 @@ final class $ContentsReferences
       $_db.dateCorrections,
     ).filter((f) => f.contentId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _dateCorrectionsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_dateCorrectionsRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<ContentTags, List<ContentTagRow>>
-  _contentTagsRefsTable(_$CatalogDatabase db) => MultiTypedResultKey.fromTable(
-    db.contentTags,
-    aliasName: 'contents__id__content_tags__content_id',
-  );
+  static MultiTypedResultKey<ContentTags, List<ContentTagRow>> _contentTagsRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.contentTags, aliasName: 'contents__id__content_tags__content_id');
 
   $ContentTagsProcessedTableManager get contentTagsRefs {
     final manager = $ContentTagsTableManager(
@@ -14474,9 +11603,7 @@ final class $ContentsReferences
     ).filter((f) => f.contentId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_contentTagsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
@@ -14488,126 +11615,87 @@ class $ContentsFilterComposer extends Composer<_$CatalogDatabase, Contents> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<Uint8List> get sha256 => $composableBuilder(
-    column: $table.sha256,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<Uint8List> get sha256 =>
+      $composableBuilder(column: $table.sha256, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sizeBytes => $composableBuilder(
-    column: $table.sizeBytes,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get mediaType => $composableBuilder(
-    column: $table.mediaType,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get mediaType =>
+      $composableBuilder(column: $table.mediaType, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
-  Expression<bool> fileInstancesRefs(
-    Expression<bool> Function($FileInstancesFilterComposer f) f,
-  ) {
+  Expression<bool> fileInstancesRefs(Expression<bool> Function($FileInstancesFilterComposer f) f) {
     final $FileInstancesFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.contentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesFilterComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> mediaMetadataRefs(
-    Expression<bool> Function($MediaMetadataFilterComposer f) f,
-  ) {
+  Expression<bool> mediaMetadataRefs(Expression<bool> Function($MediaMetadataFilterComposer f) f) {
     final $MediaMetadataFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.mediaMetadata,
       getReferencedColumn: (t) => t.contentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $MediaMetadataFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaMetadataFilterComposer(
             $db: $db,
             $table: $db.mediaMetadata,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> dateCorrectionsRefs(
-    Expression<bool> Function($DateCorrectionsFilterComposer f) f,
-  ) {
+  Expression<bool> dateCorrectionsRefs(Expression<bool> Function($DateCorrectionsFilterComposer f) f) {
     final $DateCorrectionsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.dateCorrections,
       getReferencedColumn: (t) => t.contentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $DateCorrectionsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $DateCorrectionsFilterComposer(
             $db: $db,
             $table: $db.dateCorrections,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> contentTagsRefs(
-    Expression<bool> Function($ContentTagsFilterComposer f) f,
-  ) {
+  Expression<bool> contentTagsRefs(Expression<bool> Function($ContentTagsFilterComposer f) f) {
     final $ContentTagsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.contentTags,
       getReferencedColumn: (t) => t.contentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentTagsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentTagsFilterComposer(
             $db: $db,
             $table: $db.contentTags,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -14622,34 +11710,22 @@ class $ContentsOrderingComposer extends Composer<_$CatalogDatabase, Contents> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<Uint8List> get sha256 => $composableBuilder(
-    column: $table.sha256,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<Uint8List> get sha256 =>
+      $composableBuilder(column: $table.sha256, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sizeBytes => $composableBuilder(
-    column: $table.sizeBytes,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get mediaType => $composableBuilder(
-    column: $table.mediaType,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get mediaType =>
+      $composableBuilder(column: $table.mediaType, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $ContentsAnnotationComposer
-    extends Composer<_$CatalogDatabase, Contents> {
+class $ContentsAnnotationComposer extends Composer<_$CatalogDatabase, Contents> {
   $ContentsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -14657,116 +11733,83 @@ class $ContentsAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<Uint8List> get sha256 =>
-      $composableBuilder(column: $table.sha256, builder: (column) => column);
+  GeneratedColumn<Uint8List> get sha256 => $composableBuilder(column: $table.sha256, builder: (column) => column);
 
-  GeneratedColumn<int> get sizeBytes =>
-      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+  GeneratedColumn<int> get sizeBytes => $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
 
-  GeneratedColumn<String> get mediaType =>
-      $composableBuilder(column: $table.mediaType, builder: (column) => column);
+  GeneratedColumn<String> get mediaType => $composableBuilder(column: $table.mediaType, builder: (column) => column);
 
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  Expression<T> fileInstancesRefs<T extends Object>(
-    Expression<T> Function($FileInstancesAnnotationComposer a) f,
-  ) {
+  Expression<T> fileInstancesRefs<T extends Object>(Expression<T> Function($FileInstancesAnnotationComposer a) f) {
     final $FileInstancesAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.contentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesAnnotationComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<T> mediaMetadataRefs<T extends Object>(
-    Expression<T> Function($MediaMetadataAnnotationComposer a) f,
-  ) {
+  Expression<T> mediaMetadataRefs<T extends Object>(Expression<T> Function($MediaMetadataAnnotationComposer a) f) {
     final $MediaMetadataAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.mediaMetadata,
       getReferencedColumn: (t) => t.contentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $MediaMetadataAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaMetadataAnnotationComposer(
             $db: $db,
             $table: $db.mediaMetadata,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<T> dateCorrectionsRefs<T extends Object>(
-    Expression<T> Function($DateCorrectionsAnnotationComposer a) f,
-  ) {
+  Expression<T> dateCorrectionsRefs<T extends Object>(Expression<T> Function($DateCorrectionsAnnotationComposer a) f) {
     final $DateCorrectionsAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.dateCorrections,
       getReferencedColumn: (t) => t.contentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $DateCorrectionsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $DateCorrectionsAnnotationComposer(
             $db: $db,
             $table: $db.dateCorrections,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<T> contentTagsRefs<T extends Object>(
-    Expression<T> Function($ContentTagsAnnotationComposer a) f,
-  ) {
+  Expression<T> contentTagsRefs<T extends Object>(Expression<T> Function($ContentTagsAnnotationComposer a) f) {
     final $ContentTagsAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.contentTags,
       getReferencedColumn: (t) => t.contentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentTagsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentTagsAnnotationComposer(
             $db: $db,
             $table: $db.contentTags,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -14798,12 +11841,9 @@ class $ContentsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $ContentsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $ContentsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $ContentsAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $ContentsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $ContentsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $ContentsAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -14832,14 +11872,8 @@ class $ContentsTableManager
                 mediaType: mediaType,
                 createdAt: createdAt,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<Contents, ContentRow>(table),
-                  $ContentsReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable<Contents, ContentRow>(table), $ContentsReferences(db, table, e))).toList(),
           prefetchHooksCallback:
               ({
                 fileInstancesRefs = false,
@@ -14859,77 +11893,37 @@ class $ContentsTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (fileInstancesRefs)
-                        await $_getPrefetchedDataByColumns<
-                          ContentRow,
-                          Contents,
-                          FileInstanceRow,
-                          FileInstances
-                        >(
+                        await $_getPrefetchedDataByColumns<ContentRow, Contents, FileInstanceRow, FileInstances>(
                           currentTable: table,
-                          referencedTable: $ContentsReferences
-                              ._fileInstancesRefsTable(db),
-                          managerFromTypedResult: (p0) => $ContentsReferences(
-                            db,
-                            table,
-                            p0,
-                          ).fileInstancesRefs,
+                          referencedTable: $ContentsReferences._fileInstancesRefsTable(db),
+                          managerFromTypedResult: (p0) => $ContentsReferences(db, table, p0).fileInstancesRefs,
                           currentColumn: 'id',
                           referencedColumn: 'content_id',
                           typedResults: items,
                         ),
                       if (mediaMetadataRefs)
-                        await $_getPrefetchedDataByColumns<
-                          ContentRow,
-                          Contents,
-                          MediaMetadataRow,
-                          MediaMetadata
-                        >(
+                        await $_getPrefetchedDataByColumns<ContentRow, Contents, MediaMetadataRow, MediaMetadata>(
                           currentTable: table,
-                          referencedTable: $ContentsReferences
-                              ._mediaMetadataRefsTable(db),
-                          managerFromTypedResult: (p0) => $ContentsReferences(
-                            db,
-                            table,
-                            p0,
-                          ).mediaMetadataRefs,
+                          referencedTable: $ContentsReferences._mediaMetadataRefsTable(db),
+                          managerFromTypedResult: (p0) => $ContentsReferences(db, table, p0).mediaMetadataRefs,
                           currentColumn: 'id',
                           referencedColumn: 'content_id',
                           typedResults: items,
                         ),
                       if (dateCorrectionsRefs)
-                        await $_getPrefetchedDataByColumns<
-                          ContentRow,
-                          Contents,
-                          DateCorrectionRow,
-                          DateCorrections
-                        >(
+                        await $_getPrefetchedDataByColumns<ContentRow, Contents, DateCorrectionRow, DateCorrections>(
                           currentTable: table,
-                          referencedTable: $ContentsReferences
-                              ._dateCorrectionsRefsTable(db),
-                          managerFromTypedResult: (p0) => $ContentsReferences(
-                            db,
-                            table,
-                            p0,
-                          ).dateCorrectionsRefs,
+                          referencedTable: $ContentsReferences._dateCorrectionsRefsTable(db),
+                          managerFromTypedResult: (p0) => $ContentsReferences(db, table, p0).dateCorrectionsRefs,
                           currentColumn: 'id',
                           referencedColumn: 'content_id',
                           typedResults: items,
                         ),
                       if (contentTagsRefs)
-                        await $_getPrefetchedDataByColumns<
-                          ContentRow,
-                          Contents,
-                          ContentTagRow,
-                          ContentTags
-                        >(
+                        await $_getPrefetchedDataByColumns<ContentRow, Contents, ContentTagRow, ContentTags>(
                           currentTable: table,
-                          referencedTable: $ContentsReferences
-                              ._contentTagsRefsTable(db),
-                          managerFromTypedResult: (p0) => $ContentsReferences(
-                            db,
-                            table,
-                            p0,
-                          ).contentTagsRefs,
+                          referencedTable: $ContentsReferences._contentTagsRefsTable(db),
+                          managerFromTypedResult: (p0) => $ContentsReferences(db, table, p0).contentTagsRefs,
                           currentColumn: 'id',
                           referencedColumn: 'content_id',
                           typedResults: items,
@@ -15008,8 +12002,7 @@ typedef $FileInstancesUpdateCompanionBuilder = FileInstancesCompanion Function({
   Value<int?> missingConfirmedAt,
 });
 
-final class $FileInstancesReferences
-    extends BaseReferences<_$CatalogDatabase, FileInstances, FileInstanceRow> {
+final class $FileInstancesReferences extends BaseReferences<_$CatalogDatabase, FileInstances, FileInstanceRow> {
   $FileInstancesReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static Sources _sourceIdTable(_$CatalogDatabase db) =>
@@ -15018,15 +12011,10 @@ final class $FileInstancesReferences
   $SourcesProcessedTableManager get sourceId {
     final $_column = $_itemColumn<String>('source_id')!;
 
-    final manager = $SourcesTableManager(
-      $_db,
-      $_db.sources,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $SourcesTableManager($_db, $_db.sources).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_sourceIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
   static Contents _contentIdTable(_$CatalogDatabase db) =>
@@ -15035,15 +12023,10 @@ final class $FileInstancesReferences
   $ContentsProcessedTableManager? get contentId {
     final $_column = $_itemColumn<int>('content_id');
     if ($_column == null) return null;
-    final manager = $ContentsTableManager(
-      $_db,
-      $_db.contents,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contentIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
   static Scans _firstSeenScanIdTable(_$CatalogDatabase db) =>
@@ -15052,15 +12035,10 @@ final class $FileInstancesReferences
   $ScansProcessedTableManager? get firstSeenScanId {
     final $_column = $_itemColumn<int>('first_seen_scan_id');
     if ($_column == null) return null;
-    final manager = $ScansTableManager(
-      $_db,
-      $_db.scans,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $ScansTableManager($_db, $_db.scans).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_firstSeenScanIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
   static Scans _lastSeenScanIdTable(_$CatalogDatabase db) =>
@@ -15069,19 +12047,13 @@ final class $FileInstancesReferences
   $ScansProcessedTableManager? get lastSeenScanId {
     final $_column = $_itemColumn<int>('last_seen_scan_id');
     if ($_column == null) return null;
-    final manager = $ScansTableManager(
-      $_db,
-      $_db.scans,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $ScansTableManager($_db, $_db.scans).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_lastSeenScanIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static MultiTypedResultKey<OperationItems, List<OperationItemRow>>
-  _operationItemsRefsTable(_$CatalogDatabase db) =>
+  static MultiTypedResultKey<OperationItems, List<OperationItemRow>> _operationItemsRefsTable(_$CatalogDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.operationItems,
         aliasName: 'file_instances__id__operation_items__src_instance_id',
@@ -15094,17 +12066,15 @@ final class $FileInstancesReferences
     ).filter((f) => f.srcInstanceId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_operationItemsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<SelectionSetItems, List<SelectionSetItemRow>>
-  _selectionSetItemsRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.selectionSetItems,
-        aliasName: 'file_instances__id__selection_set_items__instance_id',
-      );
+  static MultiTypedResultKey<SelectionSetItems, List<SelectionSetItemRow>> _selectionSetItemsRefsTable(
+    _$CatalogDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.selectionSetItems,
+    aliasName: 'file_instances__id__selection_set_items__instance_id',
+  );
 
   $SelectionSetItemsProcessedTableManager get selectionSetItemsRefs {
     final manager = $SelectionSetItemsTableManager(
@@ -15112,20 +12082,14 @@ final class $FileInstancesReferences
       $_db.selectionSetItems,
     ).filter((f) => f.instanceId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _selectionSetItemsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_selectionSetItemsRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<IntegrityChecks, List<IntegrityCheckRow>>
-  _integrityChecksRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.integrityChecks,
-        aliasName: 'file_instances__id__integrity_checks__instance_id',
-      );
+  static MultiTypedResultKey<IntegrityChecks, List<IntegrityCheckRow>> _integrityChecksRefsTable(
+    _$CatalogDatabase db,
+  ) =>
+      MultiTypedResultKey.fromTable(db.integrityChecks, aliasName: 'file_instances__id__integrity_checks__instance_id');
 
   $IntegrityChecksProcessedTableManager get integrityChecksRefs {
     final manager = $IntegrityChecksTableManager(
@@ -15133,17 +12097,12 @@ final class $FileInstancesReferences
       $_db.integrityChecks,
     ).filter((f) => f.instanceId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _integrityChecksRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_integrityChecksRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
-class $FileInstancesFilterComposer
-    extends Composer<_$CatalogDatabase, FileInstances> {
+class $FileInstancesFilterComposer extends Composer<_$CatalogDatabase, FileInstances> {
   $FileInstancesFilterComposer({
     required super.$db,
     required super.$table,
@@ -15151,90 +12110,51 @@ class $FileInstancesFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get relPath => $composableBuilder(
-    column: $table.relPath,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get relPath =>
+      $composableBuilder(column: $table.relPath, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get dirRelPath => $composableBuilder(
-    column: $table.dirRelPath,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get dirRelPath =>
+      $composableBuilder(column: $table.dirRelPath, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get name => $composableBuilder(column: $table.name, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get ext => $composableBuilder(
-    column: $table.ext,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get ext => $composableBuilder(column: $table.ext, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sizeBytes => $composableBuilder(
-    column: $table.sizeBytes,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get mtime => $composableBuilder(
-    column: $table.mtime,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get mtime => $composableBuilder(column: $table.mtime, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get ctime => $composableBuilder(
-    column: $table.ctime,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get ctime => $composableBuilder(column: $table.ctime, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get attributes => $composableBuilder(
-    column: $table.attributes,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get attributes =>
+      $composableBuilder(column: $table.attributes, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get hashStatus => $composableBuilder(
-    column: $table.hashStatus,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get hashStatus =>
+      $composableBuilder(column: $table.hashStatus, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get hashedSize => $composableBuilder(
-    column: $table.hashedSize,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get hashedSize =>
+      $composableBuilder(column: $table.hashedSize, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get hashedMtime => $composableBuilder(
-    column: $table.hashedMtime,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get hashedMtime =>
+      $composableBuilder(column: $table.hashedMtime, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get hashedAt => $composableBuilder(
-    column: $table.hashedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get hashedAt =>
+      $composableBuilder(column: $table.hashedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get lastVerifiedAt => $composableBuilder(
-    column: $table.lastVerifiedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get lastVerifiedAt =>
+      $composableBuilder(column: $table.lastVerifiedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get availability => $composableBuilder(
-    column: $table.availability,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get availability =>
+      $composableBuilder(column: $table.availability, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get integrity => $composableBuilder(
-    column: $table.integrity,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get integrity =>
+      $composableBuilder(column: $table.integrity, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get missingConfirmedAt => $composableBuilder(
-    column: $table.missingConfirmedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get missingConfirmedAt =>
+      $composableBuilder(column: $table.missingConfirmedAt, builder: (column) => ColumnFilters(column));
 
   $SourcesFilterComposer get sourceId {
     final $SourcesFilterComposer composer = $composerBuilder(
@@ -15242,18 +12162,13 @@ class $FileInstancesFilterComposer
       getCurrentColumn: (t) => t.sourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesFilterComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -15265,18 +12180,13 @@ class $FileInstancesFilterComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsFilterComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -15288,18 +12198,13 @@ class $FileInstancesFilterComposer
       getCurrentColumn: (t) => t.firstSeenScanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansFilterComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -15311,101 +12216,74 @@ class $FileInstancesFilterComposer
       getCurrentColumn: (t) => t.lastSeenScanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansFilterComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<bool> operationItemsRefs(
-    Expression<bool> Function($OperationItemsFilterComposer f) f,
-  ) {
+  Expression<bool> operationItemsRefs(Expression<bool> Function($OperationItemsFilterComposer f) f) {
     final $OperationItemsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.operationItems,
       getReferencedColumn: (t) => t.srcInstanceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationItemsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationItemsFilterComposer(
             $db: $db,
             $table: $db.operationItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> selectionSetItemsRefs(
-    Expression<bool> Function($SelectionSetItemsFilterComposer f) f,
-  ) {
+  Expression<bool> selectionSetItemsRefs(Expression<bool> Function($SelectionSetItemsFilterComposer f) f) {
     final $SelectionSetItemsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.selectionSetItems,
       getReferencedColumn: (t) => t.instanceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SelectionSetItemsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SelectionSetItemsFilterComposer(
             $db: $db,
             $table: $db.selectionSetItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> integrityChecksRefs(
-    Expression<bool> Function($IntegrityChecksFilterComposer f) f,
-  ) {
+  Expression<bool> integrityChecksRefs(Expression<bool> Function($IntegrityChecksFilterComposer f) f) {
     final $IntegrityChecksFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.integrityChecks,
       getReferencedColumn: (t) => t.instanceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $IntegrityChecksFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityChecksFilterComposer(
             $db: $db,
             $table: $db.integrityChecks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 }
 
-class $FileInstancesOrderingComposer
-    extends Composer<_$CatalogDatabase, FileInstances> {
+class $FileInstancesOrderingComposer extends Composer<_$CatalogDatabase, FileInstances> {
   $FileInstancesOrderingComposer({
     required super.$db,
     required super.$table,
@@ -15413,90 +12291,55 @@ class $FileInstancesOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get relPath => $composableBuilder(
-    column: $table.relPath,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get relPath =>
+      $composableBuilder(column: $table.relPath, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get dirRelPath => $composableBuilder(
-    column: $table.dirRelPath,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get dirRelPath =>
+      $composableBuilder(column: $table.dirRelPath, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get ext => $composableBuilder(
-    column: $table.ext,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get ext =>
+      $composableBuilder(column: $table.ext, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sizeBytes => $composableBuilder(
-    column: $table.sizeBytes,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get mtime => $composableBuilder(
-    column: $table.mtime,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get mtime =>
+      $composableBuilder(column: $table.mtime, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get ctime => $composableBuilder(
-    column: $table.ctime,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get ctime =>
+      $composableBuilder(column: $table.ctime, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get attributes => $composableBuilder(
-    column: $table.attributes,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get attributes =>
+      $composableBuilder(column: $table.attributes, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get hashStatus => $composableBuilder(
-    column: $table.hashStatus,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get hashStatus =>
+      $composableBuilder(column: $table.hashStatus, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get hashedSize => $composableBuilder(
-    column: $table.hashedSize,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get hashedSize =>
+      $composableBuilder(column: $table.hashedSize, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get hashedMtime => $composableBuilder(
-    column: $table.hashedMtime,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get hashedMtime =>
+      $composableBuilder(column: $table.hashedMtime, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get hashedAt => $composableBuilder(
-    column: $table.hashedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get hashedAt =>
+      $composableBuilder(column: $table.hashedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get lastVerifiedAt => $composableBuilder(
-    column: $table.lastVerifiedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get lastVerifiedAt =>
+      $composableBuilder(column: $table.lastVerifiedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get availability => $composableBuilder(
-    column: $table.availability,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get availability =>
+      $composableBuilder(column: $table.availability, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get integrity => $composableBuilder(
-    column: $table.integrity,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get integrity =>
+      $composableBuilder(column: $table.integrity, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get missingConfirmedAt => $composableBuilder(
-    column: $table.missingConfirmedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get missingConfirmedAt =>
+      $composableBuilder(column: $table.missingConfirmedAt, builder: (column) => ColumnOrderings(column));
 
   $SourcesOrderingComposer get sourceId {
     final $SourcesOrderingComposer composer = $composerBuilder(
@@ -15504,18 +12347,13 @@ class $FileInstancesOrderingComposer
       getCurrentColumn: (t) => t.sourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesOrderingComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -15527,18 +12365,13 @@ class $FileInstancesOrderingComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsOrderingComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -15550,18 +12383,13 @@ class $FileInstancesOrderingComposer
       getCurrentColumn: (t) => t.firstSeenScanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansOrderingComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -15573,26 +12401,20 @@ class $FileInstancesOrderingComposer
       getCurrentColumn: (t) => t.lastSeenScanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansOrderingComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $FileInstancesAnnotationComposer
-    extends Composer<_$CatalogDatabase, FileInstances> {
+class $FileInstancesAnnotationComposer extends Composer<_$CatalogDatabase, FileInstances> {
   $FileInstancesAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -15600,72 +12422,42 @@ class $FileInstancesAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get relPath =>
-      $composableBuilder(column: $table.relPath, builder: (column) => column);
+  GeneratedColumn<String> get relPath => $composableBuilder(column: $table.relPath, builder: (column) => column);
 
-  GeneratedColumn<String> get dirRelPath => $composableBuilder(
-    column: $table.dirRelPath,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get dirRelPath => $composableBuilder(column: $table.dirRelPath, builder: (column) => column);
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<String> get name => $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<String> get ext =>
-      $composableBuilder(column: $table.ext, builder: (column) => column);
+  GeneratedColumn<String> get ext => $composableBuilder(column: $table.ext, builder: (column) => column);
 
-  GeneratedColumn<int> get sizeBytes =>
-      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+  GeneratedColumn<int> get sizeBytes => $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
 
-  GeneratedColumn<int> get mtime =>
-      $composableBuilder(column: $table.mtime, builder: (column) => column);
+  GeneratedColumn<int> get mtime => $composableBuilder(column: $table.mtime, builder: (column) => column);
 
-  GeneratedColumn<int> get ctime =>
-      $composableBuilder(column: $table.ctime, builder: (column) => column);
+  GeneratedColumn<int> get ctime => $composableBuilder(column: $table.ctime, builder: (column) => column);
 
-  GeneratedColumn<int> get attributes => $composableBuilder(
-    column: $table.attributes,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get attributes => $composableBuilder(column: $table.attributes, builder: (column) => column);
 
-  GeneratedColumn<String> get hashStatus => $composableBuilder(
-    column: $table.hashStatus,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get hashStatus => $composableBuilder(column: $table.hashStatus, builder: (column) => column);
 
-  GeneratedColumn<int> get hashedSize => $composableBuilder(
-    column: $table.hashedSize,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get hashedSize => $composableBuilder(column: $table.hashedSize, builder: (column) => column);
 
-  GeneratedColumn<int> get hashedMtime => $composableBuilder(
-    column: $table.hashedMtime,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get hashedMtime => $composableBuilder(column: $table.hashedMtime, builder: (column) => column);
 
-  GeneratedColumn<int> get hashedAt =>
-      $composableBuilder(column: $table.hashedAt, builder: (column) => column);
+  GeneratedColumn<int> get hashedAt => $composableBuilder(column: $table.hashedAt, builder: (column) => column);
 
-  GeneratedColumn<int> get lastVerifiedAt => $composableBuilder(
-    column: $table.lastVerifiedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get lastVerifiedAt =>
+      $composableBuilder(column: $table.lastVerifiedAt, builder: (column) => column);
 
-  GeneratedColumn<String> get availability => $composableBuilder(
-    column: $table.availability,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get availability =>
+      $composableBuilder(column: $table.availability, builder: (column) => column);
 
-  GeneratedColumn<String> get integrity =>
-      $composableBuilder(column: $table.integrity, builder: (column) => column);
+  GeneratedColumn<String> get integrity => $composableBuilder(column: $table.integrity, builder: (column) => column);
 
-  GeneratedColumn<int> get missingConfirmedAt => $composableBuilder(
-    column: $table.missingConfirmedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get missingConfirmedAt =>
+      $composableBuilder(column: $table.missingConfirmedAt, builder: (column) => column);
 
   $SourcesAnnotationComposer get sourceId {
     final $SourcesAnnotationComposer composer = $composerBuilder(
@@ -15673,18 +12465,13 @@ class $FileInstancesAnnotationComposer
       getCurrentColumn: (t) => t.sourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesAnnotationComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -15696,18 +12483,13 @@ class $FileInstancesAnnotationComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsAnnotationComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -15719,18 +12501,13 @@ class $FileInstancesAnnotationComposer
       getCurrentColumn: (t) => t.firstSeenScanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansAnnotationComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -15742,43 +12519,31 @@ class $FileInstancesAnnotationComposer
       getCurrentColumn: (t) => t.lastSeenScanId,
       referencedTable: $db.scans,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ScansAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ScansAnnotationComposer(
             $db: $db,
             $table: $db.scans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<T> operationItemsRefs<T extends Object>(
-    Expression<T> Function($OperationItemsAnnotationComposer a) f,
-  ) {
+  Expression<T> operationItemsRefs<T extends Object>(Expression<T> Function($OperationItemsAnnotationComposer a) f) {
     final $OperationItemsAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.operationItems,
       getReferencedColumn: (t) => t.srcInstanceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationItemsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationItemsAnnotationComposer(
             $db: $db,
             $table: $db.operationItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -15792,43 +12557,31 @@ class $FileInstancesAnnotationComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.selectionSetItems,
       getReferencedColumn: (t) => t.instanceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SelectionSetItemsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SelectionSetItemsAnnotationComposer(
             $db: $db,
             $table: $db.selectionSetItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<T> integrityChecksRefs<T extends Object>(
-    Expression<T> Function($IntegrityChecksAnnotationComposer a) f,
-  ) {
+  Expression<T> integrityChecksRefs<T extends Object>(Expression<T> Function($IntegrityChecksAnnotationComposer a) f) {
     final $IntegrityChecksAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.integrityChecks,
       getReferencedColumn: (t) => t.instanceId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $IntegrityChecksAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityChecksAnnotationComposer(
             $db: $db,
             $table: $db.integrityChecks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -15863,12 +12616,9 @@ class $FileInstancesTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $FileInstancesFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $FileInstancesOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $FileInstancesAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $FileInstancesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $FileInstancesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $FileInstancesAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -15962,12 +12712,7 @@ class $FileInstancesTableManager
                 missingConfirmedAt: missingConfirmedAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<FileInstances, FileInstanceRow>(table),
-                  $FileInstancesReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable<FileInstances, FileInstanceRow>(table), $FileInstancesReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback:
               ({
@@ -16006,44 +12751,32 @@ class $FileInstancesTableManager
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.sourceId,
-                            referencedTable: $FileInstancesReferences
-                                ._sourceIdTable(db),
-                            referencedColumn: $FileInstancesReferences
-                                ._sourceIdTable(db)
-                                .id,
+                            referencedTable: $FileInstancesReferences._sourceIdTable(db),
+                            referencedColumn: $FileInstancesReferences._sourceIdTable(db).id,
                           ) as T;
                         }
                         if (contentId) {
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.contentId,
-                            referencedTable: $FileInstancesReferences
-                                ._contentIdTable(db),
-                            referencedColumn: $FileInstancesReferences
-                                ._contentIdTable(db)
-                                .id,
+                            referencedTable: $FileInstancesReferences._contentIdTable(db),
+                            referencedColumn: $FileInstancesReferences._contentIdTable(db).id,
                           ) as T;
                         }
                         if (firstSeenScanId) {
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.firstSeenScanId,
-                            referencedTable: $FileInstancesReferences
-                                ._firstSeenScanIdTable(db),
-                            referencedColumn: $FileInstancesReferences
-                                ._firstSeenScanIdTable(db)
-                                .id,
+                            referencedTable: $FileInstancesReferences._firstSeenScanIdTable(db),
+                            referencedColumn: $FileInstancesReferences._firstSeenScanIdTable(db).id,
                           ) as T;
                         }
                         if (lastSeenScanId) {
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.lastSeenScanId,
-                            referencedTable: $FileInstancesReferences
-                                ._lastSeenScanIdTable(db),
-                            referencedColumn: $FileInstancesReferences
-                                ._lastSeenScanIdTable(db)
-                                .id,
+                            referencedTable: $FileInstancesReferences._lastSeenScanIdTable(db),
+                            referencedColumn: $FileInstancesReferences._lastSeenScanIdTable(db).id,
                           ) as T;
                         }
 
@@ -16059,14 +12792,8 @@ class $FileInstancesTableManager
                           OperationItems
                         >(
                           currentTable: table,
-                          referencedTable: $FileInstancesReferences
-                              ._operationItemsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $FileInstancesReferences(
-                                db,
-                                table,
-                                p0,
-                              ).operationItemsRefs,
+                          referencedTable: $FileInstancesReferences._operationItemsRefsTable(db),
+                          managerFromTypedResult: (p0) => $FileInstancesReferences(db, table, p0).operationItemsRefs,
                           currentColumn: 'id',
                           referencedColumn: 'src_instance_id',
                           typedResults: items,
@@ -16079,14 +12806,8 @@ class $FileInstancesTableManager
                           SelectionSetItems
                         >(
                           currentTable: table,
-                          referencedTable: $FileInstancesReferences
-                              ._selectionSetItemsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $FileInstancesReferences(
-                                db,
-                                table,
-                                p0,
-                              ).selectionSetItemsRefs,
+                          referencedTable: $FileInstancesReferences._selectionSetItemsRefsTable(db),
+                          managerFromTypedResult: (p0) => $FileInstancesReferences(db, table, p0).selectionSetItemsRefs,
                           currentColumn: 'id',
                           referencedColumn: 'instance_id',
                           typedResults: items,
@@ -16099,14 +12820,8 @@ class $FileInstancesTableManager
                           IntegrityChecks
                         >(
                           currentTable: table,
-                          referencedTable: $FileInstancesReferences
-                              ._integrityChecksRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $FileInstancesReferences(
-                                db,
-                                table,
-                                p0,
-                              ).integrityChecksRefs,
+                          referencedTable: $FileInstancesReferences._integrityChecksRefsTable(db),
+                          managerFromTypedResult: (p0) => $FileInstancesReferences(db, table, p0).integrityChecksRefs,
                           currentColumn: 'id',
                           referencedColumn: 'instance_id',
                           typedResults: items,
@@ -16202,8 +12917,7 @@ typedef $MediaMetadataUpdateCompanionBuilder = MediaMetadataCompanion Function({
   Value<int?> extractedAt,
 });
 
-final class $MediaMetadataReferences
-    extends BaseReferences<_$CatalogDatabase, MediaMetadata, MediaMetadataRow> {
+final class $MediaMetadataReferences extends BaseReferences<_$CatalogDatabase, MediaMetadata, MediaMetadataRow> {
   $MediaMetadataReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static Contents _contentIdTable(_$CatalogDatabase db) =>
@@ -16212,20 +12926,14 @@ final class $MediaMetadataReferences
   $ContentsProcessedTableManager get contentId {
     final $_column = $_itemColumn<int>('content_id')!;
 
-    final manager = $ContentsTableManager(
-      $_db,
-      $_db.contents,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contentIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $MediaMetadataFilterComposer
-    extends Composer<_$CatalogDatabase, MediaMetadata> {
+class $MediaMetadataFilterComposer extends Composer<_$CatalogDatabase, MediaMetadata> {
   $MediaMetadataFilterComposer({
     required super.$db,
     required super.$table,
@@ -16233,140 +12941,79 @@ class $MediaMetadataFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get captureUtcMs => $composableBuilder(
-    column: $table.captureUtcMs,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get captureUtcMs =>
+      $composableBuilder(column: $table.captureUtcMs, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get captureLocal => $composableBuilder(
-    column: $table.captureLocal,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get captureLocal =>
+      $composableBuilder(column: $table.captureLocal, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get tzOffsetMin => $composableBuilder(
-    column: $table.tzOffsetMin,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get tzOffsetMin =>
+      $composableBuilder(column: $table.tzOffsetMin, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get dateSource => $composableBuilder(
-    column: $table.dateSource,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get dateSource =>
+      $composableBuilder(column: $table.dateSource, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get dateConfidence => $composableBuilder(
-    column: $table.dateConfidence,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get dateConfidence =>
+      $composableBuilder(column: $table.dateConfidence, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get dateConflict => $composableBuilder(
-    column: $table.dateConflict,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get dateConflict =>
+      $composableBuilder(column: $table.dateConflict, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get candidatesJson => $composableBuilder(
-    column: $table.candidatesJson,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get candidatesJson =>
+      $composableBuilder(column: $table.candidatesJson, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get make => $composableBuilder(
-    column: $table.make,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get make => $composableBuilder(column: $table.make, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get model => $composableBuilder(
-    column: $table.model,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get model =>
+      $composableBuilder(column: $table.model, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get lens => $composableBuilder(
-    column: $table.lens,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get lens => $composableBuilder(column: $table.lens, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get iso => $composableBuilder(
-    column: $table.iso,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get iso => $composableBuilder(column: $table.iso, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get aperture => $composableBuilder(
-    column: $table.aperture,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get aperture =>
+      $composableBuilder(column: $table.aperture, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get exposureS => $composableBuilder(
-    column: $table.exposureS,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get exposureS =>
+      $composableBuilder(column: $table.exposureS, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get focalMm => $composableBuilder(
-    column: $table.focalMm,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get focalMm =>
+      $composableBuilder(column: $table.focalMm, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get width => $composableBuilder(
-    column: $table.width,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get width => $composableBuilder(column: $table.width, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get height => $composableBuilder(
-    column: $table.height,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get height =>
+      $composableBuilder(column: $table.height, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get orientation => $composableBuilder(
-    column: $table.orientation,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get orientation =>
+      $composableBuilder(column: $table.orientation, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get lat => $composableBuilder(
-    column: $table.lat,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get lat => $composableBuilder(column: $table.lat, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get lon => $composableBuilder(
-    column: $table.lon,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get lon => $composableBuilder(column: $table.lon, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get durationMs => $composableBuilder(
-    column: $table.durationMs,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get durationMs =>
+      $composableBuilder(column: $table.durationMs, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get fps => $composableBuilder(
-    column: $table.fps,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get fps => $composableBuilder(column: $table.fps, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get videoCodec => $composableBuilder(
-    column: $table.videoCodec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get videoCodec =>
+      $composableBuilder(column: $table.videoCodec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get audioCodec => $composableBuilder(
-    column: $table.audioCodec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get audioCodec =>
+      $composableBuilder(column: $table.audioCodec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get bitrate => $composableBuilder(
-    column: $table.bitrate,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get bitrate =>
+      $composableBuilder(column: $table.bitrate, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get software => $composableBuilder(
-    column: $table.software,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get software =>
+      $composableBuilder(column: $table.software, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get extractor => $composableBuilder(
-    column: $table.extractor,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get extractor =>
+      $composableBuilder(column: $table.extractor, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get extractedAt => $composableBuilder(
-    column: $table.extractedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get extractedAt =>
+      $composableBuilder(column: $table.extractedAt, builder: (column) => ColumnFilters(column));
 
   $ContentsFilterComposer get contentId {
     final $ContentsFilterComposer composer = $composerBuilder(
@@ -16374,26 +13021,20 @@ class $MediaMetadataFilterComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsFilterComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $MediaMetadataOrderingComposer
-    extends Composer<_$CatalogDatabase, MediaMetadata> {
+class $MediaMetadataOrderingComposer extends Composer<_$CatalogDatabase, MediaMetadata> {
   $MediaMetadataOrderingComposer({
     required super.$db,
     required super.$table,
@@ -16401,140 +13042,85 @@ class $MediaMetadataOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get captureUtcMs => $composableBuilder(
-    column: $table.captureUtcMs,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get captureUtcMs =>
+      $composableBuilder(column: $table.captureUtcMs, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get captureLocal => $composableBuilder(
-    column: $table.captureLocal,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get captureLocal =>
+      $composableBuilder(column: $table.captureLocal, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get tzOffsetMin => $composableBuilder(
-    column: $table.tzOffsetMin,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get tzOffsetMin =>
+      $composableBuilder(column: $table.tzOffsetMin, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get dateSource => $composableBuilder(
-    column: $table.dateSource,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get dateSource =>
+      $composableBuilder(column: $table.dateSource, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get dateConfidence => $composableBuilder(
-    column: $table.dateConfidence,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get dateConfidence =>
+      $composableBuilder(column: $table.dateConfidence, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get dateConflict => $composableBuilder(
-    column: $table.dateConflict,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get dateConflict =>
+      $composableBuilder(column: $table.dateConflict, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get candidatesJson => $composableBuilder(
-    column: $table.candidatesJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get candidatesJson =>
+      $composableBuilder(column: $table.candidatesJson, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get make => $composableBuilder(
-    column: $table.make,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get make =>
+      $composableBuilder(column: $table.make, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get model => $composableBuilder(
-    column: $table.model,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get model =>
+      $composableBuilder(column: $table.model, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get lens => $composableBuilder(
-    column: $table.lens,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get lens =>
+      $composableBuilder(column: $table.lens, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get iso => $composableBuilder(
-    column: $table.iso,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get iso => $composableBuilder(column: $table.iso, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get aperture => $composableBuilder(
-    column: $table.aperture,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get aperture =>
+      $composableBuilder(column: $table.aperture, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get exposureS => $composableBuilder(
-    column: $table.exposureS,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get exposureS =>
+      $composableBuilder(column: $table.exposureS, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get focalMm => $composableBuilder(
-    column: $table.focalMm,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get focalMm =>
+      $composableBuilder(column: $table.focalMm, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get width => $composableBuilder(
-    column: $table.width,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get width =>
+      $composableBuilder(column: $table.width, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get height => $composableBuilder(
-    column: $table.height,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get height =>
+      $composableBuilder(column: $table.height, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get orientation => $composableBuilder(
-    column: $table.orientation,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get orientation =>
+      $composableBuilder(column: $table.orientation, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get lat => $composableBuilder(
-    column: $table.lat,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get lat =>
+      $composableBuilder(column: $table.lat, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get lon => $composableBuilder(
-    column: $table.lon,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get lon =>
+      $composableBuilder(column: $table.lon, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get durationMs => $composableBuilder(
-    column: $table.durationMs,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get durationMs =>
+      $composableBuilder(column: $table.durationMs, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get fps => $composableBuilder(
-    column: $table.fps,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get fps =>
+      $composableBuilder(column: $table.fps, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get videoCodec => $composableBuilder(
-    column: $table.videoCodec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get videoCodec =>
+      $composableBuilder(column: $table.videoCodec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get audioCodec => $composableBuilder(
-    column: $table.audioCodec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get audioCodec =>
+      $composableBuilder(column: $table.audioCodec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get bitrate => $composableBuilder(
-    column: $table.bitrate,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get bitrate =>
+      $composableBuilder(column: $table.bitrate, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get software => $composableBuilder(
-    column: $table.software,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get software =>
+      $composableBuilder(column: $table.software, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get extractor => $composableBuilder(
-    column: $table.extractor,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get extractor =>
+      $composableBuilder(column: $table.extractor, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get extractedAt => $composableBuilder(
-    column: $table.extractedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get extractedAt =>
+      $composableBuilder(column: $table.extractedAt, builder: (column) => ColumnOrderings(column));
 
   $ContentsOrderingComposer get contentId {
     final $ContentsOrderingComposer composer = $composerBuilder(
@@ -16542,26 +13128,20 @@ class $MediaMetadataOrderingComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsOrderingComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $MediaMetadataAnnotationComposer
-    extends Composer<_$CatalogDatabase, MediaMetadata> {
+class $MediaMetadataAnnotationComposer extends Composer<_$CatalogDatabase, MediaMetadata> {
   $MediaMetadataAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -16569,110 +13149,63 @@ class $MediaMetadataAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get captureUtcMs => $composableBuilder(
-    column: $table.captureUtcMs,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get captureUtcMs => $composableBuilder(column: $table.captureUtcMs, builder: (column) => column);
 
-  GeneratedColumn<String> get captureLocal => $composableBuilder(
-    column: $table.captureLocal,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get captureLocal =>
+      $composableBuilder(column: $table.captureLocal, builder: (column) => column);
 
-  GeneratedColumn<int> get tzOffsetMin => $composableBuilder(
-    column: $table.tzOffsetMin,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get tzOffsetMin => $composableBuilder(column: $table.tzOffsetMin, builder: (column) => column);
 
-  GeneratedColumn<String> get dateSource => $composableBuilder(
-    column: $table.dateSource,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get dateSource => $composableBuilder(column: $table.dateSource, builder: (column) => column);
 
-  GeneratedColumn<String> get dateConfidence => $composableBuilder(
-    column: $table.dateConfidence,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get dateConfidence =>
+      $composableBuilder(column: $table.dateConfidence, builder: (column) => column);
 
-  GeneratedColumn<bool> get dateConflict => $composableBuilder(
-    column: $table.dateConflict,
-    builder: (column) => column,
-  );
+  GeneratedColumn<bool> get dateConflict =>
+      $composableBuilder(column: $table.dateConflict, builder: (column) => column);
 
-  GeneratedColumn<String> get candidatesJson => $composableBuilder(
-    column: $table.candidatesJson,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get candidatesJson =>
+      $composableBuilder(column: $table.candidatesJson, builder: (column) => column);
 
-  GeneratedColumn<String> get make =>
-      $composableBuilder(column: $table.make, builder: (column) => column);
+  GeneratedColumn<String> get make => $composableBuilder(column: $table.make, builder: (column) => column);
 
-  GeneratedColumn<String> get model =>
-      $composableBuilder(column: $table.model, builder: (column) => column);
+  GeneratedColumn<String> get model => $composableBuilder(column: $table.model, builder: (column) => column);
 
-  GeneratedColumn<String> get lens =>
-      $composableBuilder(column: $table.lens, builder: (column) => column);
+  GeneratedColumn<String> get lens => $composableBuilder(column: $table.lens, builder: (column) => column);
 
-  GeneratedColumn<int> get iso =>
-      $composableBuilder(column: $table.iso, builder: (column) => column);
+  GeneratedColumn<int> get iso => $composableBuilder(column: $table.iso, builder: (column) => column);
 
-  GeneratedColumn<double> get aperture =>
-      $composableBuilder(column: $table.aperture, builder: (column) => column);
+  GeneratedColumn<double> get aperture => $composableBuilder(column: $table.aperture, builder: (column) => column);
 
-  GeneratedColumn<double> get exposureS =>
-      $composableBuilder(column: $table.exposureS, builder: (column) => column);
+  GeneratedColumn<double> get exposureS => $composableBuilder(column: $table.exposureS, builder: (column) => column);
 
-  GeneratedColumn<double> get focalMm =>
-      $composableBuilder(column: $table.focalMm, builder: (column) => column);
+  GeneratedColumn<double> get focalMm => $composableBuilder(column: $table.focalMm, builder: (column) => column);
 
-  GeneratedColumn<int> get width =>
-      $composableBuilder(column: $table.width, builder: (column) => column);
+  GeneratedColumn<int> get width => $composableBuilder(column: $table.width, builder: (column) => column);
 
-  GeneratedColumn<int> get height =>
-      $composableBuilder(column: $table.height, builder: (column) => column);
+  GeneratedColumn<int> get height => $composableBuilder(column: $table.height, builder: (column) => column);
 
-  GeneratedColumn<int> get orientation => $composableBuilder(
-    column: $table.orientation,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get orientation => $composableBuilder(column: $table.orientation, builder: (column) => column);
 
-  GeneratedColumn<double> get lat =>
-      $composableBuilder(column: $table.lat, builder: (column) => column);
+  GeneratedColumn<double> get lat => $composableBuilder(column: $table.lat, builder: (column) => column);
 
-  GeneratedColumn<double> get lon =>
-      $composableBuilder(column: $table.lon, builder: (column) => column);
+  GeneratedColumn<double> get lon => $composableBuilder(column: $table.lon, builder: (column) => column);
 
-  GeneratedColumn<int> get durationMs => $composableBuilder(
-    column: $table.durationMs,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get durationMs => $composableBuilder(column: $table.durationMs, builder: (column) => column);
 
-  GeneratedColumn<double> get fps =>
-      $composableBuilder(column: $table.fps, builder: (column) => column);
+  GeneratedColumn<double> get fps => $composableBuilder(column: $table.fps, builder: (column) => column);
 
-  GeneratedColumn<String> get videoCodec => $composableBuilder(
-    column: $table.videoCodec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get videoCodec => $composableBuilder(column: $table.videoCodec, builder: (column) => column);
 
-  GeneratedColumn<String> get audioCodec => $composableBuilder(
-    column: $table.audioCodec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get audioCodec => $composableBuilder(column: $table.audioCodec, builder: (column) => column);
 
-  GeneratedColumn<int> get bitrate =>
-      $composableBuilder(column: $table.bitrate, builder: (column) => column);
+  GeneratedColumn<int> get bitrate => $composableBuilder(column: $table.bitrate, builder: (column) => column);
 
-  GeneratedColumn<String> get software =>
-      $composableBuilder(column: $table.software, builder: (column) => column);
+  GeneratedColumn<String> get software => $composableBuilder(column: $table.software, builder: (column) => column);
 
-  GeneratedColumn<String> get extractor =>
-      $composableBuilder(column: $table.extractor, builder: (column) => column);
+  GeneratedColumn<String> get extractor => $composableBuilder(column: $table.extractor, builder: (column) => column);
 
-  GeneratedColumn<int> get extractedAt => $composableBuilder(
-    column: $table.extractedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get extractedAt => $composableBuilder(column: $table.extractedAt, builder: (column) => column);
 
   $ContentsAnnotationComposer get contentId {
     final $ContentsAnnotationComposer composer = $composerBuilder(
@@ -16680,18 +13213,13 @@ class $MediaMetadataAnnotationComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsAnnotationComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -16718,12 +13246,9 @@ class $MediaMetadataTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $MediaMetadataFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $MediaMetadataOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $MediaMetadataAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $MediaMetadataFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $MediaMetadataOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $MediaMetadataAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> contentId = const Value.absent(),
@@ -16845,12 +13370,7 @@ class $MediaMetadataTableManager
                 extractedAt: extractedAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<MediaMetadata, MediaMetadataRow>(table),
-                  $MediaMetadataReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable<MediaMetadata, MediaMetadataRow>(table), $MediaMetadataReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: ({contentId = false}) {
             return PrefetchHooks(
@@ -16876,11 +13396,8 @@ class $MediaMetadataTableManager
                       state = state.withJoin(
                         currentTable: table,
                         currentColumn: table.contentId,
-                        referencedTable: $MediaMetadataReferences
-                            ._contentIdTable(db),
-                        referencedColumn: $MediaMetadataReferences
-                            ._contentIdTable(db)
-                            .id,
+                        referencedTable: $MediaMetadataReferences._contentIdTable(db),
+                        referencedColumn: $MediaMetadataReferences._contentIdTable(db).id,
                       ) as T;
                     }
 
@@ -16909,30 +13426,26 @@ typedef $MediaMetadataProcessedTableManager =
       MediaMetadataRow,
       PrefetchHooks Function({bool contentId})
     >;
-typedef $DateCorrectionsCreateCompanionBuilder =
-    DateCorrectionsCompanion Function({
-      Value<int> id,
-      required int contentId,
-      required String captureLocal,
-      Value<int?> tzOffsetMin,
-      Value<String?> note,
-      required int createdAt,
-      Value<int?> supersededAt,
-    });
-typedef $DateCorrectionsUpdateCompanionBuilder =
-    DateCorrectionsCompanion Function({
-      Value<int> id,
-      Value<int> contentId,
-      Value<String> captureLocal,
-      Value<int?> tzOffsetMin,
-      Value<String?> note,
-      Value<int> createdAt,
-      Value<int?> supersededAt,
-    });
+typedef $DateCorrectionsCreateCompanionBuilder = DateCorrectionsCompanion Function({
+  Value<int> id,
+  required int contentId,
+  required String captureLocal,
+  Value<int?> tzOffsetMin,
+  Value<String?> note,
+  required int createdAt,
+  Value<int?> supersededAt,
+});
+typedef $DateCorrectionsUpdateCompanionBuilder = DateCorrectionsCompanion Function({
+  Value<int> id,
+  Value<int> contentId,
+  Value<String> captureLocal,
+  Value<int?> tzOffsetMin,
+  Value<String?> note,
+  Value<int> createdAt,
+  Value<int?> supersededAt,
+});
 
-final class $DateCorrectionsReferences
-    extends
-        BaseReferences<_$CatalogDatabase, DateCorrections, DateCorrectionRow> {
+final class $DateCorrectionsReferences extends BaseReferences<_$CatalogDatabase, DateCorrections, DateCorrectionRow> {
   $DateCorrectionsReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static Contents _contentIdTable(_$CatalogDatabase db) =>
@@ -16941,20 +13454,14 @@ final class $DateCorrectionsReferences
   $ContentsProcessedTableManager get contentId {
     final $_column = $_itemColumn<int>('content_id')!;
 
-    final manager = $ContentsTableManager(
-      $_db,
-      $_db.contents,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contentIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $DateCorrectionsFilterComposer
-    extends Composer<_$CatalogDatabase, DateCorrections> {
+class $DateCorrectionsFilterComposer extends Composer<_$CatalogDatabase, DateCorrections> {
   $DateCorrectionsFilterComposer({
     required super.$db,
     required super.$table,
@@ -16962,35 +13469,21 @@ class $DateCorrectionsFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get captureLocal => $composableBuilder(
-    column: $table.captureLocal,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get captureLocal =>
+      $composableBuilder(column: $table.captureLocal, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get tzOffsetMin => $composableBuilder(
-    column: $table.tzOffsetMin,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get tzOffsetMin =>
+      $composableBuilder(column: $table.tzOffsetMin, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get note => $composableBuilder(column: $table.note, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get supersededAt => $composableBuilder(
-    column: $table.supersededAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get supersededAt =>
+      $composableBuilder(column: $table.supersededAt, builder: (column) => ColumnFilters(column));
 
   $ContentsFilterComposer get contentId {
     final $ContentsFilterComposer composer = $composerBuilder(
@@ -16998,26 +13491,20 @@ class $DateCorrectionsFilterComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsFilterComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $DateCorrectionsOrderingComposer
-    extends Composer<_$CatalogDatabase, DateCorrections> {
+class $DateCorrectionsOrderingComposer extends Composer<_$CatalogDatabase, DateCorrections> {
   $DateCorrectionsOrderingComposer({
     required super.$db,
     required super.$table,
@@ -17025,35 +13512,22 @@ class $DateCorrectionsOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get captureLocal => $composableBuilder(
-    column: $table.captureLocal,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get captureLocal =>
+      $composableBuilder(column: $table.captureLocal, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get tzOffsetMin => $composableBuilder(
-    column: $table.tzOffsetMin,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get tzOffsetMin =>
+      $composableBuilder(column: $table.tzOffsetMin, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get supersededAt => $composableBuilder(
-    column: $table.supersededAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get supersededAt =>
+      $composableBuilder(column: $table.supersededAt, builder: (column) => ColumnOrderings(column));
 
   $ContentsOrderingComposer get contentId {
     final $ContentsOrderingComposer composer = $composerBuilder(
@@ -17061,26 +13535,20 @@ class $DateCorrectionsOrderingComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsOrderingComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $DateCorrectionsAnnotationComposer
-    extends Composer<_$CatalogDatabase, DateCorrections> {
+class $DateCorrectionsAnnotationComposer extends Composer<_$CatalogDatabase, DateCorrections> {
   $DateCorrectionsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -17088,29 +13556,18 @@ class $DateCorrectionsAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get captureLocal => $composableBuilder(
-    column: $table.captureLocal,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get captureLocal =>
+      $composableBuilder(column: $table.captureLocal, builder: (column) => column);
 
-  GeneratedColumn<int> get tzOffsetMin => $composableBuilder(
-    column: $table.tzOffsetMin,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get tzOffsetMin => $composableBuilder(column: $table.tzOffsetMin, builder: (column) => column);
 
-  GeneratedColumn<String> get note =>
-      $composableBuilder(column: $table.note, builder: (column) => column);
+  GeneratedColumn<String> get note => $composableBuilder(column: $table.note, builder: (column) => column);
 
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<int> get supersededAt => $composableBuilder(
-    column: $table.supersededAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get supersededAt => $composableBuilder(column: $table.supersededAt, builder: (column) => column);
 
   $ContentsAnnotationComposer get contentId {
     final $ContentsAnnotationComposer composer = $composerBuilder(
@@ -17118,18 +13575,13 @@ class $DateCorrectionsAnnotationComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsAnnotationComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -17156,12 +13608,9 @@ class $DateCorrectionsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $DateCorrectionsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $DateCorrectionsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $DateCorrectionsAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $DateCorrectionsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $DateCorrectionsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $DateCorrectionsAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -17200,10 +13649,8 @@ class $DateCorrectionsTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) => (
-                  e.readTable<DateCorrections, DateCorrectionRow>(table),
-                  $DateCorrectionsReferences(db, table, e),
-                ),
+                (e) =>
+                    (e.readTable<DateCorrections, DateCorrectionRow>(table), $DateCorrectionsReferences(db, table, e)),
               )
               .toList(),
           prefetchHooksCallback: ({contentId = false}) {
@@ -17230,11 +13677,8 @@ class $DateCorrectionsTableManager
                       state = state.withJoin(
                         currentTable: table,
                         currentColumn: table.contentId,
-                        referencedTable: $DateCorrectionsReferences
-                            ._contentIdTable(db),
-                        referencedColumn: $DateCorrectionsReferences
-                            ._contentIdTable(db)
-                            .id,
+                        referencedTable: $DateCorrectionsReferences._contentIdTable(db),
+                        referencedColumn: $DateCorrectionsReferences._contentIdTable(db).id,
                       ) as T;
                     }
 
@@ -17298,8 +13742,7 @@ typedef $OperationsUpdateCompanionBuilder = OperationsCompanion Function({
   Value<int> rowid,
 });
 
-final class $OperationsReferences
-    extends BaseReferences<_$CatalogDatabase, Operations, OperationRow> {
+final class $OperationsReferences extends BaseReferences<_$CatalogDatabase, Operations, OperationRow> {
   $OperationsReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static Sources _destSourceIdTable(_$CatalogDatabase db) =>
@@ -17308,15 +13751,10 @@ final class $OperationsReferences
   $SourcesProcessedTableManager? get destSourceId {
     final $_column = $_itemColumn<String>('dest_source_id');
     if ($_column == null) return null;
-    final manager = $SourcesTableManager(
-      $_db,
-      $_db.sources,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $SourcesTableManager($_db, $_db.sources).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_destSourceIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
   static Operations _undoOfTable(_$CatalogDatabase db) =>
@@ -17325,23 +13763,14 @@ final class $OperationsReferences
   $OperationsProcessedTableManager? get undoOf {
     final $_column = $_itemColumn<String>('undo_of');
     if ($_column == null) return null;
-    final manager = $OperationsTableManager(
-      $_db,
-      $_db.operations,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $OperationsTableManager($_db, $_db.operations).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_undoOfTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static MultiTypedResultKey<OperationItems, List<OperationItemRow>>
-  _operationItemsRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.operationItems,
-        aliasName: 'operations__id__operation_items__operation_id',
-      );
+  static MultiTypedResultKey<OperationItems, List<OperationItemRow>> _operationItemsRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.operationItems, aliasName: 'operations__id__operation_items__operation_id');
 
   $OperationItemsProcessedTableManager get operationItemsRefs {
     final manager = $OperationItemsTableManager(
@@ -17350,17 +13779,12 @@ final class $OperationsReferences
     ).filter((f) => f.operationId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_operationItemsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<OperationEvents, List<OperationEventRow>>
-  _operationEventsRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.operationEvents,
-        aliasName: 'operations__id__operation_events__operation_id',
-      );
+  static MultiTypedResultKey<OperationEvents, List<OperationEventRow>> _operationEventsRefsTable(
+    _$CatalogDatabase db,
+  ) => MultiTypedResultKey.fromTable(db.operationEvents, aliasName: 'operations__id__operation_events__operation_id');
 
   $OperationEventsProcessedTableManager get operationEventsRefs {
     final manager = $OperationEventsTableManager(
@@ -17368,20 +13792,13 @@ final class $OperationsReferences
       $_db.operationEvents,
     ).filter((f) => f.operationId.id.sqlEquals($_itemColumn<String>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _operationEventsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_operationEventsRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<IntegrityChecks, List<IntegrityCheckRow>>
-  _integrityChecksRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.integrityChecks,
-        aliasName: 'operations__id__integrity_checks__operation_id',
-      );
+  static MultiTypedResultKey<IntegrityChecks, List<IntegrityCheckRow>> _integrityChecksRefsTable(
+    _$CatalogDatabase db,
+  ) => MultiTypedResultKey.fromTable(db.integrityChecks, aliasName: 'operations__id__integrity_checks__operation_id');
 
   $IntegrityChecksProcessedTableManager get integrityChecksRefs {
     final manager = $IntegrityChecksTableManager(
@@ -17389,17 +13806,12 @@ final class $OperationsReferences
       $_db.integrityChecks,
     ).filter((f) => f.operationId.id.sqlEquals($_itemColumn<String>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _integrityChecksRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_integrityChecksRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
-class $OperationsFilterComposer
-    extends Composer<_$CatalogDatabase, Operations> {
+class $OperationsFilterComposer extends Composer<_$CatalogDatabase, Operations> {
   $OperationsFilterComposer({
     required super.$db,
     required super.$table,
@@ -17407,65 +13819,39 @@ class $OperationsFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get destRootRel => $composableBuilder(
-    column: $table.destRootRel,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get destRootRel =>
+      $composableBuilder(column: $table.destRootRel, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get template => $composableBuilder(
-    column: $table.template,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get template =>
+      $composableBuilder(column: $table.template, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get conflictPolicy => $composableBuilder(
-    column: $table.conflictPolicy,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get conflictPolicy =>
+      $composableBuilder(column: $table.conflictPolicy, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get paramsJson => $composableBuilder(
-    column: $table.paramsJson,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get paramsJson =>
+      $composableBuilder(column: $table.paramsJson, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get summaryJson => $composableBuilder(
-    column: $table.summaryJson,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get summaryJson =>
+      $composableBuilder(column: $table.summaryJson, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get confirmedAt => $composableBuilder(
-    column: $table.confirmedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get confirmedAt =>
+      $composableBuilder(column: $table.confirmedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get startedAt => $composableBuilder(
-    column: $table.startedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get finishedAt => $composableBuilder(
-    column: $table.finishedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get finishedAt =>
+      $composableBuilder(column: $table.finishedAt, builder: (column) => ColumnFilters(column));
 
   $SourcesFilterComposer get destSourceId {
     final $SourcesFilterComposer composer = $composerBuilder(
@@ -17473,18 +13859,13 @@ class $OperationsFilterComposer
       getCurrentColumn: (t) => t.destSourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesFilterComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -17496,101 +13877,74 @@ class $OperationsFilterComposer
       getCurrentColumn: (t) => t.undoOf,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsFilterComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<bool> operationItemsRefs(
-    Expression<bool> Function($OperationItemsFilterComposer f) f,
-  ) {
+  Expression<bool> operationItemsRefs(Expression<bool> Function($OperationItemsFilterComposer f) f) {
     final $OperationItemsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.operationItems,
       getReferencedColumn: (t) => t.operationId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationItemsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationItemsFilterComposer(
             $db: $db,
             $table: $db.operationItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> operationEventsRefs(
-    Expression<bool> Function($OperationEventsFilterComposer f) f,
-  ) {
+  Expression<bool> operationEventsRefs(Expression<bool> Function($OperationEventsFilterComposer f) f) {
     final $OperationEventsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.operationEvents,
       getReferencedColumn: (t) => t.operationId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationEventsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationEventsFilterComposer(
             $db: $db,
             $table: $db.operationEvents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> integrityChecksRefs(
-    Expression<bool> Function($IntegrityChecksFilterComposer f) f,
-  ) {
+  Expression<bool> integrityChecksRefs(Expression<bool> Function($IntegrityChecksFilterComposer f) f) {
     final $IntegrityChecksFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.integrityChecks,
       getReferencedColumn: (t) => t.operationId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $IntegrityChecksFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityChecksFilterComposer(
             $db: $db,
             $table: $db.integrityChecks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 }
 
-class $OperationsOrderingComposer
-    extends Composer<_$CatalogDatabase, Operations> {
+class $OperationsOrderingComposer extends Composer<_$CatalogDatabase, Operations> {
   $OperationsOrderingComposer({
     required super.$db,
     required super.$table,
@@ -17598,65 +13952,40 @@ class $OperationsOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get destRootRel => $composableBuilder(
-    column: $table.destRootRel,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get destRootRel =>
+      $composableBuilder(column: $table.destRootRel, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get template => $composableBuilder(
-    column: $table.template,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get template =>
+      $composableBuilder(column: $table.template, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get conflictPolicy => $composableBuilder(
-    column: $table.conflictPolicy,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get conflictPolicy =>
+      $composableBuilder(column: $table.conflictPolicy, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get paramsJson => $composableBuilder(
-    column: $table.paramsJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get paramsJson =>
+      $composableBuilder(column: $table.paramsJson, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get summaryJson => $composableBuilder(
-    column: $table.summaryJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get summaryJson =>
+      $composableBuilder(column: $table.summaryJson, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get confirmedAt => $composableBuilder(
-    column: $table.confirmedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get confirmedAt =>
+      $composableBuilder(column: $table.confirmedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get startedAt => $composableBuilder(
-    column: $table.startedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get finishedAt => $composableBuilder(
-    column: $table.finishedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get finishedAt =>
+      $composableBuilder(column: $table.finishedAt, builder: (column) => ColumnOrderings(column));
 
   $SourcesOrderingComposer get destSourceId {
     final $SourcesOrderingComposer composer = $composerBuilder(
@@ -17664,18 +13993,13 @@ class $OperationsOrderingComposer
       getCurrentColumn: (t) => t.destSourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesOrderingComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -17687,26 +14011,20 @@ class $OperationsOrderingComposer
       getCurrentColumn: (t) => t.undoOf,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsOrderingComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $OperationsAnnotationComposer
-    extends Composer<_$CatalogDatabase, Operations> {
+class $OperationsAnnotationComposer extends Composer<_$CatalogDatabase, Operations> {
   $OperationsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -17714,53 +14032,32 @@ class $OperationsAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get kind =>
-      $composableBuilder(column: $table.kind, builder: (column) => column);
+  GeneratedColumn<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => column);
 
-  GeneratedColumn<String> get status =>
-      $composableBuilder(column: $table.status, builder: (column) => column);
+  GeneratedColumn<String> get status => $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<String> get destRootRel => $composableBuilder(
-    column: $table.destRootRel,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get destRootRel =>
+      $composableBuilder(column: $table.destRootRel, builder: (column) => column);
 
-  GeneratedColumn<String> get template =>
-      $composableBuilder(column: $table.template, builder: (column) => column);
+  GeneratedColumn<String> get template => $composableBuilder(column: $table.template, builder: (column) => column);
 
-  GeneratedColumn<String> get conflictPolicy => $composableBuilder(
-    column: $table.conflictPolicy,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get conflictPolicy =>
+      $composableBuilder(column: $table.conflictPolicy, builder: (column) => column);
 
-  GeneratedColumn<String> get paramsJson => $composableBuilder(
-    column: $table.paramsJson,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get paramsJson => $composableBuilder(column: $table.paramsJson, builder: (column) => column);
 
-  GeneratedColumn<String> get summaryJson => $composableBuilder(
-    column: $table.summaryJson,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get summaryJson =>
+      $composableBuilder(column: $table.summaryJson, builder: (column) => column);
 
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<int> get confirmedAt => $composableBuilder(
-    column: $table.confirmedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get confirmedAt => $composableBuilder(column: $table.confirmedAt, builder: (column) => column);
 
-  GeneratedColumn<int> get startedAt =>
-      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+  GeneratedColumn<int> get startedAt => $composableBuilder(column: $table.startedAt, builder: (column) => column);
 
-  GeneratedColumn<int> get finishedAt => $composableBuilder(
-    column: $table.finishedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get finishedAt => $composableBuilder(column: $table.finishedAt, builder: (column) => column);
 
   $SourcesAnnotationComposer get destSourceId {
     final $SourcesAnnotationComposer composer = $composerBuilder(
@@ -17768,18 +14065,13 @@ class $OperationsAnnotationComposer
       getCurrentColumn: (t) => t.destSourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesAnnotationComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -17791,93 +14083,67 @@ class $OperationsAnnotationComposer
       getCurrentColumn: (t) => t.undoOf,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsAnnotationComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<T> operationItemsRefs<T extends Object>(
-    Expression<T> Function($OperationItemsAnnotationComposer a) f,
-  ) {
+  Expression<T> operationItemsRefs<T extends Object>(Expression<T> Function($OperationItemsAnnotationComposer a) f) {
     final $OperationItemsAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.operationItems,
       getReferencedColumn: (t) => t.operationId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationItemsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationItemsAnnotationComposer(
             $db: $db,
             $table: $db.operationItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<T> operationEventsRefs<T extends Object>(
-    Expression<T> Function($OperationEventsAnnotationComposer a) f,
-  ) {
+  Expression<T> operationEventsRefs<T extends Object>(Expression<T> Function($OperationEventsAnnotationComposer a) f) {
     final $OperationEventsAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.operationEvents,
       getReferencedColumn: (t) => t.operationId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationEventsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationEventsAnnotationComposer(
             $db: $db,
             $table: $db.operationEvents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<T> integrityChecksRefs<T extends Object>(
-    Expression<T> Function($IntegrityChecksAnnotationComposer a) f,
-  ) {
+  Expression<T> integrityChecksRefs<T extends Object>(Expression<T> Function($IntegrityChecksAnnotationComposer a) f) {
     final $IntegrityChecksAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.integrityChecks,
       getReferencedColumn: (t) => t.operationId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $IntegrityChecksAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityChecksAnnotationComposer(
             $db: $db,
             $table: $db.integrityChecks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -17910,12 +14176,9 @@ class $OperationsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $OperationsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $OperationsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $OperationsAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $OperationsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $OperationsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $OperationsAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -17985,12 +14248,7 @@ class $OperationsTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<Operations, OperationRow>(table),
-                  $OperationsReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable<Operations, OperationRow>(table), $OperationsReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback:
               ({
@@ -18027,23 +14285,16 @@ class $OperationsTableManager
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.destSourceId,
-                            referencedTable: $OperationsReferences
-                                ._destSourceIdTable(db),
-                            referencedColumn: $OperationsReferences
-                                ._destSourceIdTable(db)
-                                .id,
+                            referencedTable: $OperationsReferences._destSourceIdTable(db),
+                            referencedColumn: $OperationsReferences._destSourceIdTable(db).id,
                           ) as T;
                         }
                         if (undoOf) {
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.undoOf,
-                            referencedTable: $OperationsReferences._undoOfTable(
-                              db,
-                            ),
-                            referencedColumn: $OperationsReferences
-                                ._undoOfTable(db)
-                                .id,
+                            referencedTable: $OperationsReferences._undoOfTable(db),
+                            referencedColumn: $OperationsReferences._undoOfTable(db).id,
                           ) as T;
                         }
 
@@ -18052,20 +14303,10 @@ class $OperationsTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (operationItemsRefs)
-                        await $_getPrefetchedDataByColumns<
-                          OperationRow,
-                          Operations,
-                          OperationItemRow,
-                          OperationItems
-                        >(
+                        await $_getPrefetchedDataByColumns<OperationRow, Operations, OperationItemRow, OperationItems>(
                           currentTable: table,
-                          referencedTable: $OperationsReferences
-                              ._operationItemsRefsTable(db),
-                          managerFromTypedResult: (p0) => $OperationsReferences(
-                            db,
-                            table,
-                            p0,
-                          ).operationItemsRefs,
+                          referencedTable: $OperationsReferences._operationItemsRefsTable(db),
+                          managerFromTypedResult: (p0) => $OperationsReferences(db, table, p0).operationItemsRefs,
                           currentColumn: 'id',
                           referencedColumn: 'operation_id',
                           typedResults: items,
@@ -18078,13 +14319,8 @@ class $OperationsTableManager
                           OperationEvents
                         >(
                           currentTable: table,
-                          referencedTable: $OperationsReferences
-                              ._operationEventsRefsTable(db),
-                          managerFromTypedResult: (p0) => $OperationsReferences(
-                            db,
-                            table,
-                            p0,
-                          ).operationEventsRefs,
+                          referencedTable: $OperationsReferences._operationEventsRefsTable(db),
+                          managerFromTypedResult: (p0) => $OperationsReferences(db, table, p0).operationEventsRefs,
                           currentColumn: 'id',
                           referencedColumn: 'operation_id',
                           typedResults: items,
@@ -18097,13 +14333,8 @@ class $OperationsTableManager
                           IntegrityChecks
                         >(
                           currentTable: table,
-                          referencedTable: $OperationsReferences
-                              ._integrityChecksRefsTable(db),
-                          managerFromTypedResult: (p0) => $OperationsReferences(
-                            db,
-                            table,
-                            p0,
-                          ).integrityChecksRefs,
+                          referencedTable: $OperationsReferences._integrityChecksRefsTable(db),
+                          managerFromTypedResult: (p0) => $OperationsReferences(db, table, p0).integrityChecksRefs,
                           currentColumn: 'id',
                           referencedColumn: 'operation_id',
                           typedResults: items,
@@ -18136,75 +14367,66 @@ typedef $OperationsProcessedTableManager =
         bool integrityChecksRefs,
       })
     >;
-typedef $OperationItemsCreateCompanionBuilder =
-    OperationItemsCompanion Function({
-      Value<int> id,
-      required String operationId,
-      required int seq,
-      required String srcSourceId,
-      required String srcRelPath,
-      Value<int?> srcInstanceId,
-      required int expectedSize,
-      Value<Uint8List?> expectedSha256,
-      required String dstSourceId,
-      required String dstRelPathPlanned,
-      Value<String?> dstRelPathFinal,
-      Value<String?> tmpRelPath,
-      Value<String?> originalName,
-      required String state,
-      Value<Uint8List?> srcSha256,
-      Value<Uint8List?> dstSha256,
-      Value<int> bytesCopied,
-      Value<int> attempts,
-      Value<String?> lastErrorCode,
-      Value<String?> lastErrorMessage,
-      required int updatedAt,
-    });
-typedef $OperationItemsUpdateCompanionBuilder =
-    OperationItemsCompanion Function({
-      Value<int> id,
-      Value<String> operationId,
-      Value<int> seq,
-      Value<String> srcSourceId,
-      Value<String> srcRelPath,
-      Value<int?> srcInstanceId,
-      Value<int> expectedSize,
-      Value<Uint8List?> expectedSha256,
-      Value<String> dstSourceId,
-      Value<String> dstRelPathPlanned,
-      Value<String?> dstRelPathFinal,
-      Value<String?> tmpRelPath,
-      Value<String?> originalName,
-      Value<String> state,
-      Value<Uint8List?> srcSha256,
-      Value<Uint8List?> dstSha256,
-      Value<int> bytesCopied,
-      Value<int> attempts,
-      Value<String?> lastErrorCode,
-      Value<String?> lastErrorMessage,
-      Value<int> updatedAt,
-    });
+typedef $OperationItemsCreateCompanionBuilder = OperationItemsCompanion Function({
+  Value<int> id,
+  required String operationId,
+  required int seq,
+  required String srcSourceId,
+  required String srcRelPath,
+  Value<int?> srcInstanceId,
+  required int expectedSize,
+  Value<Uint8List?> expectedSha256,
+  required String dstSourceId,
+  required String dstRelPathPlanned,
+  Value<String?> dstRelPathFinal,
+  Value<String?> tmpRelPath,
+  Value<String?> originalName,
+  required String state,
+  Value<Uint8List?> srcSha256,
+  Value<Uint8List?> dstSha256,
+  Value<int> bytesCopied,
+  Value<int> attempts,
+  Value<String?> lastErrorCode,
+  Value<String?> lastErrorMessage,
+  required int updatedAt,
+});
+typedef $OperationItemsUpdateCompanionBuilder = OperationItemsCompanion Function({
+  Value<int> id,
+  Value<String> operationId,
+  Value<int> seq,
+  Value<String> srcSourceId,
+  Value<String> srcRelPath,
+  Value<int?> srcInstanceId,
+  Value<int> expectedSize,
+  Value<Uint8List?> expectedSha256,
+  Value<String> dstSourceId,
+  Value<String> dstRelPathPlanned,
+  Value<String?> dstRelPathFinal,
+  Value<String?> tmpRelPath,
+  Value<String?> originalName,
+  Value<String> state,
+  Value<Uint8List?> srcSha256,
+  Value<Uint8List?> dstSha256,
+  Value<int> bytesCopied,
+  Value<int> attempts,
+  Value<String?> lastErrorCode,
+  Value<String?> lastErrorMessage,
+  Value<int> updatedAt,
+});
 
-final class $OperationItemsReferences
-    extends
-        BaseReferences<_$CatalogDatabase, OperationItems, OperationItemRow> {
+final class $OperationItemsReferences extends BaseReferences<_$CatalogDatabase, OperationItems, OperationItemRow> {
   $OperationItemsReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static Operations _operationIdTable(_$CatalogDatabase db) => db.operations
-      .createAlias('operation_items__operation_id__operations__id');
+  static Operations _operationIdTable(_$CatalogDatabase db) =>
+      db.operations.createAlias('operation_items__operation_id__operations__id');
 
   $OperationsProcessedTableManager get operationId {
     final $_column = $_itemColumn<String>('operation_id')!;
 
-    final manager = $OperationsTableManager(
-      $_db,
-      $_db.operations,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $OperationsTableManager($_db, $_db.operations).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_operationIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
   static Sources _srcSourceIdTable(_$CatalogDatabase db) =>
@@ -18213,33 +14435,22 @@ final class $OperationItemsReferences
   $SourcesProcessedTableManager get srcSourceId {
     final $_column = $_itemColumn<String>('src_source_id')!;
 
-    final manager = $SourcesTableManager(
-      $_db,
-      $_db.sources,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $SourcesTableManager($_db, $_db.sources).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_srcSourceIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static FileInstances _srcInstanceIdTable(_$CatalogDatabase db) => db
-      .fileInstances
-      .createAlias('operation_items__src_instance_id__file_instances__id');
+  static FileInstances _srcInstanceIdTable(_$CatalogDatabase db) =>
+      db.fileInstances.createAlias('operation_items__src_instance_id__file_instances__id');
 
   $FileInstancesProcessedTableManager? get srcInstanceId {
     final $_column = $_itemColumn<int>('src_instance_id');
     if ($_column == null) return null;
-    final manager = $FileInstancesTableManager(
-      $_db,
-      $_db.fileInstances,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $FileInstancesTableManager($_db, $_db.fileInstances).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_srcInstanceIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
   static Sources _dstSourceIdTable(_$CatalogDatabase db) =>
@@ -18248,23 +14459,15 @@ final class $OperationItemsReferences
   $SourcesProcessedTableManager get dstSourceId {
     final $_column = $_itemColumn<String>('dst_source_id')!;
 
-    final manager = $SourcesTableManager(
-      $_db,
-      $_db.sources,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $SourcesTableManager($_db, $_db.sources).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_dstSourceIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static MultiTypedResultKey<OperationEvents, List<OperationEventRow>>
-  _operationEventsRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.operationEvents,
-        aliasName: 'operation_items__id__operation_events__item_id',
-      );
+  static MultiTypedResultKey<OperationEvents, List<OperationEventRow>> _operationEventsRefsTable(
+    _$CatalogDatabase db,
+  ) => MultiTypedResultKey.fromTable(db.operationEvents, aliasName: 'operation_items__id__operation_events__item_id');
 
   $OperationEventsProcessedTableManager get operationEventsRefs {
     final manager = $OperationEventsTableManager(
@@ -18272,17 +14475,12 @@ final class $OperationItemsReferences
       $_db.operationEvents,
     ).filter((f) => f.itemId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _operationEventsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_operationEventsRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
-class $OperationItemsFilterComposer
-    extends Composer<_$CatalogDatabase, OperationItems> {
+class $OperationItemsFilterComposer extends Composer<_$CatalogDatabase, OperationItems> {
   $OperationItemsFilterComposer({
     required super.$db,
     required super.$table,
@@ -18290,90 +14488,54 @@ class $OperationItemsFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get seq => $composableBuilder(column: $table.seq, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get srcRelPath => $composableBuilder(
-    column: $table.srcRelPath,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get srcRelPath =>
+      $composableBuilder(column: $table.srcRelPath, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get expectedSize => $composableBuilder(
-    column: $table.expectedSize,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get expectedSize =>
+      $composableBuilder(column: $table.expectedSize, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<Uint8List> get expectedSha256 => $composableBuilder(
-    column: $table.expectedSha256,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<Uint8List> get expectedSha256 =>
+      $composableBuilder(column: $table.expectedSha256, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get dstRelPathPlanned => $composableBuilder(
-    column: $table.dstRelPathPlanned,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get dstRelPathPlanned =>
+      $composableBuilder(column: $table.dstRelPathPlanned, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get dstRelPathFinal => $composableBuilder(
-    column: $table.dstRelPathFinal,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get dstRelPathFinal =>
+      $composableBuilder(column: $table.dstRelPathFinal, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get tmpRelPath => $composableBuilder(
-    column: $table.tmpRelPath,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get tmpRelPath =>
+      $composableBuilder(column: $table.tmpRelPath, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get originalName => $composableBuilder(
-    column: $table.originalName,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get originalName =>
+      $composableBuilder(column: $table.originalName, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get state => $composableBuilder(
-    column: $table.state,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<Uint8List> get srcSha256 => $composableBuilder(
-    column: $table.srcSha256,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<Uint8List> get srcSha256 =>
+      $composableBuilder(column: $table.srcSha256, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<Uint8List> get dstSha256 => $composableBuilder(
-    column: $table.dstSha256,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<Uint8List> get dstSha256 =>
+      $composableBuilder(column: $table.dstSha256, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get bytesCopied => $composableBuilder(
-    column: $table.bytesCopied,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get bytesCopied =>
+      $composableBuilder(column: $table.bytesCopied, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get attempts => $composableBuilder(
-    column: $table.attempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get lastErrorCode => $composableBuilder(
-    column: $table.lastErrorCode,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get lastErrorCode =>
+      $composableBuilder(column: $table.lastErrorCode, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get lastErrorMessage => $composableBuilder(
-    column: $table.lastErrorMessage,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get lastErrorMessage =>
+      $composableBuilder(column: $table.lastErrorMessage, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
   $OperationsFilterComposer get operationId {
     final $OperationsFilterComposer composer = $composerBuilder(
@@ -18381,18 +14543,13 @@ class $OperationItemsFilterComposer
       getCurrentColumn: (t) => t.operationId,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsFilterComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -18404,18 +14561,13 @@ class $OperationItemsFilterComposer
       getCurrentColumn: (t) => t.srcSourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesFilterComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -18427,18 +14579,13 @@ class $OperationItemsFilterComposer
       getCurrentColumn: (t) => t.srcInstanceId,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesFilterComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -18450,51 +14597,38 @@ class $OperationItemsFilterComposer
       getCurrentColumn: (t) => t.dstSourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesFilterComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<bool> operationEventsRefs(
-    Expression<bool> Function($OperationEventsFilterComposer f) f,
-  ) {
+  Expression<bool> operationEventsRefs(Expression<bool> Function($OperationEventsFilterComposer f) f) {
     final $OperationEventsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.operationEvents,
       getReferencedColumn: (t) => t.itemId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationEventsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationEventsFilterComposer(
             $db: $db,
             $table: $db.operationEvents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 }
 
-class $OperationItemsOrderingComposer
-    extends Composer<_$CatalogDatabase, OperationItems> {
+class $OperationItemsOrderingComposer extends Composer<_$CatalogDatabase, OperationItems> {
   $OperationItemsOrderingComposer({
     required super.$db,
     required super.$table,
@@ -18502,90 +14636,54 @@ class $OperationItemsOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get seq => $composableBuilder(column: $table.seq, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get srcRelPath => $composableBuilder(
-    column: $table.srcRelPath,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get srcRelPath =>
+      $composableBuilder(column: $table.srcRelPath, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get expectedSize => $composableBuilder(
-    column: $table.expectedSize,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get expectedSize =>
+      $composableBuilder(column: $table.expectedSize, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<Uint8List> get expectedSha256 => $composableBuilder(
-    column: $table.expectedSha256,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<Uint8List> get expectedSha256 =>
+      $composableBuilder(column: $table.expectedSha256, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get dstRelPathPlanned => $composableBuilder(
-    column: $table.dstRelPathPlanned,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get dstRelPathPlanned =>
+      $composableBuilder(column: $table.dstRelPathPlanned, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get dstRelPathFinal => $composableBuilder(
-    column: $table.dstRelPathFinal,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get dstRelPathFinal =>
+      $composableBuilder(column: $table.dstRelPathFinal, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get tmpRelPath => $composableBuilder(
-    column: $table.tmpRelPath,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get tmpRelPath =>
+      $composableBuilder(column: $table.tmpRelPath, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get originalName => $composableBuilder(
-    column: $table.originalName,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get originalName =>
+      $composableBuilder(column: $table.originalName, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get state => $composableBuilder(
-    column: $table.state,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<Uint8List> get srcSha256 => $composableBuilder(
-    column: $table.srcSha256,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<Uint8List> get srcSha256 =>
+      $composableBuilder(column: $table.srcSha256, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<Uint8List> get dstSha256 => $composableBuilder(
-    column: $table.dstSha256,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<Uint8List> get dstSha256 =>
+      $composableBuilder(column: $table.dstSha256, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get bytesCopied => $composableBuilder(
-    column: $table.bytesCopied,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get bytesCopied =>
+      $composableBuilder(column: $table.bytesCopied, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get attempts => $composableBuilder(
-    column: $table.attempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get lastErrorCode => $composableBuilder(
-    column: $table.lastErrorCode,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get lastErrorCode =>
+      $composableBuilder(column: $table.lastErrorCode, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get lastErrorMessage => $composableBuilder(
-    column: $table.lastErrorMessage,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get lastErrorMessage =>
+      $composableBuilder(column: $table.lastErrorMessage, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
   $OperationsOrderingComposer get operationId {
     final $OperationsOrderingComposer composer = $composerBuilder(
@@ -18593,18 +14691,13 @@ class $OperationItemsOrderingComposer
       getCurrentColumn: (t) => t.operationId,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsOrderingComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -18616,18 +14709,13 @@ class $OperationItemsOrderingComposer
       getCurrentColumn: (t) => t.srcSourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesOrderingComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -18639,18 +14727,13 @@ class $OperationItemsOrderingComposer
       getCurrentColumn: (t) => t.srcInstanceId,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesOrderingComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -18662,26 +14745,20 @@ class $OperationItemsOrderingComposer
       getCurrentColumn: (t) => t.dstSourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesOrderingComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $OperationItemsAnnotationComposer
-    extends Composer<_$CatalogDatabase, OperationItems> {
+class $OperationItemsAnnotationComposer extends Composer<_$CatalogDatabase, OperationItems> {
   $OperationItemsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -18689,76 +14766,45 @@ class $OperationItemsAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get seq =>
-      $composableBuilder(column: $table.seq, builder: (column) => column);
+  GeneratedColumn<int> get seq => $composableBuilder(column: $table.seq, builder: (column) => column);
 
-  GeneratedColumn<String> get srcRelPath => $composableBuilder(
-    column: $table.srcRelPath,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get srcRelPath => $composableBuilder(column: $table.srcRelPath, builder: (column) => column);
 
-  GeneratedColumn<int> get expectedSize => $composableBuilder(
-    column: $table.expectedSize,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get expectedSize => $composableBuilder(column: $table.expectedSize, builder: (column) => column);
 
-  GeneratedColumn<Uint8List> get expectedSha256 => $composableBuilder(
-    column: $table.expectedSha256,
-    builder: (column) => column,
-  );
+  GeneratedColumn<Uint8List> get expectedSha256 =>
+      $composableBuilder(column: $table.expectedSha256, builder: (column) => column);
 
-  GeneratedColumn<String> get dstRelPathPlanned => $composableBuilder(
-    column: $table.dstRelPathPlanned,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get dstRelPathPlanned =>
+      $composableBuilder(column: $table.dstRelPathPlanned, builder: (column) => column);
 
-  GeneratedColumn<String> get dstRelPathFinal => $composableBuilder(
-    column: $table.dstRelPathFinal,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get dstRelPathFinal =>
+      $composableBuilder(column: $table.dstRelPathFinal, builder: (column) => column);
 
-  GeneratedColumn<String> get tmpRelPath => $composableBuilder(
-    column: $table.tmpRelPath,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get tmpRelPath => $composableBuilder(column: $table.tmpRelPath, builder: (column) => column);
 
-  GeneratedColumn<String> get originalName => $composableBuilder(
-    column: $table.originalName,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get originalName =>
+      $composableBuilder(column: $table.originalName, builder: (column) => column);
 
-  GeneratedColumn<String> get state =>
-      $composableBuilder(column: $table.state, builder: (column) => column);
+  GeneratedColumn<String> get state => $composableBuilder(column: $table.state, builder: (column) => column);
 
-  GeneratedColumn<Uint8List> get srcSha256 =>
-      $composableBuilder(column: $table.srcSha256, builder: (column) => column);
+  GeneratedColumn<Uint8List> get srcSha256 => $composableBuilder(column: $table.srcSha256, builder: (column) => column);
 
-  GeneratedColumn<Uint8List> get dstSha256 =>
-      $composableBuilder(column: $table.dstSha256, builder: (column) => column);
+  GeneratedColumn<Uint8List> get dstSha256 => $composableBuilder(column: $table.dstSha256, builder: (column) => column);
 
-  GeneratedColumn<int> get bytesCopied => $composableBuilder(
-    column: $table.bytesCopied,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get bytesCopied => $composableBuilder(column: $table.bytesCopied, builder: (column) => column);
 
-  GeneratedColumn<int> get attempts =>
-      $composableBuilder(column: $table.attempts, builder: (column) => column);
+  GeneratedColumn<int> get attempts => $composableBuilder(column: $table.attempts, builder: (column) => column);
 
-  GeneratedColumn<String> get lastErrorCode => $composableBuilder(
-    column: $table.lastErrorCode,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get lastErrorCode =>
+      $composableBuilder(column: $table.lastErrorCode, builder: (column) => column);
 
-  GeneratedColumn<String> get lastErrorMessage => $composableBuilder(
-    column: $table.lastErrorMessage,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get lastErrorMessage =>
+      $composableBuilder(column: $table.lastErrorMessage, builder: (column) => column);
 
-  GeneratedColumn<int> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<int> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $OperationsAnnotationComposer get operationId {
     final $OperationsAnnotationComposer composer = $composerBuilder(
@@ -18766,18 +14812,13 @@ class $OperationItemsAnnotationComposer
       getCurrentColumn: (t) => t.operationId,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsAnnotationComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -18789,18 +14830,13 @@ class $OperationItemsAnnotationComposer
       getCurrentColumn: (t) => t.srcSourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesAnnotationComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -18812,18 +14848,13 @@ class $OperationItemsAnnotationComposer
       getCurrentColumn: (t) => t.srcInstanceId,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesAnnotationComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -18835,43 +14866,31 @@ class $OperationItemsAnnotationComposer
       getCurrentColumn: (t) => t.dstSourceId,
       referencedTable: $db.sources,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SourcesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SourcesAnnotationComposer(
             $db: $db,
             $table: $db.sources,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<T> operationEventsRefs<T extends Object>(
-    Expression<T> Function($OperationEventsAnnotationComposer a) f,
-  ) {
+  Expression<T> operationEventsRefs<T extends Object>(Expression<T> Function($OperationEventsAnnotationComposer a) f) {
     final $OperationEventsAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.operationEvents,
       getReferencedColumn: (t) => t.itemId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationEventsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationEventsAnnotationComposer(
             $db: $db,
             $table: $db.operationEvents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -18904,12 +14923,9 @@ class $OperationItemsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $OperationItemsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $OperationItemsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $OperationItemsAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $OperationItemsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $OperationItemsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $OperationItemsAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -19004,10 +15020,7 @@ class $OperationItemsTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) => (
-                  e.readTable<OperationItems, OperationItemRow>(table),
-                  $OperationItemsReferences(db, table, e),
-                ),
+                (e) => (e.readTable<OperationItems, OperationItemRow>(table), $OperationItemsReferences(db, table, e)),
               )
               .toList(),
           prefetchHooksCallback:
@@ -19020,9 +15033,7 @@ class $OperationItemsTableManager
               }) {
                 return PrefetchHooks(
                   db: db,
-                  explicitlyWatchedTables: [
-                    if (operationEventsRefs) db.operationEvents,
-                  ],
+                  explicitlyWatchedTables: [if (operationEventsRefs) db.operationEvents],
                   addJoins:
                       <
                         T extends TableManagerState<
@@ -19043,44 +15054,32 @@ class $OperationItemsTableManager
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.operationId,
-                            referencedTable: $OperationItemsReferences
-                                ._operationIdTable(db),
-                            referencedColumn: $OperationItemsReferences
-                                ._operationIdTable(db)
-                                .id,
+                            referencedTable: $OperationItemsReferences._operationIdTable(db),
+                            referencedColumn: $OperationItemsReferences._operationIdTable(db).id,
                           ) as T;
                         }
                         if (srcSourceId) {
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.srcSourceId,
-                            referencedTable: $OperationItemsReferences
-                                ._srcSourceIdTable(db),
-                            referencedColumn: $OperationItemsReferences
-                                ._srcSourceIdTable(db)
-                                .id,
+                            referencedTable: $OperationItemsReferences._srcSourceIdTable(db),
+                            referencedColumn: $OperationItemsReferences._srcSourceIdTable(db).id,
                           ) as T;
                         }
                         if (srcInstanceId) {
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.srcInstanceId,
-                            referencedTable: $OperationItemsReferences
-                                ._srcInstanceIdTable(db),
-                            referencedColumn: $OperationItemsReferences
-                                ._srcInstanceIdTable(db)
-                                .id,
+                            referencedTable: $OperationItemsReferences._srcInstanceIdTable(db),
+                            referencedColumn: $OperationItemsReferences._srcInstanceIdTable(db).id,
                           ) as T;
                         }
                         if (dstSourceId) {
                           state = state.withJoin(
                             currentTable: table,
                             currentColumn: table.dstSourceId,
-                            referencedTable: $OperationItemsReferences
-                                ._dstSourceIdTable(db),
-                            referencedColumn: $OperationItemsReferences
-                                ._dstSourceIdTable(db)
-                                .id,
+                            referencedTable: $OperationItemsReferences._dstSourceIdTable(db),
+                            referencedColumn: $OperationItemsReferences._dstSourceIdTable(db).id,
                           ) as T;
                         }
 
@@ -19096,14 +15095,8 @@ class $OperationItemsTableManager
                           OperationEvents
                         >(
                           currentTable: table,
-                          referencedTable: $OperationItemsReferences
-                              ._operationEventsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $OperationItemsReferences(
-                                db,
-                                table,
-                                p0,
-                              ).operationEventsRefs,
+                          referencedTable: $OperationItemsReferences._operationEventsRefsTable(db),
+                          managerFromTypedResult: (p0) => $OperationItemsReferences(db, table, p0).operationEventsRefs,
                           currentColumn: 'id',
                           referencedColumn: 'item_id',
                           typedResults: items,
@@ -19136,69 +15129,54 @@ typedef $OperationItemsProcessedTableManager =
         bool operationEventsRefs,
       })
     >;
-typedef $OperationEventsCreateCompanionBuilder =
-    OperationEventsCompanion Function({
-      Value<int> id,
-      required String operationId,
-      Value<int?> itemId,
-      required int at,
-      Value<String?> fromState,
-      Value<String?> toState,
-      Value<String?> message,
-    });
-typedef $OperationEventsUpdateCompanionBuilder =
-    OperationEventsCompanion Function({
-      Value<int> id,
-      Value<String> operationId,
-      Value<int?> itemId,
-      Value<int> at,
-      Value<String?> fromState,
-      Value<String?> toState,
-      Value<String?> message,
-    });
+typedef $OperationEventsCreateCompanionBuilder = OperationEventsCompanion Function({
+  Value<int> id,
+  required String operationId,
+  Value<int?> itemId,
+  required int at,
+  Value<String?> fromState,
+  Value<String?> toState,
+  Value<String?> message,
+});
+typedef $OperationEventsUpdateCompanionBuilder = OperationEventsCompanion Function({
+  Value<int> id,
+  Value<String> operationId,
+  Value<int?> itemId,
+  Value<int> at,
+  Value<String?> fromState,
+  Value<String?> toState,
+  Value<String?> message,
+});
 
-final class $OperationEventsReferences
-    extends
-        BaseReferences<_$CatalogDatabase, OperationEvents, OperationEventRow> {
+final class $OperationEventsReferences extends BaseReferences<_$CatalogDatabase, OperationEvents, OperationEventRow> {
   $OperationEventsReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static Operations _operationIdTable(_$CatalogDatabase db) => db.operations
-      .createAlias('operation_events__operation_id__operations__id');
+  static Operations _operationIdTable(_$CatalogDatabase db) =>
+      db.operations.createAlias('operation_events__operation_id__operations__id');
 
   $OperationsProcessedTableManager get operationId {
     final $_column = $_itemColumn<String>('operation_id')!;
 
-    final manager = $OperationsTableManager(
-      $_db,
-      $_db.operations,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $OperationsTableManager($_db, $_db.operations).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_operationIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static OperationItems _itemIdTable(_$CatalogDatabase db) => db.operationItems
-      .createAlias('operation_events__item_id__operation_items__id');
+  static OperationItems _itemIdTable(_$CatalogDatabase db) =>
+      db.operationItems.createAlias('operation_events__item_id__operation_items__id');
 
   $OperationItemsProcessedTableManager? get itemId {
     final $_column = $_itemColumn<int>('item_id');
     if ($_column == null) return null;
-    final manager = $OperationItemsTableManager(
-      $_db,
-      $_db.operationItems,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $OperationItemsTableManager($_db, $_db.operationItems).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $OperationEventsFilterComposer
-    extends Composer<_$CatalogDatabase, OperationEvents> {
+class $OperationEventsFilterComposer extends Composer<_$CatalogDatabase, OperationEvents> {
   $OperationEventsFilterComposer({
     required super.$db,
     required super.$table,
@@ -19206,30 +15184,18 @@ class $OperationEventsFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get at => $composableBuilder(
-    column: $table.at,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get at => $composableBuilder(column: $table.at, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get fromState => $composableBuilder(
-    column: $table.fromState,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get fromState =>
+      $composableBuilder(column: $table.fromState, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get toState => $composableBuilder(
-    column: $table.toState,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get toState =>
+      $composableBuilder(column: $table.toState, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get message => $composableBuilder(
-    column: $table.message,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => ColumnFilters(column));
 
   $OperationsFilterComposer get operationId {
     final $OperationsFilterComposer composer = $composerBuilder(
@@ -19237,18 +15203,13 @@ class $OperationEventsFilterComposer
       getCurrentColumn: (t) => t.operationId,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsFilterComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -19260,26 +15221,20 @@ class $OperationEventsFilterComposer
       getCurrentColumn: (t) => t.itemId,
       referencedTable: $db.operationItems,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationItemsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationItemsFilterComposer(
             $db: $db,
             $table: $db.operationItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $OperationEventsOrderingComposer
-    extends Composer<_$CatalogDatabase, OperationEvents> {
+class $OperationEventsOrderingComposer extends Composer<_$CatalogDatabase, OperationEvents> {
   $OperationEventsOrderingComposer({
     required super.$db,
     required super.$table,
@@ -19287,30 +15242,18 @@ class $OperationEventsOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get at => $composableBuilder(
-    column: $table.at,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get at => $composableBuilder(column: $table.at, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get fromState => $composableBuilder(
-    column: $table.fromState,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get fromState =>
+      $composableBuilder(column: $table.fromState, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get toState => $composableBuilder(
-    column: $table.toState,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get toState =>
+      $composableBuilder(column: $table.toState, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get message => $composableBuilder(
-    column: $table.message,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => ColumnOrderings(column));
 
   $OperationsOrderingComposer get operationId {
     final $OperationsOrderingComposer composer = $composerBuilder(
@@ -19318,18 +15261,13 @@ class $OperationEventsOrderingComposer
       getCurrentColumn: (t) => t.operationId,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsOrderingComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -19341,26 +15279,20 @@ class $OperationEventsOrderingComposer
       getCurrentColumn: (t) => t.itemId,
       referencedTable: $db.operationItems,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationItemsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationItemsOrderingComposer(
             $db: $db,
             $table: $db.operationItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $OperationEventsAnnotationComposer
-    extends Composer<_$CatalogDatabase, OperationEvents> {
+class $OperationEventsAnnotationComposer extends Composer<_$CatalogDatabase, OperationEvents> {
   $OperationEventsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -19368,20 +15300,15 @@ class $OperationEventsAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get at =>
-      $composableBuilder(column: $table.at, builder: (column) => column);
+  GeneratedColumn<int> get at => $composableBuilder(column: $table.at, builder: (column) => column);
 
-  GeneratedColumn<String> get fromState =>
-      $composableBuilder(column: $table.fromState, builder: (column) => column);
+  GeneratedColumn<String> get fromState => $composableBuilder(column: $table.fromState, builder: (column) => column);
 
-  GeneratedColumn<String> get toState =>
-      $composableBuilder(column: $table.toState, builder: (column) => column);
+  GeneratedColumn<String> get toState => $composableBuilder(column: $table.toState, builder: (column) => column);
 
-  GeneratedColumn<String> get message =>
-      $composableBuilder(column: $table.message, builder: (column) => column);
+  GeneratedColumn<String> get message => $composableBuilder(column: $table.message, builder: (column) => column);
 
   $OperationsAnnotationComposer get operationId {
     final $OperationsAnnotationComposer composer = $composerBuilder(
@@ -19389,18 +15316,13 @@ class $OperationEventsAnnotationComposer
       getCurrentColumn: (t) => t.operationId,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsAnnotationComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -19412,18 +15334,13 @@ class $OperationEventsAnnotationComposer
       getCurrentColumn: (t) => t.itemId,
       referencedTable: $db.operationItems,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationItemsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationItemsAnnotationComposer(
             $db: $db,
             $table: $db.operationItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -19450,12 +15367,9 @@ class $OperationEventsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $OperationEventsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $OperationEventsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $OperationEventsAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $OperationEventsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $OperationEventsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $OperationEventsAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -19494,10 +15408,8 @@ class $OperationEventsTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) => (
-                  e.readTable<OperationEvents, OperationEventRow>(table),
-                  $OperationEventsReferences(db, table, e),
-                ),
+                (e) =>
+                    (e.readTable<OperationEvents, OperationEventRow>(table), $OperationEventsReferences(db, table, e)),
               )
               .toList(),
           prefetchHooksCallback: ({operationId = false, itemId = false}) {
@@ -19524,22 +15436,16 @@ class $OperationEventsTableManager
                       state = state.withJoin(
                         currentTable: table,
                         currentColumn: table.operationId,
-                        referencedTable: $OperationEventsReferences
-                            ._operationIdTable(db),
-                        referencedColumn: $OperationEventsReferences
-                            ._operationIdTable(db)
-                            .id,
+                        referencedTable: $OperationEventsReferences._operationIdTable(db),
+                        referencedColumn: $OperationEventsReferences._operationIdTable(db).id,
                       ) as T;
                     }
                     if (itemId) {
                       state = state.withJoin(
                         currentTable: table,
                         currentColumn: table.itemId,
-                        referencedTable: $OperationEventsReferences
-                            ._itemIdTable(db),
-                        referencedColumn: $OperationEventsReferences
-                            ._itemIdTable(db)
-                            .id,
+                        referencedTable: $OperationEventsReferences._itemIdTable(db),
+                        referencedColumn: $OperationEventsReferences._itemIdTable(db).id,
                       ) as T;
                     }
 
@@ -19583,8 +15489,7 @@ typedef $SavedFiltersUpdateCompanionBuilder = SavedFiltersCompanion Function({
   Value<int> updatedAt,
 });
 
-class $SavedFiltersFilterComposer
-    extends Composer<_$CatalogDatabase, SavedFilters> {
+class $SavedFiltersFilterComposer extends Composer<_$CatalogDatabase, SavedFilters> {
   $SavedFiltersFilterComposer({
     required super.$db,
     required super.$table,
@@ -19592,34 +15497,21 @@ class $SavedFiltersFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get name => $composableBuilder(column: $table.name, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get definitionJson => $composableBuilder(
-    column: $table.definitionJson,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get definitionJson =>
+      $composableBuilder(column: $table.definitionJson, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 }
 
-class $SavedFiltersOrderingComposer
-    extends Composer<_$CatalogDatabase, SavedFilters> {
+class $SavedFiltersOrderingComposer extends Composer<_$CatalogDatabase, SavedFilters> {
   $SavedFiltersOrderingComposer({
     required super.$db,
     required super.$table,
@@ -19627,34 +15519,22 @@ class $SavedFiltersOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get definitionJson => $composableBuilder(
-    column: $table.definitionJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get definitionJson =>
+      $composableBuilder(column: $table.definitionJson, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $SavedFiltersAnnotationComposer
-    extends Composer<_$CatalogDatabase, SavedFilters> {
+class $SavedFiltersAnnotationComposer extends Composer<_$CatalogDatabase, SavedFilters> {
   $SavedFiltersAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -19662,22 +15542,16 @@ class $SavedFiltersAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<String> get name => $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<String> get definitionJson => $composableBuilder(
-    column: $table.definitionJson,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get definitionJson =>
+      $composableBuilder(column: $table.definitionJson, builder: (column) => column);
 
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<int> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<int> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $SavedFiltersTableManager
@@ -19691,10 +15565,7 @@ class $SavedFiltersTableManager
           $SavedFiltersAnnotationComposer,
           $SavedFiltersCreateCompanionBuilder,
           $SavedFiltersUpdateCompanionBuilder,
-          (
-            SavedFilterRow,
-            BaseReferences<_$CatalogDatabase, SavedFilters, SavedFilterRow>,
-          ),
+          (SavedFilterRow, BaseReferences<_$CatalogDatabase, SavedFilters, SavedFilterRow>),
           SavedFilterRow,
           PrefetchHooks Function()
         > {
@@ -19703,12 +15574,9 @@ class $SavedFiltersTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $SavedFiltersFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $SavedFiltersOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $SavedFiltersAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $SavedFiltersFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $SavedFiltersOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $SavedFiltersAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -19741,11 +15609,7 @@ class $SavedFiltersTableManager
               .map(
                 (e) => (
                   e.readTable<SavedFilters, SavedFilterRow>(table),
-                  BaseReferences<
-                    _$CatalogDatabase,
-                    SavedFilters,
-                    SavedFilterRow
-                  >(db, table, e),
+                  BaseReferences<_$CatalogDatabase, SavedFilters, SavedFilterRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -19764,10 +15628,7 @@ typedef $SavedFiltersProcessedTableManager =
       $SavedFiltersAnnotationComposer,
       $SavedFiltersCreateCompanionBuilder,
       $SavedFiltersUpdateCompanionBuilder,
-      (
-        SavedFilterRow,
-        BaseReferences<_$CatalogDatabase, SavedFilters, SavedFilterRow>,
-      ),
+      (SavedFilterRow, BaseReferences<_$CatalogDatabase, SavedFilters, SavedFilterRow>),
       SavedFilterRow,
       PrefetchHooks Function()
     >;
@@ -19782,16 +15643,13 @@ typedef $SelectionSetsUpdateCompanionBuilder = SelectionSetsCompanion Function({
   Value<int> createdAt,
 });
 
-final class $SelectionSetsReferences
-    extends BaseReferences<_$CatalogDatabase, SelectionSets, SelectionSetRow> {
+final class $SelectionSetsReferences extends BaseReferences<_$CatalogDatabase, SelectionSets, SelectionSetRow> {
   $SelectionSetsReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<SelectionSetItems, List<SelectionSetItemRow>>
-  _selectionSetItemsRefsTable(_$CatalogDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.selectionSetItems,
-        aliasName: 'selection_sets__id__selection_set_items__set_id',
-      );
+  static MultiTypedResultKey<SelectionSetItems, List<SelectionSetItemRow>> _selectionSetItemsRefsTable(
+    _$CatalogDatabase db,
+  ) =>
+      MultiTypedResultKey.fromTable(db.selectionSetItems, aliasName: 'selection_sets__id__selection_set_items__set_id');
 
   $SelectionSetItemsProcessedTableManager get selectionSetItemsRefs {
     final manager = $SelectionSetItemsTableManager(
@@ -19799,17 +15657,12 @@ final class $SelectionSetsReferences
       $_db.selectionSetItems,
     ).filter((f) => f.setId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _selectionSetItemsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_selectionSetItemsRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
-class $SelectionSetsFilterComposer
-    extends Composer<_$CatalogDatabase, SelectionSets> {
+class $SelectionSetsFilterComposer extends Composer<_$CatalogDatabase, SelectionSets> {
   $SelectionSetsFilterComposer({
     required super.$db,
     required super.$table,
@@ -19817,49 +15670,33 @@ class $SelectionSetsFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get name => $composableBuilder(column: $table.name, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
-  Expression<bool> selectionSetItemsRefs(
-    Expression<bool> Function($SelectionSetItemsFilterComposer f) f,
-  ) {
+  Expression<bool> selectionSetItemsRefs(Expression<bool> Function($SelectionSetItemsFilterComposer f) f) {
     final $SelectionSetItemsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.selectionSetItems,
       getReferencedColumn: (t) => t.setId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SelectionSetItemsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SelectionSetItemsFilterComposer(
             $db: $db,
             $table: $db.selectionSetItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 }
 
-class $SelectionSetsOrderingComposer
-    extends Composer<_$CatalogDatabase, SelectionSets> {
+class $SelectionSetsOrderingComposer extends Composer<_$CatalogDatabase, SelectionSets> {
   $SelectionSetsOrderingComposer({
     required super.$db,
     required super.$table,
@@ -19867,24 +15704,16 @@ class $SelectionSetsOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $SelectionSetsAnnotationComposer
-    extends Composer<_$CatalogDatabase, SelectionSets> {
+class $SelectionSetsAnnotationComposer extends Composer<_$CatalogDatabase, SelectionSets> {
   $SelectionSetsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -19892,14 +15721,11 @@ class $SelectionSetsAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<String> get name => $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<int> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   Expression<T> selectionSetItemsRefs<T extends Object>(
     Expression<T> Function($SelectionSetItemsAnnotationComposer a) f,
@@ -19909,18 +15735,13 @@ class $SelectionSetsAnnotationComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.selectionSetItems,
       getReferencedColumn: (t) => t.setId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SelectionSetItemsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SelectionSetItemsAnnotationComposer(
             $db: $db,
             $table: $db.selectionSetItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -19947,46 +15768,26 @@ class $SelectionSetsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $SelectionSetsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $SelectionSetsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $SelectionSetsAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<int> createdAt = const Value.absent(),
-              }) => SelectionSetsCompanion(
-                id: id,
-                name: name,
-                createdAt: createdAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required String name,
-                required int createdAt,
-              }) => SelectionSetsCompanion.insert(
-                id: id,
-                name: name,
-                createdAt: createdAt,
-              ),
+          createFilteringComposer: () => $SelectionSetsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $SelectionSetsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $SelectionSetsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+          }) => SelectionSetsCompanion(id: id, name: name, createdAt: createdAt),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String name,
+            required int createdAt,
+          }) => SelectionSetsCompanion.insert(id: id, name: name, createdAt: createdAt),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<SelectionSets, SelectionSetRow>(table),
-                  $SelectionSetsReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable<SelectionSets, SelectionSetRow>(table), $SelectionSetsReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: ({selectionSetItemsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [
-                if (selectionSetItemsRefs) db.selectionSetItems,
-              ],
+              explicitlyWatchedTables: [if (selectionSetItemsRefs) db.selectionSetItems],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
@@ -19998,13 +15799,8 @@ class $SelectionSetsTableManager
                       SelectionSetItems
                     >(
                       currentTable: table,
-                      referencedTable: $SelectionSetsReferences
-                          ._selectionSetItemsRefsTable(db),
-                      managerFromTypedResult: (p0) => $SelectionSetsReferences(
-                        db,
-                        table,
-                        p0,
-                      ).selectionSetItemsRefs,
+                      referencedTable: $SelectionSetsReferences._selectionSetItemsRefsTable(db),
+                      managerFromTypedResult: (p0) => $SelectionSetsReferences(db, table, p0).selectionSetItemsRefs,
                       currentColumn: 'id',
                       referencedColumn: 'set_id',
                       typedResults: items,
@@ -20031,64 +15827,45 @@ typedef $SelectionSetsProcessedTableManager =
       SelectionSetRow,
       PrefetchHooks Function({bool selectionSetItemsRefs})
     >;
-typedef $SelectionSetItemsCreateCompanionBuilder =
-    SelectionSetItemsCompanion Function({
-      required int setId,
-      required int instanceId,
-    });
-typedef $SelectionSetItemsUpdateCompanionBuilder =
-    SelectionSetItemsCompanion Function({
-      Value<int> setId,
-      Value<int> instanceId,
-    });
+typedef $SelectionSetItemsCreateCompanionBuilder = SelectionSetItemsCompanion Function({
+  required int setId,
+  required int instanceId,
+});
+typedef $SelectionSetItemsUpdateCompanionBuilder = SelectionSetItemsCompanion Function({
+  Value<int> setId,
+  Value<int> instanceId,
+});
 
 final class $SelectionSetItemsReferences
-    extends
-        BaseReferences<
-          _$CatalogDatabase,
-          SelectionSetItems,
-          SelectionSetItemRow
-        > {
+    extends BaseReferences<_$CatalogDatabase, SelectionSetItems, SelectionSetItemRow> {
   $SelectionSetItemsReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static SelectionSets _setIdTable(_$CatalogDatabase db) => db.selectionSets
-      .createAlias('selection_set_items__set_id__selection_sets__id');
+  static SelectionSets _setIdTable(_$CatalogDatabase db) =>
+      db.selectionSets.createAlias('selection_set_items__set_id__selection_sets__id');
 
   $SelectionSetsProcessedTableManager get setId {
     final $_column = $_itemColumn<int>('set_id')!;
 
-    final manager = $SelectionSetsTableManager(
-      $_db,
-      $_db.selectionSets,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $SelectionSetsTableManager($_db, $_db.selectionSets).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_setIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static FileInstances _instanceIdTable(_$CatalogDatabase db) => db
-      .fileInstances
-      .createAlias('selection_set_items__instance_id__file_instances__id');
+  static FileInstances _instanceIdTable(_$CatalogDatabase db) =>
+      db.fileInstances.createAlias('selection_set_items__instance_id__file_instances__id');
 
   $FileInstancesProcessedTableManager get instanceId {
     final $_column = $_itemColumn<int>('instance_id')!;
 
-    final manager = $FileInstancesTableManager(
-      $_db,
-      $_db.fileInstances,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $FileInstancesTableManager($_db, $_db.fileInstances).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_instanceIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $SelectionSetItemsFilterComposer
-    extends Composer<_$CatalogDatabase, SelectionSetItems> {
+class $SelectionSetItemsFilterComposer extends Composer<_$CatalogDatabase, SelectionSetItems> {
   $SelectionSetItemsFilterComposer({
     required super.$db,
     required super.$table,
@@ -20102,18 +15879,13 @@ class $SelectionSetItemsFilterComposer
       getCurrentColumn: (t) => t.setId,
       referencedTable: $db.selectionSets,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SelectionSetsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SelectionSetsFilterComposer(
             $db: $db,
             $table: $db.selectionSets,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20125,26 +15897,20 @@ class $SelectionSetItemsFilterComposer
       getCurrentColumn: (t) => t.instanceId,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesFilterComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $SelectionSetItemsOrderingComposer
-    extends Composer<_$CatalogDatabase, SelectionSetItems> {
+class $SelectionSetItemsOrderingComposer extends Composer<_$CatalogDatabase, SelectionSetItems> {
   $SelectionSetItemsOrderingComposer({
     required super.$db,
     required super.$table,
@@ -20158,18 +15924,13 @@ class $SelectionSetItemsOrderingComposer
       getCurrentColumn: (t) => t.setId,
       referencedTable: $db.selectionSets,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SelectionSetsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SelectionSetsOrderingComposer(
             $db: $db,
             $table: $db.selectionSets,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20181,26 +15942,20 @@ class $SelectionSetItemsOrderingComposer
       getCurrentColumn: (t) => t.instanceId,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesOrderingComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $SelectionSetItemsAnnotationComposer
-    extends Composer<_$CatalogDatabase, SelectionSetItems> {
+class $SelectionSetItemsAnnotationComposer extends Composer<_$CatalogDatabase, SelectionSetItems> {
   $SelectionSetItemsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -20214,18 +15969,13 @@ class $SelectionSetItemsAnnotationComposer
       getCurrentColumn: (t) => t.setId,
       referencedTable: $db.selectionSets,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $SelectionSetsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $SelectionSetsAnnotationComposer(
             $db: $db,
             $table: $db.selectionSets,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20237,18 +15987,13 @@ class $SelectionSetItemsAnnotationComposer
       getCurrentColumn: (t) => t.instanceId,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesAnnotationComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20275,26 +16020,15 @@ class $SelectionSetItemsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $SelectionSetItemsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $SelectionSetItemsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $SelectionSetItemsAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> setId = const Value.absent(),
-                Value<int> instanceId = const Value.absent(),
-              }) => SelectionSetItemsCompanion(
-                setId: setId,
-                instanceId: instanceId,
-              ),
-          createCompanionCallback:
-              ({required int setId, required int instanceId}) =>
-                  SelectionSetItemsCompanion.insert(
-                    setId: setId,
-                    instanceId: instanceId,
-                  ),
+          createFilteringComposer: () => $SelectionSetItemsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $SelectionSetItemsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $SelectionSetItemsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> setId = const Value.absent(),
+            Value<int> instanceId = const Value.absent(),
+          }) => SelectionSetItemsCompanion(setId: setId, instanceId: instanceId),
+          createCompanionCallback: ({required int setId, required int instanceId}) =>
+              SelectionSetItemsCompanion.insert(setId: setId, instanceId: instanceId),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
@@ -20327,22 +16061,16 @@ class $SelectionSetItemsTableManager
                       state = state.withJoin(
                         currentTable: table,
                         currentColumn: table.setId,
-                        referencedTable: $SelectionSetItemsReferences
-                            ._setIdTable(db),
-                        referencedColumn: $SelectionSetItemsReferences
-                            ._setIdTable(db)
-                            .id,
+                        referencedTable: $SelectionSetItemsReferences._setIdTable(db),
+                        referencedColumn: $SelectionSetItemsReferences._setIdTable(db).id,
                       ) as T;
                     }
                     if (instanceId) {
                       state = state.withJoin(
                         currentTable: table,
                         currentColumn: table.instanceId,
-                        referencedTable: $SelectionSetItemsReferences
-                            ._instanceIdTable(db),
-                        referencedColumn: $SelectionSetItemsReferences
-                            ._instanceIdTable(db)
-                            .id,
+                        referencedTable: $SelectionSetItemsReferences._instanceIdTable(db),
+                        referencedColumn: $SelectionSetItemsReferences._instanceIdTable(db).id,
                       ) as T;
                     }
 
@@ -20371,24 +16099,14 @@ typedef $SelectionSetItemsProcessedTableManager =
       SelectionSetItemRow,
       PrefetchHooks Function({bool setId, bool instanceId})
     >;
-typedef $TagsCreateCompanionBuilder = TagsCompanion Function({
-  Value<int> id,
-  required String name,
-});
-typedef $TagsUpdateCompanionBuilder = TagsCompanion Function({
-  Value<int> id,
-  Value<String> name,
-});
+typedef $TagsCreateCompanionBuilder = TagsCompanion Function({Value<int> id, required String name});
+typedef $TagsUpdateCompanionBuilder = TagsCompanion Function({Value<int> id, Value<String> name});
 
-final class $TagsReferences
-    extends BaseReferences<_$CatalogDatabase, Tags, TagRow> {
+final class $TagsReferences extends BaseReferences<_$CatalogDatabase, Tags, TagRow> {
   $TagsReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<ContentTags, List<ContentTagRow>>
-  _contentTagsRefsTable(_$CatalogDatabase db) => MultiTypedResultKey.fromTable(
-    db.contentTags,
-    aliasName: 'tags__id__content_tags__tag_id',
-  );
+  static MultiTypedResultKey<ContentTags, List<ContentTagRow>> _contentTagsRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.contentTags, aliasName: 'tags__id__content_tags__tag_id');
 
   $ContentTagsProcessedTableManager get contentTagsRefs {
     final manager = $ContentTagsTableManager(
@@ -20397,9 +16115,7 @@ final class $TagsReferences
     ).filter((f) => f.tagId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_contentTagsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
@@ -20411,36 +16127,23 @@ class $TagsFilterComposer extends Composer<_$CatalogDatabase, Tags> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get name => $composableBuilder(column: $table.name, builder: (column) => ColumnFilters(column));
 
-  Expression<bool> contentTagsRefs(
-    Expression<bool> Function($ContentTagsFilterComposer f) f,
-  ) {
+  Expression<bool> contentTagsRefs(Expression<bool> Function($ContentTagsFilterComposer f) f) {
     final $ContentTagsFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.contentTags,
       getReferencedColumn: (t) => t.tagId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentTagsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentTagsFilterComposer(
             $db: $db,
             $table: $db.contentTags,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -20455,15 +16158,10 @@ class $TagsOrderingComposer extends Composer<_$CatalogDatabase, Tags> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => ColumnOrderings(column));
 }
 
 class $TagsAnnotationComposer extends Composer<_$CatalogDatabase, Tags> {
@@ -20474,32 +16172,23 @@ class $TagsAnnotationComposer extends Composer<_$CatalogDatabase, Tags> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<String> get name => $composableBuilder(column: $table.name, builder: (column) => column);
 
-  Expression<T> contentTagsRefs<T extends Object>(
-    Expression<T> Function($ContentTagsAnnotationComposer a) f,
-  ) {
+  Expression<T> contentTagsRefs<T extends Object>(Expression<T> Function($ContentTagsAnnotationComposer a) f) {
     final $ContentTagsAnnotationComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.contentTags,
       getReferencedColumn: (t) => t.tagId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentTagsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentTagsAnnotationComposer(
             $db: $db,
             $table: $db.contentTags,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -20526,28 +16215,17 @@ class $TagsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $TagsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $TagsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $TagsAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $TagsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $TagsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $TagsAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<String> name = const Value.absent(),
           }) => TagsCompanion(id: id, name: name),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required String name,
-          }) => TagsCompanion.insert(id: id, name: name),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<Tags, TagRow>(table),
-                  $TagsReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          createCompanionCallback: ({Value<int> id = const Value.absent(), required String name}) =>
+              TagsCompanion.insert(id: id, name: name),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable<Tags, TagRow>(table), $TagsReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({contentTagsRefs = false}) {
             return PrefetchHooks(
               db: db,
@@ -20556,18 +16234,10 @@ class $TagsTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (contentTagsRefs)
-                    await $_getPrefetchedDataByColumns<
-                      TagRow,
-                      Tags,
-                      ContentTagRow,
-                      ContentTags
-                    >(
+                    await $_getPrefetchedDataByColumns<TagRow, Tags, ContentTagRow, ContentTags>(
                       currentTable: table,
-                      referencedTable: $TagsReferences._contentTagsRefsTable(
-                        db,
-                      ),
-                      managerFromTypedResult: (p0) =>
-                          $TagsReferences(db, table, p0).contentTagsRefs,
+                      referencedTable: $TagsReferences._contentTagsRefsTable(db),
+                      managerFromTypedResult: (p0) => $TagsReferences(db, table, p0).contentTagsRefs,
                       currentColumn: 'id',
                       referencedColumn: 'tag_id',
                       typedResults: items,
@@ -20598,13 +16268,9 @@ typedef $ContentTagsCreateCompanionBuilder = ContentTagsCompanion Function({
   required int contentId,
   required int tagId,
 });
-typedef $ContentTagsUpdateCompanionBuilder = ContentTagsCompanion Function({
-  Value<int> contentId,
-  Value<int> tagId,
-});
+typedef $ContentTagsUpdateCompanionBuilder = ContentTagsCompanion Function({Value<int> contentId, Value<int> tagId});
 
-final class $ContentTagsReferences
-    extends BaseReferences<_$CatalogDatabase, ContentTags, ContentTagRow> {
+final class $ContentTagsReferences extends BaseReferences<_$CatalogDatabase, ContentTags, ContentTagRow> {
   $ContentTagsReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static Contents _contentIdTable(_$CatalogDatabase db) =>
@@ -20613,37 +16279,25 @@ final class $ContentTagsReferences
   $ContentsProcessedTableManager get contentId {
     final $_column = $_itemColumn<int>('content_id')!;
 
-    final manager = $ContentsTableManager(
-      $_db,
-      $_db.contents,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contentIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static Tags _tagIdTable(_$CatalogDatabase db) =>
-      db.tags.createAlias('content_tags__tag_id__tags__id');
+  static Tags _tagIdTable(_$CatalogDatabase db) => db.tags.createAlias('content_tags__tag_id__tags__id');
 
   $TagsProcessedTableManager get tagId {
     final $_column = $_itemColumn<int>('tag_id')!;
 
-    final manager = $TagsTableManager(
-      $_db,
-      $_db.tags,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $TagsTableManager($_db, $_db.tags).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_tagIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $ContentTagsFilterComposer
-    extends Composer<_$CatalogDatabase, ContentTags> {
+class $ContentTagsFilterComposer extends Composer<_$CatalogDatabase, ContentTags> {
   $ContentTagsFilterComposer({
     required super.$db,
     required super.$table,
@@ -20657,18 +16311,13 @@ class $ContentTagsFilterComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsFilterComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20680,26 +16329,20 @@ class $ContentTagsFilterComposer
       getCurrentColumn: (t) => t.tagId,
       referencedTable: $db.tags,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $TagsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $TagsFilterComposer(
             $db: $db,
             $table: $db.tags,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $ContentTagsOrderingComposer
-    extends Composer<_$CatalogDatabase, ContentTags> {
+class $ContentTagsOrderingComposer extends Composer<_$CatalogDatabase, ContentTags> {
   $ContentTagsOrderingComposer({
     required super.$db,
     required super.$table,
@@ -20713,18 +16356,13 @@ class $ContentTagsOrderingComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsOrderingComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20736,26 +16374,20 @@ class $ContentTagsOrderingComposer
       getCurrentColumn: (t) => t.tagId,
       referencedTable: $db.tags,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $TagsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $TagsOrderingComposer(
             $db: $db,
             $table: $db.tags,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $ContentTagsAnnotationComposer
-    extends Composer<_$CatalogDatabase, ContentTags> {
+class $ContentTagsAnnotationComposer extends Composer<_$CatalogDatabase, ContentTags> {
   $ContentTagsAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -20769,18 +16401,13 @@ class $ContentTagsAnnotationComposer
       getCurrentColumn: (t) => t.contentId,
       referencedTable: $db.contents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $ContentsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsAnnotationComposer(
             $db: $db,
             $table: $db.contents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20792,18 +16419,13 @@ class $ContentTagsAnnotationComposer
       getCurrentColumn: (t) => t.tagId,
       referencedTable: $db.tags,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $TagsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $TagsAnnotationComposer(
             $db: $db,
             $table: $db.tags,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20830,27 +16452,17 @@ class $ContentTagsTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $ContentTagsFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $ContentTagsOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $ContentTagsAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $ContentTagsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $ContentTagsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $ContentTagsAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> contentId = const Value.absent(),
             Value<int> tagId = const Value.absent(),
           }) => ContentTagsCompanion(contentId: contentId, tagId: tagId),
-          createCompanionCallback: ({
-            required int contentId,
-            required int tagId,
-          }) => ContentTagsCompanion.insert(contentId: contentId, tagId: tagId),
+          createCompanionCallback: ({required int contentId, required int tagId}) =>
+              ContentTagsCompanion.insert(contentId: contentId, tagId: tagId),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable<ContentTags, ContentTagRow>(table),
-                  $ContentTagsReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable<ContentTags, ContentTagRow>(table), $ContentTagsReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: ({contentId = false, tagId = false}) {
             return PrefetchHooks(
@@ -20876,12 +16488,8 @@ class $ContentTagsTableManager
                       state = state.withJoin(
                         currentTable: table,
                         currentColumn: table.contentId,
-                        referencedTable: $ContentTagsReferences._contentIdTable(
-                          db,
-                        ),
-                        referencedColumn: $ContentTagsReferences
-                            ._contentIdTable(db)
-                            .id,
+                        referencedTable: $ContentTagsReferences._contentIdTable(db),
+                        referencedColumn: $ContentTagsReferences._contentIdTable(db).id,
                       ) as T;
                     }
                     if (tagId) {
@@ -20889,9 +16497,7 @@ class $ContentTagsTableManager
                         currentTable: table,
                         currentColumn: table.tagId,
                         referencedTable: $ContentTagsReferences._tagIdTable(db),
-                        referencedColumn: $ContentTagsReferences
-                            ._tagIdTable(db)
-                            .id,
+                        referencedColumn: $ContentTagsReferences._tagIdTable(db).id,
                       ) as T;
                     }
 
@@ -20920,72 +16526,56 @@ typedef $ContentTagsProcessedTableManager =
       ContentTagRow,
       PrefetchHooks Function({bool contentId, bool tagId})
     >;
-typedef $IntegrityChecksCreateCompanionBuilder =
-    IntegrityChecksCompanion Function({
-      Value<int> id,
-      required int instanceId,
-      Value<String?> operationId,
-      required int checkedAt,
-      required String result,
-      Value<Uint8List?> observedSha256,
-      Value<int?> observedSize,
-      Value<int?> observedMtime,
-    });
-typedef $IntegrityChecksUpdateCompanionBuilder =
-    IntegrityChecksCompanion Function({
-      Value<int> id,
-      Value<int> instanceId,
-      Value<String?> operationId,
-      Value<int> checkedAt,
-      Value<String> result,
-      Value<Uint8List?> observedSha256,
-      Value<int?> observedSize,
-      Value<int?> observedMtime,
-    });
+typedef $IntegrityChecksCreateCompanionBuilder = IntegrityChecksCompanion Function({
+  Value<int> id,
+  required int instanceId,
+  Value<String?> operationId,
+  required int checkedAt,
+  required String result,
+  Value<Uint8List?> observedSha256,
+  Value<int?> observedSize,
+  Value<int?> observedMtime,
+});
+typedef $IntegrityChecksUpdateCompanionBuilder = IntegrityChecksCompanion Function({
+  Value<int> id,
+  Value<int> instanceId,
+  Value<String?> operationId,
+  Value<int> checkedAt,
+  Value<String> result,
+  Value<Uint8List?> observedSha256,
+  Value<int?> observedSize,
+  Value<int?> observedMtime,
+});
 
-final class $IntegrityChecksReferences
-    extends
-        BaseReferences<_$CatalogDatabase, IntegrityChecks, IntegrityCheckRow> {
+final class $IntegrityChecksReferences extends BaseReferences<_$CatalogDatabase, IntegrityChecks, IntegrityCheckRow> {
   $IntegrityChecksReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static FileInstances _instanceIdTable(_$CatalogDatabase db) => db
-      .fileInstances
-      .createAlias('integrity_checks__instance_id__file_instances__id');
+  static FileInstances _instanceIdTable(_$CatalogDatabase db) =>
+      db.fileInstances.createAlias('integrity_checks__instance_id__file_instances__id');
 
   $FileInstancesProcessedTableManager get instanceId {
     final $_column = $_itemColumn<int>('instance_id')!;
 
-    final manager = $FileInstancesTableManager(
-      $_db,
-      $_db.fileInstances,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $FileInstancesTableManager($_db, $_db.fileInstances).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_instanceIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static Operations _operationIdTable(_$CatalogDatabase db) => db.operations
-      .createAlias('integrity_checks__operation_id__operations__id');
+  static Operations _operationIdTable(_$CatalogDatabase db) =>
+      db.operations.createAlias('integrity_checks__operation_id__operations__id');
 
   $OperationsProcessedTableManager? get operationId {
     final $_column = $_itemColumn<String>('operation_id');
     if ($_column == null) return null;
-    final manager = $OperationsTableManager(
-      $_db,
-      $_db.operations,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $OperationsTableManager($_db, $_db.operations).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_operationIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $IntegrityChecksFilterComposer
-    extends Composer<_$CatalogDatabase, IntegrityChecks> {
+class $IntegrityChecksFilterComposer extends Composer<_$CatalogDatabase, IntegrityChecks> {
   $IntegrityChecksFilterComposer({
     required super.$db,
     required super.$table,
@@ -20993,35 +16583,22 @@ class $IntegrityChecksFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get checkedAt => $composableBuilder(
-    column: $table.checkedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get checkedAt =>
+      $composableBuilder(column: $table.checkedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get result => $composableBuilder(
-    column: $table.result,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get result =>
+      $composableBuilder(column: $table.result, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<Uint8List> get observedSha256 => $composableBuilder(
-    column: $table.observedSha256,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<Uint8List> get observedSha256 =>
+      $composableBuilder(column: $table.observedSha256, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get observedSize => $composableBuilder(
-    column: $table.observedSize,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get observedSize =>
+      $composableBuilder(column: $table.observedSize, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get observedMtime => $composableBuilder(
-    column: $table.observedMtime,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get observedMtime =>
+      $composableBuilder(column: $table.observedMtime, builder: (column) => ColumnFilters(column));
 
   $FileInstancesFilterComposer get instanceId {
     final $FileInstancesFilterComposer composer = $composerBuilder(
@@ -21029,18 +16606,13 @@ class $IntegrityChecksFilterComposer
       getCurrentColumn: (t) => t.instanceId,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesFilterComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -21052,26 +16624,20 @@ class $IntegrityChecksFilterComposer
       getCurrentColumn: (t) => t.operationId,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsFilterComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $IntegrityChecksOrderingComposer
-    extends Composer<_$CatalogDatabase, IntegrityChecks> {
+class $IntegrityChecksOrderingComposer extends Composer<_$CatalogDatabase, IntegrityChecks> {
   $IntegrityChecksOrderingComposer({
     required super.$db,
     required super.$table,
@@ -21079,35 +16645,22 @@ class $IntegrityChecksOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get checkedAt => $composableBuilder(
-    column: $table.checkedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get checkedAt =>
+      $composableBuilder(column: $table.checkedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get result => $composableBuilder(
-    column: $table.result,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get result =>
+      $composableBuilder(column: $table.result, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<Uint8List> get observedSha256 => $composableBuilder(
-    column: $table.observedSha256,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<Uint8List> get observedSha256 =>
+      $composableBuilder(column: $table.observedSha256, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get observedSize => $composableBuilder(
-    column: $table.observedSize,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get observedSize =>
+      $composableBuilder(column: $table.observedSize, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get observedMtime => $composableBuilder(
-    column: $table.observedMtime,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get observedMtime =>
+      $composableBuilder(column: $table.observedMtime, builder: (column) => ColumnOrderings(column));
 
   $FileInstancesOrderingComposer get instanceId {
     final $FileInstancesOrderingComposer composer = $composerBuilder(
@@ -21115,18 +16668,13 @@ class $IntegrityChecksOrderingComposer
       getCurrentColumn: (t) => t.instanceId,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesOrderingComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -21138,26 +16686,20 @@ class $IntegrityChecksOrderingComposer
       getCurrentColumn: (t) => t.operationId,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsOrderingComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $IntegrityChecksAnnotationComposer
-    extends Composer<_$CatalogDatabase, IntegrityChecks> {
+class $IntegrityChecksAnnotationComposer extends Composer<_$CatalogDatabase, IntegrityChecks> {
   $IntegrityChecksAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -21165,29 +16707,19 @@ class $IntegrityChecksAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get checkedAt =>
-      $composableBuilder(column: $table.checkedAt, builder: (column) => column);
+  GeneratedColumn<int> get checkedAt => $composableBuilder(column: $table.checkedAt, builder: (column) => column);
 
-  GeneratedColumn<String> get result =>
-      $composableBuilder(column: $table.result, builder: (column) => column);
+  GeneratedColumn<String> get result => $composableBuilder(column: $table.result, builder: (column) => column);
 
-  GeneratedColumn<Uint8List> get observedSha256 => $composableBuilder(
-    column: $table.observedSha256,
-    builder: (column) => column,
-  );
+  GeneratedColumn<Uint8List> get observedSha256 =>
+      $composableBuilder(column: $table.observedSha256, builder: (column) => column);
 
-  GeneratedColumn<int> get observedSize => $composableBuilder(
-    column: $table.observedSize,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get observedSize => $composableBuilder(column: $table.observedSize, builder: (column) => column);
 
-  GeneratedColumn<int> get observedMtime => $composableBuilder(
-    column: $table.observedMtime,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get observedMtime =>
+      $composableBuilder(column: $table.observedMtime, builder: (column) => column);
 
   $FileInstancesAnnotationComposer get instanceId {
     final $FileInstancesAnnotationComposer composer = $composerBuilder(
@@ -21195,18 +16727,13 @@ class $IntegrityChecksAnnotationComposer
       getCurrentColumn: (t) => t.instanceId,
       referencedTable: $db.fileInstances,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $FileInstancesAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesAnnotationComposer(
             $db: $db,
             $table: $db.fileInstances,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -21218,18 +16745,13 @@ class $IntegrityChecksAnnotationComposer
       getCurrentColumn: (t) => t.operationId,
       referencedTable: $db.operations,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $OperationsAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationsAnnotationComposer(
             $db: $db,
             $table: $db.operations,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -21256,12 +16778,9 @@ class $IntegrityChecksTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $IntegrityChecksFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $IntegrityChecksOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $IntegrityChecksAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $IntegrityChecksFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $IntegrityChecksOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $IntegrityChecksAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -21304,10 +16823,8 @@ class $IntegrityChecksTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) => (
-                  e.readTable<IntegrityChecks, IntegrityCheckRow>(table),
-                  $IntegrityChecksReferences(db, table, e),
-                ),
+                (e) =>
+                    (e.readTable<IntegrityChecks, IntegrityCheckRow>(table), $IntegrityChecksReferences(db, table, e)),
               )
               .toList(),
           prefetchHooksCallback: ({instanceId = false, operationId = false}) {
@@ -21334,22 +16851,16 @@ class $IntegrityChecksTableManager
                       state = state.withJoin(
                         currentTable: table,
                         currentColumn: table.instanceId,
-                        referencedTable: $IntegrityChecksReferences
-                            ._instanceIdTable(db),
-                        referencedColumn: $IntegrityChecksReferences
-                            ._instanceIdTable(db)
-                            .id,
+                        referencedTable: $IntegrityChecksReferences._instanceIdTable(db),
+                        referencedColumn: $IntegrityChecksReferences._instanceIdTable(db).id,
                       ) as T;
                     }
                     if (operationId) {
                       state = state.withJoin(
                         currentTable: table,
                         currentColumn: table.operationId,
-                        referencedTable: $IntegrityChecksReferences
-                            ._operationIdTable(db),
-                        referencedColumn: $IntegrityChecksReferences
-                            ._operationIdTable(db)
-                            .id,
+                        referencedTable: $IntegrityChecksReferences._operationIdTable(db),
+                        referencedColumn: $IntegrityChecksReferences._operationIdTable(db).id,
                       ) as T;
                     }
 
@@ -21383,39 +16894,23 @@ class $CatalogDatabaseManager {
   final _$CatalogDatabase _db;
   $CatalogDatabaseManager(this._db);
   $AppMetaTableManager get appMeta => $AppMetaTableManager(_db, _db.appMeta);
-  $SettingsTableManager get settings =>
-      $SettingsTableManager(_db, _db.settings);
-  $PhysicalDisksTableManager get physicalDisks =>
-      $PhysicalDisksTableManager(_db, _db.physicalDisks);
+  $SettingsTableManager get settings => $SettingsTableManager(_db, _db.settings);
+  $PhysicalDisksTableManager get physicalDisks => $PhysicalDisksTableManager(_db, _db.physicalDisks);
   $SourcesTableManager get sources => $SourcesTableManager(_db, _db.sources);
   $ScansTableManager get scans => $ScansTableManager(_db, _db.scans);
-  $ScanDirsTableManager get scanDirs =>
-      $ScanDirsTableManager(_db, _db.scanDirs);
-  $ScanErrorsTableManager get scanErrors =>
-      $ScanErrorsTableManager(_db, _db.scanErrors);
-  $ContentsTableManager get contents =>
-      $ContentsTableManager(_db, _db.contents);
-  $FileInstancesTableManager get fileInstances =>
-      $FileInstancesTableManager(_db, _db.fileInstances);
-  $MediaMetadataTableManager get mediaMetadata =>
-      $MediaMetadataTableManager(_db, _db.mediaMetadata);
-  $DateCorrectionsTableManager get dateCorrections =>
-      $DateCorrectionsTableManager(_db, _db.dateCorrections);
-  $OperationsTableManager get operations =>
-      $OperationsTableManager(_db, _db.operations);
-  $OperationItemsTableManager get operationItems =>
-      $OperationItemsTableManager(_db, _db.operationItems);
-  $OperationEventsTableManager get operationEvents =>
-      $OperationEventsTableManager(_db, _db.operationEvents);
-  $SavedFiltersTableManager get savedFilters =>
-      $SavedFiltersTableManager(_db, _db.savedFilters);
-  $SelectionSetsTableManager get selectionSets =>
-      $SelectionSetsTableManager(_db, _db.selectionSets);
-  $SelectionSetItemsTableManager get selectionSetItems =>
-      $SelectionSetItemsTableManager(_db, _db.selectionSetItems);
+  $ScanDirsTableManager get scanDirs => $ScanDirsTableManager(_db, _db.scanDirs);
+  $ScanErrorsTableManager get scanErrors => $ScanErrorsTableManager(_db, _db.scanErrors);
+  $ContentsTableManager get contents => $ContentsTableManager(_db, _db.contents);
+  $FileInstancesTableManager get fileInstances => $FileInstancesTableManager(_db, _db.fileInstances);
+  $MediaMetadataTableManager get mediaMetadata => $MediaMetadataTableManager(_db, _db.mediaMetadata);
+  $DateCorrectionsTableManager get dateCorrections => $DateCorrectionsTableManager(_db, _db.dateCorrections);
+  $OperationsTableManager get operations => $OperationsTableManager(_db, _db.operations);
+  $OperationItemsTableManager get operationItems => $OperationItemsTableManager(_db, _db.operationItems);
+  $OperationEventsTableManager get operationEvents => $OperationEventsTableManager(_db, _db.operationEvents);
+  $SavedFiltersTableManager get savedFilters => $SavedFiltersTableManager(_db, _db.savedFilters);
+  $SelectionSetsTableManager get selectionSets => $SelectionSetsTableManager(_db, _db.selectionSets);
+  $SelectionSetItemsTableManager get selectionSetItems => $SelectionSetItemsTableManager(_db, _db.selectionSetItems);
   $TagsTableManager get tags => $TagsTableManager(_db, _db.tags);
-  $ContentTagsTableManager get contentTags =>
-      $ContentTagsTableManager(_db, _db.contentTags);
-  $IntegrityChecksTableManager get integrityChecks =>
-      $IntegrityChecksTableManager(_db, _db.integrityChecks);
+  $ContentTagsTableManager get contentTags => $ContentTagsTableManager(_db, _db.contentTags);
+  $IntegrityChecksTableManager get integrityChecks => $IntegrityChecksTableManager(_db, _db.integrityChecks);
 }

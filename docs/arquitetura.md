@@ -128,7 +128,8 @@ Pontuação contra cada fonte cadastrada do tipo volume:
 | Serial do volume **diferente** | −40 |
 
 - ≥ 60 e um único candidato → reconhecida automaticamente (troca de letra é transparente, porque a letra nunca é usada como identidade).
-- Dois candidatos ou pontuação entre 30 e 59 → **pergunta ao usuário**.
+- Vários candidatos ≥ 60 → o melhor vence só com 40+ pontos de vantagem (ex.: o GUID já confirmado); senão, pergunta.
+- Dois candidatos sem folga ou pontuação entre 30 e 59 → **pergunta ao usuário**.
 - A letra/ponto de montagem é só informação (`last_mount_path`).
 - Fonte do tipo `folder` = identidade do volume + `root_rel_path`.
 

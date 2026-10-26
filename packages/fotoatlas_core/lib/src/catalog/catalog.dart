@@ -48,9 +48,7 @@ class Catalog {
   static Future<Catalog> open(String dbPath) async {
     Directory(p.dirname(dbPath)).createSync(recursive: true);
     _preflight(dbPath);
-    final isolate = await DriftIsolate.spawn(
-      () => NativeDatabase(File(dbPath), setup: applyPragmas),
-    );
+    final isolate = await DriftIsolate.spawn(() => NativeDatabase(File(dbPath), setup: applyPragmas));
     final db = CatalogDatabase(await isolate.connect(singleClientMode: false));
     // Força a abertura (e a criação/migração) agora, para que erros apareçam
     // aqui e não na primeira consulta da interface.
@@ -69,20 +67,14 @@ class Catalog {
     // Só leitura: um banco que vamos recusar não pode ser modificado.
     final raw = sql.sqlite3.open(dbPath, mode: sql.OpenMode.readOnly);
     try {
-      final version =
-          raw.select('PRAGMA user_version;').first.values.first as int;
+      final version = raw.select('PRAGMA user_version;').first.values.first as int;
       const supported = CatalogDatabase.currentSchemaVersion;
       if (version > supported) {
         throw CatalogTooNewException(version, supported);
       }
       if (version > 0 && version < supported) {
-        final backups = Directory(p.join(p.dirname(dbPath), 'backups'))
-          ..createSync(recursive: true);
-        final stamp = DateTime.now()
-            .toUtc()
-            .toIso8601String()
-            .replaceAll(RegExp(r'[^0-9]'), '')
-            .substring(0, 14);
+        final backups = Directory(p.join(p.dirname(dbPath), 'backups'))..createSync(recursive: true);
+        final stamp = DateTime.now().toUtc().toIso8601String().replaceAll(RegExp(r'[^0-9]'), '').substring(0, 14);
         final target = p.join(backups.path, 'pre-migracao-v$version-$stamp.db');
         // VACUUM INTO falha se o arquivo já existir: nunca sobrescreve.
         raw.execute('VACUUM INTO ?;', [target]);

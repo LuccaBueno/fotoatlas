@@ -1,0 +1,369 @@
+import 'package:drift/drift.dart';
+
+import '../catalog/catalog_database.dart';
+import '../platform/win32/kernel32.dart';
+import '../platform/win_fs.dart';
+import '../util/clock.dart';
+import '../util/crashpoint.dart';
+import 'entry_classifier.dart';
+
+/// Progresso de um scan (enviado do worker para a interface).
+class ScanProgress {
+  const ScanProgress({
+    required this.scanId,
+    required this.sourceId,
+    required this.status,
+    required this.dirsDone,
+    required this.dirsPending,
+    required this.filesSeen,
+    required this.bytesSeen,
+    required this.errorCount,
+    this.currentDir,
+    this.message,
+  });
+
+  final int scanId;
+  final String sourceId;
+
+  /// `running`, `paused`, `interrupted`, `completed`, `cancelled`, `failed`.
+  final String status;
+  final int dirsDone;
+  final int dirsPending;
+  final int filesSeen;
+  final int bytesSeen;
+  final int errorCount;
+  final String? currentDir;
+  final String? message;
+
+  bool get isFinal => status != 'running';
+}
+
+/// Pedido de parada vindo da interface.
+enum ScanStop { pause, cancel }
+
+class _FileRec {
+  _FileRec(this.relPath, this.dirRelPath, this.entry, {required this.cloudOnly});
+  final String relPath;
+  final String dirRelPath;
+  final RawDirEntry entry;
+  final bool cloudOnly;
+}
+
+class _DirResult {
+  _DirResult(this.relDir);
+  final String relDir;
+  final files = <_FileRec>[];
+  final childDirs = <String>[];
+  final excludedDirs = <String>[];
+  final skippedLinks = <String>[];
+  String? errorKind;
+  int? errorCode;
+  String? errorMessage;
+  bool get isError => errorKind != null;
+}
+
+/// Execução de um scan de listagem (sem hash) com checkpoint no banco.
+///
+/// Cada lote de pastas é aplicado numa transação que grava os arquivos, as
+/// subpastas pendentes, o status `done` das pastas e os contadores juntos.
+/// Matar o processo a qualquer momento perde no máximo o lote em andamento,
+/// e retomar continua exatamente das pastas `pending` (ADR 0007).
+class ScanEngine {
+  ScanEngine(
+    this.db, {
+    required this.scanId,
+    required this.sourceId,
+    required this.accessRoot,
+    required this.isVolumeRoot,
+    this.batchFiles = 2000,
+    this.batchDirs = 200,
+  });
+
+  final CatalogDatabase db;
+  final int scanId;
+  final String sourceId;
+
+  /// Raiz Win32 de acesso (ex.: `\\?\Volume{…}\Fotos`).
+  final String accessRoot;
+
+  /// A fonte é um volume inteiro (ativa as exclusões de raiz de volume).
+  final bool isVolumeRoot;
+  final int batchFiles;
+  final int batchDirs;
+
+  /// Roda até terminar, pausar, cancelar ou a fonte desconectar.
+  Future<ScanProgress> run({
+    required ScanStop? Function() stopRequested,
+    void Function(ScanProgress progress)? onProgress,
+  }) async {
+    await db.customUpdate(
+      "UPDATE scans SET status = 'running' WHERE id = ?",
+      variables: [Variable.withInt(scanId)],
+      updates: {db.scans},
+    );
+    if (!directoryAccessible(accessRoot)) {
+      return _stop('interrupted', message: 'A fonte não está acessível (desconectada?).');
+    }
+    while (true) {
+      final stop = stopRequested();
+      if (stop != null) return _stop(stop == ScanStop.pause ? 'paused' : 'cancelled');
+
+      final pending = await db
+          .customSelect(
+            "SELECT rel_path FROM scan_dirs WHERE scan_id = ? AND status = 'pending' ORDER BY rel_path LIMIT ?",
+            variables: [Variable.withInt(scanId), Variable.withInt(batchDirs)],
+            readsFrom: {db.scanDirs},
+          )
+          .get();
+      if (pending.isEmpty) break;
+
+      final results = <_DirResult>[];
+      var files = 0;
+      var disconnected = false;
+      for (final row in pending) {
+        final result = _enumerate(row.read<String>('rel_path'));
+        if (result == null) {
+          disconnected = true;
+          break;
+        }
+        results.add(result);
+        files += result.files.length;
+        if (files >= batchFiles) break;
+      }
+      if (results.isNotEmpty) await _apply(results);
+      crashpoint('scan.after_batch_commit');
+      if (disconnected) {
+        return _stop('interrupted', message: 'A fonte foi desconectada durante o escaneamento.');
+      }
+      onProgress?.call(await _progress('running', currentDir: results.isEmpty ? null : results.last.relDir));
+      // Cede ao event loop para receber pedidos de pausa/cancelamento.
+      await Future<void>.delayed(Duration.zero);
+    }
+    return _finish();
+  }
+
+  /// Lista uma pasta. Devolve `null` se a própria fonte sumiu.
+  _DirResult? _enumerate(String relDir) {
+    final result = _DirResult(relDir);
+    final List<RawDirEntry> entries;
+    try {
+      entries = listDirectory(joinNative(accessRoot, relDir));
+    } on Win32Exception catch (e) {
+      if (!directoryAccessible(accessRoot)) return null;
+      result
+        ..errorCode = e.code
+        ..errorKind = switch (e.code) {
+          errorAccessDenied => 'access_denied',
+          errorFilenameExcedRange => 'path_too_long',
+          _ => 'io_error',
+        }
+        ..errorMessage = e.toString();
+      return result;
+    }
+    final atVolumeRoot = isVolumeRoot && relDir.isEmpty;
+    for (final entry in entries) {
+      final rel = relDir.isEmpty ? entry.name : '$relDir/${entry.name}';
+      switch (classifyEntry(entry, atVolumeRoot: atVolumeRoot)) {
+        case EntryAction.file:
+          result.files.add(_FileRec(rel, relDir, entry, cloudOnly: false));
+        case EntryAction.cloudOnlyFile:
+          result.files.add(_FileRec(rel, relDir, entry, cloudOnly: true));
+        case EntryAction.directory:
+          result.childDirs.add(rel);
+        case EntryAction.excludedDirectory:
+          result.excludedDirs.add(rel);
+        case EntryAction.reparsePointSkipped:
+          if (entry.isDirectory) result.excludedDirs.add(rel);
+          result.skippedLinks.add(rel);
+        case EntryAction.ignored:
+          break;
+      }
+    }
+    return result;
+  }
+
+  static const _upsertSql = '''
+    INSERT INTO file_instances (source_id, rel_path, dir_rel_path, name, ext, size_bytes, mtime, ctime,
+      attributes, hash_status, availability, first_seen_scan_id, last_seen_scan_id)
+    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, CASE WHEN ?10 THEN 'not_applicable' ELSE 'pending' END,
+      CASE WHEN ?10 THEN 'cloud_only' ELSE 'present' END, ?11, ?11)
+    ON CONFLICT (source_id, rel_path) DO UPDATE SET
+      hash_status = CASE
+        WHEN file_instances.size_bytes IS NOT excluded.size_bytes OR file_instances.mtime IS NOT excluded.mtime
+          THEN excluded.hash_status
+        WHEN file_instances.hash_status = 'not_applicable' AND excluded.availability = 'present' THEN 'pending'
+        ELSE file_instances.hash_status END,
+      content_id = CASE
+        WHEN file_instances.size_bytes IS NOT excluded.size_bytes OR file_instances.mtime IS NOT excluded.mtime
+          THEN NULL ELSE file_instances.content_id END,
+      dir_rel_path = excluded.dir_rel_path,
+      name = excluded.name,
+      ext = excluded.ext,
+      size_bytes = excluded.size_bytes,
+      mtime = excluded.mtime,
+      ctime = excluded.ctime,
+      attributes = excluded.attributes,
+      availability = excluded.availability,
+      last_seen_scan_id = excluded.last_seen_scan_id,
+      missing_confirmed_at = NULL
+  ''';
+
+  Future<void> _apply(List<_DirResult> results) async {
+    var dirsDone = 0, filesSeen = 0, bytesSeen = 0, errors = 0;
+    final now = nowMs();
+    await db.transaction(() async {
+      await db.batch((b) {
+        for (final r in results) {
+          if (r.isError) {
+            errors++;
+            b.customStatement("UPDATE scan_dirs SET status = 'error' WHERE scan_id = ? AND rel_path = ?", [
+              scanId,
+              r.relDir,
+            ]);
+            b.customStatement(
+              'INSERT INTO scan_errors (scan_id, rel_path, kind, win32_code, message, at) VALUES (?, ?, ?, ?, ?, ?)',
+              [scanId, r.relDir, r.errorKind, r.errorCode, r.errorMessage, now],
+            );
+            continue;
+          }
+          for (final f in r.files) {
+            final e = f.entry;
+            b.customStatement(_upsertSql, [
+              sourceId,
+              f.relPath,
+              f.dirRelPath,
+              e.name,
+              extensionOf(e.name),
+              e.size,
+              e.mtime,
+              e.ctime,
+              e.attributes,
+              f.cloudOnly ? 1 : 0,
+              scanId,
+            ]);
+            filesSeen++;
+            bytesSeen += e.size;
+          }
+          for (final d in r.childDirs) {
+            b.customStatement("INSERT OR IGNORE INTO scan_dirs (scan_id, rel_path, status) VALUES (?, ?, 'pending')", [
+              scanId,
+              d,
+            ]);
+          }
+          for (final d in r.excludedDirs) {
+            b.customStatement("INSERT OR IGNORE INTO scan_dirs (scan_id, rel_path, status) VALUES (?, ?, 'excluded')", [
+              scanId,
+              d,
+            ]);
+          }
+          for (final l in r.skippedLinks) {
+            b.customStatement(
+              "INSERT INTO scan_errors (scan_id, rel_path, kind, message, at) VALUES (?, ?, 'reparse_point_skipped', ?, ?)",
+              [scanId, l, 'Atalho de pasta/arquivo (junction ou link) não seguido.', now],
+            );
+          }
+          b.customStatement("UPDATE scan_dirs SET status = 'done' WHERE scan_id = ? AND rel_path = ?", [
+            scanId,
+            r.relDir,
+          ]);
+          dirsDone++;
+        }
+        b.customStatement(
+          'UPDATE scans SET dirs_done = dirs_done + ?, files_seen = files_seen + ?, '
+          'bytes_seen = bytes_seen + ?, error_count = error_count + ? WHERE id = ?',
+          [dirsDone, filesSeen, bytesSeen, errors, scanId],
+        );
+      });
+    });
+  }
+
+  /// Fim normal: define a cobertura e confirma ausências só onde é seguro
+  /// (spec §7; regras 9 e 10).
+  Future<ScanProgress> _finish() async {
+    final errorDirs = await db
+        .customSelect(
+          "SELECT COUNT(*) AS n FROM scan_dirs WHERE scan_id = ? AND status = 'error'",
+          variables: [Variable.withInt(scanId)],
+        )
+        .getSingle();
+    final complete = errorDirs.read<int>('n') == 0;
+    final now = nowMs();
+    await db.transaction(() async {
+      await db.customUpdate(
+        '''
+        UPDATE file_instances SET availability = 'missing', missing_confirmed_at = ?1
+        WHERE source_id = ?2
+          AND availability != 'missing'
+          AND (last_seen_scan_id IS NULL OR last_seen_scan_id != ?3)
+          AND NOT EXISTS (
+            SELECT 1 FROM scan_dirs d
+            WHERE d.scan_id = ?3 AND d.status = 'excluded'
+              AND (file_instances.dir_rel_path = d.rel_path
+                   OR substr(file_instances.dir_rel_path, 1, length(d.rel_path) + 1) = d.rel_path || '/'))
+          ${complete ? '' : "AND dir_rel_path IN (SELECT rel_path FROM scan_dirs WHERE scan_id = ?3 AND status = 'done')"}
+        ''',
+        variables: [Variable.withInt(now), Variable.withString(sourceId), Variable.withInt(scanId)],
+        updates: {db.fileInstances},
+      );
+      await db.customUpdate(
+        "UPDATE scans SET status = 'completed', coverage = ?, finished_at = ? WHERE id = ?",
+        variables: [
+          Variable.withString(complete ? 'complete' : 'partial'),
+          Variable.withInt(now),
+          Variable.withInt(scanId),
+        ],
+        updates: {db.scans},
+      );
+    });
+    return _progress('completed');
+  }
+
+  Future<ScanProgress> _stop(String status, {String? message}) async {
+    await db.customUpdate(
+      'UPDATE scans SET status = ?, finished_at = CASE WHEN ? THEN ? ELSE finished_at END WHERE id = ?',
+      variables: [
+        Variable.withString(status),
+        Variable.withBool(status == 'cancelled'),
+        Variable.withInt(nowMs()),
+        Variable.withInt(scanId),
+      ],
+      updates: {db.scans},
+    );
+    return _progress(status, message: message);
+  }
+
+  Future<ScanProgress> _progress(String status, {String? currentDir, String? message}) =>
+      readScanProgress(db, scanId, status: status, currentDir: currentDir, message: message);
+}
+
+/// Lê o progresso atual de um scan a partir do banco.
+Future<ScanProgress> readScanProgress(
+  CatalogDatabase db,
+  int scanId, {
+  String? status,
+  String? currentDir,
+  String? message,
+}) async {
+  final row = await db
+      .customSelect(
+        '''
+        SELECT s.source_id, s.status, s.dirs_done, s.files_seen, s.bytes_seen, s.error_count,
+          (SELECT COUNT(*) FROM scan_dirs d WHERE d.scan_id = s.id AND d.status = 'pending') AS pending
+        FROM scans s WHERE s.id = ?
+        ''',
+        variables: [Variable.withInt(scanId)],
+      )
+      .getSingle();
+  return ScanProgress(
+    scanId: scanId,
+    sourceId: row.read<String>('source_id'),
+    status: status ?? row.read<String>('status'),
+    dirsDone: row.read<int>('dirs_done'),
+    dirsPending: row.read<int>('pending'),
+    filesSeen: row.read<int>('files_seen'),
+    bytesSeen: row.read<int>('bytes_seen'),
+    errorCount: row.read<int>('error_count'),
+    currentDir: currentDir,
+    message: message,
+  );
+}

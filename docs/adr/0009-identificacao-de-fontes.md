@@ -12,6 +12,7 @@ A spec §6 lista os identificadores por ordem de confiança: marcador, GUID do v
 ## Decisão
 - Pontuação combinada (tabela em `arquitetura.md` §3.5):
   - ≥ 60 pontos e um só candidato → reconhece sozinho;
+  - vários candidatos ≥ 60 → o melhor vence só com folga de 40+ pontos (ex.: GUID já confirmado); senão, pergunta;
   - empate, ou pontuação entre 30 e 59 → **pergunta ao usuário**;
   - abaixo disso → trata como dispositivo novo.
 - A letra da unidade nunca entra na identidade; os caminhos ficam relativos à raiz da fonte.

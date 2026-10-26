@@ -1,0 +1,14 @@
+name: fotoatlas_fixtures
+description: Geradores determinísticos de dados de teste sintéticos do FotoAtlas.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  path: ^1.9.1
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6

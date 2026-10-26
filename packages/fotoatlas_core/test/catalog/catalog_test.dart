@@ -17,10 +17,7 @@ void main() {
     final catalog = await Catalog.open(p.join(home.path, 'catalog.db'));
     addTearDown(catalog.close);
     Future<Object?> pragma(String name) async =>
-        (await catalog.db.customSelect('PRAGMA $name').getSingle())
-            .data
-            .values
-            .first;
+        (await catalog.db.customSelect('PRAGMA $name').getSingle()).data.values.first;
 
     expect(await pragma('journal_mode'), 'wal');
     expect(await pragma('synchronous'), 2, reason: '2 = FULL');
@@ -31,9 +28,7 @@ void main() {
   test('cria todas as tabelas do schema v1', () async {
     final catalog = await Catalog.open(p.join(home.path, 'catalog.db'));
     addTearDown(catalog.close);
-    final rows = await catalog.db
-        .customSelect("SELECT name FROM sqlite_master WHERE type = 'table'")
-        .get();
+    final rows = await catalog.db.customSelect("SELECT name FROM sqlite_master WHERE type = 'table'").get();
     final names = rows.map((r) => r.read<String>('name')).toSet();
     expect(
       names,
@@ -80,26 +75,19 @@ void main() {
     raw.close();
     final before = File(path).readAsBytesSync();
 
-    await expectLater(
-      Catalog.open(path),
-      throwsA(isA<CatalogTooNewException>()),
-    );
+    await expectLater(Catalog.open(path), throwsA(isA<CatalogTooNewException>()));
     expect(File(path).readAsBytesSync(), before);
   });
 
   test('reabre um catálogo existente preservando os dados', () async {
     final path = p.join(home.path, 'catalog.db');
     var catalog = await Catalog.open(path);
-    await catalog.db.customStatement(
-      "INSERT INTO app_meta (key, value) VALUES ('catalog_id', 'abc')",
-    );
+    await catalog.db.customStatement("INSERT INTO app_meta (key, value) VALUES ('catalog_id', 'abc')");
     await catalog.close();
 
     catalog = await Catalog.open(path);
     addTearDown(catalog.close);
-    final row = await catalog.db
-        .customSelect("SELECT value FROM app_meta WHERE key = 'catalog_id'")
-        .getSingle();
+    final row = await catalog.db.customSelect("SELECT value FROM app_meta WHERE key = 'catalog_id'").getSingle();
     expect(row.read<String>('value'), 'abc');
   });
 }
