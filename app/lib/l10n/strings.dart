@@ -4,6 +4,8 @@ library;
 
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
+import 'format.dart';
+
 String sourceKindLabel(String kind) => switch (kind) {
   'external_hd' => 'HD externo',
   'internal' => 'Disco interno',
@@ -50,3 +52,16 @@ String scopeTypeLabel(ScopeFileType type) => switch (type) {
   ScopeFileType.video => 'Vídeos',
   ScopeFileType.other => 'Outros arquivos',
 };
+
+/// Contador com concordância: "1 arquivo com só 1 cópia", "4 cópias conferidas".
+String backupStateCount(BackupState state, int n) => switch (state) {
+  BackupState.single => '${plural(n, 'arquivo', 'arquivos')} com só 1 cópia',
+  BackupState.probable => '${plural(n, 'copiado', 'copiados')}, falta conferir',
+  BackupState.verified => plural(n, 'cópia conferida', 'cópias conferidas'),
+  BackupState.independent => '${plural(n, 'arquivo', 'arquivos')} com backup em disco independente',
+  BackupState.unknown => '${plural(n, 'arquivo', 'arquivos')} em situação desconhecida',
+};
+
+/// Caminho com um só separador: "HD_antigo › pasta2 › notas.txt".
+String displayPath(String sourceName, String relPath) =>
+    [sourceName, ...relPath.split(RegExp(r'[/\\]')).where((p) => p.isNotEmpty)].join(' › ');

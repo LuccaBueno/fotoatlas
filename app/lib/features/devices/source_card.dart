@@ -263,7 +263,10 @@ class _CoverageLine extends ConsumerWidget {
           for (final state in BackupState.values)
             if (c.counts.filesIn(state) > 0) BackupStateBadge(state, count: c.counts.filesIn(state)),
           if (c.cloudOnly > 0)
-            Text('${formatInt(c.cloudOnly)} só na nuvem', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              plural(c.cloudOnly, 'arquivo só na nuvem', 'arquivos só na nuvem'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           if (c.duplicateFiles > 0)
             Text(
               '${plural(c.duplicateFiles, 'arquivo repetido', 'arquivos repetidos')} (${formatBytes(c.duplicateBytes)})',

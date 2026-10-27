@@ -3,14 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
+import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
 import '../../widgets/connection_badge.dart';
+import '../devices/devices_page.dart';
 import 'compare_controller.dart';
 
 /// "HD Backup › Fotos/2020" (ou só o nome da fonte inteira).
 String entryLabel(ScopeEntry e, Map<String, SourceView> sources) {
   final name = sources[e.sourceId]?.name ?? 'Dispositivo esquecido';
-  return e.relPath.isEmpty ? name : '$name › ${e.relPath.replaceAll('/', ' › ')}';
+  return displayPath(name, e.relPath);
 }
 
 /// Um lado (A ou B): entradas, filtro por tipo e escopos salvos.
@@ -180,29 +182,95 @@ class ScopePickerDialog extends ConsumerStatefulWidget {
 class _ScopePickerDialogState extends ConsumerState<ScopePickerDialog> {
   ScopeEntry? _selected;
 
+  /// Cadastra uma pasta ou unidade nova, já começa a escanear e a deixa
+  /// selecionada — sem sair da Comparar.
+  Future<void> _addNew(bool drive) async {
+    const message = 'Adicionado. Escaneando agora; dá para comparar quando terminar.';
+    final id = drive
+        ? await addDrive(context, ref, addedMessage: message)
+        : await addFolder(context, ref, addedMessage: message);
+    if (id == null || !mounted) return;
+    setState(() => _selected = ScopeEntry(id));
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(backendProvider).startScan(id);
+    } on Exception catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Não foi possível começar a escanear: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final sources = ref.watch(sourcesProvider).value ?? const <SourceView>[];
+    final progress = ref.watch(scanProgressProvider).value ?? const <String, ScanProgress>{};
     return AlertDialog(
       title: const Text('Adicionar pasta ou dispositivo'),
       content: SizedBox(
         width: 520,
-        height: 420,
-        child: sources.isEmpty
-            ? const Center(child: Text('Cadastre um dispositivo em "Dispositivos" primeiro.'))
-            : ListView(
-                children: [
-                  for (final s in sources)
-                    _FolderNode(
-                      entry: ScopeEntry(s.id),
-                      label: s.name,
-                      icon: sourceKindIcon(s.kind),
-                      subtitle: s.lastScan == null ? 'ainda não escaneado' : null,
-                      selected: _selected,
-                      onSelect: (e) => setState(() => _selected = e),
+        height: 460,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.lightbulb_outline, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Não encontrou? Ela precisa ser adicionada e escaneada primeiro.',
+                    key: const ValueKey('picker-hint'),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+                PopupMenuButton<bool>(
+                  key: const ValueKey('picker-add-new'),
+                  tooltip: 'Cadastrar e escanear',
+                  onSelected: _addNew,
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: false, child: Text('Uma pasta…')),
+                    PopupMenuItem(value: true, child: Text('Uma unidade inteira (HD, pendrive, cartão)…')),
+                  ],
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add, size: 18),
+                        SizedBox(width: 4),
+                        Text('Adicionar nova pasta/dispositivo…'),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(),
+            Expanded(
+              child: sources.isEmpty
+                  ? const Center(child: Text('Nenhum dispositivo cadastrado ainda.'))
+                  : ListView(
+                      children: [
+                        for (final s in sources)
+                          _FolderNode(
+                            // Remonta quando o scan termina para recarregar as pastas.
+                            key: ValueKey('${s.id}-${s.lastScan?.id}'),
+                            entry: ScopeEntry(s.id),
+                            label: s.name,
+                            icon: sourceKindIcon(s.kind),
+                            subtitle: switch (progress[s.id]) {
+                              final p? => 'escaneando… ${plural(p.filesSeen, 'arquivo', 'arquivos')} até agora',
+                              null when s.lastScan == null => 'ainda não escaneado',
+                              null => null,
+                            },
+                            selected: _selected,
+                            onSelect: (e) => setState(() => _selected = e),
+                          ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
@@ -217,6 +285,7 @@ class _ScopePickerDialogState extends ConsumerState<ScopePickerDialog> {
 
 class _FolderNode extends ConsumerStatefulWidget {
   const _FolderNode({
+    super.key,
     required this.entry,
     required this.label,
     required this.icon,

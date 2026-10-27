@@ -5,6 +5,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 import '../../app/providers.dart';
 import '../../app/theme.dart';
 import '../../l10n/format.dart';
+import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
 import 'compare_controller.dart';
 
@@ -31,11 +32,28 @@ List<String> issueTexts(CompareSummary r) => [
     },
 ];
 
+/// "A: 5 arquivos (4 conteúdos diferentes, 1 repetido) · 6,3 KB" — para a soma
+/// das abas (que contam conteúdos) fazer sentido.
+String sideSummary(CompareSummary r, String side) {
+  final isA = side == 'A';
+  final files = isA ? r.aFiles : r.bFiles;
+  final contents = isA ? r.aContents : r.bContents;
+  final repeated = isA ? r.aRepeated : r.bRepeated;
+  final unverified = r.issues.whereType<UnverifiedFiles>().where((u) => u.side == side).fold(0, (s, u) => s + u.total);
+  final parts = [
+    plural(contents, 'conteúdo diferente', 'conteúdos diferentes'),
+    if (repeated > 0) plural(repeated, 'repetido', 'repetidos'),
+    if (unverified > 0) plural(unverified, 'ainda não conferido', 'ainda não conferidos'),
+  ];
+  return '$side: ${plural(files, 'arquivo', 'arquivos')} (${parts.join(', ')}) · '
+      '${formatBytes(isA ? r.aBytes : r.bBytes)}';
+}
+
 String _unverifiedText(UnverifiedFiles u) {
   final details = [
     if (u.cloudOnly > 0) '${formatInt(u.cloudOnly)} só na nuvem',
     if (u.errors > 0) '${formatInt(u.errors)} com erro de leitura',
-    if (u.changed > 0) '${formatInt(u.changed)} mudaram durante a leitura',
+    if (u.changed > 0) plural(u.changed, 'mudou durante a leitura', 'mudaram durante a leitura'),
   ];
   return '${plural(u.total, 'arquivo', 'arquivos')} em ${u.side} ainda sem conteúdo conferido'
       '${details.isEmpty ? '' : ' (${details.join(', ')})'}.';
@@ -98,9 +116,14 @@ class CompareResultView extends ConsumerWidget {
                 ],
                 const SizedBox(height: 8),
                 Text(
-                  'Comparação pelo conteúdo: nomes e pastas diferentes não importam. '
-                  'A: ${plural(r.aFiles, 'arquivo', 'arquivos')} (${formatBytes(r.aBytes)}) · '
-                  'B: ${plural(r.bFiles, 'arquivo', 'arquivos')} (${formatBytes(r.bBytes)}).',
+                  'Comparação pelo conteúdo: nomes e pastas diferentes não importam.',
+                  style: theme.textTheme.bodySmall,
+                ),
+                Text(sideSummary(r, 'A'), key: const ValueKey('summary-A'), style: theme.textTheme.bodySmall),
+                Text(sideSummary(r, 'B'), key: const ValueKey('summary-B'), style: theme.textTheme.bodySmall),
+                Text(
+                  'As abas contam conteúdos: arquivos repetidos entram uma vez só '
+                  '(Faltam em B + Nos dois = conteúdos de A; Só em B + Nos dois = conteúdos de B).',
                   style: theme.textTheme.bodySmall,
                 ),
                 for (final t in issues)
@@ -319,9 +342,10 @@ class _ItemListState extends ConsumerState<_ItemList> {
                   );
                 }
                 final item = _items[i];
-                final where = '${sources[item.sourceId] ?? '?'} › ${item.relPath}';
+                final where = displayPath(sources[item.sourceId] ?? '?', item.relPath);
                 final subtitle = switch (widget.list) {
-                  CompareList.inBoth => 'Em B: ${sources[item.otherSourceId] ?? '?'} › ${item.otherRelPath ?? '?'}',
+                  CompareList.inBoth =>
+                    'Em B: ${displayPath(sources[item.otherSourceId] ?? '?', item.otherRelPath ?? '?')}',
                   CompareList.unverifiedA || CompareList.unverifiedB => item.hashError ?? _pendingLabel(item),
                   _ => item.copies > 1 ? '${item.copies} arquivos com este conteúdo' : null,
                 };

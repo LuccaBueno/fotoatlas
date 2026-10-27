@@ -208,7 +208,7 @@ class _CoveragePanel extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${backupStateLabel(state)}: ${formatInt(report.overall.filesIn(state))} '
+                                '${backupStateCount(state, report.overall.filesIn(state))} '
                                 '(${formatBytes(report.overall.bytesIn(state))})',
                               ),
                               Text(backupStateHint(state), style: theme.textTheme.bodySmall),

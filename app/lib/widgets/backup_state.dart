@@ -41,7 +41,7 @@ class BackupStateBadge extends StatelessWidget {
         Icon(backupStateIcon(state), size: 16, color: color),
         const SizedBox(width: 4),
         Text(
-          count == null ? backupStateLabel(state) : '${formatInt(count!)} ${backupStateLabel(state).toLowerCase()}',
+          count == null ? backupStateLabel(state) : backupStateCount(state, count!),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
         ),
       ],

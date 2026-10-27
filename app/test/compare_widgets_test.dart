@@ -33,6 +33,10 @@ CompareSummary summary({
   aBytes: 6400,
   bFiles: 3,
   bBytes: 9000,
+  aContents: 4,
+  aRepeated: 1,
+  bContents: 3,
+  bRepeated: 0,
   missing: missing,
   onlyInB: const ContentTotals(1, 5000, 1),
   inBoth: const ContentTotals(2, 4000, 3),
@@ -103,7 +107,7 @@ void main() {
     expect(find.text('Faltam em B (2)'), findsOneWidget);
     expect(find.text('Só em B (1)'), findsOneWidget);
     expect(find.text('Nos dois (2)'), findsOneWidget);
-    expect(find.text('Disco 1 › pasta1/IMG_0002.jpg'), findsOneWidget);
+    expect(find.text('Disco 1 › pasta1 › IMG_0002.jpg'), findsOneWidget);
 
     // Seleção: um item, depois todos os resultados.
     await tester.tap(find.byType(Checkbox).first);
@@ -215,8 +219,63 @@ void main() {
     await tester.pumpWidget(harness(backend));
     await tester.pumpAndSettle();
     expect(find.text('3 fotos e vídeos existem em um lugar só (3,0 MB).'), findsOneWidget);
-    expect(find.text('Só 1 cópia: 3 (3,0 MB)'), findsOneWidget);
-    expect(find.text('Backup em disco independente: 10 (10,0 MB)'), findsOneWidget);
-    expect(find.text('3 só 1 cópia'), findsOneWidget, reason: 'por dispositivo');
+    expect(find.text('3 arquivos com só 1 cópia (3,0 MB)'), findsOneWidget);
+    expect(find.text('10 arquivos com backup em disco independente (10,0 MB)'), findsOneWidget);
+    expect(find.text('3 arquivos com só 1 cópia'), findsOneWidget, reason: 'por dispositivo');
+  });
+
+  testWidgets('resumo deixa claro arquivos × conteúdos e caminhos usam um só separador', (tester) async {
+    await tester.pumpWidget(harness(backendWith(summary())));
+    await tester.pumpAndSettle();
+    await openCompare(tester);
+    await addFolder(tester, 'a', 'Disco 1', 'pasta1');
+    await addFolder(tester, 'b', 'Disco 2', 'pasta3');
+    await tester.tap(find.byKey(const ValueKey('compare-run')));
+    await tester.pumpAndSettle();
+    expect(find.text('A: 5 arquivos (4 conteúdos diferentes, 1 repetido) · 6,3 KB'), findsOneWidget);
+    expect(find.text('B: 3 arquivos (3 conteúdos diferentes) · 8,8 KB'), findsOneWidget);
+    expect(find.textContaining('/'), findsNothing, reason: 'sem misturar › e /');
+  });
+
+  testWidgets('seletor: dica e "Adicionar nova pasta/dispositivo…" cadastra e escaneia sem sair', (tester) async {
+    final backend = backendWith(summary())
+      ..fakeVolumes = [
+        VolumeInfo(
+          guidPath: r'\?\Volume{1}\',
+          mountPoints: const [r'F:\'],
+          label: 'HD_antigo',
+          fileSystem: 'NTFS',
+          serial: 9,
+          totalBytes: 1 << 30,
+          freeBytes: 1 << 29,
+          driveType: 'fixed',
+        ),
+      ];
+    await tester.pumpWidget(harness(backend));
+    await tester.pumpAndSettle();
+    await openCompare(tester);
+    await tester.tap(find.byKey(const ValueKey('add-a')));
+    await tester.pumpAndSettle();
+    expect(find.text('Não encontrou? Ela precisa ser adicionada e escaneada primeiro.'), findsOneWidget);
+
+    await tester.tap(find.text('Adicionar nova pasta/dispositivo…'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Uma unidade inteira (HD, pendrive, cartão)…'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('HD_antigo (F:'));
+    await tester.pumpAndSettle();
+    expect(backend.calls, containsAllInOrder([r'add:F:\', 'scan:novo']));
+    backend.emitSources([
+      source('s1', 'Disco 1'),
+      source('s2', 'Disco 2'),
+      SourceView(id: 'novo', name: 'HD_antigo', kind: 'external_hd', rootRelPath: '', state: SourceState.connected),
+    ]);
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget, reason: 'continua no seletor');
+    expect(find.text('ainda não escaneado'), findsOneWidget);
+
+    await tester.tap(find.text('Adicionar'));
+    await tester.pumpAndSettle();
+    expect(find.text('HD_antigo'), findsOneWidget, reason: 'a nova fonte já entra no escopo A');
   });
 }

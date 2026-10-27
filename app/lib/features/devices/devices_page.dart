@@ -96,18 +96,18 @@ class _EmptyState extends ConsumerWidget {
   }
 }
 
-/// Escolhe uma pasta e a cadastra.
-Future<void> addFolder(BuildContext context, WidgetRef ref) async {
+/// Escolhe uma pasta e a cadastra. Devolve a fonte cadastrada (ou null).
+Future<String?> addFolder(BuildContext context, WidgetRef ref, {String? addedMessage}) async {
   final path = await getDirectoryPath(confirmButtonText: 'Escolher esta pasta');
-  if (path == null || !context.mounted) return;
-  await _add(context, ref, path);
+  if (path == null || !context.mounted) return null;
+  return _add(context, ref, path, addedMessage);
 }
 
-/// Lista as unidades conectadas e cadastra a escolhida.
-Future<void> addDrive(BuildContext context, WidgetRef ref) async {
+/// Lista as unidades conectadas e cadastra a escolhida. Devolve a fonte (ou null).
+Future<String?> addDrive(BuildContext context, WidgetRef ref, {String? addedMessage}) async {
   final backend = ref.read(backendProvider);
   await backend.refreshDevices();
-  if (!context.mounted) return;
+  if (!context.mounted) return null;
   final volumes = backend.volumes.where((v) => !v.isSystem && v.displayMount != null).toList();
   final chosen = await showDialog<VolumeInfo>(
     context: context,
@@ -130,11 +130,11 @@ Future<void> addDrive(BuildContext context, WidgetRef ref) async {
       ],
     ),
   );
-  if (chosen == null || !context.mounted) return;
-  await _add(context, ref, chosen.displayMount!);
+  if (chosen == null || !context.mounted) return null;
+  return _add(context, ref, chosen.displayMount!, addedMessage);
 }
 
-Future<void> _add(BuildContext context, WidgetRef ref, String path) async {
+Future<String?> _add(BuildContext context, WidgetRef ref, String path, String? addedMessage) async {
   final messenger = ScaffoldMessenger.of(context);
   try {
     final result = await ref.read(backendProvider).addPath(path);
@@ -142,12 +142,14 @@ Future<void> _add(BuildContext context, WidgetRef ref, String path) async {
       SnackBar(
         content: Text(
           result.warnings.isEmpty
-              ? 'Dispositivo adicionado. Clique em "Escanear" para ver o que tem nele.'
+              ? addedMessage ?? 'Dispositivo adicionado. Clique em "Escanear" para ver o que tem nele.'
               : result.warnings.join('\n'),
         ),
       ),
     );
+    return result.sourceId;
   } on SourceException catch (e) {
     messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    return null;
   }
 }
