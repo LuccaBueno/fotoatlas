@@ -19,7 +19,11 @@ class TestEnv {
   /// Pasta que faz o papel da raiz do volume simulado.
   final Directory volumeDir;
 
-  static Future<TestEnv> open({bool isolate = false, VolumeInfo Function(String root)? volume}) async {
+  static Future<TestEnv> open({
+    bool isolate = false,
+    VolumeInfo Function(String root)? volume,
+    DeviceBackend? devices,
+  }) async {
     final temp = await createTestTemp();
     final volumeDir = Directory(p.join(temp.path, 'volume_e'))..createSync();
     assertInTemp(volumeDir.path);
@@ -31,6 +35,7 @@ class TestEnv {
       useHelper: false,
       scanInIsolate: isolate,
       hashInIsolate: isolate,
+      devices: devices,
     );
     final env = TestEnv._(temp, core, provider, volumeDir);
     addTearDown(env.close);

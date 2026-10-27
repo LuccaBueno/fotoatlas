@@ -59,6 +59,7 @@ class HelperClient {
   Process? _process;
   int _nextId = 1;
   final _pending = <String, Completer<Map<String, Object?>>>{};
+  final _eventHandlers = <String, void Function(HelperEvent)>{};
   final _events = StreamController<HelperEvent>.broadcast();
   final _statusController = StreamController<HelperStatus>.broadcast();
   HelperStatus _status = HelperStatus.stopped;
@@ -148,7 +149,9 @@ class HelperClient {
         }
         return;
       }
-      _events.add(HelperEvent(event, data, requestId: id));
+      final helperEvent = HelperEvent(event, data, requestId: id);
+      if (id != null) _eventHandlers[id]?.call(helperEvent);
+      _events.add(helperEvent);
       return;
     }
     if (id == null) return;
@@ -210,7 +213,17 @@ class HelperClient {
   }
 
   /// Envia um pedido e espera a resposta.
-  Future<Map<String, Object?>> call(String method, {Map<String, Object?> params = const {}, Duration? timeout}) {
+  ///
+  /// [onEvent] recebe os eventos deste pedido (lotes, progresso). Quando
+  /// [cancel] completa, pede `system.cancel` ao helper; o pedido então falha
+  /// com `cancelled`.
+  Future<Map<String, Object?>> call(
+    String method, {
+    Map<String, Object?> params = const {},
+    Duration? timeout,
+    void Function(HelperEvent event)? onEvent,
+    Future<void>? cancel,
+  }) {
     final process = _process;
     if (process == null || _status != HelperStatus.ready) {
       return Future.error(HelperException('helper_unavailable', 'O helper não está em execução.', retryable: true));
@@ -218,19 +231,29 @@ class HelperClient {
     final id = '${_nextId++}';
     final completer = Completer<Map<String, Object?>>();
     _pending[id] = completer;
+    if (onEvent != null) _eventHandlers[id] = onEvent;
     process.stdin.write('${jsonEncode({'v': helperProtocolVersion, 'id': id, 'method': method, 'params': params})}\n');
-    return completer.future.timeout(
-      timeout ?? requestTimeout,
-      onTimeout: () {
-        _pending.remove(id);
-        throw HelperException('timeout', 'O helper não respondeu a "$method" a tempo.', retryable: true);
-      },
-    );
+    cancel?.then((_) {
+      if (_pending.containsKey(id) && _process == process) {
+        call('system.cancel', params: {'target': id}).ignore();
+      }
+    });
+    return completer.future
+        .whenComplete(() => _eventHandlers.remove(id))
+        .timeout(
+          timeout ?? requestTimeout,
+          onTimeout: () {
+            _pending.remove(id);
+            _eventHandlers.remove(id);
+            throw HelperException('timeout', 'O helper não respondeu a "$method" a tempo.', retryable: true);
+          },
+        );
   }
 
   void _failAll(HelperException error) {
     final pending = Map.of(_pending);
     _pending.clear();
+    _eventHandlers.clear();
     for (final c in pending.values) {
       if (!c.isCompleted) c.completeError(error);
     }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:fotoatlas_fixtures/fotoatlas_fixtures.dart';
@@ -36,5 +37,18 @@ void main() {
   test('recusa pasta de saída não vazia', () {
     File(p.join(temp.path, 'existente.txt')).writeAsStringSync('x');
     expect(() => generateTree(temp.path), throwsStateError);
+  });
+
+  test('celular simulado: JSON válido com conteúdo compartilhado com o HD', () {
+    final demo = generatePhoneDemo(temp.path);
+    final pixel = jsonDecode(File(demo.pixelJson).readAsStringSync()) as Map<String, Object?>;
+    expect(pixel['kind'], 'android');
+    final storages = pixel['storages']! as List<Object?>;
+    expect(storages, hasLength(2));
+    final first = (storages.first! as Map)['files'] as List<Object?>;
+    final blob = File(p.join(demo.devicesDir, (first.first! as Map)['contentFile'] as String));
+    final onHd = File(p.join(demo.hdDir, 'Backup do celular', '2024', '2024-05', 'foto praia.jpg'));
+    expect(blob.readAsBytesSync(), onHd.readAsBytesSync());
+    expect(File(p.join(demo.devicesDir, 'iphone.json')).existsSync(), isTrue);
   });
 }

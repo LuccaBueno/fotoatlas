@@ -9,7 +9,7 @@ part 'catalog_database.g.dart';
 class CatalogDatabase extends _$CatalogDatabase {
   CatalogDatabase(super.e);
 
-  static const int currentSchemaVersion = 2;
+  static const int currentSchemaVersion = 3;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -23,6 +23,11 @@ class CatalogDatabase extends _$CatalogDatabase {
       if (from < 2) {
         await m.addColumn(fileInstances, fileInstances.hashError);
         await m.createTable(savedScopes);
+      }
+      if (from < 3) {
+        await m.addColumn(sources, sources.deviceSerial);
+        await m.addColumn(sources, sources.devicePlatform);
+        await m.addColumn(fileInstances, fileInstances.deviceObjectId);
       }
     },
   );

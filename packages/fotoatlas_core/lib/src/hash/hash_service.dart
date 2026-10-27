@@ -226,8 +226,8 @@ class HashService {
     final rows = await db
         .customSelect(
           '''
-          SELECT s.id, s.physical_disk_id, s.volume_guid FROM sources s
-          WHERE s.forgotten_at IS NULL AND s.kind != 'phone' AND EXISTS (
+          SELECT s.id, s.kind, s.physical_disk_id, s.volume_guid FROM sources s
+          WHERE s.forgotten_at IS NULL AND EXISTS (
             SELECT 1 FROM file_instances fi
             WHERE fi.source_id = s.id AND fi.hash_status = 'pending' AND fi.availability = 'present')
           ''',
@@ -238,6 +238,13 @@ class HashService {
     for (final r in rows) {
       final id = r.read<String>('id');
       if (scans.isRunning(id)) continue; // um leitor por vez: o scan termina antes
+      if (r.read<String>('kind') == 'phone') {
+        // Celular: um leitor por aparelho, e só desbloqueado e autorizado.
+        final device = sources.deviceFor(id);
+        if (device == null || !device.isReady || sources.devices == null) continue;
+        groups['phone:$id'] = [HashTarget(id, '', deviceId: device.deviceId)];
+        continue;
+      }
       final row = await sources.byId(id);
       final root = row == null ? null : sources.accessRoot(row);
       if (root == null) continue; // desconectada: fica para depois
@@ -317,8 +324,18 @@ class HashService {
       }
     }
 
-    if (!useIsolate) {
-      HashEngine(db, targets: targets, priority: _priority, chunkSize: chunkSize, afterFirstChunk: debugAfterFirstChunk)
+    // Celular: o helper (outro processo) lê e calcula o hash; aqui só chegam
+    // as respostas, então roda no isolate atual.
+    final phone = targets.any((t) => t.deviceId != null);
+    if (!useIsolate || phone) {
+      HashEngine(
+            db,
+            targets: targets,
+            priority: _priority,
+            chunkSize: chunkSize,
+            afterFirstChunk: debugAfterFirstChunk,
+            devices: sources.devices,
+          )
           .run(stopRequested: () => worker.stopRequested, onFile: _onFile)
           .then(
             finish,

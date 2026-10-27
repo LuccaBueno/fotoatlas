@@ -1032,6 +1032,24 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _deviceSerialMeta = const VerificationMeta('deviceSerial');
+  late final GeneratedColumn<String> deviceSerial = GeneratedColumn<String>(
+    'device_serial',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _devicePlatformMeta = const VerificationMeta('devicePlatform');
+  late final GeneratedColumn<String> devicePlatform = GeneratedColumn<String>(
+    'device_platform',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1055,6 +1073,8 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     createdAt,
     updatedAt,
     forgottenAt,
+    deviceSerial,
+    devicePlatform,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1156,6 +1176,15 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
     if (data.containsKey('forgotten_at')) {
       context.handle(_forgottenAtMeta, forgottenAt.isAcceptableOrUnknown(data['forgotten_at']!, _forgottenAtMeta));
     }
+    if (data.containsKey('device_serial')) {
+      context.handle(_deviceSerialMeta, deviceSerial.isAcceptableOrUnknown(data['device_serial']!, _deviceSerialMeta));
+    }
+    if (data.containsKey('device_platform')) {
+      context.handle(
+        _devicePlatformMeta,
+        devicePlatform.isAcceptableOrUnknown(data['device_platform']!, _devicePlatformMeta),
+      );
+    }
     return context;
   }
 
@@ -1186,6 +1215,8 @@ class Sources extends Table with TableInfo<Sources, SourceRow> {
       createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
       forgottenAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}forgotten_at']),
+      deviceSerial: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}device_serial']),
+      devicePlatform: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}device_platform']),
     );
   }
 
@@ -1220,6 +1251,10 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
   final int createdAt;
   final int updatedAt;
   final int? forgottenAt;
+  final String? deviceSerial;
+
+  /// v3: serial do celular (identidade)
+  final String? devicePlatform;
   const SourceRow({
     required this.id,
     required this.name,
@@ -1242,6 +1277,8 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
     required this.createdAt,
     required this.updatedAt,
     this.forgottenAt,
+    this.deviceSerial,
+    this.devicePlatform,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1295,6 +1332,12 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
     if (!nullToAbsent || forgottenAt != null) {
       map['forgotten_at'] = Variable<int>(forgottenAt);
     }
+    if (!nullToAbsent || deviceSerial != null) {
+      map['device_serial'] = Variable<String>(deviceSerial);
+    }
+    if (!nullToAbsent || devicePlatform != null) {
+      map['device_platform'] = Variable<String>(devicePlatform);
+    }
     return map;
   }
 
@@ -1321,6 +1364,8 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       forgottenAt: forgottenAt == null && nullToAbsent ? const Value.absent() : Value(forgottenAt),
+      deviceSerial: deviceSerial == null && nullToAbsent ? const Value.absent() : Value(deviceSerial),
+      devicePlatform: devicePlatform == null && nullToAbsent ? const Value.absent() : Value(devicePlatform),
     );
   }
 
@@ -1348,6 +1393,8 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
       createdAt: serializer.fromJson<int>(json['created_at']),
       updatedAt: serializer.fromJson<int>(json['updated_at']),
       forgottenAt: serializer.fromJson<int?>(json['forgotten_at']),
+      deviceSerial: serializer.fromJson<String?>(json['device_serial']),
+      devicePlatform: serializer.fromJson<String?>(json['device_platform']),
     );
   }
   @override
@@ -1375,6 +1422,8 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
       'created_at': serializer.toJson<int>(createdAt),
       'updated_at': serializer.toJson<int>(updatedAt),
       'forgotten_at': serializer.toJson<int?>(forgottenAt),
+      'device_serial': serializer.toJson<String?>(deviceSerial),
+      'device_platform': serializer.toJson<String?>(devicePlatform),
     };
   }
 
@@ -1400,6 +1449,8 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
     int? createdAt,
     int? updatedAt,
     Value<int?> forgottenAt = const Value.absent(),
+    Value<String?> deviceSerial = const Value.absent(),
+    Value<String?> devicePlatform = const Value.absent(),
   }) => SourceRow(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -1422,6 +1473,8 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     forgottenAt: forgottenAt.present ? forgottenAt.value : this.forgottenAt,
+    deviceSerial: deviceSerial.present ? deviceSerial.value : this.deviceSerial,
+    devicePlatform: devicePlatform.present ? devicePlatform.value : this.devicePlatform,
   );
   SourceRow copyWithCompanion(SourcesCompanion data) {
     return SourceRow(
@@ -1446,6 +1499,8 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       forgottenAt: data.forgottenAt.present ? data.forgottenAt.value : this.forgottenAt,
+      deviceSerial: data.deviceSerial.present ? data.deviceSerial.value : this.deviceSerial,
+      devicePlatform: data.devicePlatform.present ? data.devicePlatform.value : this.devicePlatform,
     );
   }
 
@@ -1472,7 +1527,9 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
           ..write('freeBytesLast: $freeBytesLast, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('forgottenAt: $forgottenAt')
+          ..write('forgottenAt: $forgottenAt, ')
+          ..write('deviceSerial: $deviceSerial, ')
+          ..write('devicePlatform: $devicePlatform')
           ..write(')'))
         .toString();
   }
@@ -1500,6 +1557,8 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
     createdAt,
     updatedAt,
     forgottenAt,
+    deviceSerial,
+    devicePlatform,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1525,7 +1584,9 @@ class SourceRow extends DataClass implements Insertable<SourceRow> {
           other.freeBytesLast == this.freeBytesLast &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.forgottenAt == this.forgottenAt);
+          other.forgottenAt == this.forgottenAt &&
+          other.deviceSerial == this.deviceSerial &&
+          other.devicePlatform == this.devicePlatform);
 }
 
 class SourcesCompanion extends UpdateCompanion<SourceRow> {
@@ -1550,6 +1611,8 @@ class SourcesCompanion extends UpdateCompanion<SourceRow> {
   final Value<int> createdAt;
   final Value<int> updatedAt;
   final Value<int?> forgottenAt;
+  final Value<String?> deviceSerial;
+  final Value<String?> devicePlatform;
   final Value<int> rowid;
   const SourcesCompanion({
     this.id = const Value.absent(),
@@ -1573,6 +1636,8 @@ class SourcesCompanion extends UpdateCompanion<SourceRow> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.forgottenAt = const Value.absent(),
+    this.deviceSerial = const Value.absent(),
+    this.devicePlatform = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SourcesCompanion.insert({
@@ -1597,6 +1662,8 @@ class SourcesCompanion extends UpdateCompanion<SourceRow> {
     required int createdAt,
     required int updatedAt,
     this.forgottenAt = const Value.absent(),
+    this.deviceSerial = const Value.absent(),
+    this.devicePlatform = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -1625,6 +1692,8 @@ class SourcesCompanion extends UpdateCompanion<SourceRow> {
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? forgottenAt,
+    Expression<String>? deviceSerial,
+    Expression<String>? devicePlatform,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1649,6 +1718,8 @@ class SourcesCompanion extends UpdateCompanion<SourceRow> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (forgottenAt != null) 'forgotten_at': forgottenAt,
+      if (deviceSerial != null) 'device_serial': deviceSerial,
+      if (devicePlatform != null) 'device_platform': devicePlatform,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1675,6 +1746,8 @@ class SourcesCompanion extends UpdateCompanion<SourceRow> {
     Value<int>? createdAt,
     Value<int>? updatedAt,
     Value<int?>? forgottenAt,
+    Value<String?>? deviceSerial,
+    Value<String?>? devicePlatform,
     Value<int>? rowid,
   }) {
     return SourcesCompanion(
@@ -1699,6 +1772,8 @@ class SourcesCompanion extends UpdateCompanion<SourceRow> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       forgottenAt: forgottenAt ?? this.forgottenAt,
+      deviceSerial: deviceSerial ?? this.deviceSerial,
+      devicePlatform: devicePlatform ?? this.devicePlatform,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1769,6 +1844,12 @@ class SourcesCompanion extends UpdateCompanion<SourceRow> {
     if (forgottenAt.present) {
       map['forgotten_at'] = Variable<int>(forgottenAt.value);
     }
+    if (deviceSerial.present) {
+      map['device_serial'] = Variable<String>(deviceSerial.value);
+    }
+    if (devicePlatform.present) {
+      map['device_platform'] = Variable<String>(devicePlatform.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1799,6 +1880,8 @@ class SourcesCompanion extends UpdateCompanion<SourceRow> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('forgottenAt: $forgottenAt, ')
+          ..write('deviceSerial: $deviceSerial, ')
+          ..write('devicePlatform: $devicePlatform, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3489,6 +3572,15 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _deviceObjectIdMeta = const VerificationMeta('deviceObjectId');
+  late final GeneratedColumn<String> deviceObjectId = GeneratedColumn<String>(
+    'device_object_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3513,6 +3605,7 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
     lastSeenScanId,
     missingConfirmedAt,
     hashError,
+    deviceObjectId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3613,6 +3706,12 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
     if (data.containsKey('hash_error')) {
       context.handle(_hashErrorMeta, hashError.isAcceptableOrUnknown(data['hash_error']!, _hashErrorMeta));
     }
+    if (data.containsKey('device_object_id')) {
+      context.handle(
+        _deviceObjectIdMeta,
+        deviceObjectId.isAcceptableOrUnknown(data['device_object_id']!, _deviceObjectIdMeta),
+      );
+    }
     return context;
   }
 
@@ -3654,6 +3753,10 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
         data['${effectivePrefix}missing_confirmed_at'],
       ),
       hashError: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hash_error']),
+      deviceObjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_object_id'],
+      ),
     );
   }
 
@@ -3691,6 +3794,9 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
   final int? lastSeenScanId;
   final int? missingConfirmedAt;
   final String? hashError;
+
+  /// v2: motivo legível de hash_status error/changed_during_read
+  final String? deviceObjectId;
   const FileInstanceRow({
     required this.id,
     required this.sourceId,
@@ -3714,6 +3820,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     this.lastSeenScanId,
     this.missingConfirmedAt,
     this.hashError,
+    this.deviceObjectId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3764,6 +3871,9 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     if (!nullToAbsent || hashError != null) {
       map['hash_error'] = Variable<String>(hashError);
     }
+    if (!nullToAbsent || deviceObjectId != null) {
+      map['device_object_id'] = Variable<String>(deviceObjectId);
+    }
     return map;
   }
 
@@ -3791,6 +3901,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       lastSeenScanId: lastSeenScanId == null && nullToAbsent ? const Value.absent() : Value(lastSeenScanId),
       missingConfirmedAt: missingConfirmedAt == null && nullToAbsent ? const Value.absent() : Value(missingConfirmedAt),
       hashError: hashError == null && nullToAbsent ? const Value.absent() : Value(hashError),
+      deviceObjectId: deviceObjectId == null && nullToAbsent ? const Value.absent() : Value(deviceObjectId),
     );
   }
 
@@ -3819,6 +3930,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       lastSeenScanId: serializer.fromJson<int?>(json['last_seen_scan_id']),
       missingConfirmedAt: serializer.fromJson<int?>(json['missing_confirmed_at']),
       hashError: serializer.fromJson<String?>(json['hash_error']),
+      deviceObjectId: serializer.fromJson<String?>(json['device_object_id']),
     );
   }
   @override
@@ -3847,6 +3959,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       'last_seen_scan_id': serializer.toJson<int?>(lastSeenScanId),
       'missing_confirmed_at': serializer.toJson<int?>(missingConfirmedAt),
       'hash_error': serializer.toJson<String?>(hashError),
+      'device_object_id': serializer.toJson<String?>(deviceObjectId),
     };
   }
 
@@ -3873,6 +3986,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     Value<int?> lastSeenScanId = const Value.absent(),
     Value<int?> missingConfirmedAt = const Value.absent(),
     Value<String?> hashError = const Value.absent(),
+    Value<String?> deviceObjectId = const Value.absent(),
   }) => FileInstanceRow(
     id: id ?? this.id,
     sourceId: sourceId ?? this.sourceId,
@@ -3896,6 +4010,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     lastSeenScanId: lastSeenScanId.present ? lastSeenScanId.value : this.lastSeenScanId,
     missingConfirmedAt: missingConfirmedAt.present ? missingConfirmedAt.value : this.missingConfirmedAt,
     hashError: hashError.present ? hashError.value : this.hashError,
+    deviceObjectId: deviceObjectId.present ? deviceObjectId.value : this.deviceObjectId,
   );
   FileInstanceRow copyWithCompanion(FileInstancesCompanion data) {
     return FileInstanceRow(
@@ -3921,6 +4036,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       lastSeenScanId: data.lastSeenScanId.present ? data.lastSeenScanId.value : this.lastSeenScanId,
       missingConfirmedAt: data.missingConfirmedAt.present ? data.missingConfirmedAt.value : this.missingConfirmedAt,
       hashError: data.hashError.present ? data.hashError.value : this.hashError,
+      deviceObjectId: data.deviceObjectId.present ? data.deviceObjectId.value : this.deviceObjectId,
     );
   }
 
@@ -3948,7 +4064,8 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
           ..write('firstSeenScanId: $firstSeenScanId, ')
           ..write('lastSeenScanId: $lastSeenScanId, ')
           ..write('missingConfirmedAt: $missingConfirmedAt, ')
-          ..write('hashError: $hashError')
+          ..write('hashError: $hashError, ')
+          ..write('deviceObjectId: $deviceObjectId')
           ..write(')'))
         .toString();
   }
@@ -3977,6 +4094,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     lastSeenScanId,
     missingConfirmedAt,
     hashError,
+    deviceObjectId,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -4003,7 +4121,8 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
           other.firstSeenScanId == this.firstSeenScanId &&
           other.lastSeenScanId == this.lastSeenScanId &&
           other.missingConfirmedAt == this.missingConfirmedAt &&
-          other.hashError == this.hashError);
+          other.hashError == this.hashError &&
+          other.deviceObjectId == this.deviceObjectId);
 }
 
 class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
@@ -4029,6 +4148,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
   final Value<int?> lastSeenScanId;
   final Value<int?> missingConfirmedAt;
   final Value<String?> hashError;
+  final Value<String?> deviceObjectId;
   const FileInstancesCompanion({
     this.id = const Value.absent(),
     this.sourceId = const Value.absent(),
@@ -4052,6 +4172,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     this.lastSeenScanId = const Value.absent(),
     this.missingConfirmedAt = const Value.absent(),
     this.hashError = const Value.absent(),
+    this.deviceObjectId = const Value.absent(),
   });
   FileInstancesCompanion.insert({
     this.id = const Value.absent(),
@@ -4076,6 +4197,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     this.lastSeenScanId = const Value.absent(),
     this.missingConfirmedAt = const Value.absent(),
     this.hashError = const Value.absent(),
+    this.deviceObjectId = const Value.absent(),
   }) : sourceId = Value(sourceId),
        relPath = Value(relPath),
        dirRelPath = Value(dirRelPath),
@@ -4105,6 +4227,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     Expression<int>? lastSeenScanId,
     Expression<int>? missingConfirmedAt,
     Expression<String>? hashError,
+    Expression<String>? deviceObjectId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4129,6 +4252,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
       if (lastSeenScanId != null) 'last_seen_scan_id': lastSeenScanId,
       if (missingConfirmedAt != null) 'missing_confirmed_at': missingConfirmedAt,
       if (hashError != null) 'hash_error': hashError,
+      if (deviceObjectId != null) 'device_object_id': deviceObjectId,
     });
   }
 
@@ -4155,6 +4279,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     Value<int?>? lastSeenScanId,
     Value<int?>? missingConfirmedAt,
     Value<String?>? hashError,
+    Value<String?>? deviceObjectId,
   }) {
     return FileInstancesCompanion(
       id: id ?? this.id,
@@ -4179,6 +4304,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
       lastSeenScanId: lastSeenScanId ?? this.lastSeenScanId,
       missingConfirmedAt: missingConfirmedAt ?? this.missingConfirmedAt,
       hashError: hashError ?? this.hashError,
+      deviceObjectId: deviceObjectId ?? this.deviceObjectId,
     );
   }
 
@@ -4251,6 +4377,9 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     if (hashError.present) {
       map['hash_error'] = Variable<String>(hashError.value);
     }
+    if (deviceObjectId.present) {
+      map['device_object_id'] = Variable<String>(deviceObjectId.value);
+    }
     return map;
   }
 
@@ -4278,7 +4407,8 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
           ..write('firstSeenScanId: $firstSeenScanId, ')
           ..write('lastSeenScanId: $lastSeenScanId, ')
           ..write('missingConfirmedAt: $missingConfirmedAt, ')
-          ..write('hashError: $hashError')
+          ..write('hashError: $hashError, ')
+          ..write('deviceObjectId: $deviceObjectId')
           ..write(')'))
         .toString();
   }
@@ -10291,6 +10421,8 @@ typedef $SourcesCreateCompanionBuilder = SourcesCompanion Function({
   required int createdAt,
   required int updatedAt,
   Value<int?> forgottenAt,
+  Value<String?> deviceSerial,
+  Value<String?> devicePlatform,
   Value<int> rowid,
 });
 typedef $SourcesUpdateCompanionBuilder = SourcesCompanion Function({
@@ -10315,6 +10447,8 @@ typedef $SourcesUpdateCompanionBuilder = SourcesCompanion Function({
   Value<int> createdAt,
   Value<int> updatedAt,
   Value<int?> forgottenAt,
+  Value<String?> deviceSerial,
+  Value<String?> devicePlatform,
   Value<int> rowid,
 });
 
@@ -10437,6 +10571,12 @@ class $SourcesFilterComposer extends Composer<_$CatalogDatabase, Sources> {
 
   ColumnFilters<int> get forgottenAt =>
       $composableBuilder(column: $table.forgottenAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get deviceSerial =>
+      $composableBuilder(column: $table.deviceSerial, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get devicePlatform =>
+      $composableBuilder(column: $table.devicePlatform, builder: (column) => ColumnFilters(column));
 
   $PhysicalDisksFilterComposer get physicalDiskId {
     final $PhysicalDisksFilterComposer composer = $composerBuilder(
@@ -10578,6 +10718,12 @@ class $SourcesOrderingComposer extends Composer<_$CatalogDatabase, Sources> {
   ColumnOrderings<int> get forgottenAt =>
       $composableBuilder(column: $table.forgottenAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get deviceSerial =>
+      $composableBuilder(column: $table.deviceSerial, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get devicePlatform =>
+      $composableBuilder(column: $table.devicePlatform, builder: (column) => ColumnOrderings(column));
+
   $PhysicalDisksOrderingComposer get physicalDiskId {
     final $PhysicalDisksOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -10652,6 +10798,12 @@ class $SourcesAnnotationComposer extends Composer<_$CatalogDatabase, Sources> {
   GeneratedColumn<int> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   GeneratedColumn<int> get forgottenAt => $composableBuilder(column: $table.forgottenAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceSerial =>
+      $composableBuilder(column: $table.deviceSerial, builder: (column) => column);
+
+  GeneratedColumn<String> get devicePlatform =>
+      $composableBuilder(column: $table.devicePlatform, builder: (column) => column);
 
   $PhysicalDisksAnnotationComposer get physicalDiskId {
     final $PhysicalDisksAnnotationComposer composer = $composerBuilder(
@@ -10772,6 +10924,8 @@ class $SourcesTableManager
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
                 Value<int?> forgottenAt = const Value.absent(),
+                Value<String?> deviceSerial = const Value.absent(),
+                Value<String?> devicePlatform = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SourcesCompanion(
                 id: id,
@@ -10795,6 +10949,8 @@ class $SourcesTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 forgottenAt: forgottenAt,
+                deviceSerial: deviceSerial,
+                devicePlatform: devicePlatform,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10820,6 +10976,8 @@ class $SourcesTableManager
                 required int createdAt,
                 required int updatedAt,
                 Value<int?> forgottenAt = const Value.absent(),
+                Value<String?> deviceSerial = const Value.absent(),
+                Value<String?> devicePlatform = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SourcesCompanion.insert(
                 id: id,
@@ -10843,6 +11001,8 @@ class $SourcesTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 forgottenAt: forgottenAt,
+                deviceSerial: deviceSerial,
+                devicePlatform: devicePlatform,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) =>
@@ -12323,6 +12483,7 @@ typedef $FileInstancesCreateCompanionBuilder = FileInstancesCompanion Function({
   Value<int?> lastSeenScanId,
   Value<int?> missingConfirmedAt,
   Value<String?> hashError,
+  Value<String?> deviceObjectId,
 });
 typedef $FileInstancesUpdateCompanionBuilder = FileInstancesCompanion Function({
   Value<int> id,
@@ -12347,6 +12508,7 @@ typedef $FileInstancesUpdateCompanionBuilder = FileInstancesCompanion Function({
   Value<int?> lastSeenScanId,
   Value<int?> missingConfirmedAt,
   Value<String?> hashError,
+  Value<String?> deviceObjectId,
 });
 
 final class $FileInstancesReferences extends BaseReferences<_$CatalogDatabase, FileInstances, FileInstanceRow> {
@@ -12505,6 +12667,9 @@ class $FileInstancesFilterComposer extends Composer<_$CatalogDatabase, FileInsta
 
   ColumnFilters<String> get hashError =>
       $composableBuilder(column: $table.hashError, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get deviceObjectId =>
+      $composableBuilder(column: $table.deviceObjectId, builder: (column) => ColumnFilters(column));
 
   $SourcesFilterComposer get sourceId {
     final $SourcesFilterComposer composer = $composerBuilder(
@@ -12694,6 +12859,9 @@ class $FileInstancesOrderingComposer extends Composer<_$CatalogDatabase, FileIns
   ColumnOrderings<String> get hashError =>
       $composableBuilder(column: $table.hashError, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get deviceObjectId =>
+      $composableBuilder(column: $table.deviceObjectId, builder: (column) => ColumnOrderings(column));
+
   $SourcesOrderingComposer get sourceId {
     final $SourcesOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -12813,6 +12981,9 @@ class $FileInstancesAnnotationComposer extends Composer<_$CatalogDatabase, FileI
       $composableBuilder(column: $table.missingConfirmedAt, builder: (column) => column);
 
   GeneratedColumn<String> get hashError => $composableBuilder(column: $table.hashError, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceObjectId =>
+      $composableBuilder(column: $table.deviceObjectId, builder: (column) => column);
 
   $SourcesAnnotationComposer get sourceId {
     final $SourcesAnnotationComposer composer = $composerBuilder(
@@ -12998,6 +13169,7 @@ class $FileInstancesTableManager
                 Value<int?> lastSeenScanId = const Value.absent(),
                 Value<int?> missingConfirmedAt = const Value.absent(),
                 Value<String?> hashError = const Value.absent(),
+                Value<String?> deviceObjectId = const Value.absent(),
               }) => FileInstancesCompanion(
                 id: id,
                 sourceId: sourceId,
@@ -13021,6 +13193,7 @@ class $FileInstancesTableManager
                 lastSeenScanId: lastSeenScanId,
                 missingConfirmedAt: missingConfirmedAt,
                 hashError: hashError,
+                deviceObjectId: deviceObjectId,
               ),
           createCompanionCallback:
               ({
@@ -13046,6 +13219,7 @@ class $FileInstancesTableManager
                 Value<int?> lastSeenScanId = const Value.absent(),
                 Value<int?> missingConfirmedAt = const Value.absent(),
                 Value<String?> hashError = const Value.absent(),
+                Value<String?> deviceObjectId = const Value.absent(),
               }) => FileInstancesCompanion.insert(
                 id: id,
                 sourceId: sourceId,
@@ -13069,6 +13243,7 @@ class $FileInstancesTableManager
                 lastSeenScanId: lastSeenScanId,
                 missingConfirmedAt: missingConfirmedAt,
                 hashError: hashError,
+                deviceObjectId: deviceObjectId,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable<FileInstances, FileInstanceRow>(table), $FileInstancesReferences(db, table, e)))

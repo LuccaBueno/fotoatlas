@@ -1,4 +1,4 @@
--- Schema do catálogo (v2). Fonte da verdade: docs/schema-v1.md (v1 + §7, mudanças da v2).
+-- Schema do catálogo (v3). Fonte da verdade: docs/schema-v1.md (v1 + §7, mudanças da v2 e da v3).
 -- Datas do app: ms Unix UTC. mtime/ctime: FILETIME bruto (100 ns desde 1601).
 
 CREATE TABLE app_meta (
@@ -46,7 +46,9 @@ CREATE TABLE sources (
   free_bytes_last    INTEGER,
   created_at         INTEGER NOT NULL,
   updated_at         INTEGER NOT NULL,
-  forgotten_at       INTEGER
+  forgotten_at       INTEGER,
+  device_serial      TEXT,                    -- v3: serial do celular (identidade)
+  device_platform    TEXT                     -- v3: android | iphone | camera | other
 ) AS SourceRow;
 CREATE INDEX ix_sources_volume_guid   ON sources(volume_guid);
 CREATE INDEX ix_sources_volume_serial ON sources(volume_serial);
@@ -125,6 +127,7 @@ CREATE TABLE file_instances (
   last_seen_scan_id    INTEGER REFERENCES scans(id),
   missing_confirmed_at INTEGER,
   hash_error           TEXT,                   -- v2: motivo legível de hash_status error/changed_during_read
+  device_object_id     TEXT,                   -- v3: ID do objeto WPD no celular (pode mudar entre sessões)
   UNIQUE (source_id, rel_path)
 ) AS FileInstanceRow;
 CREATE INDEX ix_fi_content      ON file_instances(content_id);

@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 
 import '../catalog/catalog_database.dart';
+import '../devices/devices.dart';
 import '../platform/win_fs.dart';
 import '../util/clock.dart';
 import '../util/uuid.dart';
@@ -61,6 +62,9 @@ class SourceView {
     this.missingCount = 0,
     this.lastScan,
     this.candidates = const [],
+    this.devicePlatform,
+    this.deviceStatus,
+    this.deviceSimulated = false,
   });
 
   final String id;
@@ -85,6 +89,20 @@ class SourceView {
   /// Volumes candidatos quando [state] é [SourceState.ambiguous].
   final List<VolumeInfo> candidates;
 
+  /// Celular: `android`, `iphone`, `camera` ou `other`.
+  final String? devicePlatform;
+
+  /// Celular conectado: `ok`, `locked` ou `unauthorized` (`null` se desconectado).
+  final String? deviceStatus;
+
+  /// Celular simulado (demonstração/testes).
+  final bool deviceSimulated;
+
+  bool get isPhone => kind == 'phone';
+
+  /// Conectado e pronto para ler (celular desbloqueado e autorizado).
+  bool get isReady => isConnected && (!isPhone || deviceStatus == 'ok');
+
   bool get isConnected => state == SourceState.connected;
 
   /// Caminho para exibição (`E:\Fotos`), mesmo desconectada.
@@ -104,13 +122,19 @@ class AddSourceResult {
 
 /// Cadastro de fontes, reconhecimento independente da letra e conectividade.
 class SourcesService {
-  SourcesService(this.db, this.volumes, {PathResolver? resolver}) : resolver = resolver ?? Win32PathResolver();
+  SourcesService(this.db, this.volumes, {PathResolver? resolver, this.devices})
+    : resolver = resolver ?? Win32PathResolver();
 
   final CatalogDatabase db;
   final VolumeProvider volumes;
   final PathResolver resolver;
 
+  /// Celulares (helper WPD). `null` sem helper: celulares ficam desconectados.
+  final DeviceBackend? devices;
+
   final Map<String, MatchResult> _matches = {};
+  final Map<String, DeviceInfo> _phones = {};
+  List<DeviceInfo> _lastDevices = const [];
   final _stateChanges = StreamController<void>.broadcast();
   Timer? _monitor;
   bool _refreshing = false;
@@ -121,6 +145,12 @@ class SourcesService {
 
   /// Volumes vistos na última verificação.
   List<VolumeInfo> get lastVolumes => _lastVolumes;
+
+  /// Celulares vistos na última verificação.
+  List<DeviceInfo> get lastDevices => _lastDevices;
+
+  /// Celular conectado agora que corresponde à fonte, se houver.
+  DeviceInfo? deviceFor(String sourceId) => _phones[sourceId];
 
   /// Ao abrir: nada está conectado até a primeira verificação.
   Future<void> init() async {
@@ -195,6 +225,154 @@ class SourcesService {
     return AddSourceResult(id, warnings);
   }
 
+  /// Celulares conectados agora (para "Adicionar celular"), com a fonte já
+  /// cadastrada de cada um, se houver.
+  Future<List<(DeviceInfo, String?)>> listDevices() async {
+    final backend = devices;
+    if (backend == null) return const [];
+    final list = _lastDevices = await backend.list();
+    final phones = await (db.select(db.sources)..where((s) => s.forgottenAt.isNull() & s.kind.equals('phone'))).get();
+    return [for (final d in list) (d, _phoneRowFor(d, phones)?.id)];
+  }
+
+  /// Cadastra um celular conectado. Só grava no catálogo (nada no aparelho).
+  Future<AddSourceResult> addPhone(String deviceId, {String? name}) async {
+    final backend = devices;
+    if (backend == null) throw SourceException('A leitura de celulares não está disponível.');
+    final list = _lastDevices = await backend.list();
+    final device = list.where((d) => d.deviceId == deviceId).firstOrNull;
+    if (device == null) throw SourceException('O celular não está mais conectado. Conecte o cabo e tente de novo.');
+    final phones = await (db.select(db.sources)..where((s) => s.forgottenAt.isNull() & s.kind.equals('phone'))).get();
+    final existing = _phoneRowFor(device, phones);
+    if (existing != null) throw SourceException('Este celular já está cadastrado como "${existing.name}".');
+
+    final diskId = await _upsertPhoneDisk(device);
+    final now = nowMs();
+    final id = uuidV4();
+    await db
+        .into(db.sources)
+        .insert(
+          SourcesCompanion.insert(
+            id: id,
+            name: (name?.trim().isNotEmpty ?? false) ? name!.trim() : device.friendlyName,
+            kind: 'phone',
+            deviceId: Value(device.deviceId),
+            deviceModel: Value(device.model),
+            deviceSerial: Value(device.serial),
+            devicePlatform: Value(device.platform),
+            physicalDiskId: Value(diskId),
+            connected: const Value(true),
+            lastConnectedAt: Value(now),
+            totalBytesLast: Value(device.totalBytes),
+            freeBytesLast: Value(device.freeBytes),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    _phones[id] = device;
+    _stateChanges.add(null);
+    return AddSourceResult(id, [
+      if (device.serial == null)
+        'Este celular não informa número de série: se ele for ligado em outra porta USB, '
+            'pode ser preciso confirmar que é o mesmo.',
+    ]);
+  }
+
+  /// Fonte cadastrada para [device]: pelo serial; sem serial, pelo ID WPD.
+  static SourceRow? _phoneRowFor(DeviceInfo device, List<SourceRow> phones) {
+    for (final row in phones) {
+      if (device.serial != null && row.deviceSerial != null) {
+        if (row.deviceSerial == device.serial) return row;
+        continue;
+      }
+      if (row.deviceId != null && row.deviceId!.toLowerCase() == device.deviceId.toLowerCase()) return row;
+    }
+    return null;
+  }
+
+  /// Atualiza quais celulares cadastrados estão conectados. Devolve se mudou algo.
+  Future<bool> _refreshPhones() async {
+    final backend = devices;
+    if (backend == null) return false;
+    List<DeviceInfo> list;
+    try {
+      list = await backend.list();
+    } on DeviceException {
+      // Helper fora do ar: os celulares ficam "desconectados" (regra 9: o
+      // catálogo continua mostrando o último scan).
+      list = const [];
+    }
+    _lastDevices = list;
+    final rows = await (db.select(db.sources)..where((s) => s.forgottenAt.isNull() & s.kind.equals('phone'))).get();
+    var changed = false;
+    final now = nowMs();
+    for (final row in rows) {
+      DeviceInfo? match;
+      for (final d in list) {
+        if (_phoneRowFor(d, [row]) != null) match = d;
+      }
+      final previous = _phones[row.id];
+      if (match == null) {
+        if (previous != null || row.connected) {
+          _phones.remove(row.id);
+          changed = true;
+          await (db.update(db.sources)..where((s) => s.id.equals(row.id))).write(
+            SourcesCompanion(connected: const Value(false), updatedAt: Value(now)),
+          );
+        }
+        continue;
+      }
+      _phones[row.id] = match;
+      if (previous == null || previous.status != match.status) changed = true;
+      if (!row.connected ||
+          row.deviceId != match.deviceId ||
+          row.freeBytesLast != match.freeBytes ||
+          row.totalBytesLast != match.totalBytes) {
+        await (db.update(db.sources)..where((s) => s.id.equals(row.id))).write(
+          SourcesCompanion(
+            connected: const Value(true),
+            // Aprende o ID WPD novo (outra porta USB) quando o serial confirma.
+            deviceId: Value(match.deviceId),
+            lastConnectedAt: Value(now),
+            totalBytesLast: Value(match.totalBytes),
+            freeBytesLast: Value(match.freeBytes),
+            updatedAt: Value(now),
+          ),
+        );
+      }
+    }
+    return changed;
+  }
+
+  /// O celular conta como um disco físico próprio (`docs/arquitetura.md` §4.6).
+  Future<int> _upsertPhoneDisk(DeviceInfo device) async {
+    final now = nowMs();
+    final reliable = device.serial != null;
+    final serial = reliable ? 'phone:${device.serial}' : null;
+    final model = 'phone:${device.manufacturer ?? ''} ${device.model ?? device.friendlyName}'.trim();
+    final query = db.select(db.physicalDisks);
+    if (reliable) {
+      query.where((d) => d.identityConfidence.equals('reliable') & d.serial.equals(serial!));
+    } else {
+      // Sem serial: dois aparelhos do mesmo modelo se fundem (conservador, R1).
+      query.where((d) => d.identityConfidence.equals('weak') & d.model.equals(model) & d.sizeBytes.isNull());
+    }
+    final existing = await query.getSingleOrNull();
+    if (existing != null) return existing.id;
+    return db
+        .into(db.physicalDisks)
+        .insert(
+          PhysicalDisksCompanion.insert(
+            serial: Value(serial),
+            model: Value(model),
+            busType: const Value('mtp'),
+            identityConfidence: reliable ? 'reliable' : 'weak',
+            firstSeenAt: now,
+            lastSeenAt: now,
+          ),
+        );
+  }
+
   Future<void> rename(String id, String name) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) throw SourceException('O nome não pode ficar vazio.');
@@ -209,6 +387,7 @@ class SourcesService {
       SourcesCompanion(forgottenAt: Value(nowMs()), connected: const Value(false), updatedAt: Value(nowMs())),
     );
     _matches.remove(id);
+    _phones.remove(id);
     _stateChanges.add(null);
   }
 
@@ -259,6 +438,7 @@ class SourcesService {
             }
         }
       }
+      if (await _refreshPhones()) changed = true;
       if (changed) _stateChanges.add(null);
     } finally {
       _refreshing = false;
@@ -282,11 +462,13 @@ class SourcesService {
   }
 
   /// Estado atual de uma fonte.
-  SourceState stateOf(String sourceId) => switch (_matches[sourceId]) {
-    Matched() => SourceState.connected,
-    Ambiguous() => SourceState.ambiguous,
-    _ => SourceState.disconnected,
-  };
+  SourceState stateOf(String sourceId) => _phones.containsKey(sourceId)
+      ? SourceState.connected
+      : switch (_matches[sourceId]) {
+          Matched() => SourceState.connected,
+          Ambiguous() => SourceState.ambiguous,
+          _ => SourceState.disconnected,
+        };
 
   /// Subpastas diretas de [relPath] numa fonte, segundo o catálogo (funciona
   /// com a fonte desconectada). Só pastas que têm arquivos catalogados.
@@ -388,6 +570,29 @@ class SourcesService {
       _ => SourceState.disconnected,
     };
     final volume = match is Matched ? match.volume : null;
+    final phone = _phones[row.id];
+    if (row.kind == 'phone') {
+      return SourceView(
+        id: row.id,
+        name: row.name,
+        kind: row.kind,
+        rootRelPath: row.rootRelPath,
+        state: phone == null ? SourceState.disconnected : SourceState.connected,
+        lastConnectedAt: row.lastConnectedAt == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(row.lastConnectedAt!, isUtc: true),
+        totalBytes: phone?.totalBytes ?? row.totalBytesLast,
+        freeBytes: phone?.freeBytes ?? row.freeBytesLast,
+        fileCount: a.fileCount,
+        fileBytes: a.fileBytes,
+        mediaCount: a.mediaCount,
+        missingCount: a.missingCount,
+        lastScan: a.lastScan,
+        devicePlatform: row.devicePlatform,
+        deviceStatus: phone?.status,
+        deviceSimulated: phone?.simulated ?? false,
+      );
+    }
     return SourceView(
       id: row.id,
       name: row.name,

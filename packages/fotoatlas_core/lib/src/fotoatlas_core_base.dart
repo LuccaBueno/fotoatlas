@@ -5,6 +5,7 @@ import 'catalog/catalog.dart';
 import 'catalog/catalog_backup.dart';
 import 'compare/compare_service.dart';
 import 'coverage/coverage_service.dart';
+import 'devices/devices.dart';
 import 'hash/hash_service.dart';
 import 'helper/helper_client.dart';
 import 'scan/scan_service.dart';
@@ -61,6 +62,9 @@ class FotoAtlasCore {
   /// - [autoHash]: confere o conteúdo sozinho depois de cada scan e quando
   ///   uma fonte conecta (o app liga; testes e CLI controlam na mão).
   /// - [backupOnOpen]: faz backup do catálogo se o último tiver mais de 24 h.
+  /// - [devices]: celulares explícitos (testes). Sem ele, usa o helper.
+  /// - [fakeDevicesDir] (ou `FOTOATLAS_FAKE_DEVICES`): o helper mostra os
+  ///   celulares simulados dessa pasta em vez dos reais (testes e demonstração).
   static Future<FotoAtlasCore> open({
     CorePaths? paths,
     VolumeProvider? volumes,
@@ -72,12 +76,16 @@ class FotoAtlasCore {
     bool hashInIsolate = true,
     bool autoHash = false,
     bool backupOnOpen = false,
+    DeviceBackend? devices,
+    String? fakeDevicesDir,
   }) async {
     final resolvedPaths = paths ?? CorePaths.fromEnvironment();
     Directory(resolvedPaths.dataDir).createSync(recursive: true);
     final lock = await InstanceLock.acquire(resolvedPaths.lockPath);
     Catalog? catalog;
     HelperClient? helper;
+    var deviceBackend = devices;
+    final fake = fakeDevicesDir ?? Platform.environment['FOTOATLAS_FAKE_DEVICES'];
     try {
       catalog = await Catalog.open(resolvedPaths.catalogPath);
       var provider = volumes;
@@ -85,18 +93,25 @@ class FotoAtlasCore {
         final win32 = Win32VolumeProvider();
         final exe = useHelper ? (helperPath ?? HelperClient.locate()) : null;
         if (exe != null) {
-          helper = HelperClient(executable: exe, cacheDir: resolvedPaths.thumbsDir);
+          helper = HelperClient(
+            executable: exe,
+            cacheDir: resolvedPaths.thumbsDir,
+            arguments: [
+              if (fake != null && fake.isNotEmpty) ...['--fake-devices', fake],
+            ],
+          );
           try {
             await helper.start();
           } on Object {
             // Segue sem helper; o cliente continua tentando reiniciar.
           }
           provider = HelperVolumeProvider(helper, fallback: win32);
+          deviceBackend ??= HelperDeviceBackend(helper);
         } else {
           provider = win32;
         }
       }
-      final sources = SourcesService(catalog.db, provider, resolver: pathResolver);
+      final sources = SourcesService(catalog.db, provider, resolver: pathResolver, devices: deviceBackend);
       await sources.init();
       final scans = ScanService(catalog, sources, useIsolate: scanInIsolate);
       await scans.init();

@@ -12,8 +12,12 @@ Uso: fotoatlas_cli [--home PASTA] [--no-helper] COMANDO
 
 Comandos:
   volumes [--json]               Lista as unidades conectadas
+  devices                        Lista os celulares conectados (só leitura)
   sources list                   Lista as fontes cadastradas
   sources add CAMINHO [--name N] Cadastra uma pasta ou unidade
+  sources add-phone CELULAR [--name N]
+                                 Cadastra um celular (número da lista de "devices",
+                                 nome ou começo do ID)
   scan start FONTE               Escaneia (retoma se houver um pausado)
   scan resume ID                 Retoma um escaneamento pelo número
   scan status [FONTE]            Mostra os últimos escaneamentos
@@ -32,6 +36,7 @@ ESCOPO/LADO: "FONTE[:pasta/sub]" separados por "+" (ex.: "HD:Fotos/2020+Celular"
   ou "@NOME" para um escopo salvo. --type: photo,raw,video,other.
 --list: missing (padrão), only-b, both, unverified-a, unverified-b.
 --home (ou FOTOATLAS_HOME) troca a pasta do catálogo.
+FOTOATLAS_FAKE_DEVICES=PASTA mostra celulares simulados (testes e demonstração).
 ''';
 
 Future<void> main(List<String> arguments) async {
@@ -82,6 +87,53 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
           );
         }
       }
+      return 0;
+
+    case ['devices']:
+      final devices = await core.sources.listDevices();
+      if (devices.isEmpty) stdout.writeln('Nenhum celular conectado.');
+      for (final (i, (d, sourceId)) in devices.indexed) {
+        final status = switch (d.status) {
+          'ok' => 'pronto',
+          'locked' => 'bloqueado',
+          _ => 'sem autorização',
+        };
+        stdout.writeln(
+          '${i + 1}  ${d.friendlyName}  [$status]  ${d.platform}${d.simulated ? ' (simulado)' : ''}  '
+          '${d.storages.map((s) => s.name).join(', ')}'
+          '${sourceId == null ? '' : '  cadastrado: ${sourceId.substring(0, 8)}'}',
+        );
+        final hint = phoneStatusMessage(d);
+        if (hint != null) stdout.writeln('   $hint');
+        if (d.isIphone) {
+          stdout.writeln('   iPhone: em Ajustes > Fotos > Transferir para Mac ou PC, escolha "Manter originais".');
+        }
+      }
+      return 0;
+
+    case ['sources', 'add-phone', final query, ...final rest]:
+      final devices = await core.sources.listDevices();
+      final index = int.tryParse(query);
+      final matches = [
+        for (final (i, (d, _)) in devices.indexed)
+          if (index == i + 1 ||
+              d.deviceId == query ||
+              d.deviceId.startsWith(query) ||
+              d.friendlyName.toLowerCase() == query.toLowerCase())
+            d,
+      ];
+      if (matches.length != 1) {
+        throw SourceException(
+          matches.isEmpty ? 'Celular "$query" não encontrado.' : 'Mais de um celular combina com "$query".',
+        );
+      }
+      final nameIndex = rest.indexOf('--name');
+      final name = nameIndex >= 0 && nameIndex + 1 < rest.length ? rest[nameIndex + 1] : null;
+      final result = await core.sources.addPhone(matches.single.deviceId, name: name);
+      for (final w in result.warnings) {
+        stdout.writeln('Aviso: $w');
+      }
+      stdout.writeln('SOURCE ${result.sourceId}');
       return 0;
 
     case ['sources', 'list']:

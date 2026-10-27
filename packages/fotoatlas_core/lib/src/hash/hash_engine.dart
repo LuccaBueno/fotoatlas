@@ -6,6 +6,7 @@ import 'package:drift/drift.dart';
 import 'package:ffi/ffi.dart';
 
 import '../catalog/catalog_database.dart';
+import '../devices/devices.dart';
 import '../platform/win32/kernel32.dart';
 import '../platform/win_fs.dart';
 import '../safe_io/source_reader.dart';
@@ -22,7 +23,7 @@ class HashDone extends HashOutcome {
   const HashDone(this.sha256, this.size, this.mtime);
   final Uint8List sha256;
   final int size;
-  final int mtime;
+  final int? mtime;
 }
 
 /// O arquivo mudou desde o escaneamento ou durante a leitura (spec §7).
@@ -131,11 +132,14 @@ class _DigestSink implements Sink<Digest> {
 
 /// Uma fonte que o worker deve conferir.
 class HashTarget {
-  const HashTarget(this.sourceId, this.accessRoot);
+  const HashTarget(this.sourceId, this.accessRoot, {this.deviceId});
   final String sourceId;
 
-  /// Raiz Win32 de acesso (ex.: `\\?\Volume{…}\Fotos`).
+  /// Raiz Win32 de acesso (ex.: `\\?\Volume{…}\Fotos`); vazia no celular.
   final String accessRoot;
+
+  /// Celular: ID WPD do aparelho (o helper lê e calcula o hash).
+  final String? deviceId;
 }
 
 /// Trecho priorizado (ex.: escopos da comparação em andamento).
@@ -181,10 +185,15 @@ class HashEngine {
     this.batchSize = 32,
     this.chunkSize = 1 << 20,
     this.afterFirstChunk,
+    this.devices,
   });
 
   final CatalogDatabase db;
   final List<HashTarget> targets;
+
+  /// Celulares (só no isolate que tem o helper).
+  final DeviceBackend? devices;
+  final Map<String, PhonePathResolver> _resolvers = {};
   final List<HashPriority> priority;
   final int batchSize;
   final int chunkSize;
@@ -192,6 +201,10 @@ class HashEngine {
 
   Future<HashWorkerDone> run({required bool Function() stopRequested, void Function(HashFileEvent)? onFile}) async {
     final roots = {for (final t in targets) t.sourceId: t.accessRoot};
+    final phones = {
+      for (final t in targets)
+        if (t.deviceId != null) t.sourceId: t.deviceId!,
+    };
     final gone = <String>{};
     while (true) {
       final ids = await _orderedPending(roots.keys.where((s) => !gone.contains(s)).toList());
@@ -204,6 +217,18 @@ class HashEngine {
           if (gone.contains(row.sourceId)) continue;
           if (stopRequested()) break;
           final root = roots[row.sourceId]!;
+          final deviceId = phones[row.sourceId];
+          if (deviceId != null) {
+            final outcome = await _hashPhone(deviceId, row, stopRequested);
+            if (outcome == null) {
+              gone.add(row.sourceId);
+              continue;
+            }
+            if (outcome is HashInterrupted) break;
+            results.add((row, outcome));
+            onFile?.call(HashFileEvent(row.sourceId, row.size, _kind(outcome)));
+            continue;
+          }
           final outcome = await hashSourceFile(
             joinNative(root, row.relPath),
             expectedSize: row.size,
@@ -219,21 +244,59 @@ class HashEngine {
             continue;
           }
           results.add((row, outcome));
-          onFile?.call(
-            HashFileEvent(row.sourceId, row.size, switch (outcome) {
-              HashDone() => 'done',
-              HashChanged() => 'changed',
-              HashCloudOnly() => 'cloud',
-              HashFailed() => 'error',
-              HashInterrupted() => throw StateError('inalcançável'),
-            }),
-          );
+          onFile?.call(HashFileEvent(row.sourceId, row.size, _kind(outcome)));
         }
         if (results.isNotEmpty) await _apply(results);
         crashpoint('hash.after_batch_commit');
       }
     }
     return HashWorkerDone(goneSources: gone.toList(), message: gone.isEmpty ? null : 'Fonte desconectada.');
+  }
+
+  static String _kind(HashOutcome outcome) => switch (outcome) {
+    HashDone() => 'done',
+    HashChanged() => 'changed',
+    HashCloudOnly() => 'cloud',
+    HashFailed() => 'error',
+    HashInterrupted() => throw StateError('inalcançável'),
+  };
+
+  /// Hash de um arquivo do celular pelo helper. `null` = o aparelho saiu
+  /// (o arquivo continua pendente, nunca vira ausente).
+  Future<HashOutcome?> _hashPhone(String deviceId, _PendingRow row, bool Function() stopRequested) async {
+    final backend = devices!;
+    final resolver = _resolvers[deviceId] ??= PhonePathResolver(backend, deviceId);
+    final stop = Completer<void>();
+    final watch = Timer.periodic(const Duration(milliseconds: 200), (_) {
+      if (stopRequested() && !stop.isCompleted) stop.complete();
+    });
+    try {
+      for (var attempt = 0; attempt < 2; attempt++) {
+        // 1ª tentativa com o ID do scan; se ele ficou velho, procura pelo caminho.
+        final objectId = attempt == 0 ? row.objectId : await resolver.file(row.relPath);
+        if (objectId == null) continue;
+        try {
+          final h = await backend.hash(deviceId, objectId, expectedSize: row.size, cancel: stop.future);
+          if (h.size != row.size || h.modified != row.mtime) {
+            return const HashChanged('O arquivo mudou depois do escaneamento. Escaneie de novo.');
+          }
+          return HashDone(h.sha256, h.size, row.mtime);
+        } on DeviceException catch (e) {
+          if (e.code == 'not_found') continue;
+          if (e.code == 'cancelled') return const HashInterrupted();
+          if (e.code == 'changed_during_read') return HashChanged(e.message);
+          if (e.isDeviceGone) return null;
+          return HashFailed('Erro de leitura no celular: ${e.message}');
+        }
+      }
+      return const HashFailed('Arquivo não encontrado no celular (pode ter sido apagado ou movido). Escaneie de novo.');
+    } on DeviceException catch (e) {
+      // Falha ao procurar pelo caminho.
+      if (e.isDeviceGone) return null;
+      return HashFailed('Erro de leitura no celular: ${e.message}');
+    } finally {
+      watch.cancel();
+    }
   }
 
   /// Ids pendentes na ordem de prioridade: trechos priorizados, depois
@@ -284,7 +347,7 @@ class HashEngine {
   Future<List<_PendingRow>> _rows(List<int> ids) async {
     final rows = await db
         .customSelect(
-          "SELECT id, source_id, rel_path, size_bytes, mtime, ext FROM file_instances "
+          "SELECT id, source_id, rel_path, size_bytes, mtime, ext, device_object_id FROM file_instances "
           "WHERE id IN (${List.filled(ids.length, '?').join(',')}) "
           "AND hash_status = 'pending' AND availability = 'present'",
           variables: [for (final id in ids) Variable.withInt(id)],
@@ -300,6 +363,7 @@ class HashEngine {
           r.read<int>('size_bytes'),
           r.readNullable<int>('mtime'),
           r.read<String>('ext'),
+          r.readNullable<String>('device_object_id'),
         ),
     };
     return [for (final id in ids) ?byId[id]];
@@ -358,7 +422,8 @@ class HashEngine {
 }
 
 class _PendingRow {
-  _PendingRow(this.id, this.sourceId, this.relPath, this.size, this.mtime, this.ext);
+  _PendingRow(this.id, this.sourceId, this.relPath, this.size, this.mtime, this.ext, this.objectId);
+  final String? objectId;
   final int id;
   final String sourceId;
   final String relPath;

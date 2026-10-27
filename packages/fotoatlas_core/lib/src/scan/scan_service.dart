@@ -8,6 +8,7 @@ import '../catalog/catalog_database.dart';
 import '../sources/sources_service.dart';
 import '../util/clock.dart';
 import 'scan_engine.dart';
+import 'scan_listers.dart';
 
 class _WorkerArgs {
   _WorkerArgs({
@@ -38,8 +39,7 @@ Future<void> _scanWorkerMain(_WorkerArgs args) async {
       db,
       scanId: args.scanId,
       sourceId: args.sourceId,
-      accessRoot: args.accessRoot,
-      isVolumeRoot: args.isVolumeRoot,
+      lister: Win32ScanLister(args.accessRoot, isVolumeRoot: args.isVolumeRoot),
     ).run(stopRequested: () => stop, onProgress: args.events.send);
     args.events.send(result);
   } catch (e) {
@@ -177,6 +177,20 @@ class ScanService {
   Future<({SourceRow row, String root})> _connectedSource(String sourceId) async {
     final row = await sources.byId(sourceId);
     if (row == null) throw SourceException('Fonte não encontrada.');
+    if (row.kind == 'phone') {
+      var device = sources.deviceFor(row.id);
+      if (device == null) {
+        await sources.refreshConnectivity();
+        device = sources.deviceFor(row.id);
+      }
+      if (device == null || sources.devices == null) {
+        throw SourceException('"${row.name}" está desconectado. Conecte o celular pelo cabo USB para escanear.');
+      }
+      final notReady = phoneStatusMessage(device);
+      if (notReady != null) throw SourceException(notReady);
+      // Para o celular, a "raiz" é o ID do dispositivo.
+      return (row: row, root: device.deviceId);
+    }
     var root = sources.accessRoot(row);
     if (root == null) {
       await sources.refreshConnectivity();
@@ -205,13 +219,15 @@ class ScanService {
       }
     }
 
-    if (!useIsolate) {
+    // Celular: quem lê é o helper (outro processo); aqui só chegam lotes de
+    // JSON, então o scan roda no isolate atual sem travar a interface.
+    final phone = source.kind == 'phone';
+    if (!useIsolate || phone) {
       ScanEngine(
         db,
         scanId: scanId,
         sourceId: source.id,
-        accessRoot: root,
-        isVolumeRoot: isVolumeRoot,
+        lister: phone ? PhoneScanLister(sources.devices!, root) : Win32ScanLister(root, isVolumeRoot: isVolumeRoot),
       ).run(stopRequested: () => running.pendingStop, onProgress: onProgress).then(onProgress);
       return;
     }

@@ -5,6 +5,7 @@
 /// dentro do temp do sistema ou em `tools/fixtures/out|generated`.
 library;
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -192,4 +193,117 @@ String _nameFor(String folder, DateTime t, int counter, Random random) {
     4 => 'documento_$counter.pdf',
     _ => 'IMG_${date}_${time}_$counter.jpg',
   };
+}
+
+/// Resultado de [generatePhoneDemo].
+class PhoneDemo {
+  const PhoneDemo(this.devicesDir, this.hdDir);
+
+  /// Pasta para `FOTOATLAS_FAKE_DEVICES` (um `.json` por celular simulado).
+  final String devicesDir;
+
+  /// Pasta que faz o papel do HD de backup (cadastrar como pasta).
+  final String hdDir;
+
+  /// Arquivo do Pixel simulado: apagar/renomear = desplugar o celular.
+  String get pixelJson => p.join(devicesDir, 'pixel.json');
+}
+
+/// Celulares simulados (formato de `docs/protocolo-helper.md` §5.3.1) e um HD
+/// com parte das fotos já copiadas, com outros nomes.
+///
+/// Esperado para A = Pixel inteiro × B = HD: faltam 3 (IMG_20240502_120000.jpg,
+/// IMG-20240504-WA0001.jpg, Screenshot_20240505-180000.png) · nos dois 3 ·
+/// só em B 1 (antiga.jpg). O iPhone aparece "sem autorização" (aviso de
+/// "Confiar" e de "Manter originais").
+PhoneDemo generatePhoneDemo(String outDir, {bool stableIds = false, Map<String, Object?>? pixelFaults}) {
+  assertAllowedOutput(outDir);
+  final devices = p.join(outDir, 'celulares');
+  final hd = p.join(outDir, 'HD');
+  List<int> content(int seed, int size) {
+    final r = Random(seed);
+    return List.generate(size, (_) => r.nextInt(256));
+  }
+
+  void write(String path, List<int> bytes) {
+    final f = File(path);
+    f.parent.createSync(recursive: true);
+    f.writeAsBytesSync(bytes);
+  }
+
+  final blobs = <String, List<int>>{
+    'c1': content(11, 900 * 1024),
+    'c2': content(12, 1100 * 1024),
+    'c3': content(13, 3 * 1024 * 1024),
+    'c4': content(14, 150 * 1024),
+    'c5': content(15, 400 * 1024),
+    'c6': content(16, 700 * 1024),
+    'c7': content(17, 500 * 1024),
+    'cx': content(18, 4 * 1024),
+  };
+  for (final e in blobs.entries) {
+    write(p.join(devices, 'conteudo', '${e.key}.bin'), e.value);
+  }
+  Map<String, Object?> file(String path, String blob, String modified) => {
+    'path': path,
+    'contentFile': 'conteudo/$blob.bin',
+    'modified': modified,
+  };
+  final pixel = {
+    'deviceId': r'\?\usb#vid_18d1&pid_4ee1#simulado0001#{6ac27878-a6fa-4155-ba85-f98f491d4f33}',
+    'friendlyName': 'Pixel de Teste',
+    'manufacturer': 'Google',
+    'model': 'Pixel 9',
+    'serial': 'SIMULADO0001',
+    'kind': 'android',
+    'status': 'ok',
+    'stableIds': stableIds,
+    'storages': [
+      {
+        'name': 'Armazenamento interno compartilhado',
+        'totalBytes': 128000000000,
+        'freeBytes': 40000000000,
+        'folders': ['Download', 'Music'],
+        'files': [
+          file('DCIM/Camera/IMG_20240501_100000.jpg', 'c1', '2024-05-01T13:00:00Z'),
+          file('DCIM/Camera/IMG_20240502_120000.jpg', 'c2', '2024-05-02T15:00:00Z'),
+          file('DCIM/Camera/VID_20240503_090000.mp4', 'c3', '2024-05-03T12:00:00Z'),
+          file('WhatsApp/Media/WhatsApp Images/IMG-20240504-WA0001.jpg', 'c4', '2024-05-04T20:00:00Z'),
+          file('Pictures/Screenshots/Screenshot_20240505-180000.png', 'c5', '2024-05-05T21:00:00Z'),
+          file('Android/data/com.exemplo.app/cache/temp.bin', 'cx', '2024-05-06T10:00:00Z'),
+        ],
+      },
+      {
+        'name': 'Cartão SD',
+        'totalBytes': 64000000000,
+        'freeBytes': 50000000000,
+        'files': [file('DCIM/Camera/IMG_20230101_000000.jpg', 'c6', '2023-01-01T03:00:00Z')],
+      },
+    ],
+    'faults': ?pixelFaults,
+  };
+  final iphone = {
+    'deviceId': r'\?\usb#vid_05ac&pid_12a8#simulado0002#{6ac27878-a6fa-4155-ba85-f98f491d4f33}',
+    'friendlyName': 'iPhone de Teste',
+    'manufacturer': 'Apple Inc.',
+    'model': 'iPhone',
+    'serial': 'SIMULADO0002',
+    'kind': 'iphone',
+    'status': 'unauthorized',
+    'storages': [
+      {
+        'name': 'Internal Storage',
+        'files': [file('DCIM/100APPLE/IMG_0001.HEIC', 'c7', '2024-06-01T12:00:00Z')],
+      },
+    ],
+  };
+  const json = JsonEncoder.withIndent('  ');
+  File(p.join(devices, 'pixel.json')).writeAsStringSync(json.convert(pixel));
+  File(p.join(devices, 'iphone.json')).writeAsStringSync(json.convert(iphone));
+
+  write(p.join(hd, 'Backup do celular', '2024', '2024-05', 'foto praia.jpg'), blobs['c1']!);
+  write(p.join(hd, 'Backup do celular', '2024', '2024-05', 'video.mp4'), blobs['c3']!);
+  write(p.join(hd, 'Backup do celular', '2023', 'ano novo.jpg'), blobs['c6']!);
+  write(p.join(hd, 'Backup do celular', '2023', 'antiga.jpg'), blobs['c7']!);
+  return PhoneDemo(devices, hd);
 }

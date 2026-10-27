@@ -1,11 +1,10 @@
 import 'package:drift/drift.dart';
 
 import '../catalog/catalog_database.dart';
-import '../platform/win32/kernel32.dart';
-import '../platform/win_fs.dart';
 import '../util/clock.dart';
 import '../util/crashpoint.dart';
 import 'entry_classifier.dart';
+import 'scan_listers.dart';
 
 /// Progresso de um scan (enviado do worker para a interface).
 class ScanProgress {
@@ -41,27 +40,6 @@ class ScanProgress {
 /// Pedido de parada vindo da interface.
 enum ScanStop { pause, cancel }
 
-class _FileRec {
-  _FileRec(this.relPath, this.dirRelPath, this.entry, {required this.cloudOnly});
-  final String relPath;
-  final String dirRelPath;
-  final RawDirEntry entry;
-  final bool cloudOnly;
-}
-
-class _DirResult {
-  _DirResult(this.relDir);
-  final String relDir;
-  final files = <_FileRec>[];
-  final childDirs = <String>[];
-  final excludedDirs = <String>[];
-  final skippedLinks = <String>[];
-  String? errorKind;
-  int? errorCode;
-  String? errorMessage;
-  bool get isError => errorKind != null;
-}
-
 /// Execução de um scan de listagem (sem hash) com checkpoint no banco.
 ///
 /// Cada lote de pastas é aplicado numa transação que grava os arquivos, as
@@ -73,8 +51,7 @@ class ScanEngine {
     this.db, {
     required this.scanId,
     required this.sourceId,
-    required this.accessRoot,
-    required this.isVolumeRoot,
+    required this.lister,
     this.batchFiles = 2000,
     this.batchDirs = 200,
   });
@@ -83,11 +60,8 @@ class ScanEngine {
   final int scanId;
   final String sourceId;
 
-  /// Raiz Win32 de acesso (ex.: `\\?\Volume{…}\Fotos`).
-  final String accessRoot;
-
-  /// A fonte é um volume inteiro (ativa as exclusões de raiz de volume).
-  final bool isVolumeRoot;
+  /// Como as pastas são lidas (Windows ou celular).
+  final ScanLister lister;
   final int batchFiles;
   final int batchDirs;
 
@@ -101,9 +75,8 @@ class ScanEngine {
       variables: [Variable.withInt(scanId)],
       updates: {db.scans},
     );
-    if (!directoryAccessible(accessRoot)) {
-      return _stop('interrupted', message: 'A fonte não está acessível (desconectada?).');
-    }
+    final inaccessible = await lister.checkAccessible();
+    if (inaccessible != null) return _stop('interrupted', message: inaccessible);
     while (true) {
       final stop = stopRequested();
       if (stop != null) return _stop(stop == ScanStop.pause ? 'paused' : 'cancelled');
@@ -117,13 +90,15 @@ class ScanEngine {
           .get();
       if (pending.isEmpty) break;
 
-      final results = <_DirResult>[];
+      final results = <ListedDir>[];
       var files = 0;
-      var disconnected = false;
+      String? gone;
       for (final row in pending) {
-        final result = _enumerate(row.read<String>('rel_path'));
-        if (result == null) {
-          disconnected = true;
+        final ListedDir result;
+        try {
+          result = await lister.list(row.read<String>('rel_path'));
+        } on SourceGone catch (e) {
+          gone = e.message;
           break;
         }
         results.add(result);
@@ -132,9 +107,7 @@ class ScanEngine {
       }
       if (results.isNotEmpty) await _apply(results);
       crashpoint('scan.after_batch_commit');
-      if (disconnected) {
-        return _stop('interrupted', message: 'A fonte foi desconectada durante o escaneamento.');
-      }
+      if (gone != null) return _stop('interrupted', message: gone);
       onProgress?.call(await _progress('running', currentDir: results.isEmpty ? null : results.last.relDir));
       // Cede ao event loop para receber pedidos de pausa/cancelamento.
       await Future<void>.delayed(Duration.zero);
@@ -142,51 +115,11 @@ class ScanEngine {
     return _finish();
   }
 
-  /// Lista uma pasta. Devolve `null` se a própria fonte sumiu.
-  _DirResult? _enumerate(String relDir) {
-    final result = _DirResult(relDir);
-    final List<RawDirEntry> entries;
-    try {
-      entries = listDirectory(joinNative(accessRoot, relDir));
-    } on Win32Exception catch (e) {
-      if (!directoryAccessible(accessRoot)) return null;
-      result
-        ..errorCode = e.code
-        ..errorKind = switch (e.code) {
-          errorAccessDenied => 'access_denied',
-          errorFilenameExcedRange => 'path_too_long',
-          _ => 'io_error',
-        }
-        ..errorMessage = e.toString();
-      return result;
-    }
-    final atVolumeRoot = isVolumeRoot && relDir.isEmpty;
-    for (final entry in entries) {
-      final rel = relDir.isEmpty ? entry.name : '$relDir/${entry.name}';
-      switch (classifyEntry(entry, atVolumeRoot: atVolumeRoot)) {
-        case EntryAction.file:
-          result.files.add(_FileRec(rel, relDir, entry, cloudOnly: false));
-        case EntryAction.cloudOnlyFile:
-          result.files.add(_FileRec(rel, relDir, entry, cloudOnly: true));
-        case EntryAction.directory:
-          result.childDirs.add(rel);
-        case EntryAction.excludedDirectory:
-          result.excludedDirs.add(rel);
-        case EntryAction.reparsePointSkipped:
-          if (entry.isDirectory) result.excludedDirs.add(rel);
-          result.skippedLinks.add(rel);
-        case EntryAction.ignored:
-          break;
-      }
-    }
-    return result;
-  }
-
   static const _upsertSql = '''
     INSERT INTO file_instances (source_id, rel_path, dir_rel_path, name, ext, size_bytes, mtime, ctime,
-      attributes, hash_status, availability, first_seen_scan_id, last_seen_scan_id)
+      attributes, hash_status, availability, first_seen_scan_id, last_seen_scan_id, device_object_id)
     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, CASE WHEN ?10 THEN 'not_applicable' ELSE 'pending' END,
-      CASE WHEN ?10 THEN 'cloud_only' ELSE 'present' END, ?11, ?11)
+      CASE WHEN ?10 THEN 'cloud_only' ELSE 'present' END, ?11, ?11, ?12)
     ON CONFLICT (source_id, rel_path) DO UPDATE SET
       hash_status = CASE
         WHEN file_instances.size_bytes IS NOT excluded.size_bytes OR file_instances.mtime IS NOT excluded.mtime
@@ -205,10 +138,11 @@ class ScanEngine {
       attributes = excluded.attributes,
       availability = excluded.availability,
       last_seen_scan_id = excluded.last_seen_scan_id,
-      missing_confirmed_at = NULL
+      missing_confirmed_at = NULL,
+      device_object_id = excluded.device_object_id
   ''';
 
-  Future<void> _apply(List<_DirResult> results) async {
+  Future<void> _apply(List<ListedDir> results) async {
     var dirsDone = 0, filesSeen = 0, bytesSeen = 0, errors = 0;
     final now = nowMs();
     await db.transaction(() async {
@@ -227,22 +161,22 @@ class ScanEngine {
             continue;
           }
           for (final f in r.files) {
-            final e = f.entry;
             b.customStatement(_upsertSql, [
               sourceId,
               f.relPath,
               f.dirRelPath,
-              e.name,
-              extensionOf(e.name),
-              e.size,
-              e.mtime,
-              e.ctime,
-              e.attributes,
+              f.name,
+              extensionOf(f.name),
+              f.size,
+              f.mtime,
+              f.ctime,
+              f.attributes,
               f.cloudOnly ? 1 : 0,
               scanId,
+              f.objectId,
             ]);
             filesSeen++;
-            bytesSeen += e.size;
+            bytesSeen += f.size;
           }
           for (final d in r.childDirs) {
             b.customStatement("INSERT OR IGNORE INTO scan_dirs (scan_id, rel_path, status) VALUES (?, ?, 'pending')", [
