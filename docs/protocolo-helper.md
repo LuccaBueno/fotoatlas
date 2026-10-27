@@ -61,6 +61,7 @@
 | `io_error` | Erro de E/S (traz `win32Code`/`hresult` em `details`) | sim |
 | `write_refused` | Caminho de escrita fora das regras da seção 6 | não |
 | `already_exists` | Destino já existe (`CreateNew`) | não |
+| `changed_during_read` | Arquivo do celular mudou depois do scan ou durante a leitura (Fase 3) | não |
 | `internal` | Exceção inesperada (detalhes no stderr) | sim |
 
 ## 5. Métodos
@@ -114,13 +115,48 @@
 
 | Método | Params | Resultado / eventos |
 |---|---|---|
-| `devices.list` | — | `{"devices":[{"deviceId","friendlyName","manufacturer","model","kind":"android\|iphone\|camera\|other","status":"ok\|locked\|unauthorized","storages":[{"storageId","name","totalBytes","freeBytes"}]}]}` |
-| `devices.enumerate` | `{"deviceId","storageId","rootObjectId?"}` | eventos `entries` com `{"items":[{"objectId","parentObjectId","name","isFolder","size","modified":"<FILETIME str>\|null","persistentId?"}]}` em lotes de até 500; resultado `{"folders":N,"files":N,"errors":[…]}` |
-| `devices.hashObject` | `{"deviceId","objectId","expectedSize?"}` | eventos `progress`; resultado `{"sha256":"<hex>","size":N}` |
-| `devices.pullToFile` | `{"deviceId","objectId","destPath","expectedSize"}` | grava em `destPath` (regras da seção 6), calcula o SHA-256 durante a leitura, faz `FlushFileBuffers`; resultado `{"sha256":"<hex>","bytesWritten":N}` |
+Implementado na Fase 3 (ADR 0012). `devices.enumerate` (recursivo, do plano inicial) foi trocado por `devices.listChildren` (uma pasta por pedido): o core guarda o checkpoint por pasta, igual ao scan de disco, e retoma depois de uma desconexão.
 
-- Uma desconexão no meio devolve `device_disconnected`; o `.part` parcial fica como está e o core decide (recuperação).
+| Método | Params | Resultado / eventos |
+|---|---|---|
+| `devices.list` | — | `{"devices":[{"deviceId","friendlyName","manufacturer","model","serial","kind":"android\|iphone\|camera\|other","status":"ok\|locked\|unauthorized","simulated":bool,"storages":[{"storageId","name","totalBytes","freeBytes"}]}]}` |
+| `devices.listChildren` | `{"deviceId","objectId"}` (`""` = raiz: os filhos são os armazenamentos) | eventos `entries` com `{"items":[{"objectId","parentObjectId","name","isFolder","size","modified":"<FILETIME str>\|null","created","persistentId"}]}` em lotes de até 200; resultado `{"count":N}` |
+| `devices.hashObject` | `{"deviceId","objectId","expectedSize?"}` | eventos `progress` `{"bytes":N}` a cada ~4 MiB; resultado `{"sha256":"<hex>","size":N,"modified":"<FILETIME str>\|null"}` |
+| `devices.pullToFile` (Fase 5) | `{"deviceId","objectId","destPath","expectedSize"}` | grava em `destPath` (regras da seção 6), calcula o SHA-256 durante a leitura, faz `FlushFileBuffers`; resultado `{"sha256":"<hex>","bytesWritten":N}` |
+
+- Erros: `device_disconnected` (saiu da lista do Windows no meio), `device_locked`, `device_unauthorized`, `not_found` (objeto não existe **ou o ID é de outra sessão** — o core refaz o caminho pelo nome), `changed_during_read` (tamanho diferente do esperado, ou tamanho/data mudaram durante a leitura, ou bytes lidos ≠ tamanho), `io_error`.
+- Uma falha ao ler as propriedades de um filho derruba a pasta inteira (`io_error`): pular o filho faria o arquivo parecer ausente.
+- O nome vem de `WPD_OBJECT_ORIGINAL_FILE_NAME` (com extensão) e, na falta, de `WPD_OBJECT_NAME`. Datas `VT_DATE` (hora local do aparelho) viram FILETIME UTC.
+- Na raiz só entram objetos funcionais da categoria armazenamento; pendrives/cartões vistos pelo WpdFs (`MSC`) não aparecem em `devices.list`.
+- Uma desconexão no meio de `pullToFile` devolve `device_disconnected`; o `.part` parcial fica como está e o core decide (recuperação).
 - iPhone: `devices.list` inclui `"kind":"iphone"` para o app mostrar o aviso "Manter originais".
+
+#### 5.3.1. Celulares simulados (`--fake-devices PASTA`)
+
+Para testes e demonstração (o core repassa `FOTOATLAS_FAKE_DEVICES`). Cada `*.json` da pasta é um aparelho; ele está conectado enquanto o arquivo existir (apagar ou renomear = desplugar). O helper só lê a pasta.
+
+```json
+{
+  "deviceId": "\\\\?\\usb#vid_18d1&pid_4ee1#simulado0001#{…}",
+  "friendlyName": "Pixel de Teste", "manufacturer": "Google", "model": "Pixel 9",
+  "serial": "SIMULADO0001", "kind": "android", "status": "ok",
+  "stableIds": false,
+  "storages": [{
+    "name": "Armazenamento interno compartilhado", "totalBytes": 128000000000, "freeBytes": 40000000000,
+    "folders": ["Download"],
+    "files": [
+      {"path": "DCIM/Camera/IMG_0001.jpg", "contentFile": "conteudo/c1.bin", "modified": "2024-05-01T13:00:00Z"},
+      {"path": "Notas/a.txt", "text": "olá"},
+      {"path": "WhatsApp/x.jpg", "base64": "…", "modified": null}
+    ]
+  }],
+  "faults": {"disconnectAfterListCalls": 4, "changeDuringRead": ["DCIM/Camera/IMG_0002.jpg"], "folderErrors": ["Android"], "readDelayMs": 0}
+}
+```
+
+- `stableIds: false` (padrão): os IDs de objeto mudam a cada processo do helper, como no Android.
+- `status` diferente de `ok`: o aparelho aparece sem armazenamentos.
+- `tools/fixtures/bin/gen_phone_demo.dart` gera um Pixel e um iPhone (sem autorização) mais uma pasta "HD" com parte das fotos.
 
 ### 5.4. Miniaturas (Fase 4)
 

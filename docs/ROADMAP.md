@@ -83,21 +83,27 @@ Observações da Fase 2:
 - `last_verified_at` e o selo "conferida recentemente" ficam para a Fase 7.
 - Duplicatas: há a API (`duplicateGroups`) e o espaço repetido por fonte; uma tela de navegação por grupos entra com a Biblioteca (Fase 4).
 
-## Fase 3 — Celular (leitura) — em andamento (2026-10-27)
-- [ ] Helper com WPD: listar dispositivos, navegar, ler arquivos em streaming
-  - [ ] Interop COM próprio só de leitura (ADR 0012): métodos de escrita/exclusão não declarados, abertura com `GENERIC_READ`, pendrives (WPD-MSC) filtrados
-  - [ ] `devices.list` (status ok/bloqueado/sem autorização, armazenamentos), `devices.listChildren` (lotes), `devices.hashObject` (SHA-256 no helper, mudança durante a leitura)
-  - [ ] Backend simulado `--fake-devices` (testes e demonstração sem celular), com "desplugar" e IDs instáveis
-- [ ] Escanear Android e iPhone; avisos de desbloqueio/autorização e "Manter originais"
-  - [ ] Schema v3 aditivo (`file_instances.device_object_id`, `sources.device_serial`, `sources.device_platform`)
-  - [ ] Cadastro de celular (identidade pelo serial; ID WPD como reserva), conectividade, celular como disco próprio
-  - [ ] Scan por pasta com checkpoint; ID de objeto re-resolvido pelo caminho; desconexão → `interrupted`, nunca ausência
-  - [ ] Conferência (hash) pelo helper, um leitor por celular
-- [ ] Comparar celular × HD
-- [ ] App: "Adicionar celular", avisos, cartão do celular; CLI `devices` e `sources add-phone`; fixture de celular simulado
-- [ ] Critérios da spec (teste real com celular só quando o usuário pedir, somente leitura)
-- [ ] Teste do usuário
+## Fase 3 — Celular (leitura) — implementada, aguardando o teste do usuário (2026-10-27)
+- [x] Helper com WPD: listar dispositivos, navegar, ler arquivos em streaming (2026-10-27)
+  - [x] Interop COM próprio só de leitura (ADR 0012): métodos de escrita/exclusão não declarados, abertura com `GENERIC_READ`, pendrives (WPD-MSC) filtrados
+  - [x] `devices.list` (status ok/bloqueado/sem autorização, armazenamentos), `devices.listChildren` (lotes), `devices.hashObject` (SHA-256 no helper, mudança durante a leitura)
+  - [x] Backend simulado `--fake-devices` (testes e demonstração sem celular), com "desplugar" e IDs instáveis
+- [x] Escanear Android e iPhone; avisos de desbloqueio/autorização e "Manter originais" (2026-10-27)
+  - [x] Schema v3 aditivo (`file_instances.device_object_id`, `sources.device_serial`, `sources.device_platform`)
+  - [x] Cadastro de celular (identidade pelo serial; ID WPD como reserva), conectividade, celular como disco próprio
+  - [x] Scan por pasta com checkpoint; ID de objeto re-resolvido pelo caminho; desconexão → `interrupted`, nunca ausência
+  - [x] Conferência (hash) pelo helper, um leitor por celular
+- [x] Comparar celular × HD (core, CLI com helper real e app) (2026-10-27)
+- [x] App: "Adicionar celular", avisos, cartão do celular; CLI `devices` e `sources add-phone`; fixture de celular simulado
+- [~] Critérios da spec: com celular **simulado** pelo helper real, "listar fotos que não estão no HD" e "desconexão durante o scan não corrompe o catálogo" provados (evidências no CHANGELOG). Falta o celular **real** (somente leitura), quando o usuário pedir
+- [ ] Teste do usuário (celular simulado com `run-app.ps1 -CelularSimulado`; depois celular real, só leitura)
 - [ ] Tag `v0.3.0`
+
+Observações da Fase 3:
+- Não existe celular virtual no Windows: a CI cobre o interop WPD real só com objetos em memória do Windows; navegação e leitura num aparelho real dependem do teste do usuário (ADR 0012).
+- `devices.enumerate` (recursivo) virou `devices.listChildren` (por pasta), para o checkpoint por pasta.
+- Sem data do aparelho, o incremental do celular usa tamanho + caminho (não refaz o hash de tudo pelo USB).
+- A migração da Fase 4 passa a ser v3 → v4 (a v3 foi usada aqui).
 
 ## Fase 4 — Metadados e Biblioteca
 - [ ] Script para baixar ExifTool e FFmpeg (não versionados)
@@ -109,7 +115,7 @@ Observações da Fase 2:
   - [ ] Nomear, juntar e separar momentos (só catálogo), preservados em recálculos
   - [ ] Correção de relógio por dispositivo de captura ("+1 h", "ano errado"), com prévia, só no catálogo, reversível
   - [ ] Momento como escopo na Comparar (entrada nova no JSON do escopo, `v: 2`) e como filtro
-  - [ ] Schema: tabelas novas para momentos, edições de momentos e correções por dispositivo (migração aditiva v2 → v3)
+  - [ ] Schema: tabelas novas para momentos, edições de momentos e correções por dispositivo (migração aditiva v3 → v4)
 - [ ] Miniaturas em cache (Shell API + fallback)
 - [ ] Biblioteca: grade, lista, linha do tempo, painel de detalhes
 - [ ] Filtros em chips + avançado, seleção em massa, filtros salvos — incluindo faixa de horário, período do dia, dia da semana, momento e confiança da hora
@@ -154,3 +160,4 @@ Observações da Fase 2:
 - 2026-10-27 — Antes da Fase 2 + Fase 2 — CI: causa dos runs 40275882141 (bin/ não versionado) e 40276396430 (VHD); desanexo trocado por Dismount-DiskImage após o reforço mostrar disco ainda anexado; 3/3 verdes; actions em Node 24. Requisito de comparação com escopo livre na spec. Fase 2 implementada (hash, cobertura, duplicatas, comparação, escopos salvos, backup do catálogo, telas); tag v0.2.0 aguarda o teste do usuário.
 - 2026-10-27 — Ajuste de requisito (sem implementação) — data e hora da captura até segundos, linha do tempo única, momentos (nomear/juntar/separar, escopo e filtro), filtros de horário/período/dia da semana, correção de relógio por dispositivo com prévia, hora de baixa confiança fora dos momentos automáticos, modelo {ano}/{ano}-{mes}-{dia} {momento}/: spec §3.2, §8, §9, §10, §12, §16 e ROADMAP das Fases 4 e 6.
 - 2026-10-27 — Teste do usuário da Fase 2 aprovado (Faltam 2 / Só em B 1 / Nos dois 2). Ajustes de interface: adicionar e escanear pelo seletor da Comparar, plural nos contadores, caminhos com um só separador, resumo arquivos × conteúdos. Tag v0.2.0. Fase 3 **não iniciada**: aguarda o usuário.
+- 2026-10-27 — Fase 3 — Celular só leitura: helper WPD (interop próprio sem métodos de escrita, GENERIC_READ, pendrives filtrados), celulares simulados, schema v3, cadastro pelo serial, scan por pasta com checkpoint e re-resolução de IDs, conferência pelo helper, celular × HD, app (Adicionar celular, avisos, "Manter originais"), CLI devices/add-phone. Evidências com o helper real e celular simulado; falta o teste do usuário (simulado e depois real, só leitura) e a tag v0.3.0.

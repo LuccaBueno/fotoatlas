@@ -31,3 +31,4 @@ Modelo:
 | [0009](0009-identificacao-de-fontes.md) | Identificação de fontes por pontuação | aceita |
 | [0010](0010-fila-de-hash.md) | Fila de conferência de conteúdo (SHA-256) e `package:crypto` | aceita |
 | [0011](0011-comparacao-por-escopo.md) | Comparação A × B com escopo livre | aceita |
+| [0012](0012-celular-wpd-somente-leitura.md) | Celular pelo WPD, somente leitura (interop próprio, celulares simulados) | aceita |

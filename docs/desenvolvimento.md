@@ -35,11 +35,16 @@ Os testes do core marcados `slow` (50 mil arquivos) podem ser pulados com `dart 
 # Catálogo temporário de demonstração (não toca no catálogo real)
 powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -Demo
 
+# Catálogo temporário + celulares simulados (Pixel e iPhone) e uma pasta "HD" — sem celular real
+powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -CelularSimulado
+
 # Catálogo real em %APPDATA%\FotoAtlas
 powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1
 ```
 
-O app procura o helper em `FOTOATLAS_HELPER`, ao lado do executável ou na saída de build de `native\fotoatlas_helper`. Sem o helper, ele segue funcionando, mas sem informações de disco físico.
+O app procura o helper em `FOTOATLAS_HELPER`, ao lado do executável ou na saída de build de `native\fotoatlas_helper`. Sem o helper, ele segue funcionando, mas sem informações de disco físico nem celulares.
+
+Celulares simulados: `FOTOATLAS_FAKE_DEVICES=<pasta>` faz o helper mostrar os aparelhos descritos nos JSON dessa pasta (formato em `docs/protocolo-helper.md` §5.3.1). Gere uma com `dart run bin/gen_phone_demo.dart --out <pasta no temp>` em `tools/fixtures`.
 
 ## CLI
 

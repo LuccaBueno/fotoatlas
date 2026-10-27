@@ -165,6 +165,8 @@ A recuperação na inicialização é idempotente e decide **olhando o disco**, 
 
 ### 3.7. Celular (Fase 3)
 
+Implementado (ADR 0012): `PhoneScanLister` lista pasta por pasta pelo helper (`devices.listChildren`), com o mesmo checkpoint em `scan_dirs` do scan de disco; a raiz da fonte mostra os armazenamentos como pastas (L7). `PhonePathResolver` guarda os IDs de objeto e refaz o caminho a partir da raiz quando um ID ficou velho (Android muda IDs entre sessões). Desconexão, bloqueio ou helper fora do ar → `interrupted`/`pending`, nunca `missing`. O scan e a conferência do celular rodam no isolate principal (o trabalho é do helper, outro processo). Identidade pelo serial, com o ID WPD como reserva; o celular é um disco físico próprio (`bus_type = 'mtp'`).
+
 O helper enumera os objetos WPD e calcula o SHA-256 lendo o arquivo pelo USB, **dentro do próprio helper**. Na cópia, o helper grava direto no `.part` indicado pelo core (`devices.pullToFile`) e devolve hash e tamanho; o core relê o `.part` com o seu próprio SHA-256 em Dart. São duas implementações independentes, e só com valores iguais o item vira `verified`.
 
 ## 4. App Flutter

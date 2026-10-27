@@ -1,6 +1,6 @@
 # Schema SQLite v1 — FotoAtlas
 
-- Versão do schema: **2** (`PRAGMA user_version = 2`, gerido pelo drift). A v1 está descrita nas seções 1–6; as mudanças da v2 (aditivas) estão na seção 7.
+- Versão do schema: **3** (`PRAGMA user_version = 3`, gerido pelo drift). A v1 está descrita nas seções 1–6; as mudanças aditivas da v2 e da v3 estão nas seções 7 e 8.
 - Data: 2026-10-26 (Etapa 0)
 - Identificadores em inglês; os rótulos em PT-BR ficam na UI.
 
@@ -393,3 +393,30 @@ Uso das colunas existentes pela fila de hash (ADR 0010):
 | `content_id` | preenchido junto com `done`; zerado pelo scan quando tamanho ou data mudam |
 | `hashed_size`, `hashed_mtime`, `hashed_at` | o que foi observado no handle durante a leitura |
 | `last_verified_at` | ainda não usado (verificação periódica, Fase 7) |
+
+## 8. v3 (Fase 3, 2026-10-27) — mudanças aditivas
+
+Migração `v2 → v3` numa transação, depois do backup `pre-migracao-v2-<data>.db`. Testada a partir dos *snapshots* v1 e v2 (`drift_schemas/drift_schema_v3.json`).
+
+```sql
+-- Celular (ADR 0012): identidade pelo serial; plataforma para os avisos (iPhone: "Manter originais").
+ALTER TABLE sources ADD COLUMN device_serial   TEXT;   -- NULL se o aparelho não informa (ou só zeros)
+ALTER TABLE sources ADD COLUMN device_platform TEXT;   -- android | iphone | camera | other
+
+-- ID do objeto WPD visto no último scan. Pode não valer mais em outra sessão:
+-- o core refaz o caminho a partir da raiz quando o helper responde not_found.
+ALTER TABLE file_instances ADD COLUMN device_object_id TEXT;
+```
+
+Uso das colunas existentes por um celular:
+
+| Coluna | No celular |
+|---|---|
+| `sources.kind` | `phone` |
+| `sources.device_id` | ID WPD (PnP) atual; atualizado quando o serial reconhece o aparelho em outra porta |
+| `sources.device_model` | modelo informado pelo aparelho |
+| `sources.physical_disk_id` | disco próprio do celular (`bus_type = 'mtp'`, serial `phone:<serial>`; `weak` sem serial) |
+| `sources.volume_*`, `last_mount_path`, `root_rel_path` | vazios (sem volume Win32) |
+| `file_instances.rel_path` | começa pelo nome do armazenamento: `Armazenamento interno compartilhado/DCIM/Camera/IMG_0001.jpg` (L7) |
+| `file_instances.mtime` / `ctime` | datas do WPD convertidas para FILETIME UTC; `NULL` se o aparelho não informa |
+| `file_instances.attributes` | `NULL` |
