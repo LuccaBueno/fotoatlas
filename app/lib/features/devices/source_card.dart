@@ -4,6 +4,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
 import '../../l10n/format.dart';
+import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
 import '../../widgets/connection_badge.dart';
 
@@ -49,6 +50,16 @@ class SourceCard extends ConsumerWidget {
                           children: [
                             ConnectionBadge(s.state),
                             if (s.displayPath != null) Text(s.displayPath!, style: theme.textTheme.bodySmall),
+                            if (s.isPhone)
+                              Text(
+                                [
+                                  s.devicePlatform == 'iphone' ? 'iPhone' : sourceKindLabel(s.kind),
+                                  if (s.deviceSimulated) 'simulado',
+                                  if (s.deviceStatus != null && s.deviceStatus != 'ok')
+                                    deviceStatusLabel(s.deviceStatus!),
+                                ].join(' · '),
+                                style: theme.textTheme.bodySmall,
+                              ),
                           ],
                         ),
                       ],
@@ -81,6 +92,18 @@ class SourceCard extends ConsumerWidget {
                 ),
               ],
               if (s.state == SourceState.ambiguous) ...[const SizedBox(height: 12), _AmbiguousHelp(source: s)],
+              if (s.isPhone && s.isConnected && !s.isReady) ...[
+                const SizedBox(height: 12),
+                _Notice(
+                  key: ValueKey('phone-locked-${s.id}'),
+                  icon: Icons.lock_outline,
+                  text: s.deviceStatus == 'locked' ? lockedMessage : unauthorizedMessage,
+                ),
+              ],
+              if (s.isPhone && s.devicePlatform == 'iphone') ...[
+                const SizedBox(height: 12),
+                _Notice(key: ValueKey('iphone-originals-${s.id}'), icon: Icons.info_outline, text: iphoneOriginalsHint),
+              ],
             ],
           ),
         ),
@@ -159,7 +182,7 @@ class _Actions extends ConsumerWidget {
           TextButton(onPressed: () => guard(() => backend.cancelScan(running.scanId)), child: const Text('Cancelar')),
         ] else
           FilledButton.tonalIcon(
-            onPressed: source.isConnected ? () => guard(() => backend.startScan(source.id)) : null,
+            onPressed: source.isReady ? () => guard(() => backend.startScan(source.id)) : null,
             icon: Icon(resumable ? Icons.play_arrow : Icons.search),
             label: Text(resumable ? 'Retomar' : 'Escanear'),
           ),
@@ -216,6 +239,32 @@ class _Actions extends ConsumerWidget {
       ),
     );
     if (confirmed == true) await ref.read(backendProvider).forget(source.id);
+  }
+}
+
+/// Aviso em destaque dentro do cartão (celular bloqueado, iPhone…).
+class _Notice extends StatelessWidget {
+  const _Notice({super.key, required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: scheme.secondaryContainer, borderRadius: BorderRadius.circular(8)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: scheme.onSecondaryContainer),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text, style: TextStyle(color: scheme.onSecondaryContainer)),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -13,6 +13,7 @@ class FakeBackend implements AppBackend {
   final _progress = StreamController<ScanProgress>.broadcast();
   final calls = <String>[];
   List<VolumeInfo> fakeVolumes = const [];
+  List<(DeviceInfo, String?)> fakeDevices = const [];
 
   void emitSources(List<SourceView> list) {
     _sources = List.of(list);
@@ -40,6 +41,15 @@ class FakeBackend implements AppBackend {
   Future<AddSourceResult> addPath(String path, {String? name}) async {
     calls.add('add:$path');
     return const AddSourceResult('novo', []);
+  }
+
+  @override
+  Future<List<(DeviceInfo, String?)>> listDevices() async => fakeDevices;
+
+  @override
+  Future<AddSourceResult> addPhone(String deviceId, {String? name}) async {
+    calls.add('addPhone:$deviceId');
+    return const AddSourceResult('celular', []);
   }
 
   @override

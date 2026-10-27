@@ -15,6 +15,10 @@ abstract interface class AppBackend {
   List<VolumeInfo> get volumes;
 
   Future<AddSourceResult> addPath(String path, {String? name});
+
+  /// Celulares conectados agora, com a fonte já cadastrada de cada um.
+  Future<List<(DeviceInfo, String?)>> listDevices();
+  Future<AddSourceResult> addPhone(String deviceId, {String? name});
   Future<void> rename(String sourceId, String name);
   Future<void> forget(String sourceId);
   Future<void> confirmVolume(String sourceId, String guidPath);
@@ -65,6 +69,12 @@ class CoreBackend implements AppBackend {
 
   @override
   Future<AddSourceResult> addPath(String path, {String? name}) => core.sources.addPath(path, name: name);
+
+  @override
+  Future<List<(DeviceInfo, String?)>> listDevices() => core.sources.listDevices();
+
+  @override
+  Future<AddSourceResult> addPhone(String deviceId, {String? name}) => core.sources.addPhone(deviceId, name: name);
 
   @override
   Future<void> rename(String sourceId, String name) => core.sources.rename(sourceId, name);

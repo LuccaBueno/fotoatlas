@@ -65,3 +65,15 @@ String backupStateCount(BackupState state, int n) => switch (state) {
 /// Caminho com um só separador: "HD_antigo › pasta2 › notas.txt".
 String displayPath(String sourceName, String relPath) =>
     [sourceName, ...relPath.split(RegExp(r'[/\\]')).where((p) => p.isNotEmpty)].join(' › ');
+
+/// Aviso do iPhone (spec §13): sem "Manter originais", o HEIC chega como JPG.
+const iphoneOriginalsHint =
+    'No iPhone, abra Ajustes › Fotos e, em "Transferir para Mac ou PC", escolha "Manter originais". '
+    'Senão as fotos chegam convertidas (HEIC vira JPG) e não batem com as originais.';
+
+/// Situação de um celular conectado.
+String deviceStatusLabel(String status) => switch (status) {
+  'ok' => 'Pronto',
+  'locked' => 'Bloqueado',
+  _ => 'Falta permitir o acesso',
+};

@@ -5,6 +5,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
 import '../../l10n/format.dart';
+import '../../l10n/strings.dart';
 import 'source_card.dart';
 
 /// Dispositivos: fontes cadastradas, conectadas ou não (spec §3.2).
@@ -23,6 +24,12 @@ class DevicesPage extends ConsumerWidget {
             onPressed: () => addFolder(context, ref),
             icon: const Icon(Icons.create_new_folder_outlined),
             label: const Text('Adicionar pasta'),
+          ),
+          const SizedBox(width: 8),
+          TextButton.icon(
+            onPressed: () => addPhone(context, ref),
+            icon: const Icon(Icons.smartphone),
+            label: const Text('Adicionar celular'),
           ),
           const SizedBox(width: 8),
           FilledButton.icon(
@@ -68,14 +75,21 @@ class _EmptyState extends ConsumerWidget {
               Text('Nenhum dispositivo cadastrado', style: theme.textTheme.headlineSmall),
               const SizedBox(height: 8),
               const Text(
-                'Cadastre os HDs, pendrives e pastas onde estão suas fotos. O FotoAtlas só lê: '
+                'Cadastre os celulares, HDs, pendrives e pastas onde estão suas fotos. O FotoAtlas só lê: '
                 'nada é alterado, movido ou apagado.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
               Wrap(
                 spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
                 children: [
+                  OutlinedButton.icon(
+                    onPressed: () => addPhone(context, ref),
+                    icon: const Icon(Icons.smartphone),
+                    label: const Text('Adicionar celular'),
+                  ),
                   OutlinedButton.icon(
                     onPressed: () => addFolder(context, ref),
                     icon: const Icon(Icons.create_new_folder_outlined),
@@ -151,5 +165,108 @@ Future<String?> _add(BuildContext context, WidgetRef ref, String path, String? a
   } on SourceException catch (e) {
     messenger.showSnackBar(SnackBar(content: Text(e.message)));
     return null;
+  }
+}
+
+/// Lista os celulares conectados e cadastra o escolhido. Devolve a fonte (ou null).
+///
+/// Cadastrar só grava no catálogo do FotoAtlas: nada é gravado no celular.
+Future<String?> addPhone(BuildContext context, WidgetRef ref, {String? addedMessage}) async {
+  final backend = ref.read(backendProvider);
+  final messenger = ScaffoldMessenger.of(context);
+  final List<(DeviceInfo, String?)> devices;
+  try {
+    devices = await backend.listDevices();
+  } on Exception catch (e) {
+    messenger.showSnackBar(SnackBar(content: Text('Não foi possível procurar celulares: $e')));
+    return null;
+  }
+  if (!context.mounted) return null;
+  final chosen = await showDialog<DeviceInfo>(
+    context: context,
+    builder: (context) => _PhonePickerDialog(devices: devices),
+  );
+  if (chosen == null || !context.mounted) return null;
+  try {
+    final result = await backend.addPhone(chosen.deviceId);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          [
+            addedMessage ??
+                (chosen.isReady
+                    ? 'Celular adicionado. Clique em "Escanear" para ver o que tem nele.'
+                    : 'Celular adicionado. ${phoneStatusMessage(chosen)}'),
+            ...result.warnings,
+          ].join('\n'),
+        ),
+      ),
+    );
+    return result.sourceId;
+  } on SourceException catch (e) {
+    messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    return null;
+  }
+}
+
+class _PhonePickerDialog extends StatelessWidget {
+  const _PhonePickerDialog({required this.devices});
+  final List<(DeviceInfo, String?)> devices;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: const Text('Qual celular você quer adicionar?'),
+      content: SizedBox(
+        width: 520,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (devices.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'Nenhum celular encontrado. Ligue o celular pelo cabo USB, desbloqueie a tela e, '
+                  'no Android, escolha "Transferência de arquivos" no aviso de USB.',
+                  key: ValueKey('no-phones'),
+                ),
+              ),
+            for (final (d, sourceId) in devices)
+              ListTile(
+                key: ValueKey('phone-${d.deviceId}'),
+                leading: const Icon(Icons.smartphone),
+                enabled: sourceId == null,
+                title: Text('${d.friendlyName}${d.simulated ? ' (simulado)' : ''}'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      sourceId != null
+                          ? 'Já cadastrado'
+                          : [
+                              deviceStatusLabel(d.status),
+                              if (d.storages.isNotEmpty) d.storages.map((s) => s.name).join(', '),
+                            ].join(' · '),
+                    ),
+                    if (sourceId == null && phoneStatusMessage(d) != null)
+                      Text(phoneStatusMessage(d)!, style: theme.textTheme.bodySmall),
+                    if (d.isIphone) Text(iphoneOriginalsHint, style: theme.textTheme.bodySmall),
+                  ],
+                ),
+                isThreeLine: d.isIphone || (sourceId == null && !d.isReady),
+                onTap: sourceId == null ? () => Navigator.pop(context, d) : null,
+              ),
+            const SizedBox(height: 8),
+            Text(
+              'O FotoAtlas só lê o celular: nada é gravado, movido ou apagado nele.',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar'))],
+    );
   }
 }

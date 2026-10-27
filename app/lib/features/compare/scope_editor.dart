@@ -184,11 +184,14 @@ class _ScopePickerDialogState extends ConsumerState<ScopePickerDialog> {
 
   /// Cadastra uma pasta ou unidade nova, já começa a escanear e a deixa
   /// selecionada — sem sair da Comparar.
-  Future<void> _addNew(bool drive) async {
+  Future<void> _addNew(String kind) async {
     const message = 'Adicionado. Escaneando agora; dá para comparar quando terminar.';
-    final id = drive
-        ? await addDrive(context, ref, addedMessage: message)
-        : await addFolder(context, ref, addedMessage: message);
+    final add = switch (kind) {
+      'drive' => addDrive,
+      'phone' => addPhone,
+      _ => addFolder,
+    };
+    final id = await add(context, ref, addedMessage: message);
     if (id == null || !mounted) return;
     setState(() => _selected = ScopeEntry(id));
     final messenger = ScaffoldMessenger.of(context);
@@ -223,13 +226,14 @@ class _ScopePickerDialogState extends ConsumerState<ScopePickerDialog> {
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
-                PopupMenuButton<bool>(
+                PopupMenuButton<String>(
                   key: const ValueKey('picker-add-new'),
                   tooltip: 'Cadastrar e escanear',
                   onSelected: _addNew,
                   itemBuilder: (_) => const [
-                    PopupMenuItem(value: false, child: Text('Uma pasta…')),
-                    PopupMenuItem(value: true, child: Text('Uma unidade inteira (HD, pendrive, cartão)…')),
+                    PopupMenuItem(value: 'folder', child: Text('Uma pasta…')),
+                    PopupMenuItem(value: 'drive', child: Text('Uma unidade inteira (HD, pendrive, cartão)…')),
+                    PopupMenuItem(value: 'phone', child: Text('Um celular (pelo cabo USB)…')),
                   ],
                   child: const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
