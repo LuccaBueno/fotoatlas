@@ -68,7 +68,13 @@ Observações da Fase 1:
   - [x] Teste: A = pasta1 + pasta2, B = pasta3, nomes diferentes e conteúdo parcial (core, CLI e app com core real)
 - [x] Tela Comparar (montar escopos A e B, escopos salvos, resultado e listas com seleção) e painel de cobertura no Início; cobertura por fonte em Dispositivos; backup em Configurações (2026-10-27)
 - [x] Critérios da spec (seção 16, Fase 2) — evidências no CHANGELOG
-- [ ] Tag `v0.2.0` — **depois do teste do usuário**
+- [x] Teste do usuário (2026-10-27): A = pasta1 + pasta2 × B = pasta3 → Faltam 2 / Só em B 1 / Nos dois 2; escopo salvo OK
+- [ ] Ajustes de interface pedidos no teste (antes da tag)
+  - [ ] Seletor da Comparar: botão "Adicionar nova pasta/dispositivo…" que cadastra e escaneia sem sair da tela + dica "Não encontrou? Ela precisa ser adicionada e escaneada primeiro"
+  - [ ] Plural/concordância em todos os contadores ("1 arquivo com só 1 cópia", "4 cópias conferidas")
+  - [ ] Caminhos nas listas com um só separador ("HD_antigo › pasta2 › notas.txt")
+  - [ ] Resumo da comparação com arquivos × conteúdos ("A: 5 arquivos (4 conteúdos diferentes, 1 repetido)")
+- [ ] Tag `v0.2.0` — **depois dos ajustes, com CI verde**
 
 Observações da Fase 2:
 - Antes da fase: o teste de VHD passou a conferir o estado real pelo Windows; isso mostrou que o `detach vdisk` do diskpart deixava o disco anexado. Trocado por `Dismount-DiskImage`, sem tolerância; 3/3 verdes na CI. Actions atualizadas para Node 24 (checkout@v7, setup-dotnet@v6).
