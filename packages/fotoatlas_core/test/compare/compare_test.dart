@@ -62,6 +62,13 @@ void main() {
     expect(r.issues, isEmpty);
     expect(r.aFiles, 5);
     expect(r.bFiles, 3);
+    // A: 5 arquivos = 4 conteúdos diferentes + 1 repetido (C1 duas vezes).
+    expect(r.aContents, 4);
+    expect(r.aRepeated, 1);
+    expect(r.aContents, r.missing.contents + r.inBoth.contents);
+    expect(r.bContents, 3);
+    expect(r.bRepeated, 0);
+    expect(r.bContents, r.onlyInB.contents + r.inBoth.contents);
     // Faltam C2 e C4 (o IMG_0002 de "outra/" está fora do escopo B).
     expect(r.missing.contents, 2);
     expect(r.missing.bytes, 2000 + 400);

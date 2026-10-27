@@ -108,6 +108,10 @@ class CompareSummary {
     required this.aBytes,
     required this.bFiles,
     required this.bBytes,
+    required this.aContents,
+    required this.aRepeated,
+    required this.bContents,
+    required this.bRepeated,
     required this.missing,
     required this.onlyInB,
     required this.inBoth,
@@ -121,6 +125,18 @@ class CompareSummary {
   final int aBytes;
   final int bFiles;
   final int bBytes;
+
+  /// Conteúdos diferentes já conferidos em A (= "Faltam em B" + "Nos dois").
+  final int aContents;
+
+  /// Arquivos conferidos de A que repetem um conteúdo já contado em A.
+  final int aRepeated;
+
+  /// Conteúdos diferentes já conferidos em B (= "Só em B" + "Nos dois").
+  final int bContents;
+
+  /// Arquivos conferidos de B que repetem um conteúdo já contado em B.
+  final int bRepeated;
 
   /// Conteúdos de A que não estão em B (cópias repetidas em A contam uma vez).
   final ContentTotals missing;
@@ -227,6 +243,9 @@ class CompareService {
           'both AS MATERIALIZED (SELECT content_id FROM ac WHERE content_id IN (SELECT content_id FROM bc)) '
           'SELECT (SELECT COUNT(*) FROM a) AS a_files, (SELECT COALESCE(SUM(size_bytes), 0) FROM a) AS a_bytes, '
           '(SELECT COUNT(*) FROM b) AS b_files, (SELECT COALESCE(SUM(size_bytes), 0) FROM b) AS b_bytes, '
+          '(SELECT COUNT(*) FROM ac) AS a_contents, (SELECT COUNT(*) FROM bc) AS b_contents, '
+          "(SELECT COUNT(*) FROM a WHERE hash_status = 'done' AND content_id IS NOT NULL) AS a_verified, "
+          "(SELECT COUNT(*) FROM b WHERE hash_status = 'done' AND content_id IS NOT NULL) AS b_verified, "
           '${totals('missing', 'a')}, ${totals('onlyb', 'b')}, ${totals('both', 'a')}, '
           '${unverified('a')}, ${unverified('b')}',
           variables: vars,
@@ -268,6 +287,10 @@ class CompareService {
       aBytes: row.read<int>('a_bytes'),
       bFiles: row.read<int>('b_files'),
       bBytes: row.read<int>('b_bytes'),
+      aContents: row.read<int>('a_contents'),
+      aRepeated: row.read<int>('a_verified') - row.read<int>('a_contents'),
+      bContents: row.read<int>('b_contents'),
+      bRepeated: row.read<int>('b_verified') - row.read<int>('b_contents'),
       missing: missing,
       onlyInB: t('onlyb'),
       inBoth: t('both'),

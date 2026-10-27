@@ -177,7 +177,10 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
       stdout
         ..writeln(verdict)
         ..writeln('VERDICT ${r.verdict.name}')
-        ..writeln('A files=${r.aFiles} bytes=${r.aBytes}  B files=${r.bFiles} bytes=${r.bBytes}')
+        ..writeln(
+          'A files=${r.aFiles} bytes=${r.aBytes} contents=${r.aContents} repeated=${r.aRepeated}  '
+          'B files=${r.bFiles} bytes=${r.bBytes} contents=${r.bContents} repeated=${r.bRepeated}',
+        )
         ..writeln('MISSING contents=${r.missing.contents} bytes=${r.missing.bytes} files=${r.missing.files}')
         ..writeln('ONLY_B contents=${r.onlyInB.contents} bytes=${r.onlyInB.bytes}')
         ..writeln('BOTH contents=${r.inBoth.contents} bytes=${r.inBoth.bytes}');
