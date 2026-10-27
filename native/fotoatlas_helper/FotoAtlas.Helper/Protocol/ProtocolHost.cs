@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using FotoAtlas.Helper.Devices;
 using FotoAtlas.Helper.Volumes;
 
 namespace FotoAtlas.Helper.Protocol;
@@ -14,7 +15,7 @@ internal sealed class HelperException(string code, string message, bool retryabl
 }
 
 /// <summary>Host JSON-lines: lê pedidos de <c>input</c>, escreve respostas e eventos em <c>output</c>.</summary>
-internal sealed class ProtocolHost(TextReader input, TextWriter output, IVolumeSource volumes, TextWriter? log = null)
+internal sealed class ProtocolHost(TextReader input, TextWriter output, IVolumeSource volumes, TextWriter? log = null, IDeviceBackend? devices = null)
 {
     public const int ProtocolVersion = 1;
     public const int MaxLineLength = 1 << 20;
@@ -83,7 +84,7 @@ internal sealed class ProtocolHost(TextReader input, TextWriter output, IVolumeS
             if (!_inflight.TryAdd(id, cts)) throw new HelperException("bad_request", $"id '{id}' já está em uso.");
             try
             {
-                var result = await DispatchAsync(method, parameters, cts.Token);
+                var result = await DispatchAsync(id, method, parameters, cts.Token);
                 Emit(new JsonObject { ["v"] = ProtocolVersion, ["id"] = id, ["ok"] = true, ["result"] = result });
             }
             finally
@@ -107,7 +108,7 @@ internal sealed class ProtocolHost(TextReader input, TextWriter output, IVolumeS
         }
     }
 
-    private async Task<JsonNode> DispatchAsync(string? method, JsonObject parameters, CancellationToken ct)
+    private async Task<JsonNode> DispatchAsync(string id, string? method, JsonObject parameters, CancellationToken ct)
     {
         switch (method)
         {
@@ -131,9 +132,68 @@ internal sealed class ProtocolHost(TextReader input, TextWriter output, IVolumeS
                 var list = await Task.Run(volumes.List, ct);
                 ct.ThrowIfCancellationRequested();
                 return new JsonObject { ["volumes"] = VolumeJson.ToJson(list) };
+            case "devices.list":
+                var found = await Task.Run(Devices.List, ct);
+                ct.ThrowIfCancellationRequested();
+                return new JsonObject { ["devices"] = DeviceJson.ToJson(found) };
+            case "devices.listChildren":
+                return await ListChildrenAsync(id, parameters, ct);
+            case "devices.hashObject":
+                return await HashObjectAsync(id, parameters, ct);
             default:
                 throw new HelperException("bad_request", $"Método desconhecido: '{method}'.");
         }
+    }
+
+    private IDeviceBackend Devices =>
+        devices ?? throw new HelperException("not_found", "Leitura de celulares indisponível neste helper.");
+
+    private static string RequiredString(JsonObject parameters, string name, bool allowEmpty = false)
+    {
+        var node = parameters[name];
+        if (node?.GetValueKind() != JsonValueKind.String) throw new HelperException("bad_request", $"Parâmetro '{name}' (string) ausente.");
+        var value = node.GetValue<string>();
+        if (!allowEmpty && value.Length == 0) throw new HelperException("bad_request", $"Parâmetro '{name}' vazio.");
+        return value;
+    }
+
+    private async Task<JsonNode> ListChildrenAsync(string id, JsonObject parameters, CancellationToken ct)
+    {
+        var deviceId = RequiredString(parameters, "deviceId");
+        var objectId = RequiredString(parameters, "objectId", allowEmpty: true);
+        var count = 0;
+        await Task.Run(() => Devices.ListChildren(deviceId, objectId, batch =>
+        {
+            count += batch.Count;
+            Emit(new JsonObject
+            {
+                ["v"] = ProtocolVersion,
+                ["id"] = id,
+                ["event"] = "entries",
+                ["data"] = new JsonObject { ["items"] = DeviceJson.ToJson(batch) },
+            });
+        }, ct), ct);
+        return new JsonObject { ["count"] = count };
+    }
+
+    private async Task<JsonNode> HashObjectAsync(string id, JsonObject parameters, CancellationToken ct)
+    {
+        var deviceId = RequiredString(parameters, "deviceId");
+        var objectId = RequiredString(parameters, "objectId");
+        long? expected = parameters["expectedSize"]?.GetValueKind() == JsonValueKind.Number ? parameters["expectedSize"]!.GetValue<long>() : null;
+        var result = await Task.Run(() => Devices.Hash(deviceId, objectId, expected, bytes => Emit(new JsonObject
+        {
+            ["v"] = ProtocolVersion,
+            ["id"] = id,
+            ["event"] = "progress",
+            ["data"] = new JsonObject { ["bytes"] = bytes },
+        }), ct), ct);
+        return new JsonObject
+        {
+            ["sha256"] = result.Sha256Hex,
+            ["size"] = result.Size,
+            ["modified"] = result.Modified?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        };
     }
 
     private void EmitError(string? id, string code, string message, bool retryable) =>
@@ -193,6 +253,63 @@ internal static class VolumeJson
                 ["isSystem"] = v.IsSystem,
                 ["isBoot"] = v.IsBoot,
                 ["physicalDisks"] = disks,
+            });
+        }
+        return array;
+    }
+}
+
+internal static class DeviceJson
+{
+    private static string? FileTime(long? value) => value?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    public static JsonArray ToJson(IReadOnlyList<DeviceInfo> devices)
+    {
+        var array = new JsonArray();
+        foreach (var d in devices)
+        {
+            var storages = new JsonArray();
+            foreach (var s in d.Storages)
+            {
+                storages.Add((JsonNode)new JsonObject
+                {
+                    ["storageId"] = s.StorageId,
+                    ["name"] = s.Name,
+                    ["totalBytes"] = s.TotalBytes,
+                    ["freeBytes"] = s.FreeBytes,
+                });
+            }
+            array.Add((JsonNode)new JsonObject
+            {
+                ["deviceId"] = d.DeviceId,
+                ["friendlyName"] = d.FriendlyName,
+                ["manufacturer"] = d.Manufacturer,
+                ["model"] = d.Model,
+                ["serial"] = d.Serial,
+                ["kind"] = d.Kind,
+                ["status"] = d.Status,
+                ["simulated"] = d.Simulated,
+                ["storages"] = storages,
+            });
+        }
+        return array;
+    }
+
+    public static JsonArray ToJson(IReadOnlyList<DeviceEntry> entries)
+    {
+        var array = new JsonArray();
+        foreach (var e in entries)
+        {
+            array.Add((JsonNode)new JsonObject
+            {
+                ["objectId"] = e.ObjectId,
+                ["parentObjectId"] = e.ParentObjectId,
+                ["name"] = e.Name,
+                ["isFolder"] = e.IsFolder,
+                ["size"] = e.Size,
+                ["modified"] = FileTime(e.Modified),
+                ["created"] = FileTime(e.Created),
+                ["persistentId"] = e.PersistentId,
             });
         }
         return array;

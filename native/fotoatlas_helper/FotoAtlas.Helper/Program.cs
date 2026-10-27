@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using System.Text;
+using FotoAtlas.Helper.Devices;
+using FotoAtlas.Helper.Devices.Fake;
+using FotoAtlas.Helper.Devices.Wpd;
 using FotoAtlas.Helper.Protocol;
 using FotoAtlas.Helper.Volumes;
 
@@ -19,7 +22,11 @@ internal static class Program
         var utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
         using var stdin = new StreamReader(Console.OpenStandardInput(), utf8);
         using var stdout = new StreamWriter(Console.OpenStandardOutput(), utf8) { AutoFlush = false };
-        var host = new ProtocolHost(stdin, stdout, new VolumeEnumerator(), Console.Error);
+        // --fake-devices: celulares simulados (testes e demonstração), no lugar do WPD.
+        var fakeDevices = ArgValue(args, "--fake-devices");
+        IDeviceBackend devices = fakeDevices is not null ? new FakeDeviceBackend(Path.GetFullPath(fakeDevices)) : new WpdBackend();
+        if (fakeDevices is not null) Console.Error.WriteLine($"[helper] celulares simulados de {fakeDevices}");
+        var host = new ProtocolHost(stdin, stdout, new VolumeEnumerator(), Console.Error, devices);
 
         var waiters = new List<Task> { host.RunAsync(), host.ShutdownRequested };
         if (int.TryParse(ArgValue(args, "--parent-pid"), out var parentPid))

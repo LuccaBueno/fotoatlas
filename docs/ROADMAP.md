@@ -83,11 +83,20 @@ Observações da Fase 2:
 - `last_verified_at` e o selo "conferida recentemente" ficam para a Fase 7.
 - Duplicatas: há a API (`duplicateGroups`) e o espaço repetido por fonte; uma tela de navegação por grupos entra com a Biblioteca (Fase 4).
 
-## Fase 3 — Celular (leitura)
+## Fase 3 — Celular (leitura) — em andamento (2026-10-27)
 - [ ] Helper com WPD: listar dispositivos, navegar, ler arquivos em streaming
+  - [ ] Interop COM próprio só de leitura (ADR 0012): métodos de escrita/exclusão não declarados, abertura com `GENERIC_READ`, pendrives (WPD-MSC) filtrados
+  - [ ] `devices.list` (status ok/bloqueado/sem autorização, armazenamentos), `devices.listChildren` (lotes), `devices.hashObject` (SHA-256 no helper, mudança durante a leitura)
+  - [ ] Backend simulado `--fake-devices` (testes e demonstração sem celular), com "desplugar" e IDs instáveis
 - [ ] Escanear Android e iPhone; avisos de desbloqueio/autorização e "Manter originais"
+  - [ ] Schema v3 aditivo (`file_instances.device_object_id`, `sources.device_serial`, `sources.device_platform`)
+  - [ ] Cadastro de celular (identidade pelo serial; ID WPD como reserva), conectividade, celular como disco próprio
+  - [ ] Scan por pasta com checkpoint; ID de objeto re-resolvido pelo caminho; desconexão → `interrupted`, nunca ausência
+  - [ ] Conferência (hash) pelo helper, um leitor por celular
 - [ ] Comparar celular × HD
+- [ ] App: "Adicionar celular", avisos, cartão do celular; CLI `devices` e `sources add-phone`; fixture de celular simulado
 - [ ] Critérios da spec (teste real com celular só quando o usuário pedir, somente leitura)
+- [ ] Teste do usuário
 - [ ] Tag `v0.3.0`
 
 ## Fase 4 — Metadados e Biblioteca
