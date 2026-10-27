@@ -87,9 +87,17 @@ Observações da Fase 2:
 ## Fase 4 — Metadados e Biblioteca
 - [ ] Script para baixar ExifTool e FFmpeg (não versionados)
 - [ ] ExifTool `-stay_open`, FFprobe, estratégia de datas e fusos, padrões de nome (WhatsApp etc.)
+- [ ] **Data e hora da captura como cidadã de primeira classe** (requisito ajustado em 2026-10-27, spec §3.2, §8.1–8.3, §10)
+  - [ ] Hora até os segundos (+ subsegundos), instante UTC + hora local, origem e confiança (alta/média/baixa); "hora incerta" sinalizada
+  - [ ] Linha do tempo única intercalando todos os dispositivos pela hora real (ano → mês → dia → momento)
+  - [ ] Momentos automáticos por intervalo sem fotos (padrão 2 h, configurável); baixa confiança fica em "Hora a confirmar"
+  - [ ] Nomear, juntar e separar momentos (só catálogo), preservados em recálculos
+  - [ ] Correção de relógio por dispositivo de captura ("+1 h", "ano errado"), com prévia, só no catálogo, reversível
+  - [ ] Momento como escopo na Comparar (entrada nova no JSON do escopo, `v: 2`) e como filtro
+  - [ ] Schema: tabelas novas para momentos, edições de momentos e correções por dispositivo (migração aditiva v2 → v3)
 - [ ] Miniaturas em cache (Shell API + fallback)
 - [ ] Biblioteca: grade, lista, linha do tempo, painel de detalhes
-- [ ] Filtros em chips + avançado, seleção em massa, filtros salvos
+- [ ] Filtros em chips + avançado, seleção em massa, filtros salvos — incluindo faixa de horário, período do dia, dia da semana, momento e confiança da hora
 - [ ] Critérios da spec (100 mil itens, < 1 s)
 - [ ] Tag `v0.4.0`
 
@@ -104,6 +112,7 @@ Observações da Fase 2:
 
 ## Fase 6 — Reorganização
 - [ ] Modelos de estrutura e prévia em árvore antes → depois
+- [ ] Modelo com momento: `{ano}/{ano}-{mes}-{dia} {momento}/` (momento sem nome → início do momento; hora a confirmar → pasta própria; sanitização de nomes), variáveis de hora usando as correções do catálogo (spec §12)
 - [ ] Movimentação no mesmo volume via diário + Desfazer
 - [ ] Critérios da spec
 - [ ] Tag `v0.6.0`
@@ -128,3 +137,4 @@ Observações da Fase 2:
 - 2026-10-26 — Etapa 0 — Spec analisada (8 contradições, 12 riscos, 15 lacunas); arquitetura, schema v1, protocolo do helper, ADRs 0001–0009 e plano da Fase 1. Aguardando "aprovado" e as respostas de Q1–Q4.
 - 2026-10-26 — Fase 1 — Fundação concluída: catálogo v1, helper com volumes.list, fontes independentes da letra, scan com checkpoint em isolate, CLI, fixtures, telas Início/Dispositivos, CI verde (incl. kill e VHD NTFS/FAT32). Tag v0.1.0.
 - 2026-10-27 — Antes da Fase 2 + Fase 2 — CI: causa dos runs 40275882141 (bin/ não versionado) e 40276396430 (VHD); desanexo trocado por Dismount-DiskImage após o reforço mostrar disco ainda anexado; 3/3 verdes; actions em Node 24. Requisito de comparação com escopo livre na spec. Fase 2 implementada (hash, cobertura, duplicatas, comparação, escopos salvos, backup do catálogo, telas); tag v0.2.0 aguarda o teste do usuário.
+- 2026-10-27 — Ajuste de requisito (sem implementação) — data e hora da captura até segundos, linha do tempo única, momentos (nomear/juntar/separar, escopo e filtro), filtros de horário/período/dia da semana, correção de relógio por dispositivo com prévia, hora de baixa confiança fora dos momentos automáticos, modelo {ano}/{ano}-{mes}-{dia} {momento}/: spec §3.2, §8, §9, §10, §12, §16 e ROADMAP das Fases 4 e 6.

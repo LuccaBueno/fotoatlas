@@ -4,6 +4,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado] — Fase 2: Conteúdo e cobertura (tag `v0.2.0` depois do teste do usuário)
 
+### Requisitos ajustados (sem implementação ainda)
+- **Data e hora da captura (até segundos) como cidadã de primeira classe** — spec §3.2, §8.1–8.3, §10, §12 e §16; ROADMAP das Fases 4 e 6: linha do tempo única intercalando todos os dispositivos pela hora real; **momentos** automáticos (intervalo sem fotos, padrão 2 h) que o usuário pode nomear, juntar e separar, usados como filtro, escopo na Comparar e no modelo de organização `{ano}/{ano}-{mes}-{dia} {momento}/`; filtros por faixa de horário, período do dia e dia da semana; correção de relógio por dispositivo de captura com prévia, só no catálogo; hora de baixa confiança sinalizada e fora dos momentos automáticos até ser confirmada.
+
 ### Adicionado
 - **Conferência de conteúdo (SHA-256)** em segundo plano, um leitor por disco físico, em isolates (ADR 0010). Lê os arquivos só para leitura, sem baixar placeholders do OneDrive, e detecta arquivo que mudou depois do escaneamento ou durante a leitura (tamanho e data antes e depois). Erro de leitura fica registrado com o motivo e nunca vira "ausente". Pausar/continuar; "tentar de novo" para os que falharam; começa sozinha depois de cada escaneamento e quando um dispositivo conecta. Retomada exata depois de o processo ser morto.
 - **Duplicatas exatas e cobertura de backup**: 🔴 só 1 cópia, 🟡 provável cópia (falta conferir), 🟢 cópia conferida no mesmo disco, 🔵 backup em disco independente, ⚪ desconhecido. O mesmo arquivo visto por duas fontes sobrepostas conta uma vez; disco de identidade incerta nunca conta como independente; dispositivo desconectado continua contando. Espaço ocupado por arquivos repetidos, por dispositivo.

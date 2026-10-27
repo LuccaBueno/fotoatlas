@@ -78,9 +78,13 @@ A interface precisa ser **fácil, útil, completa e, acima de tudo, intuitiva**.
 ### 3.2. Telas principais (navegação lateral)
 
 1. **Início.** Painel com as respostas às 4 perguntas, alertas ("HD antigo não é verificado há 6 meses") e atalhos para as tarefas mais comuns.
-2. **Biblioteca.** Galeria em grade e em lista, linha do tempo (ano/mês), filtros, seleção e painel de detalhes com todas as localizações conhecidas do item.
+2. **Biblioteca.** Galeria em grade e em lista, filtros, seleção e painel de detalhes com todas as localizações conhecidas do item.
+   - **Linha do tempo única** pela **data e hora real da captura (até os segundos)**, intercalando fotos e vídeos de todos os dispositivos (celular, câmera, HD) numa só sequência — ex.: a foto da câmera às 14:03:12 aparece entre as do celular de 14:02:50 e 14:05:01. Navegação por ano → mês → dia → **momento**. Conteúdo idêntico em vários lugares aparece uma vez.
+   - **Momentos**: grupos automáticos de fotos próximas no tempo (§8), com nome editável; o usuário pode **nomear, juntar e separar** momentos. Isso só muda o catálogo, nunca os arquivos.
+   - Hora de **baixa confiança** (ex.: tirada da data do sistema de arquivos) aparece sinalizada (ícone + texto "hora incerta"), com atalho para confirmar ou corrigir.
+   - **Corrigir relógio de um dispositivo** (§8): assistente com prévia "antes → depois" antes de aplicar.
 3. **Dispositivos.** Fontes cadastradas, conectadas e desconectadas, com último escaneamento, espaço e cobertura de backup de cada uma.
-4. **Comparar.** Dois **escopos livres**, A e B (ex.: "pasta 1 + pasta 2 do HD antigo" × "pasta Backup do HD novo", ou celular × HD inteiro), montados com uma ou mais pastas/subpastas e/ou dispositivos inteiros, com filtros opcionais. A pergunta principal fica no topo: **"B contém todo o conteúdo de A?"**, com resposta direta — "Sim, 100%" ou "Faltam N arquivos (X GB)" — e a lista do que falta pronta para seleção e cópia. Abaixo, "Só em B" e "Nos dois". Se algum arquivo dos escopos ainda não teve o conteúdo conferido, a resposta é "Resultado incompleto", nunca "100%". Escopos podem ser salvos com nome (ex.: "Fotos do celular antigo") para reutilizar. Regras na seção 9.
+4. **Comparar.** Dois **escopos livres**, A e B (ex.: "pasta 1 + pasta 2 do HD antigo" × "pasta Backup do HD novo", ou celular × HD inteiro), montados com uma ou mais pastas/subpastas, dispositivos inteiros e/ou **momentos** (§8.3, a partir da Fase 4), com filtros opcionais. A pergunta principal fica no topo: **"B contém todo o conteúdo de A?"**, com resposta direta — "Sim, 100%" ou "Faltam N arquivos (X GB)" — e a lista do que falta pronta para seleção e cópia. Abaixo, "Só em B" e "Nos dois". Se algum arquivo dos escopos ainda não teve o conteúdo conferido, a resposta é "Resultado incompleto", nunca "100%". Escopos podem ser salvos com nome (ex.: "Fotos do celular antigo") para reutilizar. Regras na seção 9.
 5. **Tarefas.** Fila de operações em andamento e histórico completo (auditoria) com exportação.
 6. **Configurações.** Biblioteca principal, modelos de organização, verificação periódica e backup do catálogo.
 
@@ -201,6 +205,22 @@ Os caminhos são guardados **relativos à raiz da fonte**, para que a troca da l
 - Filtros para encontrar: "sem data confiável", "datas conflitantes" e "corrigidas manualmente".
 - **Nunca regravar os metadados originais.**
 
+### 8.1. Data e hora da captura (primeira classe)
+- Cada conteúdo tem **data e hora da captura com precisão de segundos** (e subsegundos quando o arquivo tiver, ex.: `SubSecTimeOriginal`), guardadas como instante normalizado (UTC) **e** como hora local vivida, com a origem e a confiança (§8).
+- A ordenação da linha do tempo e dos momentos usa o **instante real** (UTC); a tela mostra a hora local. Fotos de dispositivos diferentes ficam intercaladas corretamente mesmo com fusos diferentes.
+- **Níveis de confiança:** alta (EXIF com fuso ou vídeo em UTC conhecido), média (EXIF sem fuso, assumindo o fuso padrão; data no nome do arquivo), **baixa** (só data do sistema de arquivos, que muda com cópias e restaurações). Hora de baixa confiança é sinalizada em toda a interface.
+
+### 8.2. Correção de relógio por dispositivo de captura
+- Para câmeras com relógio errado: o usuário escolhe um **dispositivo de captura** (fabricante + modelo + número de série do corpo quando o EXIF tiver; ex.: "Canon X") e informa um deslocamento ("+1 h", "−3 min 20 s") ou um ajuste de ano/data ("ano errado: 2015 → 2025"), opcionalmente limitado a um período ou a fontes específicas.
+- **Prévia obrigatória** antes de aplicar: quantos itens mudam, exemplos "antes → depois" e como a linha do tempo/os momentos ficam. Uma técnica de apoio: alinhar uma foto da câmera com uma do celular tirada no mesmo instante para calcular o deslocamento.
+- Aplicada **só no catálogo** (correção registrada com histórico, sobre a data extraída; correções manuais por item continuam valendo acima dela), **nunca no arquivo**. Pode ser desfeita a qualquer momento.
+
+### 8.3. Momentos
+- **Agrupamento automático** pela hora real: um novo momento começa quando há um intervalo sem fotos/vídeos maior que o limite (**padrão 2 h, configurável**). Considera todos os dispositivos juntos.
+- Itens com hora de **baixa confiança não entram em momentos automáticos** até o usuário confirmar a hora (ou corrigi-la); ficam numa lista "Hora a confirmar".
+- O usuário pode **nomear** ("Aniversário da Ana"), **juntar** e **separar** momentos. As edições ficam guardadas no catálogo e **nunca se perdem** quando o agrupamento é recalculado (ex.: novas fotos, novo limite, correção de relógio): momentos editados ficam fixos, e itens novos dentro do intervalo deles são incluídos; o recálculo só mexe nos automáticos e mostra o que mudou.
+- Momentos não alteram arquivos. Podem ser usados como **filtro** (§10), como **escopo na Comparar** (§9; ex.: "este momento já está todo no HD?") e no **modelo de organização** (§12).
+
 ---
 
 ## 9. COBERTURA DE BACKUP E DUPLICATAS
@@ -212,7 +232,7 @@ Os caminhos são guardados **relativos à raiz da fonte**, para que a troca da l
   - cópias em discos físicos diferentes;
   - pelo menos 1 cópia conferida recentemente.
 - **Comparação A × B com escopo livre:**
-  - **Escopo** = conjunto de uma ou mais entradas, cada uma sendo um dispositivo/fonte inteiro ou uma pasta/subpasta dentro de uma fonte, mais **filtros opcionais** (tipo de mídia agora; data, câmera etc. quando os metadados existirem — Fase 4). A e B são escopos independentes; entradas de fontes diferentes podem ser misturadas no mesmo lado.
+  - **Escopo** = conjunto de uma ou mais entradas, cada uma sendo um dispositivo/fonte inteiro, uma pasta/subpasta dentro de uma fonte ou **um momento** (§8.3, Fase 4: os arquivos daquele momento, em qualquer dispositivo; combinável com uma fonte para restringir, ex.: "momento X no celular"), mais **filtros opcionais** (tipo de mídia agora; data, câmera etc. quando os metadados existirem — Fase 4). A e B são escopos independentes; entradas de fontes diferentes podem ser misturadas no mesmo lado.
   - **Sempre por conteúdo** (SHA-256 + tamanho). Nomes, extensões e estrutura de pastas são ignorados: a mesma foto com outro nome, em outra pasta, conta como "está em B".
   - **Pergunta principal:** "B contém todo o conteúdo de A?" Respostas possíveis:
     - **"Sim, 100%"** — todo conteúdo de A existe em B, e não há pendências (abaixo);
@@ -232,6 +252,9 @@ Os caminhos são guardados **relativos à raiz da fonte**, para que a troca da l
 
 - **Filtros:**
   - data (ano/mês/intervalo/sem data);
+  - **horário** da captura: faixa de horário (ex.: 18:00–23:59), **período do dia** (madrugada 0–6 h, manhã 6–12 h, tarde 12–18 h, noite 18–24 h, pela hora local) e **dia da semana**;
+  - **momento** (um ou mais);
+  - confiança da hora (alta/média/baixa, "hora a confirmar") e "com correção de relógio";
   - fonte;
   - câmera/celular;
   - tipo e extensão;
@@ -295,7 +318,11 @@ O objetivo é deixar o HD organizado sem risco.
   - `{ano}/{ano}-{mes}/`
   - `{ano}/{dispositivo}/`
   - `{tipo}/{ano}/`
+  - `{ano}/{ano}-{mes}-{dia} {momento}/` (ex.: `2024/2024-07-13 Aniversário da Ana/`)
   - estrutura original preservada
+- **Variáveis de data e hora** usam a hora da captura já com as correções do catálogo (§8.2): `{ano}`, `{mes}`, `{dia}`, `{hora}`, `{minuto}`, `{segundo}`; `{momento}` é o nome do momento (§8.3).
+- **Momento sem nome** usa o início do momento (ex.: `2024-07-13 14h03`); itens fora de momentos (hora a confirmar) vão para uma pasta configurável (padrão `Sem data confirmada/`). Nomes são sanitizados para o Windows (caracteres proibidos, nomes reservados, espaços/pontos no fim, comprimento).
+- A prévia mostra quantos itens dependem de hora de baixa confiança antes de confirmar.
 - **Prévia em árvore** de "antes → depois", com conflitos destacados.
 - **Dentro do mesmo volume:** mover por renomeação (operação de metadados, sem copiar dados), registrada no diário, sem substituição e com **Desfazer**.
 - **Entre volumes:** sempre copiar e conferir (seção 11). A origem permanece intacta.
@@ -374,7 +401,11 @@ Cada fase termina com **testes passando + demonstração funcionando + CHANGELOG
 - **Critérios:**
   - filtros por data, câmera, fonte e situação de backup funcionando em 100 mil itens com resposta abaixo de 1 s;
   - fusos de vídeo × foto coerentes;
-  - datas de WhatsApp reconhecidas.
+  - datas de WhatsApp reconhecidas;
+  - linha do tempo intercala 2+ dispositivos pela hora real (segundos), inclusive com fusos diferentes;
+  - momentos automáticos com limite configurável; nomear/juntar/separar sobrevive a um recálculo; hora de baixa confiança fica fora até confirmar;
+  - correção de relógio por dispositivo com prévia, aplicada só no catálogo (arquivo com hash igual antes e depois) e reversível;
+  - filtros por faixa de horário, período do dia, dia da semana e momento em 100 mil itens abaixo de 1 s.
 
 ### Fase 5 — Cópia segura
 - Diário, protocolo completo, recuperação e assistente "Copiar o que falta" (unidades e celular).
@@ -382,7 +413,7 @@ Cada fase termina com **testes passando + demonstração funcionando + CHANGELOG
 
 ### Fase 6 — Reorganização
 - Modelos de estrutura, prévia em árvore, movimentação no mesmo volume com diário e Desfazer.
-- **Critérios:** interrupção no meio da reorganização é recuperável; Desfazer restaura exatamente a estrutura anterior.
+- **Critérios:** interrupção no meio da reorganização é recuperável; Desfazer restaura exatamente a estrutura anterior; modelo `{ano}/{ano}-{mes}-{dia} {momento}/` gera a árvore esperada (com momento sem nome, hora a confirmar e nomes inválidos no Windows).
 
 ### Fase 7 — Integridade periódica
 - **Critérios:** corrupção simulada (bytes alterados com mtime preservado) é detectada e outras cópias conferidas são apontadas.
