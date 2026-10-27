@@ -32,6 +32,19 @@ final scanProgressProvider = StreamProvider<Map<String, ScanProgress>>((ref) {
   return controller.stream;
 });
 
+/// Situação da conferência de conteúdo (começa pelo valor atual).
+final hashStatusProvider = StreamProvider<HashStatus>((ref) async* {
+  final backend = ref.watch(backendProvider);
+  yield backend.hashStatus;
+  yield* backend.watchHashStatus();
+});
+
+/// Cobertura de backup (fotos e vídeos), recalculada enquanto o catálogo muda.
+final coverageProvider = StreamProvider<CoverageReport>((ref) => ref.watch(backendProvider).watchCoverage());
+
+/// Escopos de comparação salvos.
+final savedScopesProvider = StreamProvider<List<SavedScope>>((ref) => ref.watch(backendProvider).watchSavedScopes());
+
 /// Destino selecionado na navegação lateral.
 final navigationIndexProvider = NotifierProvider<NavigationIndex, int>(NavigationIndex.new);
 

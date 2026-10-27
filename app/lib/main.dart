@@ -26,7 +26,8 @@ class FotoAtlasApp extends StatefulWidget {
 }
 
 class _FotoAtlasAppState extends State<FotoAtlasApp> {
-  late final Future<FotoAtlasCore> _core = (widget.openCore ?? () => FotoAtlasCore.open(monitor: true))();
+  late final Future<FotoAtlasCore> _core =
+      (widget.openCore ?? () => FotoAtlasCore.open(monitor: true, autoHash: true, backupOnOpen: true))();
   late final AppLifecycleListener _lifecycle;
 
   @override
@@ -51,25 +52,29 @@ class _FotoAtlasAppState extends State<FotoAtlasApp> {
     super.dispose();
   }
 
+  MaterialApp _app(Widget home) => MaterialApp(
+    title: 'FotoAtlas',
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.light(),
+    darkTheme: AppTheme.dark(),
+    home: home,
+  );
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FotoAtlas',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      home: FutureBuilder<FotoAtlasCore>(
-        future: _core,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return _StartupError(error: snapshot.error!);
-          final core = snapshot.data;
-          if (core == null) return const _Splash();
-          return ProviderScope(
-            overrides: [backendProvider.overrideWithValue(CoreBackend(core))],
-            child: const AppShell(),
-          );
-        },
-      ),
+    return FutureBuilder<FotoAtlasCore>(
+      future: _core,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return _app(_StartupError(error: snapshot.error!));
+        final core = snapshot.data;
+        if (core == null) return _app(const _Splash());
+        // O ProviderScope fica ACIMA do MaterialApp: diálogos e rotas (que o
+        // Navigator põe fora da árvore da tela) também enxergam os providers.
+        return ProviderScope(
+          overrides: [backendProvider.overrideWithValue(CoreBackend(core))],
+          child: _app(const AppShell()),
+        );
+      },
     );
   }
 }

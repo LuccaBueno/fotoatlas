@@ -57,7 +57,7 @@ void main() {
     for (final label in ['Início', 'Biblioteca', 'Dispositivos', 'Comparar', 'Tarefas', 'Configurações']) {
       expect(find.text(label), findsWidgets);
     }
-    await tester.tap(find.text('Comparar'));
+    await tester.tap(find.text('Tarefas'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Disponível em breve'), findsOneWidget);
   });

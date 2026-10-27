@@ -22,6 +22,29 @@ abstract interface class AppBackend {
   Future<void> pauseScan(int scanId);
   Future<void> cancelScan(int scanId);
   Future<void> refreshDevices();
+
+  /// Subpastas de uma fonte segundo o catálogo (seletor de escopo).
+  Future<List<String>> childFolders(String sourceId, String relPath);
+
+  // Conferência de conteúdo (fila de hash).
+  HashStatus get hashStatus;
+  Stream<HashStatus> watchHashStatus();
+  Future<void> startHash({List<HashPriority>? priority});
+  Future<void> pauseHash();
+  Future<int> retryFailedHashes();
+
+  // Cobertura e comparação.
+  Stream<CoverageReport> watchCoverage();
+  Future<CompareSummary> compare(Scope a, Scope b);
+  Future<List<CompareItem>> compareItems(Scope a, Scope b, CompareList list, {int offset = 0, int limit = 200});
+  Stream<List<SavedScope>> watchSavedScopes();
+  Future<SavedScope> saveScope(String name, Scope scope, {bool replace = false});
+  Future<void> renameScope(int id, String name);
+  Future<void> removeScope(int id);
+
+  // Backup do catálogo.
+  List<CatalogBackupInfo> catalogBackups();
+  Future<CatalogBackupInfo> backupCatalogNow();
 }
 
 class CoreBackend implements AppBackend {
@@ -63,4 +86,55 @@ class CoreBackend implements AppBackend {
 
   @override
   Future<void> refreshDevices() => core.sources.refreshConnectivity();
+
+  @override
+  Future<List<String>> childFolders(String sourceId, String relPath) => core.sources.childFolders(sourceId, relPath);
+
+  @override
+  HashStatus get hashStatus => core.hashes.current;
+
+  @override
+  Stream<HashStatus> watchHashStatus() => core.hashes.status;
+
+  @override
+  Future<void> startHash({List<HashPriority>? priority}) => core.hashes.start(priority: priority);
+
+  @override
+  Future<void> pauseHash() => core.hashes.pause();
+
+  @override
+  Future<int> retryFailedHashes() async {
+    final n = await core.hashes.retryFailed();
+    await core.hashes.start();
+    return n;
+  }
+
+  @override
+  Stream<CoverageReport> watchCoverage() => core.coverage.watch();
+
+  @override
+  Future<CompareSummary> compare(Scope a, Scope b) => core.compare.compare(a, b);
+
+  @override
+  Future<List<CompareItem>> compareItems(Scope a, Scope b, CompareList list, {int offset = 0, int limit = 200}) =>
+      core.compare.items(a, b, list, offset: offset, limit: limit);
+
+  @override
+  Stream<List<SavedScope>> watchSavedScopes() => core.compare.watchSavedScopes();
+
+  @override
+  Future<SavedScope> saveScope(String name, Scope scope, {bool replace = false}) =>
+      core.compare.saveScope(name, scope, replace: replace);
+
+  @override
+  Future<void> renameScope(int id, String name) => core.compare.renameScope(id, name);
+
+  @override
+  Future<void> removeScope(int id) => core.compare.removeScope(id);
+
+  @override
+  List<CatalogBackupInfo> catalogBackups() => core.backups.list();
+
+  @override
+  Future<CatalogBackupInfo> backupCatalogNow() => core.backups.backupNow();
 }

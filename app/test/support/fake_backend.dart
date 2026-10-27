@@ -65,6 +65,90 @@ class FakeBackend implements AppBackend {
 
   @override
   Future<void> refreshDevices() async => calls.add('refresh');
+
+  // --- Fase 2 ---------------------------------------------------------------
+
+  Map<String, List<String>> folders = const {};
+  HashStatus fakeHashStatus = const HashStatus();
+  final _hash = StreamController<HashStatus>.broadcast();
+  CoverageReport? coverage;
+  CompareSummary? compareResult;
+  Map<CompareList, List<CompareItem>> compareLists = const {};
+  final savedScopes = <SavedScope>[];
+  final _scopes = StreamController<List<SavedScope>>.broadcast();
+  List<CatalogBackupInfo> backups = const [];
+
+  void emitHash(HashStatus s) {
+    fakeHashStatus = s;
+    _hash.add(s);
+  }
+
+  @override
+  Future<List<String>> childFolders(String sourceId, String relPath) async => folders['$sourceId:$relPath'] ?? const [];
+
+  @override
+  HashStatus get hashStatus => fakeHashStatus;
+
+  @override
+  Stream<HashStatus> watchHashStatus() => _hash.stream;
+
+  @override
+  Future<void> startHash({List<HashPriority>? priority}) async =>
+      calls.add('hash:${priority?.map((p) => '${p.sourceId}:${p.relPath}').join(',') ?? ''}');
+
+  @override
+  Future<void> pauseHash() async => calls.add('hash-pause');
+
+  @override
+  Future<int> retryFailedHashes() async {
+    calls.add('hash-retry');
+    return 0;
+  }
+
+  @override
+  Stream<CoverageReport> watchCoverage() async* {
+    if (coverage != null) yield coverage!;
+  }
+
+  @override
+  Future<CompareSummary> compare(Scope a, Scope b) async {
+    calls.add('compare:${a.entries.join('+')}|${b.entries.join('+')}|${a.types?.map((t) => t.name).join(',') ?? ''}');
+    return compareResult!;
+  }
+
+  @override
+  Future<List<CompareItem>> compareItems(Scope a, Scope b, CompareList list, {int offset = 0, int limit = 200}) async =>
+      offset == 0 ? (compareLists[list] ?? const []) : const [];
+
+  @override
+  Stream<List<SavedScope>> watchSavedScopes() async* {
+    yield List.of(savedScopes);
+    yield* _scopes.stream;
+  }
+
+  @override
+  Future<SavedScope> saveScope(String name, Scope scope, {bool replace = false}) async {
+    calls.add('save-scope:$name');
+    final saved = SavedScope(id: savedScopes.length + 1, name: name, scope: scope, updatedAt: DateTime.utc(2026));
+    savedScopes.add(saved);
+    _scopes.add(List.of(savedScopes));
+    return saved;
+  }
+
+  @override
+  Future<void> renameScope(int id, String name) async => calls.add('rename-scope:$id:$name');
+
+  @override
+  Future<void> removeScope(int id) async => calls.add('remove-scope:$id');
+
+  @override
+  List<CatalogBackupInfo> catalogBackups() => backups;
+
+  @override
+  Future<CatalogBackupInfo> backupCatalogNow() async {
+    calls.add('backup');
+    return CatalogBackupInfo('x', DateTime.utc(2026), 1024);
+  }
 }
 
 ScanRow completedScan({int id = 1, String sourceId = 's1', String coverage = 'complete', int errors = 0}) => ScanRow(

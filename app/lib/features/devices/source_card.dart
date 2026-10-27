@@ -4,6 +4,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
 import '../../l10n/format.dart';
+import '../../widgets/backup_state.dart';
 import '../../widgets/connection_badge.dart';
 
 /// Cartão de uma fonte. Desconectada aparece esmaecida, mas com os dados do
@@ -60,6 +61,11 @@ class SourceCard extends ConsumerWidget {
               Text(_summary(s), style: theme.textTheme.bodyMedium),
               const SizedBox(height: 4),
               Text(_details(s, scanning), style: theme.textTheme.bodySmall),
+              _CoverageLine(sourceId: s.id),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: HashProgressBar(sourceId: s.id),
+              ),
               if (scanning) ...[
                 const SizedBox(height: 12),
                 LinearProgressIndicator(
@@ -235,6 +241,36 @@ class _AmbiguousHelp extends ConsumerWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Situação de backup das fotos e vídeos desta fonte + espaço em repetidos.
+class _CoverageLine extends ConsumerWidget {
+  const _CoverageLine({required this.sourceId});
+  final String sourceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = ref.watch(coverageProvider.select((r) => r.value?.perSource[sourceId]));
+    if (c == null || c.counts.totalFiles == 0) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 4,
+        children: [
+          for (final state in BackupState.values)
+            if (c.counts.filesIn(state) > 0) BackupStateBadge(state, count: c.counts.filesIn(state)),
+          if (c.cloudOnly > 0)
+            Text('${formatInt(c.cloudOnly)} só na nuvem', style: Theme.of(context).textTheme.bodySmall),
+          if (c.duplicateFiles > 0)
+            Text(
+              '${plural(c.duplicateFiles, 'arquivo repetido', 'arquivos repetidos')} (${formatBytes(c.duplicateBytes)})',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+        ],
+      ),
     );
   }
 }

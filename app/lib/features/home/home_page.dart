@@ -6,9 +6,12 @@ import '../../app/providers.dart';
 import '../../app/shell.dart';
 import '../../app/theme.dart';
 import '../../l10n/format.dart';
+import '../../l10n/strings.dart';
+import '../../widgets/backup_state.dart';
 import '../../widgets/connection_badge.dart';
 
-/// Início (básico na Fase 1): o que você tem e onde está, alertas e atalhos.
+/// Início: as respostas às perguntas "o que eu tenho e onde está?" e "o que já
+/// tem backup e o que ainda não tem?", alertas e atalhos.
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
@@ -30,9 +33,9 @@ class HomePage extends ConsumerWidget {
                   const SizedBox(height: 16),
                   ..._alerts(context, list, progress),
                   const SizedBox(height: 16),
-                  _PerSource(sources: list),
+                  const _CoveragePanel(),
                   const SizedBox(height: 16),
-                  const _NextSteps(),
+                  _PerSource(sources: list),
                 ],
               ),
       ),
@@ -127,12 +130,13 @@ class _Overview extends StatelessWidget {
   }
 }
 
-class _PerSource extends StatelessWidget {
+class _PerSource extends ConsumerWidget {
   const _PerSource({required this.sources});
   final List<SourceView> sources;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final coverage = ref.watch(coverageProvider).value;
     return Card(
       child: Column(
         children: [
@@ -140,7 +144,15 @@ class _PerSource extends StatelessWidget {
             ListTile(
               leading: Icon(sourceKindIcon(s.kind)),
               title: Text(s.name),
-              subtitle: ConnectionBadge(s.state),
+              subtitle: Wrap(
+                spacing: 12,
+                runSpacing: 4,
+                children: [
+                  ConnectionBadge(s.state),
+                  if (coverage?.perSource[s.id] case final c? when c.counts.filesIn(BackupState.single) > 0)
+                    BackupStateBadge(BackupState.single, count: c.counts.filesIn(BackupState.single)),
+                ],
+              ),
               trailing: Text(
                 s.lastScan == null ? 'não escaneado' : plural(s.mediaCount, 'foto ou vídeo', 'fotos e vídeos'),
               ),
@@ -151,17 +163,84 @@ class _PerSource extends StatelessWidget {
   }
 }
 
-class _NextSteps extends StatelessWidget {
-  const _NextSteps();
+/// "O que já tem backup e o que ainda não tem?" (spec §3.2, Início).
+class _CoveragePanel extends ConsumerWidget {
+  const _CoveragePanel();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final report = ref.watch(coverageProvider).value;
+    final hash = ref.watch(hashStatusProvider).value;
+    final single = report?.overall.filesIn(BackupState.single) ?? 0;
+    final pending = report?.pendingFiles ?? 0;
+    final headline = report == null
+        ? 'Calculando…'
+        : report.overall.totalFiles == 0
+        ? 'Escaneie um dispositivo para saber o que tem backup.'
+        : single == 0 && pending == 0
+        ? 'Todas as fotos e vídeos conhecidos têm pelo menos uma cópia idêntica.'
+        : single > 0
+        ? '${plural(single, 'foto ou vídeo existe', 'fotos e vídeos existem')} em um lugar só'
+              ' (${formatBytes(report.overall.bytesIn(BackupState.single))}).'
+        : 'Ainda conferindo o conteúdo dos arquivos.';
     return Card(
-      child: ListTile(
-        leading: const Icon(Icons.schedule),
-        title: const Text('Em breve: o que já tem backup e o que ainda falta'),
-        subtitle: const Text(
-          'Na próxima fase o FotoAtlas confere o conteúdo dos arquivos e mostra o que só existe em um lugar.',
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('O que já tem backup e o que ainda não tem', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(headline, style: theme.textTheme.titleLarge),
+            if (report != null && report.overall.totalFiles > 0) ...[
+              const SizedBox(height: 12),
+              for (final state in BackupState.values)
+                if (report.overall.filesIn(state) > 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(backupStateIcon(state), color: backupStateColor(context, state)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${backupStateLabel(state)}: ${formatInt(report.overall.filesIn(state))} '
+                                '(${formatBytes(report.overall.bytesIn(state))})',
+                              ),
+                              Text(backupStateHint(state), style: theme.textTheme.bodySmall),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              if (pending > 0) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '${plural(pending, 'arquivo ainda não teve', 'arquivos ainda não tiveram')} o conteúdo conferido'
+                  '${hash?.running ?? false ? '' : ' (conecte o dispositivo para conferir)'}.',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ],
+            const SizedBox(height: 12),
+            const HashProgressBar(),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: () => ref.read(navigationIndexProvider.notifier).select(compareDestination),
+                  icon: const Icon(Icons.compare_arrows),
+                  label: const Text('Comparar dispositivos ou pastas'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

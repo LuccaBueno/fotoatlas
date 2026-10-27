@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/compare/compare_page.dart';
 import '../features/devices/devices_page.dart';
 import '../features/home/home_page.dart';
 import '../features/placeholder/coming_soon_page.dart';
+import '../features/settings/settings_page.dart';
 import 'providers.dart';
 
 class _Destination {
@@ -27,16 +29,7 @@ final _destinations = [
     ),
   ),
   _Destination('Dispositivos', Icons.storage_outlined, Icons.storage, () => const DevicesPage()),
-  _Destination(
-    'Comparar',
-    Icons.compare_arrows_outlined,
-    Icons.compare_arrows,
-    () => const ComingSoonPage(
-      title: 'Comparar',
-      description: 'Veja o que existe em um dispositivo e ainda não está em outro — por exemplo, celular × HD.',
-      phase: 'Fase 2',
-    ),
-  ),
+  _Destination('Comparar', Icons.compare_arrows_outlined, Icons.compare_arrows, () => const ComparePage()),
   _Destination(
     'Tarefas',
     Icons.task_alt_outlined,
@@ -47,20 +40,14 @@ final _destinations = [
       phase: 'Fase 5',
     ),
   ),
-  _Destination(
-    'Configurações',
-    Icons.settings_outlined,
-    Icons.settings,
-    () => const ComingSoonPage(
-      title: 'Configurações',
-      description: 'Biblioteca principal, modelos de organização, verificação periódica e backup do catálogo.',
-      phase: 'próximas fases',
-    ),
-  ),
+  _Destination('Configurações', Icons.settings_outlined, Icons.settings, () => const SettingsPage()),
 ];
 
 /// Índice do destino "Dispositivos" (atalhos do Início).
 const devicesDestination = 2;
+
+/// Índice do destino "Comparar".
+const compareDestination = 3;
 
 /// Navegação lateral com as 6 telas da spec (§3.2).
 class AppShell extends ConsumerWidget {

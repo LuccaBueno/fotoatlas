@@ -84,4 +84,83 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 5));
   });
+
+  testWidgets('app com o core real: compara Celular × Backup pelo conteúdo', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1400, 1100)
+      ..devicePixelRatio = 1;
+    late Directory temp;
+    late FotoAtlasCore core;
+    await tester.runAsync(() async {
+      temp = await Directory.systemTemp.createTemp('fotoatlas_app_test_');
+      final volumeDir = Directory(p.join(temp.path, 'vol'))..createSync();
+      void write(String rel, List<int> bytes) {
+        final f = File(p.join(volumeDir.path, rel));
+        f.parent.createSync(recursive: true);
+        f.writeAsBytesSync(bytes);
+      }
+
+      write('Celular/IMG_1.jpg', List.filled(300, 1));
+      write('Celular/IMG_2.jpg', List.filled(400, 2));
+      write('Backup/2020/foto renomeada.jpg', List.filled(300, 1));
+      final fake = _OneVolume(volumeDir.path);
+      core = await FotoAtlasCore.open(
+        paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
+        volumes: fake,
+        pathResolver: fake,
+        useHelper: false,
+      );
+      for (final name in ['Celular', 'Backup']) {
+        final id = (await core.sources.addPath(p.join(volumeDir.path, name))).sourceId;
+        await core.scans.wait(await core.scans.start(id));
+      }
+      await core.hashes.start();
+      await core.hashes.waitIdle();
+    });
+    addTearDown(() async {
+      // Desmonta antes de fechar o core (também quando o teste falha no meio).
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+      await tester.runAsync(() async {
+        await core.close();
+        await temp.delete(recursive: true);
+      });
+    });
+
+    Future<void> settle() async {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
+      await tester.pump();
+    }
+
+    await tester.pumpWidget(FotoAtlasApp(openCore: () async => core));
+    final single = find.textContaining('existe em um lugar só');
+    for (var i = 0; i < 50 && single.evaluate().isEmpty; i++) {
+      await settle();
+    }
+    expect(single, findsOneWidget, reason: 'IMG_2 só está no Celular');
+
+    await tester.tap(find.text('Comparar').first);
+    await settle();
+    for (final (side, name) in [('a', 'Celular'), ('b', 'Backup')]) {
+      await tester.tap(find.byKey(ValueKey('add-$side')));
+      await settle();
+      await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text(name)));
+      await tester.pump();
+      await tester.tap(find.text('Adicionar'));
+      await settle();
+    }
+    await tester.tap(find.byKey(const ValueKey('compare-run')));
+    final verdict = find.textContaining('Falta 1 arquivo');
+    for (var i = 0; i < 50 && verdict.evaluate().isEmpty; i++) {
+      await settle();
+    }
+    expect(verdict, findsOneWidget);
+    for (var i = 0; i < 10 && find.textContaining('IMG_2.jpg').evaluate().isEmpty; i++) {
+      await settle();
+    }
+    expect(find.text('Celular › IMG_2.jpg'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 5));
+  });
 }

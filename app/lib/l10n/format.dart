@@ -41,3 +41,12 @@ String formatEpochMs(int ms) => formatDateTime(DateTime.fromMillisecondsSinceEpo
 
 /// "1 arquivo" / "2 arquivos".
 String plural(int n, String singular, String pluralForm) => '${formatInt(n)} ${n == 1 ? singular : pluralForm}';
+
+/// Duração aproximada: "menos de 1 min", "12 min", "2 h 5 min".
+String formatDuration(Duration d) {
+  final minutes = (d.inSeconds / 60).ceil();
+  if (minutes < 1) return 'menos de 1 min';
+  if (minutes < 60) return '$minutes min';
+  final h = minutes ~/ 60, m = minutes % 60;
+  return m == 0 ? '$h h' : '$h h $m min';
+}
