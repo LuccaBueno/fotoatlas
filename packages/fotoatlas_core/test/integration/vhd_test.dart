@@ -19,8 +19,17 @@ Future<void> diskpart(Directory temp, String script, {String? alsoOk}) async {
   final file = File(p.join(temp.path, 'diskpart_${DateTime.now().microsecondsSinceEpoch}.txt'))
     ..writeAsStringSync(script);
   final r = await Process.run('diskpart', ['/s', file.path]);
+  // Tolerância exclusiva deste teste (nunca no código do app); quem a usa
+  // confere o estado final por outro caminho.
   if (alsoOk != null && '${r.stdout}'.contains(alsoOk)) return;
   expect(r.exitCode, 0, reason: 'diskpart falhou:\n$script\n${r.stdout}\n${r.stderr}');
+}
+
+/// Estado real do VHD segundo o Windows, independente da saída do diskpart.
+Future<bool> vhdAttached(String vhd) async {
+  final r = await Process.run('powershell', ['-NoProfile', '-Command', "(Get-DiskImage -ImagePath '$vhd').Attached"]);
+  expect(r.exitCode, 0, reason: 'Get-DiskImage falhou: ${r.stderr}');
+  return '${r.stdout}'.trim() == 'True';
 }
 
 List<String> freeLetters() => [
@@ -52,6 +61,7 @@ assign letter=$first
             ..writeAsStringSync('select vdisk file="$vhd"\ndetach vdisk\n');
           await Process.run('diskpart', ['/s', script.path]);
         });
+        expect(await vhdAttached(vhd), isTrue);
 
         final fotos = Directory('$first:\\Fotos')..createSync();
         for (var i = 0; i < 20; i++) {
@@ -78,10 +88,11 @@ assign letter=$first
 
         await diskpart(temp, 'select volume $second\nremove letter=$second\n');
         // Sem letra o volume continua acessível pelo GUID; desmonta de vez.
-        // Na CI o VDS às vezes já desanexou neste ponto ("already detached"):
-        // o objetivo (unidade fora do sistema) foi atingido do mesmo jeito.
+        // Na CI o VDS às vezes já desanexou neste ponto e o diskpart responde
+        // "already detached" com código de erro. Aceitamos só essa mensagem e
+        // conferimos pelo Windows que o disco de fato saiu do sistema.
         await diskpart(temp, 'select vdisk file="$vhd"\ndetach vdisk\n', alsoOk: 'already detached');
-        expect(Directory('$second:\\').existsSync(), isFalse);
+        expect(await vhdAttached(vhd), isFalse, reason: 'o VHD deveria estar desanexado');
         await core.sources.refreshConnectivity();
         view = (await core.sources.list()).single;
         expect(view.state, SourceState.disconnected);
