@@ -30,6 +30,7 @@ class TestEnv {
       pathResolver: FakePathResolver(provider),
       useHelper: false,
       scanInIsolate: isolate,
+      hashInIsolate: isolate,
     );
     final env = TestEnv._(temp, core, provider, volumeDir);
     addTearDown(env.close);
@@ -45,9 +46,28 @@ class TestEnv {
 
   CatalogDatabase get db => core.catalog.db;
 
+  /// Cria mais um volume simulado (outro "HD"), com disco físico próprio.
+  Directory addVolume(String name, {String? diskSerial, String diskConfidence = 'reliable', String mount = r'F:\'}) {
+    final dir = Directory(p.join(temp.path, 'volume_$name'))..createSync();
+    assertInTemp(dir.path);
+    volumes.volumes = [
+      ...volumes.volumes,
+      fakeVolume(
+        dir.path,
+        mount: mount,
+        label: name,
+        serial: 0x1000 + volumes.volumes.length,
+        diskSerial: diskSerial ?? 'DISCO-$name',
+        diskConfidence: diskConfidence,
+      ),
+    ];
+    return dir;
+  }
+
   /// Cadastra [relDir] do volume simulado como fonte (cria a pasta se preciso).
-  Future<String> addFolder(String relDir, {String? name}) async {
-    final dir = Directory(p.join(volumeDir.path, relDir))..createSync(recursive: true);
+  /// Sem [volume], usa o volume principal.
+  Future<String> addFolder(String relDir, {String? name, Directory? volume}) async {
+    final dir = Directory(p.join((volume ?? volumeDir).path, relDir))..createSync(recursive: true);
     return (await core.sources.addPath(dir.path, name: name)).sourceId;
   }
 
@@ -55,6 +75,20 @@ class TestEnv {
   Future<ScanProgress> scan(String sourceId) async {
     final id = await core.scans.start(sourceId);
     return core.scans.wait(id);
+  }
+
+  /// Confere o conteúdo de tudo o que estiver pendente e espera terminar.
+  Future<void> hashAll() async {
+    await core.hashes.start();
+    await core.hashes.waitIdle();
+  }
+
+  /// Escreve um arquivo (cria as pastas) e devolve o caminho.
+  File write(String relPath, List<int> bytes, {Directory? volume}) {
+    final f = File(p.join((volume ?? volumeDir).path, relPath));
+    f.parent.createSync(recursive: true);
+    assertInTemp(f.path);
+    return f..writeAsBytesSync(bytes);
   }
 
   Future<int> count(String sql, [List<Object?> args = const []]) async {

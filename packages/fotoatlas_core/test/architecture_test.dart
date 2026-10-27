@@ -21,8 +21,10 @@ const _writeApis = [
   'FileMode.write',
   'FileMode.append',
   'MoveFileEx',
+  'moveFileEx',
   'DeleteFile',
   'CreateFileW',
+  'createFile',
   'RemoveDirectory',
   'SetFileAttributes',
   'SetFileTime',
@@ -35,6 +37,20 @@ const _allowed = {
   ('fotoatlas_core_base.dart', 'createSync'),
   // Arquivo de trava do catálogo (catalog.lock), na pasta do catálogo.
   ('util/instance_lock.dart', 'FileMode.append'),
+  // Bindings FFI (só declaração; o uso fica restrito a safe_io/).
+  ('platform/win32/kernel32.dart', 'CreateFileW'),
+  ('platform/win32/kernel32.dart', 'createFile'),
+  ('platform/win32/kernel32.dart', 'MoveFileEx'),
+  ('platform/win32/kernel32.dart', 'moveFileEx'),
+  // Única forma de abrir arquivo de usuário: somente leitura (flags conferidas abaixo).
+  ('safe_io/source_reader.dart', 'CreateFileW'),
+  ('safe_io/source_reader.dart', 'createFile'),
+  // Publicação sem sobrescrever (MoveFileExW sem REPLACE_EXISTING).
+  ('safe_io/move_no_replace.dart', 'MoveFileEx'),
+  ('safe_io/move_no_replace.dart', 'moveFileEx'),
+  // Backup do catálogo: pasta backups/ e rotação dos próprios backups (nunca arquivos de usuário).
+  ('catalog/catalog_backup.dart', 'createSync'),
+  ('catalog/catalog_backup.dart', 'deleteSync'),
 };
 
 void main() {
@@ -56,6 +72,23 @@ void main() {
       }
     }
     expect(violations, isEmpty, reason: 'APIs de escrita fora dos módulos autorizados');
+  });
+
+  test('a única abertura de arquivo de usuário é somente leitura e nunca cria', () {
+    final src = File(p.join('lib', 'src', 'safe_io', 'source_reader.dart')).readAsStringSync();
+    final call = RegExp(r'createFile\(([\s\S]*?)\),\s*\);').firstMatch(src);
+    expect(call, isNotNull, reason: 'chamada a createFile não encontrada');
+    final args = call!.group(1)!;
+    expect(args, contains('genericRead'));
+    expect(args, contains('openExisting'));
+    expect(args, contains('fileFlagOpenNoRecall'));
+    for (final forbidden in ['genericWrite', 'createNew', 'createAlways', 'openAlways', 'truncateExisting']) {
+      expect(args, isNot(contains(forbidden)));
+    }
+    // moveNoReplace nunca pede para substituir.
+    final move = File(p.join('lib', 'src', 'safe_io', 'move_no_replace.dart')).readAsStringSync();
+    expect(move, isNot(contains('ReplaceExisting')));
+    expect(move, isNot(contains('0x1')));
   });
 
   test('o core não depende de Flutter', () {

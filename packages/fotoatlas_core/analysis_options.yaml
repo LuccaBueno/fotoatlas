@@ -6,6 +6,7 @@ formatter:
 analyzer:
   exclude:
     - "**/*.g.dart"
+    - test/generated_schema/**
   language:
     strict-casts: true
     strict-raw-types: true

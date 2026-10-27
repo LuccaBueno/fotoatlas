@@ -86,6 +86,78 @@ void main() {
     expect(second.stderr as String, contains('já está em uso'));
   });
 
+  test('comparar pela CLI: A = pasta1 + pasta2, B = pasta3, e escopo salvo', () async {
+    final temp = await createTestTemp();
+    final home = p.join(temp.path, 'home');
+    void write(String rel, List<int> bytes) {
+      final f = File(p.join(temp.path, rel));
+      f.parent.createSync(recursive: true);
+      f.writeAsBytesSync(bytes);
+    }
+
+    write('Disco/pasta1/IMG_1.jpg', List.filled(1000, 1));
+    write('Disco/pasta1/IMG_2.jpg', List.filled(2000, 2));
+    write('Disco/pasta2/VID_1.mp4', List.filled(3000, 3));
+    write('Backup/pasta3/renomeada.jpg', List.filled(1000, 1));
+    write('Backup/pasta3/x/video.mp4', List.filled(3000, 3));
+    write('Backup/pasta3/so_b.jpg', List.filled(500, 9));
+    for (final (dir, name) in [('Disco', 'Disco'), ('Backup', 'Backup')]) {
+      expect((await run(home, ['sources', 'add', p.join(temp.path, dir), '--name', name])).exitCode, 0);
+      expect((await run(home, ['scan', 'start', name])).exitCode, 0);
+    }
+
+    var r = await run(home, ['compare', 'Disco:pasta1+Disco:pasta2', 'Backup:pasta3']);
+    expect(r.stdout as String, contains('VERDICT incomplete'), reason: 'ainda sem conferir o conteúdo');
+
+    final hash = await run(home, ['hash', 'run']);
+    expect(hash.stdout as String, contains('HASH done feitos=6 erros=0'), reason: '${hash.stdout}${hash.stderr}');
+
+    expect((await run(home, ['scopes', 'save', 'Fotos do celular antigo', 'Disco:pasta1+Disco:pasta2'])).exitCode, 0);
+    r = await run(home, ['compare', '@Fotos do celular antigo', 'Backup:pasta3', '--list', 'missing']);
+    final out = r.stdout as String;
+    expect(out, contains('Falta 1 arquivo (2.0 KB) de A em B.'));
+    expect(out, contains('VERDICT missing'));
+    expect(out, contains('MISSING contents=1 bytes=2000 files=1'));
+    expect(out, contains('ONLY_B contents=1 bytes=500'));
+    expect(out, contains('BOTH contents=2 bytes=4000'));
+    expect(out, contains('ITEM Disco:pasta1/IMG_2.jpg'));
+  });
+
+  test('processo morto no meio da conferência: retomar termina sem duplicar conteúdo', () async {
+    final temp = await createTestTemp();
+    final home = p.join(temp.path, 'home');
+    final manifest = generateTree(p.join(temp.path, 'Fotos'), const FixtureOptions(files: 300, seed: 7));
+    expect((await run(home, ['sources', 'add', p.join(temp.path, 'Fotos'), '--name', 'Fotos'])).exitCode, 0);
+    expect((await run(home, ['scan', 'start', 'Fotos'])).exitCode, 0);
+
+    final victim = await Process.start(
+      cli,
+      ['--home', home, '--no-helper', 'hash', 'run'],
+      environment: {'FOTOATLAS_CRASHPOINT': 'hash.after_batch_commit:2'},
+    );
+    final output = StringBuffer();
+    final reached = Completer<void>();
+    victim.stdout.transform(utf8.decoder).listen((chunk) {
+      output.write(chunk);
+      if (output.toString().contains('CRASHPOINT hash.after_batch_commit') && !reached.isCompleted) {
+        reached.complete();
+      }
+    });
+    victim.stderr.drain<void>().ignore();
+    await reached.future.timeout(const Duration(minutes: 2), onTimeout: () => fail('crashpoint não atingido: $output'));
+    expect(victim.kill(), isTrue);
+    await victim.exitCode;
+
+    final resumed = await run(home, ['hash', 'run']);
+    expect(resumed.exitCode, 0, reason: '${resumed.stdout}${resumed.stderr}');
+    // 2 lotes de 32 já estavam gravados; o resto foi feito agora.
+    expect(resumed.stdout as String, contains('HASH done feitos=${manifest.files - 64} erros=0'));
+    final again = await run(home, ['hash', 'run']);
+    expect(again.stdout as String, contains('HASH done feitos=0'), reason: 'nada pendente: idempotente');
+    final coverage = await run(home, ['coverage']);
+    expect(coverage.stdout as String, contains('Ainda sem conteúdo conferido: 0'));
+  }, timeout: const Timeout(Duration(minutes: 5)));
+
   for (final hit in [1, 3]) {
     test('processo morto no meio do scan (lote $hit): retomar dá contagem exata', () async {
       final temp = await createTestTemp();

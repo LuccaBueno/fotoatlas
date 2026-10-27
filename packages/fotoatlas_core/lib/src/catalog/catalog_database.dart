@@ -9,7 +9,7 @@ part 'catalog_database.g.dart';
 class CatalogDatabase extends _$CatalogDatabase {
   CatalogDatabase(super.e);
 
-  static const int currentSchemaVersion = 1;
+  static const int currentSchemaVersion = 2;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -17,10 +17,13 @@ class CatalogDatabase extends _$CatalogDatabase {
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
+    // Cada passo vN→vN+1 roda dentro da transação de migração do drift: se
+    // falhar, nada muda. Só mudanças aditivas (docs/schema-v1.md §3).
     onUpgrade: (m, from, to) async {
-      // Não há migrações ainda. Cada passo futuro vN→vN+1 entra aqui e roda
-      // dentro da transação de migração do drift.
-      throw StateError('Migração de v$from para v$to não implementada.');
+      if (from < 2) {
+        await m.addColumn(fileInstances, fileInstances.hashError);
+        await m.createTable(savedScopes);
+      }
     },
   );
 }

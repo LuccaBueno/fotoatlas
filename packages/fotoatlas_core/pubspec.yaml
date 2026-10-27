@@ -11,6 +11,7 @@ executables:
   fotoatlas_cli:
 
 dependencies:
+  crypto: ^3.0.8
   drift: ^2.35.3
   ffi: ^2.2.0
   path: ^1.9.1

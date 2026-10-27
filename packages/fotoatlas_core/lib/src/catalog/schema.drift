@@ -1,4 +1,4 @@
--- Schema do catálogo v1. Fonte da verdade: docs/schema-v1.md.
+-- Schema do catálogo (v2). Fonte da verdade: docs/schema-v1.md (v1 + §7, mudanças da v2).
 -- Datas do app: ms Unix UTC. mtime/ctime: FILETIME bruto (100 ns desde 1601).
 
 CREATE TABLE app_meta (
@@ -124,6 +124,7 @@ CREATE TABLE file_instances (
   first_seen_scan_id   INTEGER REFERENCES scans(id),
   last_seen_scan_id    INTEGER REFERENCES scans(id),
   missing_confirmed_at INTEGER,
+  hash_error           TEXT,                   -- v2: motivo legível de hash_status error/changed_during_read
   UNIQUE (source_id, rel_path)
 ) AS FileInstanceRow;
 CREATE INDEX ix_fi_content      ON file_instances(content_id);
@@ -270,3 +271,12 @@ CREATE TABLE integrity_checks (
   observed_mtime   INTEGER
 ) AS IntegrityCheckRow;
 CREATE INDEX ix_ic_instance ON integrity_checks(instance_id, checked_at DESC);
+
+-- v2: escopos de comparação salvos com nome (spec §9). Só catálogo; nunca toca em arquivos.
+CREATE TABLE saved_scopes (
+  id              INTEGER NOT NULL PRIMARY KEY,
+  name            TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  definition_json TEXT NOT NULL,
+  created_at      INTEGER NOT NULL,
+  updated_at      INTEGER NOT NULL
+) AS SavedScopeRow;

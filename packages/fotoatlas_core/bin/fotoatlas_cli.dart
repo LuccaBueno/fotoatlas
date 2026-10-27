@@ -17,8 +17,20 @@ Comandos:
   scan start FONTE               Escaneia (retoma se houver um pausado)
   scan resume ID                 Retoma um escaneamento pelo número
   scan status [FONTE]            Mostra os últimos escaneamentos
+  hash run                       Confere o conteúdo dos pendentes (Ctrl+C pausa)
+  hash retry [FONTE]             Volta para a fila os que deram erro ou mudaram
+  coverage                       Situação de backup (fotos e vídeos)
+  compare LADO_A LADO_B [--list L] [--type T]
+                                 B contém todo o conteúdo de A?
+  scopes list                    Lista os escopos salvos
+  scopes save NOME ESCOPO        Salva um escopo com nome
+  scopes remove NOME             Remove um escopo salvo (só do catálogo)
+  backup [now|list]              Backup do catálogo
 
 FONTE pode ser o nome, o id ou o começo do id.
+ESCOPO/LADO: "FONTE[:pasta/sub]" separados por "+" (ex.: "HD:Fotos/2020+Celular"),
+  ou "@NOME" para um escopo salvo. --type: photo,raw,video,other.
+--list: missing (padrão), only-b, both, unverified-a, unverified-b.
 --home (ou FOTOATLAS_HOME) troca a pasta do catálogo.
 ''';
 
@@ -120,9 +132,189 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
         );
       }
       return 0;
+
+    case ['hash', 'run']:
+      return _hashRun(core);
+
+    case ['hash', 'retry', ...final rest]:
+      final sourceId = rest.isEmpty ? null : await _findSource(core, rest.first);
+      stdout.writeln('RETRY ${await core.hashes.retryFailed(sourceId: sourceId)}');
+      return 0;
+
+    case ['coverage']:
+      final r = await core.coverage.report();
+      final names = {for (final s in await core.sources.list()) s.id: s.name};
+      stdout.writeln('Fotos e vídeos (conteúdos distintos):');
+      for (final state in BackupState.values) {
+        stdout.writeln(
+          '  ${_stateLabel(state)}: ${r.overall.filesIn(state)} (${_bytes(r.overall.bytesIn(state))})  '
+          'COVERAGE ${state.name}=${r.overall.filesIn(state)}',
+        );
+      }
+      stdout.writeln('  Ainda sem conteúdo conferido: ${r.pendingFiles}');
+      for (final s in r.perSource.values) {
+        stdout.writeln(
+          '${names[s.sourceId] ?? s.sourceId}: ${BackupState.values.map((st) => '${st.name}=${s.counts.filesIn(st)}').join(' ')}'
+          '  repetidos=${s.duplicateFiles} (${_bytes(s.duplicateBytes)})',
+        );
+      }
+      return 0;
+
+    case ['compare', final sideA, final sideB, ...final rest]:
+      final types = _option(rest, '--type');
+      final a = await _parseScope(core, sideA, types);
+      final b = await _parseScope(core, sideB, types);
+      final r = await core.compare.compare(a, b);
+      final verdict = switch (r.verdict) {
+        CompareVerdict.complete => 'Sim, 100%: B contém todo o conteúdo de A.',
+        CompareVerdict.missing =>
+          '${r.missing.contents == 1 ? 'Falta 1 arquivo' : 'Faltam ${r.missing.contents} arquivos'} (${_bytes(r.missing.bytes)}) de A em B.',
+        CompareVerdict.incomplete =>
+          'Resultado incompleto: ${r.unverifiedTotal} arquivos ainda sem conteúdo conferido'
+              '${r.missing.contents > 0 ? '; já se sabe que faltam ${r.missing.contents} (${_bytes(r.missing.bytes)})' : ''}.',
+        CompareVerdict.emptyA => 'A não tem nenhum arquivo.',
+      };
+      stdout
+        ..writeln(verdict)
+        ..writeln('VERDICT ${r.verdict.name}')
+        ..writeln('A files=${r.aFiles} bytes=${r.aBytes}  B files=${r.bFiles} bytes=${r.bBytes}')
+        ..writeln('MISSING contents=${r.missing.contents} bytes=${r.missing.bytes} files=${r.missing.files}')
+        ..writeln('ONLY_B contents=${r.onlyInB.contents} bytes=${r.onlyInB.bytes}')
+        ..writeln('BOTH contents=${r.inBoth.contents} bytes=${r.inBoth.bytes}');
+      for (final issue in r.issues) {
+        stdout.writeln(switch (issue) {
+          UnverifiedFiles(:final side, :final pending, :final errors, :final changed, :final cloudOnly) =>
+            'ISSUE unverified $side pending=$pending errors=$errors changed=$changed cloud=$cloudOnly',
+          NeverScanned(:final side, :final sourceName) => 'ISSUE never_scanned $side $sourceName',
+          UnreadFolders(:final side, :final sourceName, :final folders) =>
+            'ISSUE unread_folders $side $sourceName ${folders.join(', ')}',
+          UnknownSource(:final side, :final sourceId) => 'ISSUE unknown_source $side $sourceId',
+        });
+      }
+      for (final w in r.warnings) {
+        stdout.writeln(switch (w) {
+          DisconnectedSource(:final side, :final sourceName) => 'WARN disconnected $side $sourceName',
+          ScopesOverlap(:final aName, :final bName) => 'WARN overlap $aName × $bName',
+        });
+      }
+      final listName = _option(rest, '--list');
+      if (listName != null) {
+        final list = switch (listName) {
+          'only-b' => CompareList.onlyInB,
+          'both' => CompareList.inBoth,
+          'unverified-a' => CompareList.unverifiedA,
+          'unverified-b' => CompareList.unverifiedB,
+          _ => CompareList.missing,
+        };
+        final names = {for (final s in await core.sources.list()) s.id: s.name};
+        for (var offset = 0; ; offset += 500) {
+          final page = await core.compare.items(a, b, list, offset: offset, limit: 500);
+          for (final i in page) {
+            stdout.writeln('ITEM ${names[i.sourceId] ?? i.sourceId}:${i.relPath}  ${_bytes(i.sizeBytes)}');
+          }
+          if (page.length < 500) break;
+        }
+      }
+      return 0;
+
+    case ['scopes', 'list']:
+      final saved = await core.compare.savedScopes();
+      if (saved.isEmpty) stdout.writeln('Nenhum escopo salvo.');
+      final names = {for (final s in await core.sources.list()) s.id: s.name};
+      for (final s in saved) {
+        final entries = s.scope.entries.map(
+          (e) => e.relPath.isEmpty ? names[e.sourceId] : '${names[e.sourceId]}:${e.relPath}',
+        );
+        stdout.writeln(
+          '${s.name}: ${entries.join(' + ')}${s.scope.types == null ? '' : '  (${s.scope.types!.map((t) => t.name).join(',')})'}',
+        );
+      }
+      return 0;
+
+    case ['scopes', 'save', final name, final spec, ...final rest]:
+      final saved = await core.compare.saveScope(name, await _parseScope(core, spec, _option(rest, '--type')));
+      stdout.writeln('SCOPE ${saved.id} ${saved.name}');
+      return 0;
+
+    case ['scopes', 'remove', final name]:
+      final saved = (await core.compare.savedScopes()).where((s) => s.name.toLowerCase() == name.toLowerCase());
+      if (saved.isEmpty) throw SourceException('Escopo "$name" não encontrado.');
+      await core.compare.removeScope(saved.single.id);
+      return 0;
+
+    case ['backup'] || ['backup', 'now']:
+      final info = await core.backups.backupNow();
+      stdout.writeln('BACKUP ${info.path} ${_bytes(info.sizeBytes)}');
+      return 0;
+
+    case ['backup', 'list']:
+      for (final b in core.backups.list()) {
+        stdout.writeln('${b.createdAt.toLocal()}  ${_bytes(b.sizeBytes)}  ${b.path}');
+      }
+      return 0;
   }
   stderr.write(_usage);
   return 64;
+}
+
+String? _option(List<String> args, String name) {
+  final i = args.indexOf(name);
+  return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
+}
+
+/// "FONTE[:pasta]+FONTE2" ou "@NOME" (escopo salvo).
+Future<Scope> _parseScope(FotoAtlasCore core, String spec, String? types) async {
+  final typeSet = types?.split(',').map((t) => ScopeFileType.values.byName(t.trim())).toSet();
+  if (spec.startsWith('@')) {
+    final name = spec.substring(1).toLowerCase();
+    final saved = (await core.compare.savedScopes()).where((s) => s.name.toLowerCase() == name);
+    if (saved.isEmpty) throw SourceException('Escopo salvo "${spec.substring(1)}" não encontrado.');
+    final scope = saved.single.scope;
+    return typeSet == null ? scope : Scope(scope.entries, types: typeSet);
+  }
+  final entries = <ScopeEntry>[];
+  for (final part in spec.split('+')) {
+    final i = part.indexOf(':');
+    // "C:\..." não é usado aqui: pastas são relativas à fonte.
+    final source = await _findSource(core, i < 0 ? part : part.substring(0, i));
+    entries.add(ScopeEntry(source, i < 0 ? '' : part.substring(i + 1)));
+  }
+  return Scope(entries, types: typeSet);
+}
+
+String _stateLabel(BackupState s) => switch (s) {
+  BackupState.single => 'Só 1 cópia',
+  BackupState.probable => 'Copiado, falta conferir',
+  BackupState.verified => 'Cópia conferida',
+  BackupState.independent => 'Backup em disco independente',
+  BackupState.unknown => 'Situação desconhecida',
+};
+
+/// Confere o conteúdo até acabar; Ctrl+C pausa (os pendentes ficam para depois).
+Future<int> _hashRun(FotoAtlasCore core) async {
+  final sigint = ProcessSignal.sigint.watch().listen((_) {
+    stdout.writeln('Pausando…');
+    core.hashes.pause();
+  });
+  var lastPrint = DateTime.fromMillisecondsSinceEpoch(0);
+  final sub = core.hashes.status.listen((s) {
+    final now = DateTime.now();
+    if (now.difference(lastPrint).inMilliseconds < 1000 && s.running) return;
+    lastPrint = now;
+    stdout.writeln(
+      'PROGRESS feitos=${s.filesDone}/${s.filesTotal} bytes=${s.bytesDone}/${s.bytesTotal} erros=${s.errors}',
+    );
+  });
+  await core.hashes.start();
+  await core.hashes.waitIdle();
+  await sub.cancel();
+  await sigint.cancel();
+  final s = core.hashes.current;
+  stdout.writeln(
+    'HASH ${s.paused ? 'paused' : 'done'} feitos=${s.filesDone} erros=${s.errors} mudaram=${s.changed}'
+    '${s.message == null ? '' : ' — ${s.message}'}',
+  );
+  return 0;
 }
 
 /// Acompanha o scan até o fim; Ctrl+C pausa (pode retomar depois).

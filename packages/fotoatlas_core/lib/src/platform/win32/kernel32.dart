@@ -1,5 +1,7 @@
 // Bindings FFI mínimos do kernel32 (ADR 0008). Somente o necessário, revisável
-// em um só lugar. Nenhuma função de escrita é exposta nesta fase.
+// em um só lugar. Abrir arquivo (CreateFileW) e mover (MoveFileExW) só são
+// usados por safe_io/ (teste de arquitetura): leitura de origem e publicação
+// sem sobrescrever.
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
@@ -19,6 +21,10 @@ const int errorDevNotExist = 55;
 const int errorBadNetPath = 53;
 const int errorMoreData = 234;
 const int errorFilenameExcedRange = 206;
+const int errorSharingViolation = 32;
+const int errorLockViolation = 33;
+const int errorAlreadyExists = 183;
+const int errorFileExists = 80;
 
 // Atributos de arquivo.
 const int fileAttributeHidden = 0x2;
@@ -129,6 +135,60 @@ final getDriveType = _kernel32.lookupFunction<Uint32 Function(Pointer<Utf16>), i
   'GetDriveTypeW',
   isLeaf: true,
 );
+
+// --- Arquivos (somente safe_io/) -------------------------------------------
+
+const int genericRead = 0x80000000;
+const int fileShareRead = 0x1;
+const int fileShareWrite = 0x2;
+const int fileShareDelete = 0x4;
+const int openExisting = 3;
+const int fileFlagSequentialScan = 0x08000000;
+
+/// Não traz o conteúdo de volta de armazenamento remoto (placeholders).
+const int fileFlagOpenNoRecall = 0x00100000;
+const int getFileExInfoStandard = 0;
+
+/// Sem `MOVEFILE_REPLACE_EXISTING` (0x1), de propósito: nunca sobrescrever.
+const int movefileWriteThrough = 0x8;
+
+/// Tamanho de BY_HANDLE_FILE_INFORMATION.
+const int byHandleFileInformationSize = 52;
+
+/// Tamanho de WIN32_FILE_ATTRIBUTE_DATA.
+const int win32FileAttributeDataSize = 36;
+
+final createFile = _kernel32
+    .lookupFunction<
+      IntPtr Function(Pointer<Utf16>, Uint32, Uint32, Pointer<Void>, Uint32, Uint32, IntPtr),
+      int Function(Pointer<Utf16>, int, int, Pointer<Void>, int, int, int)
+    >('CreateFileW', isLeaf: true);
+
+final readFile = _kernel32
+    .lookupFunction<
+      Int32 Function(IntPtr, Pointer<Uint8>, Uint32, Pointer<Uint32>, Pointer<Void>),
+      int Function(int, Pointer<Uint8>, int, Pointer<Uint32>, Pointer<Void>)
+    >('ReadFile', isLeaf: true);
+
+final closeHandle = _kernel32.lookupFunction<Int32 Function(IntPtr), int Function(int)>('CloseHandle', isLeaf: true);
+
+final getFileInformationByHandle = _kernel32
+    .lookupFunction<Int32 Function(IntPtr, Pointer<Uint8>), int Function(int, Pointer<Uint8>)>(
+      'GetFileInformationByHandle',
+      isLeaf: true,
+    );
+
+final getFileAttributesEx = _kernel32
+    .lookupFunction<
+      Int32 Function(Pointer<Utf16>, Int32, Pointer<Uint8>),
+      int Function(Pointer<Utf16>, int, Pointer<Uint8>)
+    >('GetFileAttributesExW', isLeaf: true);
+
+final moveFileEx = _kernel32
+    .lookupFunction<
+      Int32 Function(Pointer<Utf16>, Pointer<Utf16>, Uint32),
+      int Function(Pointer<Utf16>, Pointer<Utf16>, int)
+    >('MoveFileExW', isLeaf: true);
 
 /// Lê uma string UTF-16 terminada em zero de um buffer de tamanho fixo.
 String readFixedUtf16(Pointer<Uint8> base, int offsetBytes, int maxChars) {

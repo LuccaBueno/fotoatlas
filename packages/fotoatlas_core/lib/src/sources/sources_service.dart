@@ -116,6 +116,9 @@ class SourcesService {
   bool _refreshing = false;
   List<VolumeInfo> _lastVolumes = const [];
 
+  /// Avisa quando o estado de conexão de alguma fonte muda.
+  Stream<void> get stateChanges => _stateChanges.stream;
+
   /// Volumes vistos na última verificação.
   List<VolumeInfo> get lastVolumes => _lastVolumes;
 
@@ -284,6 +287,30 @@ class SourcesService {
     Ambiguous() => SourceState.ambiguous,
     _ => SourceState.disconnected,
   };
+
+  /// Subpastas diretas de [relPath] numa fonte, segundo o catálogo (funciona
+  /// com a fonte desconectada). Só pastas que têm arquivos catalogados.
+  Future<List<String>> childFolders(String sourceId, [String relPath = '']) async {
+    final rows = await db
+        .customSelect(
+          "SELECT DISTINCT dir_rel_path FROM file_instances WHERE source_id = ? AND availability != 'missing' "
+          "AND dir_rel_path != '' ${relPath.isEmpty ? '' : 'AND substr(dir_rel_path, 1, ?) = ?'}",
+          variables: [
+            Variable.withString(sourceId),
+            if (relPath.isNotEmpty) ...[Variable.withInt(relPath.length + 1), Variable.withString('$relPath/')],
+          ],
+          readsFrom: {db.fileInstances},
+        )
+        .get();
+    final prefix = relPath.isEmpty ? 0 : relPath.length + 1;
+    final children = <String>{};
+    for (final r in rows) {
+      final rest = r.read<String>('dir_rel_path').substring(prefix);
+      final slash = rest.indexOf('/');
+      children.add((relPath.isEmpty ? '' : '$relPath/') + (slash < 0 ? rest : rest.substring(0, slash)));
+    }
+    return children.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  }
 
   Future<SourceRow?> byId(String id) => (db.select(db.sources)..where((s) => s.id.equals(id))).getSingleOrNull();
 

@@ -1,0 +1,3174 @@
+{
+  "_meta": {
+    "description": "This file contains a serialized version of schema entities for drift.",
+    "version": "1.3.0"
+  },
+  "options": {
+    "store_date_time_values_as_text": false
+  },
+  "entities": [
+    {
+      "id": 0,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "app_meta",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "key",
+            "getter_name": "key",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "value",
+            "getter_name": "value",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": true,
+        "constraints": []
+      }
+    },
+    {
+      "id": 1,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "settings",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "key",
+            "getter_name": "key",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "value_json",
+            "getter_name": "valueJson",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": true,
+        "constraints": []
+      }
+    },
+    {
+      "id": 2,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "physical_disks",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "serial",
+            "getter_name": "serial",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "model",
+            "getter_name": "model",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "size_bytes",
+            "getter_name": "sizeBytes",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "bus_type",
+            "getter_name": "busType",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "identity_confidence",
+            "getter_name": "identityConfidence",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (identity_confidence IN ('reliable', 'weak', 'unknown'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "user_confirmed",
+            "getter_name": "userConfirmed",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "first_seen_at",
+            "getter_name": "firstSeenAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "last_seen_at",
+            "getter_name": "lastSeenAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 3,
+      "references": [
+        2
+      ],
+      "type": "table",
+      "data": {
+        "name": "sources",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "kind",
+            "getter_name": "kind",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (kind IN ('external_hd', 'internal', 'usb_stick', 'memory_card', 'phone', 'folder'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "volume_guid",
+            "getter_name": "volumeGuid",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "volume_serial",
+            "getter_name": "volumeSerial",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "volume_label",
+            "getter_name": "volumeLabel",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "filesystem",
+            "getter_name": "filesystem",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "volume_size_bytes",
+            "getter_name": "volumeSizeBytes",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "physical_disk_id",
+            "getter_name": "physicalDiskId",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "REFERENCES physical_disks(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "physical_disks",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "marker_id",
+            "getter_name": "markerId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "device_id",
+            "getter_name": "deviceId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "device_model",
+            "getter_name": "deviceModel",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "root_rel_path",
+            "getter_name": "rootRelPath",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT ''",
+            "default_dart": "const CustomExpression('\\'\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "last_mount_path",
+            "getter_name": "lastMountPath",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "connected",
+            "getter_name": "connected",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "last_connected_at",
+            "getter_name": "lastConnectedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "total_bytes_last",
+            "getter_name": "totalBytesLast",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "free_bytes_last",
+            "getter_name": "freeBytesLast",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "forgotten_at",
+            "getter_name": "forgottenAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 4,
+      "references": [
+        3
+      ],
+      "type": "index",
+      "data": {
+        "on": 3,
+        "name": "ix_sources_volume_guid",
+        "sql": "CREATE INDEX ix_sources_volume_guid   ON sources(volume_guid);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 5,
+      "references": [
+        3
+      ],
+      "type": "index",
+      "data": {
+        "on": 3,
+        "name": "ix_sources_volume_serial",
+        "sql": "CREATE INDEX ix_sources_volume_serial ON sources(volume_serial);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 6,
+      "references": [
+        3
+      ],
+      "type": "index",
+      "data": {
+        "on": 3,
+        "name": "ix_sources_device_id",
+        "sql": "CREATE INDEX ix_sources_device_id     ON sources(device_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 7,
+      "references": [
+        3
+      ],
+      "type": "table",
+      "data": {
+        "name": "scans",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "source_id",
+            "getter_name": "sourceId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES sources(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "sources",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "kind",
+            "getter_name": "kind",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (kind IN ('full', 'incremental'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "status",
+            "getter_name": "status",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (status IN ('running', 'paused', 'interrupted', 'completed', 'cancelled', 'failed'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "coverage",
+            "getter_name": "coverage",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "CHECK (coverage IN ('complete', 'partial'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "mount_path_used",
+            "getter_name": "mountPathUsed",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "started_at",
+            "getter_name": "startedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "finished_at",
+            "getter_name": "finishedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "dirs_done",
+            "getter_name": "dirsDone",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "files_seen",
+            "getter_name": "filesSeen",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "bytes_seen",
+            "getter_name": "bytesSeen",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "error_count",
+            "getter_name": "errorCount",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 8,
+      "references": [
+        7
+      ],
+      "type": "index",
+      "data": {
+        "on": 7,
+        "name": "ix_scans_source",
+        "sql": "CREATE INDEX ix_scans_source ON scans(source_id, started_at DESC);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 9,
+      "references": [
+        7
+      ],
+      "type": "table",
+      "data": {
+        "name": "scan_dirs",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "scan_id",
+            "getter_name": "scanId",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES scans(id)ON DELETE CASCADE",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "scans",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": "cascade"
+                }
+              }
+            ]
+          },
+          {
+            "name": "rel_path",
+            "getter_name": "relPath",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "status",
+            "getter_name": "status",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (status IN ('pending', 'done', 'error', 'excluded'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": true,
+        "constraints": [
+          "PRIMARY KEY(scan_id, rel_path)"
+        ],
+        "explicit_pk": [
+          "scan_id",
+          "rel_path"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "references": [
+        9
+      ],
+      "type": "index",
+      "data": {
+        "on": 9,
+        "name": "ix_scan_dirs_pending",
+        "sql": "CREATE INDEX ix_scan_dirs_pending ON scan_dirs(scan_id) WHERE status = 'pending';",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 11,
+      "references": [
+        7
+      ],
+      "type": "table",
+      "data": {
+        "name": "scan_errors",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "scan_id",
+            "getter_name": "scanId",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES scans(id)ON DELETE CASCADE",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "scans",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": "cascade"
+                }
+              }
+            ]
+          },
+          {
+            "name": "rel_path",
+            "getter_name": "relPath",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "kind",
+            "getter_name": "kind",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (kind IN ('access_denied', 'path_too_long', 'io_error', 'reparse_point_skipped', 'device_disconnected', 'other'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "win32_code",
+            "getter_name": "win32Code",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "message",
+            "getter_name": "message",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "at",
+            "getter_name": "at",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 12,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "contents",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "sha256",
+            "getter_name": "sha256",
+            "moor_type": "blob",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (length(sha256) = 32)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "size_bytes",
+            "getter_name": "sizeBytes",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "media_type",
+            "getter_name": "mediaType",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 'unknown' CHECK (media_type IN ('photo', 'video', 'raw', 'sidecar', 'other', 'unknown'))",
+            "default_dart": "const CustomExpression('\\'unknown\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "UNIQUE(sha256, size_bytes)"
+        ],
+        "unique_keys": [
+          [
+            "sha256",
+            "size_bytes"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "references": [
+        3,
+        12,
+        7
+      ],
+      "type": "table",
+      "data": {
+        "name": "file_instances",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "source_id",
+            "getter_name": "sourceId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES sources(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "sources",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "rel_path",
+            "getter_name": "relPath",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "dir_rel_path",
+            "getter_name": "dirRelPath",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "ext",
+            "getter_name": "ext",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "size_bytes",
+            "getter_name": "sizeBytes",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "mtime",
+            "getter_name": "mtime",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "ctime",
+            "getter_name": "ctime",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "attributes",
+            "getter_name": "attributes",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "content_id",
+            "getter_name": "contentId",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "REFERENCES contents(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "contents",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "hash_status",
+            "getter_name": "hashStatus",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 'pending' CHECK (hash_status IN ('pending', 'done', 'changed_during_read', 'error', 'not_applicable'))",
+            "default_dart": "const CustomExpression('\\'pending\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "hashed_size",
+            "getter_name": "hashedSize",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "hashed_mtime",
+            "getter_name": "hashedMtime",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "hashed_at",
+            "getter_name": "hashedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "last_verified_at",
+            "getter_name": "lastVerifiedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "availability",
+            "getter_name": "availability",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 'present' CHECK (availability IN ('present', 'cloud_only', 'unreadable', 'missing'))",
+            "default_dart": "const CustomExpression('\\'present\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "integrity",
+            "getter_name": "integrity",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 'unknown' CHECK (integrity IN ('unknown', 'ok', 'changed', 'possibly_corrupt'))",
+            "default_dart": "const CustomExpression('\\'unknown\\'')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "first_seen_scan_id",
+            "getter_name": "firstSeenScanId",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "REFERENCES scans(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "scans",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "last_seen_scan_id",
+            "getter_name": "lastSeenScanId",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "REFERENCES scans(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "scans",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "missing_confirmed_at",
+            "getter_name": "missingConfirmedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "hash_error",
+            "getter_name": "hashError",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "UNIQUE(source_id, rel_path)"
+        ],
+        "unique_keys": [
+          [
+            "source_id",
+            "rel_path"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "references": [
+        13
+      ],
+      "type": "index",
+      "data": {
+        "on": 13,
+        "name": "ix_fi_content",
+        "sql": "CREATE INDEX ix_fi_content      ON file_instances(content_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 15,
+      "references": [
+        13
+      ],
+      "type": "index",
+      "data": {
+        "on": 13,
+        "name": "ix_fi_source_dir",
+        "sql": "CREATE INDEX ix_fi_source_dir   ON file_instances(source_id, dir_rel_path);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 16,
+      "references": [
+        13
+      ],
+      "type": "index",
+      "data": {
+        "on": 13,
+        "name": "ix_fi_size",
+        "sql": "CREATE INDEX ix_fi_size         ON file_instances(size_bytes);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 17,
+      "references": [
+        13
+      ],
+      "type": "index",
+      "data": {
+        "on": 13,
+        "name": "ix_fi_hash_pending",
+        "sql": "CREATE INDEX ix_fi_hash_pending ON file_instances(source_id) WHERE hash_status = 'pending';",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 18,
+      "references": [
+        13
+      ],
+      "type": "index",
+      "data": {
+        "on": 13,
+        "name": "ix_fi_last_seen",
+        "sql": "CREATE INDEX ix_fi_last_seen    ON file_instances(source_id, last_seen_scan_id);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 19,
+      "references": [
+        13
+      ],
+      "type": "index",
+      "data": {
+        "on": 13,
+        "name": "ix_fi_ext",
+        "sql": "CREATE INDEX ix_fi_ext          ON file_instances(ext);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 20,
+      "references": [
+        12
+      ],
+      "type": "table",
+      "data": {
+        "name": "media_metadata",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "content_id",
+            "getter_name": "contentId",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY REFERENCES contents(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key",
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "contents",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "capture_utc_ms",
+            "getter_name": "captureUtcMs",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "capture_local",
+            "getter_name": "captureLocal",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "tz_offset_min",
+            "getter_name": "tzOffsetMin",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "date_source",
+            "getter_name": "dateSource",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "CHECK (date_source IN ('manual', 'exif_original', 'video_internal', 'filename', 'filesystem', 'none'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "date_confidence",
+            "getter_name": "dateConfidence",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "CHECK (date_confidence IN ('high', 'medium', 'low', 'none'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "date_conflict",
+            "getter_name": "dateConflict",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "candidates_json",
+            "getter_name": "candidatesJson",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "make",
+            "getter_name": "make",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "model",
+            "getter_name": "model",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "lens",
+            "getter_name": "lens",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "iso",
+            "getter_name": "iso",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "aperture",
+            "getter_name": "aperture",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "exposure_s",
+            "getter_name": "exposureS",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "focal_mm",
+            "getter_name": "focalMm",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "width",
+            "getter_name": "width",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "height",
+            "getter_name": "height",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "orientation",
+            "getter_name": "orientation",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "lat",
+            "getter_name": "lat",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "lon",
+            "getter_name": "lon",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "duration_ms",
+            "getter_name": "durationMs",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "fps",
+            "getter_name": "fps",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "video_codec",
+            "getter_name": "videoCodec",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "audio_codec",
+            "getter_name": "audioCodec",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "bitrate",
+            "getter_name": "bitrate",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "software",
+            "getter_name": "software",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "extractor",
+            "getter_name": "extractor",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "extracted_at",
+            "getter_name": "extractedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 21,
+      "references": [
+        20
+      ],
+      "type": "index",
+      "data": {
+        "on": 20,
+        "name": "ix_mm_capture",
+        "sql": "CREATE INDEX ix_mm_capture ON media_metadata(capture_utc_ms);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 22,
+      "references": [
+        20
+      ],
+      "type": "index",
+      "data": {
+        "on": 20,
+        "name": "ix_mm_camera",
+        "sql": "CREATE INDEX ix_mm_camera  ON media_metadata(make, model);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 23,
+      "references": [
+        12
+      ],
+      "type": "table",
+      "data": {
+        "name": "date_corrections",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "content_id",
+            "getter_name": "contentId",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES contents(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "contents",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "capture_local",
+            "getter_name": "captureLocal",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "tz_offset_min",
+            "getter_name": "tzOffsetMin",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "note",
+            "getter_name": "note",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "superseded_at",
+            "getter_name": "supersededAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 24,
+      "references": [
+        23
+      ],
+      "type": "index",
+      "data": {
+        "on": 23,
+        "name": "ix_dc_content",
+        "sql": "CREATE INDEX ix_dc_content ON date_corrections(content_id) WHERE superseded_at IS NULL;",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 25,
+      "references": [
+        3
+      ],
+      "type": "table",
+      "data": {
+        "name": "operations",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "kind",
+            "getter_name": "kind",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (kind IN ('copy', 'reorganize_move', 'undo', 'restore', 'catalog_backup_copy'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "status",
+            "getter_name": "status",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (status IN ('planned', 'confirmed', 'running', 'paused', 'completed', 'completed_with_errors', 'cancelled', 'needs_attention'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "dest_source_id",
+            "getter_name": "destSourceId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "REFERENCES sources(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "sources",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "dest_root_rel",
+            "getter_name": "destRootRel",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "template",
+            "getter_name": "template",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "conflict_policy",
+            "getter_name": "conflictPolicy",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "CHECK (conflict_policy IN ('suffix', 'ask'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "params_json",
+            "getter_name": "paramsJson",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "summary_json",
+            "getter_name": "summaryJson",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "undo_of",
+            "getter_name": "undoOf",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "REFERENCES operations(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "operations",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "confirmed_at",
+            "getter_name": "confirmedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "started_at",
+            "getter_name": "startedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "finished_at",
+            "getter_name": "finishedAt",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 26,
+      "references": [
+        25,
+        3,
+        13
+      ],
+      "type": "table",
+      "data": {
+        "name": "operation_items",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "operation_id",
+            "getter_name": "operationId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES operations(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "operations",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "seq",
+            "getter_name": "seq",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "src_source_id",
+            "getter_name": "srcSourceId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES sources(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "sources",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "src_rel_path",
+            "getter_name": "srcRelPath",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "src_instance_id",
+            "getter_name": "srcInstanceId",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "REFERENCES file_instances(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "file_instances",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "expected_size",
+            "getter_name": "expectedSize",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "expected_sha256",
+            "getter_name": "expectedSha256",
+            "moor_type": "blob",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "dst_source_id",
+            "getter_name": "dstSourceId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES sources(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "sources",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "dst_rel_path_planned",
+            "getter_name": "dstRelPathPlanned",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "dst_rel_path_final",
+            "getter_name": "dstRelPathFinal",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "tmp_rel_path",
+            "getter_name": "tmpRelPath",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "original_name",
+            "getter_name": "originalName",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "state",
+            "getter_name": "state",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (state IN ('pending', 'copying', 'copied', 'verifying', 'verified', 'publishing', 'published', 'skipped_identical', 'failed', 'needs_attention', 'undone'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "src_sha256",
+            "getter_name": "srcSha256",
+            "moor_type": "blob",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "dst_sha256",
+            "getter_name": "dstSha256",
+            "moor_type": "blob",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "bytes_copied",
+            "getter_name": "bytesCopied",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "attempts",
+            "getter_name": "attempts",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL DEFAULT 0",
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "last_error_code",
+            "getter_name": "lastErrorCode",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "last_error_message",
+            "getter_name": "lastErrorMessage",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [
+          "UNIQUE(operation_id, seq)"
+        ],
+        "unique_keys": [
+          [
+            "operation_id",
+            "seq"
+          ]
+        ]
+      }
+    },
+    {
+      "id": 27,
+      "references": [
+        26
+      ],
+      "type": "index",
+      "data": {
+        "on": 26,
+        "name": "ix_oi_open",
+        "sql": "CREATE INDEX ix_oi_open ON operation_items(operation_id, state)\n  WHERE state NOT IN ('published','skipped_identical','undone');",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 28,
+      "references": [
+        25,
+        26
+      ],
+      "type": "table",
+      "data": {
+        "name": "operation_events",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "operation_id",
+            "getter_name": "operationId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES operations(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "operations",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "item_id",
+            "getter_name": "itemId",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "REFERENCES operation_items(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "operation_items",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "at",
+            "getter_name": "at",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "from_state",
+            "getter_name": "fromState",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "to_state",
+            "getter_name": "toState",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "message",
+            "getter_name": "message",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 29,
+      "references": [
+        28
+      ],
+      "type": "index",
+      "data": {
+        "on": 28,
+        "name": "ix_oe_op",
+        "sql": "CREATE INDEX ix_oe_op ON operation_events(operation_id, at);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 30,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "saved_filters",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL UNIQUE",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "unique"
+            ]
+          },
+          {
+            "name": "definition_json",
+            "getter_name": "definitionJson",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 31,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "selection_sets",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL UNIQUE",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "unique"
+            ]
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 32,
+      "references": [
+        31,
+        13
+      ],
+      "type": "table",
+      "data": {
+        "name": "selection_set_items",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "set_id",
+            "getter_name": "setId",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES selection_sets(id)ON DELETE CASCADE",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "selection_sets",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": "cascade"
+                }
+              }
+            ]
+          },
+          {
+            "name": "instance_id",
+            "getter_name": "instanceId",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES file_instances(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "file_instances",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": true,
+        "constraints": [
+          "PRIMARY KEY(set_id, instance_id)"
+        ],
+        "explicit_pk": [
+          "set_id",
+          "instance_id"
+        ]
+      }
+    },
+    {
+      "id": 33,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "tags",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL UNIQUE COLLATE NOCASE",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "unique"
+            ]
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 34,
+      "references": [
+        12,
+        33
+      ],
+      "type": "table",
+      "data": {
+        "name": "content_tags",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "content_id",
+            "getter_name": "contentId",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES contents(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "contents",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "tag_id",
+            "getter_name": "tagId",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES tags(id)ON DELETE CASCADE",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "tags",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": "cascade"
+                }
+              }
+            ]
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": true,
+        "constraints": [
+          "PRIMARY KEY(content_id, tag_id)"
+        ],
+        "explicit_pk": [
+          "content_id",
+          "tag_id"
+        ]
+      }
+    },
+    {
+      "id": 35,
+      "references": [
+        13,
+        25
+      ],
+      "type": "table",
+      "data": {
+        "name": "integrity_checks",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "instance_id",
+            "getter_name": "instanceId",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL REFERENCES file_instances(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "file_instances",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "operation_id",
+            "getter_name": "operationId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": "REFERENCES operations(id)",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "operations",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": null
+                }
+              }
+            ]
+          },
+          {
+            "name": "checked_at",
+            "getter_name": "checkedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "result",
+            "getter_name": "result",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (result IN ('unchanged', 'changed_legit', 'possibly_corrupt', 'unreadable', 'missing'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "observed_sha256",
+            "getter_name": "observedSha256",
+            "moor_type": "blob",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "observed_size",
+            "getter_name": "observedSize",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "observed_mtime",
+            "getter_name": "observedMtime",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": "",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    },
+    {
+      "id": 36,
+      "references": [
+        35
+      ],
+      "type": "index",
+      "data": {
+        "on": 35,
+        "name": "ix_ic_instance",
+        "sql": "CREATE INDEX ix_ic_instance ON integrity_checks(instance_id, checked_at DESC);",
+        "unique": false,
+        "columns": []
+      }
+    },
+    {
+      "id": 37,
+      "references": [],
+      "type": "table",
+      "data": {
+        "name": "saved_scopes",
+        "was_declared_in_moor": true,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL PRIMARY KEY",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "primary-key"
+            ]
+          },
+          {
+            "name": "name",
+            "getter_name": "name",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL UNIQUE COLLATE NOCASE",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              "unique"
+            ]
+          },
+          {
+            "name": "definition_json",
+            "getter_name": "definitionJson",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "created_at",
+            "getter_name": "createdAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "updated_at",
+            "getter_name": "updatedAt",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": "NOT NULL",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": []
+      }
+    }
+  ],
+  "fixed_sql": [
+    {
+      "name": "app_meta",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"app_meta\" (\"key\" TEXT NOT NULL PRIMARY KEY, \"value\" TEXT NOT NULL) WITHOUT ROWID;"
+        }
+      ]
+    },
+    {
+      "name": "settings",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"settings\" (\"key\" TEXT NOT NULL PRIMARY KEY, \"value_json\" TEXT NOT NULL, \"updated_at\" INTEGER NOT NULL) WITHOUT ROWID;"
+        }
+      ]
+    },
+    {
+      "name": "physical_disks",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"physical_disks\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"serial\" TEXT, \"model\" TEXT, \"size_bytes\" INTEGER, \"bus_type\" TEXT, \"identity_confidence\" TEXT NOT NULL CHECK (identity_confidence IN ('reliable', 'weak', 'unknown')), \"user_confirmed\" INTEGER NOT NULL DEFAULT 0, \"first_seen_at\" INTEGER NOT NULL, \"last_seen_at\" INTEGER NOT NULL);"
+        }
+      ]
+    },
+    {
+      "name": "sources",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"sources\" (\"id\" TEXT NOT NULL PRIMARY KEY, \"name\" TEXT NOT NULL, \"kind\" TEXT NOT NULL CHECK (kind IN ('external_hd', 'internal', 'usb_stick', 'memory_card', 'phone', 'folder')), \"volume_guid\" TEXT, \"volume_serial\" INTEGER, \"volume_label\" TEXT, \"filesystem\" TEXT, \"volume_size_bytes\" INTEGER, \"physical_disk_id\" INTEGER REFERENCES physical_disks(id), \"marker_id\" TEXT, \"device_id\" TEXT, \"device_model\" TEXT, \"root_rel_path\" TEXT NOT NULL DEFAULT '', \"last_mount_path\" TEXT, \"connected\" INTEGER NOT NULL DEFAULT 0, \"last_connected_at\" INTEGER, \"total_bytes_last\" INTEGER, \"free_bytes_last\" INTEGER, \"created_at\" INTEGER NOT NULL, \"updated_at\" INTEGER NOT NULL, \"forgotten_at\" INTEGER);"
+        }
+      ]
+    },
+    {
+      "name": "ix_sources_volume_guid",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_sources_volume_guid ON sources (volume_guid)"
+        }
+      ]
+    },
+    {
+      "name": "ix_sources_volume_serial",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_sources_volume_serial ON sources (volume_serial)"
+        }
+      ]
+    },
+    {
+      "name": "ix_sources_device_id",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_sources_device_id ON sources (device_id)"
+        }
+      ]
+    },
+    {
+      "name": "scans",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"scans\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"source_id\" TEXT NOT NULL REFERENCES sources(id), \"kind\" TEXT NOT NULL CHECK (kind IN ('full', 'incremental')), \"status\" TEXT NOT NULL CHECK (status IN ('running', 'paused', 'interrupted', 'completed', 'cancelled', 'failed')), \"coverage\" TEXT CHECK (coverage IN ('complete', 'partial')), \"mount_path_used\" TEXT, \"started_at\" INTEGER NOT NULL, \"finished_at\" INTEGER, \"dirs_done\" INTEGER NOT NULL DEFAULT 0, \"files_seen\" INTEGER NOT NULL DEFAULT 0, \"bytes_seen\" INTEGER NOT NULL DEFAULT 0, \"error_count\" INTEGER NOT NULL DEFAULT 0);"
+        }
+      ]
+    },
+    {
+      "name": "ix_scans_source",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_scans_source ON scans (source_id, started_at DESC)"
+        }
+      ]
+    },
+    {
+      "name": "scan_dirs",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"scan_dirs\" (\"scan_id\" INTEGER NOT NULL REFERENCES scans(id)ON DELETE CASCADE, \"rel_path\" TEXT NOT NULL, \"status\" TEXT NOT NULL CHECK (status IN ('pending', 'done', 'error', 'excluded')), PRIMARY KEY(scan_id, rel_path)) WITHOUT ROWID;"
+        }
+      ]
+    },
+    {
+      "name": "ix_scan_dirs_pending",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_scan_dirs_pending ON scan_dirs (scan_id) WHERE status = 'pending'"
+        }
+      ]
+    },
+    {
+      "name": "scan_errors",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"scan_errors\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"scan_id\" INTEGER NOT NULL REFERENCES scans(id)ON DELETE CASCADE, \"rel_path\" TEXT NOT NULL, \"kind\" TEXT NOT NULL CHECK (kind IN ('access_denied', 'path_too_long', 'io_error', 'reparse_point_skipped', 'device_disconnected', 'other')), \"win32_code\" INTEGER, \"message\" TEXT, \"at\" INTEGER NOT NULL);"
+        }
+      ]
+    },
+    {
+      "name": "contents",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"contents\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"sha256\" BLOB NOT NULL CHECK (length(sha256) = 32), \"size_bytes\" INTEGER NOT NULL, \"media_type\" TEXT NOT NULL DEFAULT 'unknown' CHECK (media_type IN ('photo', 'video', 'raw', 'sidecar', 'other', 'unknown')), \"created_at\" INTEGER NOT NULL, UNIQUE(sha256, size_bytes));"
+        }
+      ]
+    },
+    {
+      "name": "file_instances",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"file_instances\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"source_id\" TEXT NOT NULL REFERENCES sources(id), \"rel_path\" TEXT NOT NULL, \"dir_rel_path\" TEXT NOT NULL, \"name\" TEXT NOT NULL, \"ext\" TEXT NOT NULL, \"size_bytes\" INTEGER NOT NULL, \"mtime\" INTEGER, \"ctime\" INTEGER, \"attributes\" INTEGER, \"content_id\" INTEGER REFERENCES contents(id), \"hash_status\" TEXT NOT NULL DEFAULT 'pending' CHECK (hash_status IN ('pending', 'done', 'changed_during_read', 'error', 'not_applicable')), \"hashed_size\" INTEGER, \"hashed_mtime\" INTEGER, \"hashed_at\" INTEGER, \"last_verified_at\" INTEGER, \"availability\" TEXT NOT NULL DEFAULT 'present' CHECK (availability IN ('present', 'cloud_only', 'unreadable', 'missing')), \"integrity\" TEXT NOT NULL DEFAULT 'unknown' CHECK (integrity IN ('unknown', 'ok', 'changed', 'possibly_corrupt')), \"first_seen_scan_id\" INTEGER REFERENCES scans(id), \"last_seen_scan_id\" INTEGER REFERENCES scans(id), \"missing_confirmed_at\" INTEGER, \"hash_error\" TEXT, UNIQUE(source_id, rel_path));"
+        }
+      ]
+    },
+    {
+      "name": "ix_fi_content",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_fi_content ON file_instances (content_id)"
+        }
+      ]
+    },
+    {
+      "name": "ix_fi_source_dir",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_fi_source_dir ON file_instances (source_id, dir_rel_path)"
+        }
+      ]
+    },
+    {
+      "name": "ix_fi_size",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_fi_size ON file_instances (size_bytes)"
+        }
+      ]
+    },
+    {
+      "name": "ix_fi_hash_pending",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_fi_hash_pending ON file_instances (source_id) WHERE hash_status = 'pending'"
+        }
+      ]
+    },
+    {
+      "name": "ix_fi_last_seen",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_fi_last_seen ON file_instances (source_id, last_seen_scan_id)"
+        }
+      ]
+    },
+    {
+      "name": "ix_fi_ext",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_fi_ext ON file_instances (ext)"
+        }
+      ]
+    },
+    {
+      "name": "media_metadata",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"media_metadata\" (\"content_id\" INTEGER NOT NULL PRIMARY KEY REFERENCES contents(id), \"capture_utc_ms\" INTEGER, \"capture_local\" TEXT, \"tz_offset_min\" INTEGER, \"date_source\" TEXT CHECK (date_source IN ('manual', 'exif_original', 'video_internal', 'filename', 'filesystem', 'none')), \"date_confidence\" TEXT CHECK (date_confidence IN ('high', 'medium', 'low', 'none')), \"date_conflict\" INTEGER NOT NULL DEFAULT 0, \"candidates_json\" TEXT, \"make\" TEXT, \"model\" TEXT, \"lens\" TEXT, \"iso\" INTEGER, \"aperture\" REAL, \"exposure_s\" REAL, \"focal_mm\" REAL, \"width\" INTEGER, \"height\" INTEGER, \"orientation\" INTEGER, \"lat\" REAL, \"lon\" REAL, \"duration_ms\" INTEGER, \"fps\" REAL, \"video_codec\" TEXT, \"audio_codec\" TEXT, \"bitrate\" INTEGER, \"software\" TEXT, \"extractor\" TEXT, \"extracted_at\" INTEGER);"
+        }
+      ]
+    },
+    {
+      "name": "ix_mm_capture",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_mm_capture ON media_metadata (capture_utc_ms)"
+        }
+      ]
+    },
+    {
+      "name": "ix_mm_camera",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_mm_camera ON media_metadata (make, model)"
+        }
+      ]
+    },
+    {
+      "name": "date_corrections",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"date_corrections\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"content_id\" INTEGER NOT NULL REFERENCES contents(id), \"capture_local\" TEXT NOT NULL, \"tz_offset_min\" INTEGER, \"note\" TEXT, \"created_at\" INTEGER NOT NULL, \"superseded_at\" INTEGER);"
+        }
+      ]
+    },
+    {
+      "name": "ix_dc_content",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_dc_content ON date_corrections (content_id) WHERE superseded_at IS NULL"
+        }
+      ]
+    },
+    {
+      "name": "operations",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"operations\" (\"id\" TEXT NOT NULL PRIMARY KEY, \"kind\" TEXT NOT NULL CHECK (kind IN ('copy', 'reorganize_move', 'undo', 'restore', 'catalog_backup_copy')), \"status\" TEXT NOT NULL CHECK (status IN ('planned', 'confirmed', 'running', 'paused', 'completed', 'completed_with_errors', 'cancelled', 'needs_attention')), \"dest_source_id\" TEXT REFERENCES sources(id), \"dest_root_rel\" TEXT, \"template\" TEXT, \"conflict_policy\" TEXT CHECK (conflict_policy IN ('suffix', 'ask')), \"params_json\" TEXT, \"summary_json\" TEXT, \"undo_of\" TEXT REFERENCES operations(id), \"created_at\" INTEGER NOT NULL, \"confirmed_at\" INTEGER, \"started_at\" INTEGER, \"finished_at\" INTEGER);"
+        }
+      ]
+    },
+    {
+      "name": "operation_items",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"operation_items\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"operation_id\" TEXT NOT NULL REFERENCES operations(id), \"seq\" INTEGER NOT NULL, \"src_source_id\" TEXT NOT NULL REFERENCES sources(id), \"src_rel_path\" TEXT NOT NULL, \"src_instance_id\" INTEGER REFERENCES file_instances(id), \"expected_size\" INTEGER NOT NULL, \"expected_sha256\" BLOB, \"dst_source_id\" TEXT NOT NULL REFERENCES sources(id), \"dst_rel_path_planned\" TEXT NOT NULL, \"dst_rel_path_final\" TEXT, \"tmp_rel_path\" TEXT, \"original_name\" TEXT, \"state\" TEXT NOT NULL CHECK (state IN ('pending', 'copying', 'copied', 'verifying', 'verified', 'publishing', 'published', 'skipped_identical', 'failed', 'needs_attention', 'undone')), \"src_sha256\" BLOB, \"dst_sha256\" BLOB, \"bytes_copied\" INTEGER NOT NULL DEFAULT 0, \"attempts\" INTEGER NOT NULL DEFAULT 0, \"last_error_code\" TEXT, \"last_error_message\" TEXT, \"updated_at\" INTEGER NOT NULL, UNIQUE(operation_id, seq));"
+        }
+      ]
+    },
+    {
+      "name": "ix_oi_open",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_oi_open ON operation_items (operation_id, state) WHERE state NOT IN ('published', 'skipped_identical', 'undone')"
+        }
+      ]
+    },
+    {
+      "name": "operation_events",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"operation_events\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"operation_id\" TEXT NOT NULL REFERENCES operations(id), \"item_id\" INTEGER REFERENCES operation_items(id), \"at\" INTEGER NOT NULL, \"from_state\" TEXT, \"to_state\" TEXT, \"message\" TEXT);"
+        }
+      ]
+    },
+    {
+      "name": "ix_oe_op",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_oe_op ON operation_events (operation_id, at)"
+        }
+      ]
+    },
+    {
+      "name": "saved_filters",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"saved_filters\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"name\" TEXT NOT NULL UNIQUE, \"definition_json\" TEXT NOT NULL, \"created_at\" INTEGER NOT NULL, \"updated_at\" INTEGER NOT NULL);"
+        }
+      ]
+    },
+    {
+      "name": "selection_sets",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"selection_sets\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"name\" TEXT NOT NULL UNIQUE, \"created_at\" INTEGER NOT NULL);"
+        }
+      ]
+    },
+    {
+      "name": "selection_set_items",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"selection_set_items\" (\"set_id\" INTEGER NOT NULL REFERENCES selection_sets(id)ON DELETE CASCADE, \"instance_id\" INTEGER NOT NULL REFERENCES file_instances(id), PRIMARY KEY(set_id, instance_id)) WITHOUT ROWID;"
+        }
+      ]
+    },
+    {
+      "name": "tags",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"tags\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"name\" TEXT NOT NULL UNIQUE COLLATE NOCASE);"
+        }
+      ]
+    },
+    {
+      "name": "content_tags",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"content_tags\" (\"content_id\" INTEGER NOT NULL REFERENCES contents(id), \"tag_id\" INTEGER NOT NULL REFERENCES tags(id)ON DELETE CASCADE, PRIMARY KEY(content_id, tag_id)) WITHOUT ROWID;"
+        }
+      ]
+    },
+    {
+      "name": "integrity_checks",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"integrity_checks\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"instance_id\" INTEGER NOT NULL REFERENCES file_instances(id), \"operation_id\" TEXT REFERENCES operations(id), \"checked_at\" INTEGER NOT NULL, \"result\" TEXT NOT NULL CHECK (result IN ('unchanged', 'changed_legit', 'possibly_corrupt', 'unreadable', 'missing')), \"observed_sha256\" BLOB, \"observed_size\" INTEGER, \"observed_mtime\" INTEGER);"
+        }
+      ]
+    },
+    {
+      "name": "ix_ic_instance",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE INDEX ix_ic_instance ON integrity_checks (instance_id, checked_at DESC)"
+        }
+      ]
+    },
+    {
+      "name": "saved_scopes",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"saved_scopes\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"name\" TEXT NOT NULL UNIQUE COLLATE NOCASE, \"definition_json\" TEXT NOT NULL, \"created_at\" INTEGER NOT NULL, \"updated_at\" INTEGER NOT NULL);"
+        }
+      ]
+    }
+  ]
+}

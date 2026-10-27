@@ -3480,6 +3480,15 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _hashErrorMeta = const VerificationMeta('hashError');
+  late final GeneratedColumn<String> hashError = GeneratedColumn<String>(
+    'hash_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3503,6 +3512,7 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
     firstSeenScanId,
     lastSeenScanId,
     missingConfirmedAt,
+    hashError,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3600,6 +3610,9 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
         missingConfirmedAt.isAcceptableOrUnknown(data['missing_confirmed_at']!, _missingConfirmedAtMeta),
       );
     }
+    if (data.containsKey('hash_error')) {
+      context.handle(_hashErrorMeta, hashError.isAcceptableOrUnknown(data['hash_error']!, _hashErrorMeta));
+    }
     return context;
   }
 
@@ -3640,6 +3653,7 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
         DriftSqlType.int,
         data['${effectivePrefix}missing_confirmed_at'],
       ),
+      hashError: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hash_error']),
     );
   }
 
@@ -3676,6 +3690,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
   final int? firstSeenScanId;
   final int? lastSeenScanId;
   final int? missingConfirmedAt;
+  final String? hashError;
   const FileInstanceRow({
     required this.id,
     required this.sourceId,
@@ -3698,6 +3713,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     this.firstSeenScanId,
     this.lastSeenScanId,
     this.missingConfirmedAt,
+    this.hashError,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3745,6 +3761,9 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     if (!nullToAbsent || missingConfirmedAt != null) {
       map['missing_confirmed_at'] = Variable<int>(missingConfirmedAt);
     }
+    if (!nullToAbsent || hashError != null) {
+      map['hash_error'] = Variable<String>(hashError);
+    }
     return map;
   }
 
@@ -3771,6 +3790,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       firstSeenScanId: firstSeenScanId == null && nullToAbsent ? const Value.absent() : Value(firstSeenScanId),
       lastSeenScanId: lastSeenScanId == null && nullToAbsent ? const Value.absent() : Value(lastSeenScanId),
       missingConfirmedAt: missingConfirmedAt == null && nullToAbsent ? const Value.absent() : Value(missingConfirmedAt),
+      hashError: hashError == null && nullToAbsent ? const Value.absent() : Value(hashError),
     );
   }
 
@@ -3798,6 +3818,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       firstSeenScanId: serializer.fromJson<int?>(json['first_seen_scan_id']),
       lastSeenScanId: serializer.fromJson<int?>(json['last_seen_scan_id']),
       missingConfirmedAt: serializer.fromJson<int?>(json['missing_confirmed_at']),
+      hashError: serializer.fromJson<String?>(json['hash_error']),
     );
   }
   @override
@@ -3825,6 +3846,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       'first_seen_scan_id': serializer.toJson<int?>(firstSeenScanId),
       'last_seen_scan_id': serializer.toJson<int?>(lastSeenScanId),
       'missing_confirmed_at': serializer.toJson<int?>(missingConfirmedAt),
+      'hash_error': serializer.toJson<String?>(hashError),
     };
   }
 
@@ -3850,6 +3872,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     Value<int?> firstSeenScanId = const Value.absent(),
     Value<int?> lastSeenScanId = const Value.absent(),
     Value<int?> missingConfirmedAt = const Value.absent(),
+    Value<String?> hashError = const Value.absent(),
   }) => FileInstanceRow(
     id: id ?? this.id,
     sourceId: sourceId ?? this.sourceId,
@@ -3872,6 +3895,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     firstSeenScanId: firstSeenScanId.present ? firstSeenScanId.value : this.firstSeenScanId,
     lastSeenScanId: lastSeenScanId.present ? lastSeenScanId.value : this.lastSeenScanId,
     missingConfirmedAt: missingConfirmedAt.present ? missingConfirmedAt.value : this.missingConfirmedAt,
+    hashError: hashError.present ? hashError.value : this.hashError,
   );
   FileInstanceRow copyWithCompanion(FileInstancesCompanion data) {
     return FileInstanceRow(
@@ -3896,6 +3920,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       firstSeenScanId: data.firstSeenScanId.present ? data.firstSeenScanId.value : this.firstSeenScanId,
       lastSeenScanId: data.lastSeenScanId.present ? data.lastSeenScanId.value : this.lastSeenScanId,
       missingConfirmedAt: data.missingConfirmedAt.present ? data.missingConfirmedAt.value : this.missingConfirmedAt,
+      hashError: data.hashError.present ? data.hashError.value : this.hashError,
     );
   }
 
@@ -3922,7 +3947,8 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
           ..write('integrity: $integrity, ')
           ..write('firstSeenScanId: $firstSeenScanId, ')
           ..write('lastSeenScanId: $lastSeenScanId, ')
-          ..write('missingConfirmedAt: $missingConfirmedAt')
+          ..write('missingConfirmedAt: $missingConfirmedAt, ')
+          ..write('hashError: $hashError')
           ..write(')'))
         .toString();
   }
@@ -3950,6 +3976,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     firstSeenScanId,
     lastSeenScanId,
     missingConfirmedAt,
+    hashError,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -3975,7 +4002,8 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
           other.integrity == this.integrity &&
           other.firstSeenScanId == this.firstSeenScanId &&
           other.lastSeenScanId == this.lastSeenScanId &&
-          other.missingConfirmedAt == this.missingConfirmedAt);
+          other.missingConfirmedAt == this.missingConfirmedAt &&
+          other.hashError == this.hashError);
 }
 
 class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
@@ -4000,6 +4028,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
   final Value<int?> firstSeenScanId;
   final Value<int?> lastSeenScanId;
   final Value<int?> missingConfirmedAt;
+  final Value<String?> hashError;
   const FileInstancesCompanion({
     this.id = const Value.absent(),
     this.sourceId = const Value.absent(),
@@ -4022,6 +4051,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     this.firstSeenScanId = const Value.absent(),
     this.lastSeenScanId = const Value.absent(),
     this.missingConfirmedAt = const Value.absent(),
+    this.hashError = const Value.absent(),
   });
   FileInstancesCompanion.insert({
     this.id = const Value.absent(),
@@ -4045,6 +4075,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     this.firstSeenScanId = const Value.absent(),
     this.lastSeenScanId = const Value.absent(),
     this.missingConfirmedAt = const Value.absent(),
+    this.hashError = const Value.absent(),
   }) : sourceId = Value(sourceId),
        relPath = Value(relPath),
        dirRelPath = Value(dirRelPath),
@@ -4073,6 +4104,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     Expression<int>? firstSeenScanId,
     Expression<int>? lastSeenScanId,
     Expression<int>? missingConfirmedAt,
+    Expression<String>? hashError,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4096,6 +4128,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
       if (firstSeenScanId != null) 'first_seen_scan_id': firstSeenScanId,
       if (lastSeenScanId != null) 'last_seen_scan_id': lastSeenScanId,
       if (missingConfirmedAt != null) 'missing_confirmed_at': missingConfirmedAt,
+      if (hashError != null) 'hash_error': hashError,
     });
   }
 
@@ -4121,6 +4154,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     Value<int?>? firstSeenScanId,
     Value<int?>? lastSeenScanId,
     Value<int?>? missingConfirmedAt,
+    Value<String?>? hashError,
   }) {
     return FileInstancesCompanion(
       id: id ?? this.id,
@@ -4144,6 +4178,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
       firstSeenScanId: firstSeenScanId ?? this.firstSeenScanId,
       lastSeenScanId: lastSeenScanId ?? this.lastSeenScanId,
       missingConfirmedAt: missingConfirmedAt ?? this.missingConfirmedAt,
+      hashError: hashError ?? this.hashError,
     );
   }
 
@@ -4213,6 +4248,9 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     if (missingConfirmedAt.present) {
       map['missing_confirmed_at'] = Variable<int>(missingConfirmedAt.value);
     }
+    if (hashError.present) {
+      map['hash_error'] = Variable<String>(hashError.value);
+    }
     return map;
   }
 
@@ -4239,7 +4277,8 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
           ..write('integrity: $integrity, ')
           ..write('firstSeenScanId: $firstSeenScanId, ')
           ..write('lastSeenScanId: $lastSeenScanId, ')
-          ..write('missingConfirmedAt: $missingConfirmedAt')
+          ..write('missingConfirmedAt: $missingConfirmedAt, ')
+          ..write('hashError: $hashError')
           ..write(')'))
         .toString();
   }
@@ -9283,6 +9322,310 @@ class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
   }
 }
 
+class SavedScopes extends Table with TableInfo<SavedScopes, SavedScopeRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  SavedScopes(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL UNIQUE COLLATE NOCASE',
+  );
+  static const VerificationMeta _definitionJsonMeta = const VerificationMeta('definitionJson');
+  late final GeneratedColumn<String> definitionJson = GeneratedColumn<String>(
+    'definition_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, definitionJson, createdAt, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'saved_scopes';
+  @override
+  VerificationContext validateIntegrity(Insertable<SavedScopeRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(_nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('definition_json')) {
+      context.handle(
+        _definitionJsonMeta,
+        definitionJson.isAcceptableOrUnknown(data['definition_json']!, _definitionJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_definitionJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SavedScopeRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SavedScopeRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      definitionJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}definition_json'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  SavedScopes createAlias(String alias) {
+    return SavedScopes(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class SavedScopeRow extends DataClass implements Insertable<SavedScopeRow> {
+  final int id;
+  final String name;
+  final String definitionJson;
+  final int createdAt;
+  final int updatedAt;
+  const SavedScopeRow({
+    required this.id,
+    required this.name,
+    required this.definitionJson,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['definition_json'] = Variable<String>(definitionJson);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  SavedScopesCompanion toCompanion(bool nullToAbsent) {
+    return SavedScopesCompanion(
+      id: Value(id),
+      name: Value(name),
+      definitionJson: Value(definitionJson),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SavedScopeRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SavedScopeRow(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      definitionJson: serializer.fromJson<String>(json['definition_json']),
+      createdAt: serializer.fromJson<int>(json['created_at']),
+      updatedAt: serializer.fromJson<int>(json['updated_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'definition_json': serializer.toJson<String>(definitionJson),
+      'created_at': serializer.toJson<int>(createdAt),
+      'updated_at': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  SavedScopeRow copyWith({int? id, String? name, String? definitionJson, int? createdAt, int? updatedAt}) =>
+      SavedScopeRow(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        definitionJson: definitionJson ?? this.definitionJson,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  SavedScopeRow copyWithCompanion(SavedScopesCompanion data) {
+    return SavedScopeRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      definitionJson: data.definitionJson.present ? data.definitionJson.value : this.definitionJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SavedScopeRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('definitionJson: $definitionJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, definitionJson, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SavedScopeRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.definitionJson == this.definitionJson &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SavedScopesCompanion extends UpdateCompanion<SavedScopeRow> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> definitionJson;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  const SavedScopesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.definitionJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  SavedScopesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required String definitionJson,
+    required int createdAt,
+    required int updatedAt,
+  }) : name = Value(name),
+       definitionJson = Value(definitionJson),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<SavedScopeRow> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? definitionJson,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (definitionJson != null) 'definition_json': definitionJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  SavedScopesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? definitionJson,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+  }) {
+    return SavedScopesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      definitionJson: definitionJson ?? this.definitionJson,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (definitionJson.present) {
+      map['definition_json'] = Variable<String>(definitionJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SavedScopesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('definitionJson: $definitionJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$CatalogDatabase extends GeneratedDatabase {
   _$CatalogDatabase(QueryExecutor e) : super(e);
   $CatalogDatabaseManager get managers => $CatalogDatabaseManager(this);
@@ -9359,6 +9702,7 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     'ix_ic_instance',
     'CREATE INDEX ix_ic_instance ON integrity_checks (instance_id, checked_at DESC)',
   );
+  late final SavedScopes savedScopes = SavedScopes(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
@@ -9400,6 +9744,7 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     contentTags,
     integrityChecks,
     ixIcInstance,
+    savedScopes,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -11977,6 +12322,7 @@ typedef $FileInstancesCreateCompanionBuilder = FileInstancesCompanion Function({
   Value<int?> firstSeenScanId,
   Value<int?> lastSeenScanId,
   Value<int?> missingConfirmedAt,
+  Value<String?> hashError,
 });
 typedef $FileInstancesUpdateCompanionBuilder = FileInstancesCompanion Function({
   Value<int> id,
@@ -12000,6 +12346,7 @@ typedef $FileInstancesUpdateCompanionBuilder = FileInstancesCompanion Function({
   Value<int?> firstSeenScanId,
   Value<int?> lastSeenScanId,
   Value<int?> missingConfirmedAt,
+  Value<String?> hashError,
 });
 
 final class $FileInstancesReferences extends BaseReferences<_$CatalogDatabase, FileInstances, FileInstanceRow> {
@@ -12155,6 +12502,9 @@ class $FileInstancesFilterComposer extends Composer<_$CatalogDatabase, FileInsta
 
   ColumnFilters<int> get missingConfirmedAt =>
       $composableBuilder(column: $table.missingConfirmedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get hashError =>
+      $composableBuilder(column: $table.hashError, builder: (column) => ColumnFilters(column));
 
   $SourcesFilterComposer get sourceId {
     final $SourcesFilterComposer composer = $composerBuilder(
@@ -12341,6 +12691,9 @@ class $FileInstancesOrderingComposer extends Composer<_$CatalogDatabase, FileIns
   ColumnOrderings<int> get missingConfirmedAt =>
       $composableBuilder(column: $table.missingConfirmedAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get hashError =>
+      $composableBuilder(column: $table.hashError, builder: (column) => ColumnOrderings(column));
+
   $SourcesOrderingComposer get sourceId {
     final $SourcesOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -12458,6 +12811,8 @@ class $FileInstancesAnnotationComposer extends Composer<_$CatalogDatabase, FileI
 
   GeneratedColumn<int> get missingConfirmedAt =>
       $composableBuilder(column: $table.missingConfirmedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get hashError => $composableBuilder(column: $table.hashError, builder: (column) => column);
 
   $SourcesAnnotationComposer get sourceId {
     final $SourcesAnnotationComposer composer = $composerBuilder(
@@ -12642,6 +12997,7 @@ class $FileInstancesTableManager
                 Value<int?> firstSeenScanId = const Value.absent(),
                 Value<int?> lastSeenScanId = const Value.absent(),
                 Value<int?> missingConfirmedAt = const Value.absent(),
+                Value<String?> hashError = const Value.absent(),
               }) => FileInstancesCompanion(
                 id: id,
                 sourceId: sourceId,
@@ -12664,6 +13020,7 @@ class $FileInstancesTableManager
                 firstSeenScanId: firstSeenScanId,
                 lastSeenScanId: lastSeenScanId,
                 missingConfirmedAt: missingConfirmedAt,
+                hashError: hashError,
               ),
           createCompanionCallback:
               ({
@@ -12688,6 +13045,7 @@ class $FileInstancesTableManager
                 Value<int?> firstSeenScanId = const Value.absent(),
                 Value<int?> lastSeenScanId = const Value.absent(),
                 Value<int?> missingConfirmedAt = const Value.absent(),
+                Value<String?> hashError = const Value.absent(),
               }) => FileInstancesCompanion.insert(
                 id: id,
                 sourceId: sourceId,
@@ -12710,6 +13068,7 @@ class $FileInstancesTableManager
                 firstSeenScanId: firstSeenScanId,
                 lastSeenScanId: lastSeenScanId,
                 missingConfirmedAt: missingConfirmedAt,
+                hashError: hashError,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable<FileInstances, FileInstanceRow>(table), $FileInstancesReferences(db, table, e)))
@@ -16889,6 +17248,164 @@ typedef $IntegrityChecksProcessedTableManager =
       IntegrityCheckRow,
       PrefetchHooks Function({bool instanceId, bool operationId})
     >;
+typedef $SavedScopesCreateCompanionBuilder = SavedScopesCompanion Function({
+  Value<int> id,
+  required String name,
+  required String definitionJson,
+  required int createdAt,
+  required int updatedAt,
+});
+typedef $SavedScopesUpdateCompanionBuilder = SavedScopesCompanion Function({
+  Value<int> id,
+  Value<String> name,
+  Value<String> definitionJson,
+  Value<int> createdAt,
+  Value<int> updatedAt,
+});
+
+class $SavedScopesFilterComposer extends Composer<_$CatalogDatabase, SavedScopes> {
+  $SavedScopesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get definitionJson =>
+      $composableBuilder(column: $table.definitionJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $SavedScopesOrderingComposer extends Composer<_$CatalogDatabase, SavedScopes> {
+  $SavedScopesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get definitionJson =>
+      $composableBuilder(column: $table.definitionJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $SavedScopesAnnotationComposer extends Composer<_$CatalogDatabase, SavedScopes> {
+  $SavedScopesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name => $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get definitionJson =>
+      $composableBuilder(column: $table.definitionJson, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $SavedScopesTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          SavedScopes,
+          SavedScopeRow,
+          $SavedScopesFilterComposer,
+          $SavedScopesOrderingComposer,
+          $SavedScopesAnnotationComposer,
+          $SavedScopesCreateCompanionBuilder,
+          $SavedScopesUpdateCompanionBuilder,
+          (SavedScopeRow, BaseReferences<_$CatalogDatabase, SavedScopes, SavedScopeRow>),
+          SavedScopeRow,
+          PrefetchHooks Function()
+        > {
+  $SavedScopesTableManager(_$CatalogDatabase db, SavedScopes table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $SavedScopesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $SavedScopesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $SavedScopesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> definitionJson = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+              }) => SavedScopesCompanion(
+                id: id,
+                name: name,
+                definitionJson: definitionJson,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required String definitionJson,
+                required int createdAt,
+                required int updatedAt,
+              }) => SavedScopesCompanion.insert(
+                id: id,
+                name: name,
+                definitionJson: definitionJson,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<SavedScopes, SavedScopeRow>(table),
+                  BaseReferences<_$CatalogDatabase, SavedScopes, SavedScopeRow>(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $SavedScopesProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      SavedScopes,
+      SavedScopeRow,
+      $SavedScopesFilterComposer,
+      $SavedScopesOrderingComposer,
+      $SavedScopesAnnotationComposer,
+      $SavedScopesCreateCompanionBuilder,
+      $SavedScopesUpdateCompanionBuilder,
+      (SavedScopeRow, BaseReferences<_$CatalogDatabase, SavedScopes, SavedScopeRow>),
+      SavedScopeRow,
+      PrefetchHooks Function()
+    >;
 
 class $CatalogDatabaseManager {
   final _$CatalogDatabase _db;
@@ -16913,4 +17430,5 @@ class $CatalogDatabaseManager {
   $TagsTableManager get tags => $TagsTableManager(_db, _db.tags);
   $ContentTagsTableManager get contentTags => $ContentTagsTableManager(_db, _db.contentTags);
   $IntegrityChecksTableManager get integrityChecks => $IntegrityChecksTableManager(_db, _db.integrityChecks);
+  $SavedScopesTableManager get savedScopes => $SavedScopesTableManager(_db, _db.savedScopes);
 }
