@@ -51,20 +51,31 @@ Observações da Fase 1:
 - O teste "UI não trava" mede o event loop no core (mesmo isolate da UI no app) em vez de `integration_test` (ADR 0007 atualizado).
 - Pendente para fases futuras: helper ainda não é copiado junto do app no build (o app o encontra na pasta de build do `native/` em desenvolvimento) — empacotamento na Fase 8.
 
-## Fase 2 — Conteúdo e cobertura
-- [ ] Fila de hash SHA-256 em streaming, com detecção de arquivo alterado durante a leitura
-- [ ] Ignorar placeholders do OneDrive (scan já os cataloga como `cloud_only` sem abrir; falta a fila de hash respeitar isso)
-- [ ] Duplicatas exatas e níveis de cobertura (1 cópia / mesmo disco / discos diferentes)
-- [ ] Backup automático do catálogo (`VACUUM INTO` com rotação)
-- [ ] Comparação com **escopo livre** (requisito ajustado em 2026-10-27, spec §3.2 e §9)
-  - [ ] Escopo = uma ou mais pastas/subpastas e/ou fontes inteiras + filtro opcional por tipo (data etc. na Fase 4)
-  - [ ] "B contém todo o conteúdo de A?" → "Sim, 100%" / "Faltam N arquivos (X GB)" com a lista pronta para seleção; também "Só em B" e "Nos dois"
-  - [ ] Sempre por conteúdo (SHA-256), ignorando nomes e pastas; hash pendente/erro/nuvem ou pasta ilegível em qualquer lado → "Resultado incompleto" (nunca "100%") + "Conferir agora"
-  - [ ] Escopos salvos com nome (tabela nova, migração aditiva v1 → v2)
-  - [ ] Teste: A = pasta1 + pasta2, B = pasta3, nomes diferentes e conteúdo parcial
-- [ ] Tela Comparar (montar escopos A e B, escopos salvos, resultado e listas) e painel de cobertura no Início
-- [ ] Critérios da spec (seção 16, Fase 2)
-- [ ] Tag `v0.2.0`
+## Fase 2 — Conteúdo e cobertura (implementada em 2026-10-27; aguardando o teste do usuário)
+- [x] Fila de hash SHA-256 em streaming, com detecção de arquivo alterado durante a leitura (2026-10-27)
+  - [x] Leitura só por `safe_io/source_reader.dart` (FFI, `GENERIC_READ` + `OPEN_EXISTING` + `FILE_FLAG_OPEN_NO_RECALL`), flags conferidas pelo teste de arquitetura
+  - [x] Um worker por disco físico, prioridade (comparação → tamanhos que colidem → pasta), lotes transacionais com guarda contra scan concorrente, pausar/continuar, automática após scan e ao conectar (ADR 0010)
+  - [x] Mudou depois do scan / durante a leitura (tamanho e data) → `changed_during_read`; erro → `error` + motivo, nunca `missing`; fonte que sai fica `pending`
+  - [x] Kill no meio da conferência (CLI, crashpoint `hash.after_batch_commit`) → retomar sem duplicar
+- [x] Ignorar placeholders do OneDrive: a fila só lê `present` e checa os atributos antes de abrir (2026-10-27)
+- [x] Duplicatas exatas e níveis de cobertura (1 cópia / mesmo disco / discos diferentes), com dedup de fontes sobrepostas, disco fraco nunca independente e poda por tamanho (L8) (2026-10-27)
+- [x] Backup automático do catálogo (`VACUUM INTO` → conferência → publicação sem sobrescrever → rotação de 10) (2026-10-27)
+- [x] Comparação com **escopo livre** (requisito ajustado em 2026-10-27, spec §3.2 e §9; ADR 0011)
+  - [x] Escopo = uma ou mais pastas/subpastas e/ou fontes inteiras + filtro opcional por tipo (data etc. na Fase 4)
+  - [x] "B contém todo o conteúdo de A?" → "Sim, 100%" / "Faltam N arquivos (X GB)" com a lista pronta para seleção; também "Só em B" e "Nos dois"
+  - [x] Sempre por conteúdo (SHA-256), ignorando nomes e pastas; hash pendente/erro/nuvem ou pasta ilegível em qualquer lado → "Resultado incompleto" (nunca "100%") + "Conferir agora"
+  - [x] Escopos salvos com nome (tabela `saved_scopes`, migração aditiva v1 → v2 com teste)
+  - [x] Teste: A = pasta1 + pasta2, B = pasta3, nomes diferentes e conteúdo parcial (core, CLI e app com core real)
+- [x] Tela Comparar (montar escopos A e B, escopos salvos, resultado e listas com seleção) e painel de cobertura no Início; cobertura por fonte em Dispositivos; backup em Configurações (2026-10-27)
+- [x] Critérios da spec (seção 16, Fase 2) — evidências no CHANGELOG
+- [ ] Tag `v0.2.0` — **depois do teste do usuário**
+
+Observações da Fase 2:
+- Antes da fase: o teste de VHD passou a conferir o estado real pelo Windows; isso mostrou que o `detach vdisk` do diskpart deixava o disco anexado. Trocado por `Dismount-DiskImage`, sem tolerância; 3/3 verdes na CI. Actions atualizadas para Node 24 (checkout@v7, setup-dotnet@v6).
+- "Copiar para B…" aparece desabilitado na Comparar: a cópia segura é a Fase 5.
+- Limitação registrada (ADR 0010): reescrita com mesmo tamanho **e** data restaurada durante a leitura não é detectável por tamanho+data; a Fase 7 relê o conteúdo.
+- `last_verified_at` e o selo "conferida recentemente" ficam para a Fase 7.
+- Duplicatas: há a API (`duplicateGroups`) e o espaço repetido por fonte; uma tela de navegação por grupos entra com a Biblioteca (Fase 4).
 
 ## Fase 3 — Celular (leitura)
 - [ ] Helper com WPD: listar dispositivos, navegar, ler arquivos em streaming
@@ -116,3 +127,4 @@ Observações da Fase 1:
 <!-- O Claude Code adiciona uma linha por sessão: data — etapa — resumo -->
 - 2026-10-26 — Etapa 0 — Spec analisada (8 contradições, 12 riscos, 15 lacunas); arquitetura, schema v1, protocolo do helper, ADRs 0001–0009 e plano da Fase 1. Aguardando "aprovado" e as respostas de Q1–Q4.
 - 2026-10-26 — Fase 1 — Fundação concluída: catálogo v1, helper com volumes.list, fontes independentes da letra, scan com checkpoint em isolate, CLI, fixtures, telas Início/Dispositivos, CI verde (incl. kill e VHD NTFS/FAT32). Tag v0.1.0.
+- 2026-10-27 — Antes da Fase 2 + Fase 2 — CI: causa dos runs 40275882141 (bin/ não versionado) e 40276396430 (VHD); desanexo trocado por Dismount-DiskImage após o reforço mostrar disco ainda anexado; 3/3 verdes; actions em Node 24. Requisito de comparação com escopo livre na spec. Fase 2 implementada (hash, cobertura, duplicatas, comparação, escopos salvos, backup do catálogo, telas); tag v0.2.0 aguarda o teste do usuário.

@@ -50,6 +50,24 @@ dart run bin/fotoatlas_cli.dart volumes
 dart run bin/fotoatlas_cli.dart sources add "C:\caminho\para\uma\pasta" --name Teste
 dart run bin/fotoatlas_cli.dart scan start Teste
 dart run bin/fotoatlas_cli.dart sources list
+dart run bin/fotoatlas_cli.dart hash run                     # confere o conteúdo (Ctrl+C pausa)
+dart run bin/fotoatlas_cli.dart coverage                     # situação de backup
+dart run bin/fotoatlas_cli.dart compare "Teste:pasta1+Teste:pasta2" "Outra:pasta3" --list missing
+dart run bin/fotoatlas_cli.dart scopes save "Fotos do celular antigo" "Teste:pasta1+Teste:pasta2"
+dart run bin/fotoatlas_cli.dart compare "@Fotos do celular antigo" "Outra" --type photo,video
+dart run bin/fotoatlas_cli.dart backup now
+```
+
+Um lado da comparação é `FONTE[:pasta/sub]` com `+` entre as partes, ou `@NOME` de um escopo salvo. As linhas `VERDICT`, `MISSING`, `ONLY_B`, `BOTH`, `ISSUE` e `WARN` são estáveis para scripts e testes.
+
+Depois de mudar `schema.drift` (nova versão do schema):
+
+```powershell
+cd C:\dev\fotoatlas\packages\fotoatlas_core
+dart run build_runner build --delete-conflicting-outputs
+dart run drift_dev schema dump lib/src/catalog/catalog_database.dart drift_schemas/
+dart run drift_dev schema generate drift_schemas/ test/generated_schema/
+dart format .
 ```
 
 Para gerar uma árvore sintética e escanear:

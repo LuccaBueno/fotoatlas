@@ -1,6 +1,6 @@
 # Schema SQLite v1 — FotoAtlas
 
-- Versão do schema: **1** (`PRAGMA user_version = 1`, gerido pelo drift)
+- Versão do schema: **2** (`PRAGMA user_version = 2`, gerido pelo drift). A v1 está descrita nas seções 1–6; as mudanças da v2 (aditivas) estão na seção 7.
 - Data: 2026-10-26 (Etapa 0)
 - Identificadores em inglês; os rótulos em PT-BR ficam na UI.
 
@@ -365,3 +365,31 @@ CREATE INDEX ix_ic_instance ON integrity_checks(instance_id, checked_at DESC);
 - **Hash perceptual** (Fase 9+): `perceptual_hashes(content_id, dhash, phash)`.
 
 Todas são migrações aditivas (novas tabelas e índices).
+
+## 7. v2 (Fase 2, 2026-10-27) — mudanças aditivas
+
+Migração `v1 → v2` numa transação, depois do backup `pre-migracao-v1-<data>.db`. Testada com os *snapshots* `drift_schemas/drift_schema_v1.json` e `v2.json` (`test/catalog/migration_test.dart`).
+
+```sql
+-- Motivo legível quando hash_status é 'error' ou 'changed_during_read'
+-- (ex.: "Arquivo não encontrado (pode ter sido movido). Escaneie de novo.").
+ALTER TABLE file_instances ADD COLUMN hash_error TEXT;
+
+-- Escopos de comparação salvos com nome (spec §9). Só catálogo.
+CREATE TABLE saved_scopes (
+  id              INTEGER PRIMARY KEY,
+  name            TEXT NOT NULL UNIQUE COLLATE NOCASE,   -- "Fotos do celular antigo"
+  definition_json TEXT NOT NULL,                         -- {"v":1,"entries":[{"source":"<uuid>","path":"DCIM"}],"types":["photo"]}
+  created_at      INTEGER NOT NULL,
+  updated_at      INTEGER NOT NULL
+);
+```
+
+Uso das colunas existentes pela fila de hash (ADR 0010):
+
+| Coluna | Na Fase 2 |
+|---|---|
+| `hash_status` | `pending` → `done` / `changed_during_read` / `error`; `not_applicable` para somente na nuvem |
+| `content_id` | preenchido junto com `done`; zerado pelo scan quando tamanho ou data mudam |
+| `hashed_size`, `hashed_mtime`, `hashed_at` | o que foi observado no handle durante a leitura |
+| `last_verified_at` | ainda não usado (verificação periódica, Fase 7) |

@@ -29,3 +29,5 @@ Modelo:
 | [0007](0007-testes-de-falha.md) | Estratégia de testes, incluindo testes de falha (kill) | aceita |
 | [0008](0008-win32-via-ffi-no-core.md) | Acesso Win32 no core via FFI, com bindings próprios mínimos | aceita |
 | [0009](0009-identificacao-de-fontes.md) | Identificação de fontes por pontuação | aceita |
+| [0010](0010-fila-de-hash.md) | Fila de conferência de conteúdo (SHA-256) e `package:crypto` | aceita |
+| [0011](0011-comparacao-por-escopo.md) | Comparação A × B com escopo livre | aceita |

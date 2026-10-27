@@ -77,7 +77,11 @@ fotoatlas/
 - `sources`: `list()`, `watch()`, `addFolder(path)`, `addVolume(volumeGuid)`, `rename()`, `forget()` (só catálogo)
 - `scans`: `start(sourceId)`, `pause()`, `resume()`, `cancel()`, `progress(scanId) → Stream`
 - `devices`: `volumes() → Stream<List<VolumeInfo>>` (conectividade)
-- Fases seguintes: `hashes`, `coverage`, `compare`, `library`, `operations`, `recovery`
+- `hashes`: `start(priority)`, `pause()`, `retryFailed()`, `status → Stream<HashStatus>` (Fase 2, §3.4.1)
+- `coverage`: `report()`, `watch()`, `statesForSource()`, `duplicateGroups()` (Fase 2)
+- `compare`: `compare(A, B)`, `items(A, B, lista)`, escopos salvos (Fase 2)
+- `backups`: `backupNow()`, `maybeBackup()`, `list()` (Fase 2)
+- Fases seguintes: `library`, `operations`, `recovery`
 
 Toda operação longa devolve um `TaskHandle` com `Stream<Progress>`, `pause/resume/cancel` e um `Future<Result>`. A UI nunca espera uma operação longa no isolate principal.
 
@@ -113,6 +117,13 @@ A variável de ambiente `FOTOATLAS_HOME` substitui as duas raízes (usada pela C
 5. Pasta enumerada sem erro → `scan_dirs.status = done`. Erro (acesso negado, E/S) → `error` + `scan_errors`; **os filhos dessa pasta não são marcados como ausentes**.
 6. Ao final: se todas as pastas ficaram `done`, `coverage = complete`. As instâncias da fonte não vistas neste scan e cuja pasta-pai está `done` passam a `missing` (com `missing_confirmed_at`). Em scan parcial ou com erro, nada vira `missing` (regras 9 e 10).
 7. Pausar = o worker termina o lote atual e para; o estado fica todo no banco. Retomar = cria um worker que continua das `scan_dirs pending`. Se o app fechar no meio, o scan fica `interrupted` e pode ser retomado.
+
+### 3.4.1. Conferência de conteúdo, cobertura e comparação (Fase 2)
+
+- **Fila de hash** (ADR 0010): um worker por disco físico; ordem = prioridade da comparação → tamanhos que colidem (L8) → pasta. Leitura só por `safe_io/source_reader.dart` (`GENERIC_READ`, `OPEN_EXISTING`, `FILE_FLAG_OPEN_NO_RECALL`). Tamanho e data comparados antes e depois; mudou → `changed_during_read`; erro → `error` + `hash_error`, nunca `missing`. Lotes de 32 por transação, com guarda contra scan concorrente.
+- **Cobertura** (§4.6): uma consulta com CTEs; instância física deduplicada por (volume, caminho absoluto no volume); "independente" exige 2+ discos de identidade confiável. Sem hash: tamanho único → 🔴; mesmo nome+tamanho em outra fonte → 🟡; resto ⚪. `watch()` recalcula no máximo a cada 2 s (a fila grava em lotes e avisa o drift com `notifyUpdates`).
+- **Comparação com escopo livre** (ADR 0011): veredito `complete` / `missing` / `incomplete` / `emptyA`; qualquer arquivo não conferido ou pasta não lida em A ou B → `incomplete`.
+- **Backup do catálogo**: `quick_check` → `VACUUM INTO backups/catalog-<data>.db.tmp` → confere a cópia (só leitura) → `MoveFileExW` sem sobrescrever → rotação dos 10 mais novos (os `pre-migracao-*` nunca saem). Automático ao abrir o app se o último tiver mais de 24 h.
 
 ### 3.5. Identificação de fontes (ADR 0009)
 
@@ -181,6 +192,14 @@ Nenhum `await` de operação longa no isolate da UI. As listas grandes usam `Lis
 
 - **Dispositivos**: lista de fontes (nome, tipo, conectada/desconectada, letra atual, último scan, nº de arquivos, espaço). Ações: "Adicionar pasta", "Adicionar unidade", "Escanear", "Pausar", "Retomar", "Renomear". Fontes desconectadas aparecem esmaecidas, com "Visto pela última vez em…" e os dados do último scan.
 - **Início (básica)**: total de arquivos e de fotos/vídeos (por extensão) por fonte, fontes desconectadas, scans em andamento, atalho para "Adicionar dispositivo".
+
+### 4.5.1. Telas da Fase 2
+
+- **Início**: painel "O que já tem backup e o que ainda não tem" com as 5 situações (cor + ícone + texto, quantidade e tamanho), progresso da conferência (pausar/continuar) e atalho para Comparar; por dispositivo, quantos arquivos só existem ali.
+- **Dispositivos**: no cartão, situação de backup das fotos e vídeos da fonte, arquivos repetidos (espaço) e progresso da conferência daquela fonte.
+- **Comparar**: dois editores de escopo (A e B) com entradas (dispositivo inteiro ou pasta, escolhidas pelo catálogo — funciona desconectado), filtro por tipo e escopos salvos; resultado com a pergunta "B contém todo o conteúdo de A?", motivos de "incompleto", "Conferir agora" e abas Faltam em B / Só em B / Nos dois / Não conferidos, com seleção ("N itens · X GB", "Selecionar todos os resultados"). "Copiar para B…" fica desabilitado até a Fase 5.
+- **Configurações**: backup do catálogo (último, quantidade, "Fazer backup agora").
+- O `ProviderScope` fica acima do `MaterialApp` para que diálogos enxerguem os providers.
 
 ### 4.6. Mapeamento dos estados de backup (resolve C2; usado a partir da Fase 2)
 

@@ -32,7 +32,7 @@ Flutter · Dart · SQLite · C# .NET 10 (APIs do Windows) · ExifTool · FFmpeg
 - [Roteiro](docs/ROADMAP.md)
 - [Desenvolvimento: build, testes e execução](docs/desenvolvimento.md)
 - [Arquitetura](docs/arquitetura.md)
-- [Schema do catálogo (v1)](docs/schema-v1.md)
+- [Schema do catálogo (v1 + mudanças da v2)](docs/schema-v1.md)
 - [Protocolo do helper nativo](docs/protocolo-helper.md)
 - [Análise da especificação](docs/analise-spec.md)
 - [Decisões técnicas (ADRs)](docs/adr/)
