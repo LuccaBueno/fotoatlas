@@ -52,7 +52,12 @@ build/
 .flutter-plugins
 .flutter-plugins-dependencies
 pubspec_overrides.yaml
-coverage/
+# Saída de cobertura de testes (dart/flutter test --coverage) — só na raiz de cada pacote,
+# para não ignorar o módulo lib/src/coverage/ do core.
+/coverage/
+/app/coverage/
+/packages/*/coverage/
+/tools/*/coverage/
 *.g.dart.bak
 app/windows/flutter/ephemeral/
 
