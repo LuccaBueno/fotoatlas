@@ -80,7 +80,7 @@ A interface precisa ser **fácil, útil, completa e, acima de tudo, intuitiva**.
 1. **Início.** Painel com as respostas às 4 perguntas, alertas ("HD antigo não é verificado há 6 meses") e atalhos para as tarefas mais comuns.
 2. **Biblioteca.** Galeria em grade e em lista, linha do tempo (ano/mês), filtros, seleção e painel de detalhes com todas as localizações conhecidas do item.
 3. **Dispositivos.** Fontes cadastradas, conectadas e desconectadas, com último escaneamento, espaço e cobertura de backup de cada uma.
-4. **Comparar.** "O que existe em A e não existe em B" (ex.: celular × HD), com resultado direto para seleção e cópia.
+4. **Comparar.** Dois **escopos livres**, A e B (ex.: "pasta 1 + pasta 2 do HD antigo" × "pasta Backup do HD novo", ou celular × HD inteiro), montados com uma ou mais pastas/subpastas e/ou dispositivos inteiros, com filtros opcionais. A pergunta principal fica no topo: **"B contém todo o conteúdo de A?"**, com resposta direta — "Sim, 100%" ou "Faltam N arquivos (X GB)" — e a lista do que falta pronta para seleção e cópia. Abaixo, "Só em B" e "Nos dois". Se algum arquivo dos escopos ainda não teve o conteúdo conferido, a resposta é "Resultado incompleto", nunca "100%". Escopos podem ser salvos com nome (ex.: "Fotos do celular antigo") para reutilizar. Regras na seção 9.
 5. **Tarefas.** Fila de operações em andamento e histórico completo (auditoria) com exportação.
 6. **Configurações.** Biblioteca principal, modelos de organização, verificação periódica e backup do catálogo.
 
@@ -211,7 +211,18 @@ Os caminhos são guardados **relativos à raiz da fonte**, para que a troca da l
   - várias cópias no mesmo disco físico;
   - cópias em discos físicos diferentes;
   - pelo menos 1 cópia conferida recentemente.
-- **Comparação A × B:** conteúdos em A que não existem em B (ou em nenhum backup), com resultado direto para seleção.
+- **Comparação A × B com escopo livre:**
+  - **Escopo** = conjunto de uma ou mais entradas, cada uma sendo um dispositivo/fonte inteiro ou uma pasta/subpasta dentro de uma fonte, mais **filtros opcionais** (tipo de mídia agora; data, câmera etc. quando os metadados existirem — Fase 4). A e B são escopos independentes; entradas de fontes diferentes podem ser misturadas no mesmo lado.
+  - **Sempre por conteúdo** (SHA-256 + tamanho). Nomes, extensões e estrutura de pastas são ignorados: a mesma foto com outro nome, em outra pasta, conta como "está em B".
+  - **Pergunta principal:** "B contém todo o conteúdo de A?" Respostas possíveis:
+    - **"Sim, 100%"** — todo conteúdo de A existe em B, e não há pendências (abaixo);
+    - **"Faltam N arquivos (X GB)"** — N é o número de conteúdos distintos de A ausentes em B e X a soma dos seus tamanhos (cópias repetidas dentro de A contam uma vez; o total de arquivos de A envolvidos aparece nos detalhes). A lista do que falta vem pronta para seleção, mostrando onde cada conteúdo está em A;
+    - **"Resultado incompleto"** — há arquivos, em A ou em B, cujo conteúdo ainda não foi conferido (hash pendente, com erro, alterado durante a leitura ou somente na nuvem), ou pastas do escopo que não puderam ser lidas / fontes nunca escaneadas por completo. Nesse caso o app **nunca** mostra "100%": informa quantos arquivos faltam conferir, de que lado, e oferece "Conferir agora" (prioriza esses arquivos na fila de hash). O número de "faltam" já conhecido continua visível, com a ressalva.
+  - **Também mostrar:** "Só em B" (conteúdos de B que não existem em A) e "Nos dois" (conteúdos presentes em ambos), com contagem e tamanho.
+  - Instâncias ausentes (`missing`) não contam; instâncias de fonte **desconectada contam** pelo último scan (regra 9), com aviso "resultado baseado no escaneamento de <data>".
+  - Se A e B se sobrepõem fisicamente (ex.: A = pasta dentro do HD, B = HD inteiro), avisar: um arquivo nessa área "está em B" por ser o mesmo arquivo, não uma cópia de segurança.
+  - **Escopos salvos:** o usuário pode salvar um escopo com nome (ex.: "Fotos do celular antigo") e reutilizá-lo em qualquer lado da comparação. Escopos salvos ficam no catálogo; apagar um escopo nunca toca em arquivos.
+  - A comparação é somente leitura (regra 2).
 - Espaço ocupado por duplicatas, por fonte.
 - **Duplicatas visuais** (perceptuais) ficam fora do MVP. Quando entrarem, serão só sugestões com comparação lado a lado.
 
@@ -344,8 +355,9 @@ Cada fase termina com **testes passando + demonstração funcionando + CHANGELOG
 
 ### Fase 2 — Conteúdo e cobertura
 - Fila de hash; duplicatas exatas; backup automático do catálogo.
-- Tela Comparar (A × B) e painel de cobertura.
+- Tela Comparar (A × B, com escopo livre e escopos salvos — §9) e painel de cobertura.
 - **Critérios:**
+  - comparação com A = pasta1 + pasta2 e B = pasta3, com nomes diferentes e conteúdo parcial, responde corretamente "faltam N", "só em B" e "nos dois"; com hash pendente em qualquer lado, responde "incompleto";
   - conteúdo idêntico com nomes diferentes é agrupado;
   - mesmo nome com conteúdo diferente **não** é agrupado;
   - "só 1 cópia" está correto em cenário de teste com 3 fontes;

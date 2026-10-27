@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+### Alterado
+- **Requisito da comparação ajustado** (spec §3.2, §9 e §16): A e B passam a ser escopos livres (várias pastas e/ou dispositivos, com filtros), a pergunta principal é "B contém todo o conteúdo de A?" (sempre por conteúdo), com resultado "incompleto" quando há arquivos sem conteúdo conferido, e escopos podem ser salvos com nome.
+- CI: `actions/checkout@v7` e `actions/setup-dotnet@v6` (Node 24); `subosito/flutter-action@v2` já usa `actions/cache@v5` (Node 24). Disparo manual (`workflow_dispatch`) para repetir a CI.
+
+### Testes
+- VHD: a tolerância a "already detached" ao desanexar agora confirma pelo Windows (`Get-DiskImage`) que o disco saiu de fato; vale só para o próprio teste.
+
 ## [0.1.0] — 2026-10-26 — Fase 1: Fundação
 
 ### Adicionado

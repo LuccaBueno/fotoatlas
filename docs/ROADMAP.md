@@ -56,7 +56,13 @@ Observações da Fase 1:
 - [ ] Ignorar placeholders do OneDrive (scan já os cataloga como `cloud_only` sem abrir; falta a fila de hash respeitar isso)
 - [ ] Duplicatas exatas e níveis de cobertura (1 cópia / mesmo disco / discos diferentes)
 - [ ] Backup automático do catálogo (`VACUUM INTO` com rotação)
-- [ ] Tela Comparar (A × B) e painel de cobertura no Início
+- [ ] Comparação com **escopo livre** (requisito ajustado em 2026-10-27, spec §3.2 e §9)
+  - [ ] Escopo = uma ou mais pastas/subpastas e/ou fontes inteiras + filtro opcional por tipo (data etc. na Fase 4)
+  - [ ] "B contém todo o conteúdo de A?" → "Sim, 100%" / "Faltam N arquivos (X GB)" com a lista pronta para seleção; também "Só em B" e "Nos dois"
+  - [ ] Sempre por conteúdo (SHA-256), ignorando nomes e pastas; hash pendente/erro/nuvem ou pasta ilegível em qualquer lado → "Resultado incompleto" (nunca "100%") + "Conferir agora"
+  - [ ] Escopos salvos com nome (tabela nova, migração aditiva v1 → v2)
+  - [ ] Teste: A = pasta1 + pasta2, B = pasta3, nomes diferentes e conteúdo parcial
+- [ ] Tela Comparar (montar escopos A e B, escopos salvos, resultado e listas) e painel de cobertura no Início
 - [ ] Critérios da spec (seção 16, Fase 2)
 - [ ] Tag `v0.2.0`
 
