@@ -15,21 +15,32 @@ import '../support/temp.dart';
 /// liga isso; na máquina do desenvolvedor fica desligado por padrão (ADR 0007).
 final bool _enabled = Platform.environment['FOTOATLAS_VHD_TESTS'] == '1';
 
-Future<void> diskpart(Directory temp, String script, {String? alsoOk}) async {
+Future<void> diskpart(Directory temp, String script) async {
   final file = File(p.join(temp.path, 'diskpart_${DateTime.now().microsecondsSinceEpoch}.txt'))
     ..writeAsStringSync(script);
   final r = await Process.run('diskpart', ['/s', file.path]);
-  // Tolerância exclusiva deste teste (nunca no código do app); quem a usa
-  // confere o estado final por outro caminho.
-  if (alsoOk != null && '${r.stdout}'.contains(alsoOk)) return;
   expect(r.exitCode, 0, reason: 'diskpart falhou:\n$script\n${r.stdout}\n${r.stderr}');
 }
 
-/// Estado real do VHD segundo o Windows, independente da saída do diskpart.
+Future<ProcessResult> powershell(String command) =>
+    Process.run('powershell', ['-NoProfile', '-NonInteractive', '-Command', command]);
+
+/// Estado real do VHD segundo a API de Storage do Windows.
 Future<bool> vhdAttached(String vhd) async {
-  final r = await Process.run('powershell', ['-NoProfile', '-Command', "(Get-DiskImage -ImagePath '$vhd').Attached"]);
-  expect(r.exitCode, 0, reason: 'Get-DiskImage falhou: ${r.stderr}');
+  final r = await powershell("\$ErrorActionPreference = 'Stop'; (Get-DiskImage -ImagePath '$vhd').Attached");
+  expect(r.exitCode, 0, reason: 'Get-DiskImage falhou: ${r.stdout}\n${r.stderr}');
   return '${r.stdout}'.trim() == 'True';
+}
+
+/// Desanexa pela mesma API (Storage do Windows) que o [vhdAttached] consulta.
+///
+/// Antes usávamos `detach vdisk` do diskpart, que na CI às vezes respondia
+/// "already detached". Conferido pelo `Get-DiskImage` (run 40546116893), o
+/// disco continuava anexado depois desse passo nos dois testes: a resposta do
+/// diskpart não refletia o estado real.
+Future<void> dismount(String vhd) async {
+  final r = await powershell("\$ErrorActionPreference = 'Stop'; Dismount-DiskImage -ImagePath '$vhd' | Out-Null");
+  expect(r.exitCode, 0, reason: 'Dismount-DiskImage falhou: ${r.stdout}\n${r.stderr}');
 }
 
 List<String> freeLetters() => [
@@ -56,11 +67,9 @@ create partition primary
 format fs=$fs quick label=FATESTE
 assign letter=$first
 ''');
-        addTearDown(() async {
-          final script = File(p.join(temp.path, 'detach.txt'))
-            ..writeAsStringSync('select vdisk file="$vhd"\ndetach vdisk\n');
-          await Process.run('diskpart', ['/s', script.path]);
-        });
+        // Limpeza se o teste parar antes do desanexo (aqui o erro é ignorado:
+        // o disco pode já ter saído).
+        addTearDown(() => powershell("Dismount-DiskImage -ImagePath '$vhd' -ErrorAction SilentlyContinue"));
         expect(await vhdAttached(vhd), isTrue);
 
         final fotos = Directory('$first:\\Fotos')..createSync();
@@ -87,11 +96,8 @@ assign letter=$first
         expect(view.missingCount, 0);
 
         await diskpart(temp, 'select volume $second\nremove letter=$second\n');
-        // Sem letra o volume continua acessível pelo GUID; desmonta de vez.
-        // Na CI o VDS às vezes já desanexou neste ponto e o diskpart responde
-        // "already detached" com código de erro. Aceitamos só essa mensagem e
-        // conferimos pelo Windows que o disco de fato saiu do sistema.
-        await diskpart(temp, 'select vdisk file="$vhd"\ndetach vdisk\n', alsoOk: 'already detached');
+        // Sem letra o volume continua acessível pelo GUID; desanexa de vez.
+        await dismount(vhd);
         expect(await vhdAttached(vhd), isFalse, reason: 'o VHD deveria estar desanexado');
         await core.sources.refreshConnectivity();
         view = (await core.sources.list()).single;
