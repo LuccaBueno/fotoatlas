@@ -74,7 +74,7 @@ Observações da Fase 1:
   - [x] Plural/concordância em todos os contadores ("1 arquivo com só 1 cópia", "4 cópias conferidas")
   - [x] Caminhos nas listas com um só separador ("HD_antigo › pasta2 › notas.txt")
   - [x] Resumo da comparação com arquivos × conteúdos ("A: 5 arquivos (4 conteúdos diferentes, 1 repetido)")
-- [ ] Tag `v0.2.0` — **depois dos ajustes, com CI verde**
+- [x] Tag `v0.2.0` em 045d6f1 (2026-10-27), CI run 40562944176 verde
 
 Observações da Fase 2:
 - Antes da fase: o teste de VHD passou a conferir o estado real pelo Windows; isso mostrou que o `detach vdisk` do diskpart deixava o disco anexado. Trocado por `Dismount-DiskImage`, sem tolerância; 3/3 verdes na CI. Actions atualizadas para Node 24 (checkout@v7, setup-dotnet@v6).
