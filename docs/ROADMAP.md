@@ -51,7 +51,7 @@ Observações da Fase 1:
 - O teste "UI não trava" mede o event loop no core (mesmo isolate da UI no app) em vez de `integration_test` (ADR 0007 atualizado).
 - Pendente para fases futuras: helper ainda não é copiado junto do app no build (o app o encontra na pasta de build do `native/` em desenvolvimento) — empacotamento na Fase 8.
 
-## Fase 2 — Conteúdo e cobertura (implementada em 2026-10-27; aguardando o teste do usuário)
+## Fase 2 — Conteúdo e cobertura (concluída em 2026-10-27)
 - [x] Fila de hash SHA-256 em streaming, com detecção de arquivo alterado durante a leitura (2026-10-27)
   - [x] Leitura só por `safe_io/source_reader.dart` (FFI, `GENERIC_READ` + `OPEN_EXISTING` + `FILE_FLAG_OPEN_NO_RECALL`), flags conferidas pelo teste de arquitetura
   - [x] Um worker por disco físico, prioridade (comparação → tamanhos que colidem → pasta), lotes transacionais com guarda contra scan concorrente, pausar/continuar, automática após scan e ao conectar (ADR 0010)
@@ -69,11 +69,11 @@ Observações da Fase 1:
 - [x] Tela Comparar (montar escopos A e B, escopos salvos, resultado e listas com seleção) e painel de cobertura no Início; cobertura por fonte em Dispositivos; backup em Configurações (2026-10-27)
 - [x] Critérios da spec (seção 16, Fase 2) — evidências no CHANGELOG
 - [x] Teste do usuário (2026-10-27): A = pasta1 + pasta2 × B = pasta3 → Faltam 2 / Só em B 1 / Nos dois 2; escopo salvo OK
-- [ ] Ajustes de interface pedidos no teste (antes da tag)
-  - [ ] Seletor da Comparar: botão "Adicionar nova pasta/dispositivo…" que cadastra e escaneia sem sair da tela + dica "Não encontrou? Ela precisa ser adicionada e escaneada primeiro"
-  - [ ] Plural/concordância em todos os contadores ("1 arquivo com só 1 cópia", "4 cópias conferidas")
-  - [ ] Caminhos nas listas com um só separador ("HD_antigo › pasta2 › notas.txt")
-  - [ ] Resumo da comparação com arquivos × conteúdos ("A: 5 arquivos (4 conteúdos diferentes, 1 repetido)")
+- [x] Ajustes de interface pedidos no teste (antes da tag) (2026-10-27)
+  - [x] Seletor da Comparar: botão "Adicionar nova pasta/dispositivo…" que cadastra e escaneia sem sair da tela + dica "Não encontrou? Ela precisa ser adicionada e escaneada primeiro"
+  - [x] Plural/concordância em todos os contadores ("1 arquivo com só 1 cópia", "4 cópias conferidas")
+  - [x] Caminhos nas listas com um só separador ("HD_antigo › pasta2 › notas.txt")
+  - [x] Resumo da comparação com arquivos × conteúdos ("A: 5 arquivos (4 conteúdos diferentes, 1 repetido)")
 - [ ] Tag `v0.2.0` — **depois dos ajustes, com CI verde**
 
 Observações da Fase 2:
@@ -144,3 +144,4 @@ Observações da Fase 2:
 - 2026-10-26 — Fase 1 — Fundação concluída: catálogo v1, helper com volumes.list, fontes independentes da letra, scan com checkpoint em isolate, CLI, fixtures, telas Início/Dispositivos, CI verde (incl. kill e VHD NTFS/FAT32). Tag v0.1.0.
 - 2026-10-27 — Antes da Fase 2 + Fase 2 — CI: causa dos runs 40275882141 (bin/ não versionado) e 40276396430 (VHD); desanexo trocado por Dismount-DiskImage após o reforço mostrar disco ainda anexado; 3/3 verdes; actions em Node 24. Requisito de comparação com escopo livre na spec. Fase 2 implementada (hash, cobertura, duplicatas, comparação, escopos salvos, backup do catálogo, telas); tag v0.2.0 aguarda o teste do usuário.
 - 2026-10-27 — Ajuste de requisito (sem implementação) — data e hora da captura até segundos, linha do tempo única, momentos (nomear/juntar/separar, escopo e filtro), filtros de horário/período/dia da semana, correção de relógio por dispositivo com prévia, hora de baixa confiança fora dos momentos automáticos, modelo {ano}/{ano}-{mes}-{dia} {momento}/: spec §3.2, §8, §9, §10, §12, §16 e ROADMAP das Fases 4 e 6.
+- 2026-10-27 — Teste do usuário da Fase 2 aprovado (Faltam 2 / Só em B 1 / Nos dois 2). Ajustes de interface: adicionar e escanear pelo seletor da Comparar, plural nos contadores, caminhos com um só separador, resumo arquivos × conteúdos. Tag v0.2.0. Fase 3 **não iniciada**: aguarda o usuário.

@@ -2,7 +2,7 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [Não lançado] — Fase 2: Conteúdo e cobertura (tag `v0.2.0` depois do teste do usuário)
+## [0.2.0] — 2026-10-27 — Fase 2: Conteúdo e cobertura
 
 ### Requisitos ajustados (sem implementação ainda)
 - **Data e hora da captura (até segundos) como cidadã de primeira classe** — spec §3.2, §8.1–8.3, §10, §12 e §16; ROADMAP das Fases 4 e 6: linha do tempo única intercalando todos os dispositivos pela hora real; **momentos** automáticos (intervalo sem fotos, padrão 2 h) que o usuário pode nomear, juntar e separar, usados como filtro, escopo na Comparar e no modelo de organização `{ano}/{ano}-{mes}-{dia} {momento}/`; filtros por faixa de horário, período do dia e dia da semana; correção de relógio por dispositivo de captura com prévia, só no catálogo; hora de baixa confiança sinalizada e fora dos momentos automáticos até ser confirmada.
@@ -15,6 +15,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - **App**: Início com o painel "O que já tem backup e o que ainda não tem" e o progresso da conferência; Dispositivos com a situação de backup e os repetidos de cada fonte; tela **Comparar** completa; **Configurações** com o backup do catálogo.
 - **CLI**: `hash run|retry`, `coverage`, `compare A B [--list] [--type]`, `scopes list|save|remove`, `backup now|list`.
 - **Schema v2** (aditivo): `file_instances.hash_error` e tabela `saved_scopes`, com teste de migração a partir do snapshot da v1.
+
+### Alterado (ajustes pedidos no teste do usuário)
+- **Comparar**: o seletor "Adicionar pasta ou dispositivo" ganhou o botão **"Adicionar nova pasta/dispositivo…"**, que cadastra uma pasta ou unidade, já começa a escanear e deixa a nova fonte selecionada, sem sair da tela; e a dica "Não encontrou? Ela precisa ser adicionada e escaneada primeiro".
+- **Comparar**: o resumo separa arquivos de conteúdos ("A: 5 arquivos (4 conteúdos diferentes, 1 repetido)"), e explica que as abas contam conteúdos — "Faltam em B" + "Nos dois" = conteúdos de A. O core passou a devolver `aContents`/`aRepeated`/`bContents`/`bRepeated` (também na saída da CLI `compare`).
+- Contadores com plural e concordância em todas as telas: "1 arquivo com só 1 cópia", "4 cópias conferidas", "2 arquivos só na nuvem", "1 mudou durante a leitura".
+- Caminhos nas listas com um só separador: "HD_antigo › pasta2 › notas.txt" (antes misturava › e /).
 
 ### Corrigido
 - O `ProviderScope` do app ficava dentro do `MaterialApp`, e diálogos não enxergavam os providers (o seletor de pastas da comparação quebraria). Achado pelo teste do app com o core real.
