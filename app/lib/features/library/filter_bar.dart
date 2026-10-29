@@ -27,12 +27,13 @@ class FilterBar extends ConsumerWidget {
       if (cond == null) return '';
       final list = cond.values.map(label).toList();
       final text = list.length <= max ? list.join(', ') : '${list.take(max).join(', ')} +${list.length - max}';
-      return cond.negate ? 'NÃO $text' : text;
+      return cond.negate ? 'todos menos $text' : text;
     }
 
     Widget chip(String key, String label, bool active, String detail, VoidCallback onTap, {FilterKind? clear}) {
       return InputChip(
         key: ValueKey('chip-$key'),
+        tooltip: _chipHelp[key],
         label: Text(active ? '$label: $detail' : label),
         selected: active,
         showCheckmark: false,
@@ -126,7 +127,7 @@ class FilterBar extends ConsumerWidget {
         ),
         chip(
           'time',
-          'Horário',
+          'Horário do dia',
           timeActive,
           _timeSummary(f),
           () => showDialog<void>(context: context, builder: (_) => const _TimeDialog()),
@@ -143,7 +144,7 @@ class FilterBar extends ConsumerWidget {
         ),
         chip(
           'hour',
-          'Hora',
+          'Hora confiável?',
           hourActive,
           _hourSummary(f),
           () => showDialog<void>(context: context, builder: (_) => const _HourDialog()),
@@ -268,7 +269,7 @@ class _PickManyDialogState<T extends Object> extends State<_PickManyDialog<T>> {
                         dense: true,
                         value: _sel.contains(o.$1),
                         title: Text(o.$2),
-                        secondary: o.$3 == null ? null : Text(formatInt(o.$3!)),
+                        secondary: o.$3 == null ? null : Text(plural(o.$3!, 'foto ou vídeo', 'fotos e vídeos')),
                         onChanged: (v) => setState(() => v! ? _sel.add(o.$1) : _sel.remove(o.$1)),
                       ),
                   ],
@@ -276,7 +277,8 @@ class _PickManyDialogState<T extends Object> extends State<_PickManyDialog<T>> {
               ),
             SwitchListTile(
               dense: true,
-              title: const Text('Excluir os marcados (NÃO)'),
+              title: const Text('Mostrar tudo, menos os marcados'),
+              subtitle: const Text('Em vez de mostrar só os marcados (filtro NÃO).'),
               value: _negate,
               onChanged: (v) => setState(() => _negate = v),
             ),
@@ -322,7 +324,7 @@ class _TimeDialogState extends ConsumerState<_TimeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Horário da captura'),
+      title: const Text('Horário do dia em que foi tirada'),
       content: SizedBox(
         width: 460,
         child: Column(
@@ -432,7 +434,7 @@ class _HourDialogState extends ConsumerState<_HourDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Hora da captura'),
+      title: const Text('A hora é confiável?'),
       content: SizedBox(
         width: 440,
         child: Column(
@@ -652,7 +654,7 @@ String conditionLabel(FilterCondition c) => switch (c.kind) {
   FilterKind.months => 'Mês: ${c.values.join(', ')}',
   FilterKind.dateRange => 'Período: ${c.values.join(' a ')}',
   FilterKind.noDate => 'Sem data',
-  FilterKind.timeRange => 'Horário: ${_hm((c.min ?? 0).toInt())}–${_hm((c.max ?? 1439).toInt())}',
+  FilterKind.timeRange => 'Horário do dia: ${_hm((c.min ?? 0).toInt())}–${_hm((c.max ?? 1439).toInt())}',
   FilterKind.periods => 'Período do dia: ${c.values.map((v) => DayPart.values.byName('$v').label).join(', ')}',
   FilterKind.weekdays => 'Dia da semana: ${c.values.map((v) => weekdayShort[(v as int) - 1]).join(', ')}',
   FilterKind.moments => 'Momento (${c.values.length})',
@@ -804,3 +806,16 @@ class _SavedFiltersMenu extends ConsumerWidget {
     );
   }
 }
+
+/// Dica de cada chip de filtro, em linguagem simples.
+const _chipHelp = {
+  'year': 'Mostrar só as fotos e vídeos tirados nestes anos.',
+  'source': 'Mostrar só o que tem cópia nestes dispositivos (celular, HD, pasta…).',
+  'camera': 'Mostrar só o que foi tirado por estas câmeras ou celulares (pelos dados gravados na foto).',
+  'type': 'Fotos, fotos RAW (de câmeras profissionais) ou vídeos.',
+  'backup': 'Filtrar pela situação de backup: sem backup, com cópia conferida ou com backup em outro disco.',
+  'time': 'Filtrar pela hora do dia em que foi tirada (ex.: só à noite, só aos sábados).',
+  'moment': 'Momentos são grupos de fotos tiradas perto umas das outras (ex.: uma festa, um passeio).',
+  'hour': 'Filtrar pela confiança na hora: confiável, provável ou incerta (ex.: a confirmar).',
+  'more': 'Período de datas, tamanho, resolução, duração do vídeo, localização e erros de leitura.',
+};

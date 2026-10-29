@@ -173,6 +173,8 @@ class FotoAtlasCore {
       metadata.cleanLeftovers();
       final moments = MomentsService(catalog.db);
       await moments.init();
+      // Regras de data novas: os momentos acompanham (em segundo plano).
+      if (metadata.reresolvedOnInit) unawaited(moments.recompute().then((_) {}, onError: (Object _) {}));
       await sources.refreshConnectivity();
       if (monitor) sources.startMonitoring();
       final core = FotoAtlasCore._(

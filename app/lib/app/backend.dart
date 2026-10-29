@@ -61,6 +61,10 @@ abstract interface class AppBackend {
 
   // Backup do catálogo.
   List<CatalogBackupInfo> catalogBackups();
+
+  /// O guia de primeiros passos já foi visto (ou pulado)?
+  Future<bool> isFirstRunGuideDone();
+  Future<void> setFirstRunGuideDone();
   Future<CatalogBackupInfo> backupCatalogNow();
 }
 
@@ -167,6 +171,14 @@ class CoreBackend implements AppBackend {
 
   @override
   List<CatalogBackupInfo> catalogBackups() => core.backups.list();
+
+  static const _guideKey = 'ui.firstRunGuideDone';
+
+  @override
+  Future<bool> isFirstRunGuideDone() async => await SettingsStore(core.catalog.db).get(_guideKey) == true;
+
+  @override
+  Future<void> setFirstRunGuideDone() => SettingsStore(core.catalog.db).set(_guideKey, true);
 
   @override
   Future<CatalogBackupInfo> backupCatalogNow() => core.backups.backupNow();

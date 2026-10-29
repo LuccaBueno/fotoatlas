@@ -8,6 +8,7 @@ import '../features/home/home_page.dart';
 import '../features/library/library_page.dart';
 import '../features/placeholder/coming_soon_page.dart';
 import '../features/settings/settings_page.dart';
+import 'help.dart';
 import 'providers.dart';
 import '../l10n/strings.dart';
 
@@ -44,11 +45,30 @@ const devicesDestination = 2;
 const compareDestination = 3;
 
 /// Navegação lateral com as 6 telas da spec (§3.2).
-class AppShell extends ConsumerWidget {
-  const AppShell({super.key});
+class AppShell extends ConsumerStatefulWidget {
+  const AppShell({super.key, this.firstRunGuide = false});
+
+  /// Mostra o guia de primeiros passos se ainda não foi visto (o app liga).
+  final bool firstRunGuide;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.firstRunGuide) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final done = await ref.read(backendProvider).isFirstRunGuideDone();
+        if (!done && mounted) await showFirstRunGuide(context, ref);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // O helper caiu (fora do encerramento): avisa; o core já interrompeu o
     // scan/conferência de forma segura e reinicia o helper.
     ref.listen(helperStatusProvider, (previous, next) {
@@ -89,6 +109,25 @@ class AppShell extends ConsumerWidget {
               for (final d in _destinations)
                 NavigationRailDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selectedIcon), label: Text(d.label)),
             ],
+            // "?" sempre no mesmo lugar: ajuda da tela aberta (e o guia de primeiros passos).
+            trailing: Expanded(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: IconButton.filledTonal(
+                    key: const ValueKey('help-button'),
+                    tooltip: 'Ajuda sobre esta tela: o que dá para fazer e o que significam as cores',
+                    iconSize: 28,
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => HelpDialog(topic: helpTopics[index]),
+                    ),
+                    icon: const Icon(Icons.help_outline),
+                  ),
+                ),
+              ),
+            ),
           ),
           const VerticalDivider(width: 1),
           Expanded(child: _destinations[index].builder()),

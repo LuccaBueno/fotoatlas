@@ -158,7 +158,15 @@ Observações:
 - [x] Biblioteca: grade, lista, linha do tempo, painel de detalhes
 - [x] Filtros em chips + avançado, seleção em massa, filtros salvos — incluindo faixa de horário, período do dia, dia da semana, momento e confiança da hora
 - [x] Critérios da spec (100 mil itens, < 1 s)
-- [ ] Teste do usuário (celular simulado com `-DemoPersistente -CelularSimulado`; depois, se quiser, uma pasta real só leitura)
+- [x] Teste do usuário (2026-10-29, celular simulado com `-DemoPersistente -CelularSimulado`): retomada da conferência depois de fechar OK, Biblioteca, momentos nomeados, filtros, seleção e painel de detalhes OK; correção de relógio funcionou, mas pouco intuitiva
+- [x] Ajustes de usabilidade pedidos no teste (spec §3.1, §3.3 e §8.1)
+  - [x] Situações de backup com nomes que dizem se tem backup: "Sem backup (só em 1 lugar)", "Parece ter cópia (falta conferir)", "Tem cópia conferida", "Backup em outro disco", "Ainda não dá para saber" (rótulos, contadores e dicas)
+  - [x] Filtros "Horário do dia" e "Hora confiável?"; "Mostrar tudo, menos os marcados"; contagens com unidade ("3 fotos e vídeos")
+  - [x] Momento de 1 instante mostra só "09:00"; momento sem nome ganha nome descritivo ("Sábado de manhã", "Sábado, da manhã à tarde"); botão "Opções" visível e menu pelo clique direito (ou toque longo) no cabeçalho
+  - [x] Possível bug "1º de janeiro de 2023 · 00:00": a foto do demo tem mesmo essa data no EXIF (gerada de propósito). Como é a data de relógio zerado, a regra mudou: 1º de janeiro às 00:00:00 em ponto vira hora incerta e vai para "Hora a confirmar"; catálogos existentes são recalculados ao abrir (pelas datas já guardadas, sem reler arquivos), e o painel explica o motivo
+  - [x] Dicas em ícones, selos, chips e botões (selo de backup diz onde o arquivo está: "Sem backup: este arquivo só existe em 'Pixel de Teste'"); botão "?" na navegação com a ajuda da tela aberta e a legenda das cores; guia de primeiros passos (4 passos) que pode ser pulado e reaberto pelo "?"
+  - [x] Correção de relógio mais intuitiva: modo padrão "Sei a hora certa de uma foto" (escolhe a foto, vê a hora que ela marca, digita a hora certa) com a frase "O relógio estava adiantado 1 h: todas as fotos… vão ficar 1 h mais cedo"
+  - [x] Testes: guia (passos, pular, não volta sozinho), "?" por tela e reabrir o guia (achou e corrigiu um erro ao reabrir o guia pelo "?"), nomes de momento, dica de backup com o lugar, regra do relógio zerado e recálculo ao abrir
 - [ ] Tag `v0.4.0`
 
 Observações da Fase 4:

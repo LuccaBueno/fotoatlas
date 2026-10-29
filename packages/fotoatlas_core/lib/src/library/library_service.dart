@@ -59,6 +59,7 @@ class LibraryItem {
     this.hasGps = false,
     this.metaError,
     this.sha256Hex,
+    this.places = const [],
   });
 
   final int contentId;
@@ -85,6 +86,9 @@ class LibraryItem {
   final bool hasGps;
   final String? metaError;
   final String? sha256Hex;
+
+  /// Nomes dos dispositivos onde há cópia (para "só existe no Pixel").
+  final List<String> places;
 
   /// Hora incerta: baixa confiança, não corrigida nem confirmada.
   bool get uncertain => (confidence == DateConfidence.low || confidence == DateConfidence.none) && !corrected;
@@ -312,6 +316,9 @@ class LibraryService {
             mm.moment_id, mm.width, mm.height, mm.duration_ms, mm.make, mm.model, mm.lat, mm.meta_status, mm.meta_error,
             (SELECT fi.name FROM file_instances fi WHERE fi.content_id = c.id AND fi.availability != 'missing' ORDER BY fi.id LIMIT 1) AS name,
             (SELECT fi.ext FROM file_instances fi WHERE fi.content_id = c.id ORDER BY fi.id LIMIT 1) AS ext,
+            (SELECT group_concat(name, char(31)) FROM (SELECT DISTINCT s.name FROM file_instances fi
+              JOIN sources s ON s.id = fi.source_id AND s.forgotten_at IS NULL
+              WHERE fi.content_id = c.id AND fi.availability = 'present' ORDER BY s.name)) AS places,
             b.copies, b.state
           FROM contents c
           LEFT JOIN media_metadata mm ON mm.content_id = c.id
@@ -350,6 +357,7 @@ class LibraryService {
     hasGps: r.readNullable<double>('lat') != null,
     metaError: r.readNullable<String>('meta_status') == 'error' ? r.readNullable<String>('meta_error') : null,
     sha256Hex: r.readNullable<String>('sha')?.toLowerCase(),
+    places: r.readNullable<String>('places')?.split(String.fromCharCode(31)) ?? const [],
   );
 
   Future<LibraryItemDetail?> detail(int contentId) async {

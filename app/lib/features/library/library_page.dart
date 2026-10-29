@@ -98,11 +98,22 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                           segments: const [
                             ButtonSegment(
                               value: LibraryView.timeline,
+                              tooltip: 'Todas as fotos e vídeos na ordem em que foram tirados, por dia e momento',
                               icon: Icon(Icons.timeline),
                               label: Text('Linha do tempo'),
                             ),
-                            ButtonSegment(value: LibraryView.grid, icon: Icon(Icons.grid_view), label: Text('Grade')),
-                            ButtonSegment(value: LibraryView.list, icon: Icon(Icons.view_list), label: Text('Lista')),
+                            ButtonSegment(
+                              value: LibraryView.grid,
+                              tooltip: 'Miniaturas maiores, separadas por mês',
+                              icon: Icon(Icons.grid_view),
+                              label: Text('Grade'),
+                            ),
+                            ButtonSegment(
+                              value: LibraryView.list,
+                              tooltip: 'Uma linha por item, com data, câmera, tamanho e backup',
+                              icon: Icon(Icons.view_list),
+                              label: Text('Lista'),
+                            ),
                           ],
                           selected: {state.view},
                           onSelectionChanged: (s) => c.setView(s.first),
@@ -274,47 +285,69 @@ class _Header extends ConsumerWidget {
         final focused = state.focused;
         final focusedIndex = focused == null ? -1 : state.index.ids.indexOf(focused);
         final split = focusedIndex >= 0 && state.index.moment[focusedIndex] == m.id ? focused : null;
-        return Row(
-          key: ValueKey('moment-${m.id}'),
-          children: [
-            Icon(
-              m.edited ? Icons.push_pin_outlined : Icons.collections_outlined,
-              size: 18,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                m.name ?? 'Momento',
-                style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary),
-                overflow: TextOverflow.ellipsis,
+        void openMenu(BuildContext context, {Offset? at}) {
+          final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+          final Rect rect;
+          if (at != null) {
+            rect = Rect.fromCenter(center: overlay.globalToLocal(at), width: 1, height: 1);
+          } else {
+            final box = context.findRenderObject()! as RenderBox;
+            rect = box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
+          }
+          showMomentMenu(
+            context,
+            ref,
+            m,
+            position: RelativeRect.fromRect(rect, Offset.zero & overlay.size),
+            next: next,
+            splitAtContentId: split,
+          );
+        }
+
+        // Clique direito (ou toque longo) em qualquer parte do cabeçalho abre o menu.
+        return Builder(
+          builder: (context) => GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onSecondaryTapUp: (d) => openMenu(context, at: d.globalPosition),
+            onLongPressStart: (d) => openMenu(context, at: d.globalPosition),
+            child: Tooltip(
+              message: m.edited
+                  ? 'Momento fixo (você deu nome, juntou ou separou). Clique com o botão direito para mais opções.'
+                  : 'Momento: fotos tiradas perto umas das outras. Clique com o botão direito para dar nome, '
+                        'juntar ou separar.',
+              waitDuration: const Duration(milliseconds: 800),
+              child: Row(
+                key: ValueKey('moment-${m.id}'),
+                children: [
+                  Icon(
+                    m.edited ? Icons.push_pin_outlined : Icons.collections_outlined,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      m.name ?? momentAutoName(m),
+                      style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(momentSubtitle(m), style: theme.textTheme.bodySmall),
+                  const SizedBox(width: 4),
+                  Builder(
+                    builder: (context) => TextButton.icon(
+                      key: ValueKey('moment-menu-${m.id}'),
+                      style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                      onPressed: () => openMenu(context),
+                      icon: const Icon(Icons.more_horiz, size: 20),
+                      label: const Text('Opções'),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            Text(
-              '${plural(m.itemCount, 'item', 'itens')} · '
-              '${m.startLocal == null ? '' : formatClock(m.startLocal!, seconds: false)}'
-              '${m.endLocal == null ? '' : '–${formatClock(m.endLocal!, seconds: false)}'}',
-              style: theme.textTheme.bodySmall,
-            ),
-            Builder(
-              builder: (context) => IconButton(
-                key: ValueKey('moment-menu-${m.id}'),
-                tooltip: 'Nomear, juntar ou separar',
-                iconSize: 18,
-                onPressed: () {
-                  final box = context.findRenderObject()! as RenderBox;
-                  final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
-                  final pos = RelativeRect.fromRect(
-                    box.localToGlobal(Offset.zero, ancestor: overlay) & box.size,
-                    Offset.zero & overlay.size,
-                  );
-                  showMomentMenu(context, ref, m, position: pos, next: next, splitAtContentId: split);
-                },
-                icon: const Icon(Icons.more_horiz),
-              ),
-            ),
-          ],
+          ),
         );
     }
   }
@@ -497,10 +530,7 @@ class _NavigationTree extends ConsumerWidget {
                           contentPadding: const EdgeInsets.only(left: 56),
                           leading: const Icon(Icons.collections_outlined, size: 16),
                           title: Text(
-                            moments[mo]?.name ??
-                                (moments[mo]?.startLocal == null
-                                    ? 'Momento'
-                                    : formatClock(moments[mo]!.startLocal!, seconds: false)),
+                            moments[mo] == null ? 'Momento' : (moments[mo]!.name ?? momentAutoName(moments[mo]!)),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

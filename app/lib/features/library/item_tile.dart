@@ -128,20 +128,29 @@ class ItemTile extends ConsumerWidget {
                         child: _Pill(
                           icon: Icons.play_arrow,
                           text: item.durationMs == null ? 'Vídeo' : formatVideoLength(item.durationMs!),
+                          tooltip: item.durationMs == null
+                              ? 'Vídeo'
+                              : 'Vídeo de ${formatVideoLength(item.durationMs!)}',
                         ),
                       ),
                     if (item != null && item.uncertain)
                       const Positioned(
                         left: 4,
                         bottom: 4,
-                        child: _Pill(icon: Icons.help_outline, text: 'hora incerta'),
+                        child: _Pill(
+                          icon: Icons.help_outline,
+                          text: 'hora incerta',
+                          tooltip:
+                              'Hora incerta: não dá para ter certeza de quando foi tirada (ex.: veio só da data do '
+                              'arquivo, que muda quando ele é copiado). Abra os detalhes para confirmar ou corrigir.',
+                        ),
                       ),
                     if (item != null)
                       Positioned(
                         right: 4,
                         top: 4,
                         child: Tooltip(
-                          message: backupStateLabel(item.backup),
+                          message: backupStateItemHint(item.backup, item.places),
                           child: CircleAvatar(
                             radius: 11,
                             backgroundColor: scheme.surface.withValues(alpha: 0.85),
@@ -156,18 +165,23 @@ class ItemTile extends ConsumerWidget {
                     Positioned(
                       left: 2,
                       top: 2,
-                      child: SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: Checkbox(
-                          value: selected,
-                          onChanged: (_) => onToggle(),
-                          visualDensity: VisualDensity.compact,
-                          side: BorderSide(color: scheme.onSurface.withValues(alpha: 0.6)),
-                          fillColor: WidgetStateProperty.resolveWith(
-                            (s) => s.contains(WidgetState.selected)
-                                ? scheme.primary
-                                : scheme.surface.withValues(alpha: 0.7),
+                      child: Tooltip(
+                        message: 'Marcar ou desmarcar (Ctrl+clique e Shift+clique também marcam)',
+                        waitDuration: const Duration(milliseconds: 600),
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: Checkbox(
+                            semanticLabel: 'Marcar (Ctrl+clique e Shift+clique também marcam)',
+                            value: selected,
+                            onChanged: (_) => onToggle(),
+                            visualDensity: VisualDensity.compact,
+                            side: BorderSide(color: scheme.onSurface.withValues(alpha: 0.6)),
+                            fillColor: WidgetStateProperty.resolveWith(
+                              (s) => s.contains(WidgetState.selected)
+                                  ? scheme.primary
+                                  : scheme.surface.withValues(alpha: 0.7),
+                            ),
                           ),
                         ),
                       ),
@@ -196,12 +210,15 @@ class ItemTile extends ConsumerWidget {
 }
 
 class _Pill extends StatelessWidget {
-  const _Pill({required this.icon, required this.text});
+  const _Pill({required this.icon, required this.text, required this.tooltip});
   final IconData icon;
   final String text;
+  final String tooltip;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => Tooltip(message: tooltip, child: _pill());
+
+  Widget _pill() => Container(
     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
     decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(8)),
     child: Row(

@@ -220,9 +220,9 @@ void main() {
     await tester.pumpWidget(harness(backend));
     await tester.pumpAndSettle();
     expect(find.text('3 fotos e vídeos existem em um lugar só (3,0 MB).'), findsOneWidget);
-    expect(find.text('3 arquivos com só 1 cópia (3,0 MB)'), findsOneWidget);
-    expect(find.text('10 arquivos com backup em disco independente (10,0 MB)'), findsOneWidget);
-    expect(find.text('3 arquivos com só 1 cópia'), findsOneWidget, reason: 'por dispositivo');
+    expect(find.text('3 arquivos sem backup (só em 1 lugar) (3,0 MB)'), findsOneWidget);
+    expect(find.text('10 arquivos com backup em outro disco (10,0 MB)'), findsOneWidget);
+    expect(find.text('3 arquivos sem backup (só em 1 lugar)'), findsOneWidget, reason: 'por dispositivo');
   });
 
   testWidgets('cópias em disco que não dá para identificar: Início e cartão avisam (R1)', (tester) async {
@@ -248,7 +248,7 @@ void main() {
       );
     await tester.pumpWidget(harness(backend));
     await tester.pumpAndSettle();
-    expect(find.text('3 cópias conferidas (2,9 KB)'), findsOneWidget);
+    expect(find.text('3 arquivos com cópia conferida (2,9 KB)'), findsOneWidget);
     expect(
       find.text(
         'Há outra cópia idêntica, mas não dá para confirmar que estão em discos diferentes: '
@@ -262,7 +262,10 @@ void main() {
   });
 
   test('dica dos discos incertos só quando há, e com a quantidade quando é parte', () {
-    expect(verifiedHint(4, 0), 'Há outra cópia com conteúdo idêntico, mas no mesmo disco.');
+    expect(
+      verifiedHint(4, 0),
+      'Tem cópia com conteúdo idêntico, mas no mesmo disco: se esse disco falhar, as duas se perdem.',
+    );
     expect(verifiedHint(4, 1), contains('Em 1 arquivo, não dá para confirmar'));
     expect(uncertainDiskShort(4, 2), 'Não dá para confirmar que 2 delas estão em discos diferentes');
   });

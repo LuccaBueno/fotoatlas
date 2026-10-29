@@ -17,7 +17,16 @@ export 'src/helper/helper_client.dart' show HelperClient, HelperException, Helpe
 export 'src/library/library_filter.dart';
 export 'src/library/library_service.dart';
 export 'src/metadata/capture_date.dart'
-    show DateConfidence, DateSource, DateCandidate, TimeZones, WallTime, formatWall, parseWall, wallTime;
+    show
+        DateConfidence,
+        DateSource,
+        DateCandidate,
+        TimeZones,
+        WallTime,
+        formatWall,
+        looksLikeClockReset,
+        parseWall,
+        wallTime;
 export 'src/metadata/dates_service.dart';
 export 'src/metadata/effective_dates.dart' show ClockCorrection;
 export 'src/metadata/external_tools.dart';
@@ -29,6 +38,7 @@ export 'src/scan/scan_service.dart' show ScanService;
 export 'src/sources/identity.dart';
 export 'src/sources/media_types.dart';
 export 'src/sources/sources_service.dart';
+export 'src/settings/settings_store.dart';
 export 'src/sources/volumes.dart';
 export 'src/thumbs/thumbnail_service.dart' show ThumbnailService, exifThumbnail;
 export 'src/util/clock.dart' show fileTimeToDateTime;

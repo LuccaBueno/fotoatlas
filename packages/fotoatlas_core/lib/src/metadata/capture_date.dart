@@ -281,6 +281,9 @@ class DateStrategy {
 
     final at = _instant(chosen);
     final conflict = _conflict(chosen, at.utcMs, sorted);
+    // 1º de janeiro à meia-noite em ponto: é a data que câmeras e celulares
+    // gravam com o relógio zerado. Fica como hora incerta ("Hora a confirmar").
+    if (looksLikeClockReset(at.wall)) confidence = DateConfidence.low;
     return ResolvedDate(
       utcMs: at.utcMs,
       wall: at.wall,
@@ -339,3 +342,7 @@ class DateStrategy {
       ? const []
       : [for (final m in (jsonDecode(json) as List<Object?>).cast<Map<String, Object?>>()) DateCandidate.fromJson(m)];
 }
+
+/// Data típica de relógio zerado: 1º de janeiro, 00:00:00 em ponto.
+bool looksLikeClockReset(WallTime w) =>
+    w.month == 1 && w.day == 1 && w.hour == 0 && w.minute == 0 && w.second == 0 && w.millisecond == 0;

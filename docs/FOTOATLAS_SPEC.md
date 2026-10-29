@@ -62,11 +62,13 @@ A interface precisa ser **fácil, útil, completa e, acima de tudo, intuitiva**.
   - "celular" em vez de "dispositivo MTP".
   Os detalhes técnicos ficam disponíveis num painel "Detalhes", para quem quiser.
 - **Estados com cor + ícone + texto** (nunca só cor):
-  - 🔴 Só 1 cópia
-  - 🟡 Copiado, falta conferir
-  - 🟢 Cópia conferida
-  - 🔵 Backup em disco independente
-  - ⚪ Situação desconhecida
+  - 🔴 Sem backup (só em 1 lugar)
+  - 🟡 Parece ter cópia (falta conferir)
+  - 🟢 Tem cópia conferida (no mesmo disco)
+  - 🔵 Backup em outro disco
+  - ⚪ Ainda não dá para saber
+
+  Os nomes dizem o que importa para quem não é técnico — tem backup ou não (ajuste de 2026-10-29, depois do teste da Fase 4).
 - **Prévia visual** de toda operação: quantidade, tamanho, espaço livre no destino, conflitos e a estrutura de pastas resultante.
 - **Tudo pode ser interrompido** (pausar, cancelar) e **retomado**.
 - **Desfazer** para reorganizações dentro do mesmo disco.
@@ -74,6 +76,12 @@ A interface precisa ser **fácil, útil, completa e, acima de tudo, intuitiva**.
 - **Seleção em massa** óbvia: clicar, Shift+clique, Ctrl+clique, "Selecionar todos os resultados" e uma barra fixa mostrando "523 itens · 4,2 GB · 498 conteúdos únicos".
 - **Interface sempre responsiva.** Trabalho pesado roda em segundo plano, com progresso visível.
 - Tema claro e escuro, atalhos de teclado e boa legibilidade.
+- **Ajuda sempre à mão** (ajuste de 2026-10-29):
+  - **dica (tooltip)** em todo ícone, selo, chip e botão, em linguagem simples e com o caso concreto quando houver (ex.: selo vermelho → "Sem backup: este arquivo só existe em 'Pixel de Teste'");
+  - **botão "?"** fixo na navegação lateral, abrindo um painel curto da tela aberta: o que ela é, o que dá para fazer e o significado das cores e dos selos;
+  - **guia de primeira execução** em 3–4 passos (adicionar dispositivo → escanear → ver o que não tem backup → comparar), que pode ser pulado e reaberto pelo "?".
+- Nomes de filtro que não se confundem ("Horário do dia" × "Hora confiável?"); "NÃO" explicado como "Mostrar tudo, menos os marcados"; contagens com unidade ("3 fotos e vídeos").
+- Momento sem nome recebe um nome descritivo ("Sábado de manhã"); momento de um instante mostra uma hora só ("09:00"). As opções do momento abrem por um botão visível e pelo clique direito no cabeçalho.
 
 ### 3.2. Telas principais (navegação lateral)
 
@@ -95,7 +103,8 @@ A interface precisa ser **fácil, útil, completa e, acima de tudo, intuitiva**.
 - **Copiar o que falta:** origem → destino → comparação → filtros/seleção → modelo de organização → prévia → confirmar → progresso → relatório.
 - **Reorganizar disco** (ver seção 12).
 - **Verificar integridade.**
-- **Primeira execução:** cadastrar dispositivos, escolher a biblioteca principal e fazer o primeiro escaneamento.
+- **Primeira execução:** cadastrar dispositivos, escolher a biblioteca principal e fazer o primeiro escaneamento. (Na Fase 4: guia de 4 passos que pode ser pulado e reaberto pelo "?"; a escolha da biblioteca principal entra com a Fase 6.)
+- **Corrigir o relógio de um dispositivo:** o jeito padrão é "sei a hora certa de uma foto" — escolher uma foto do dispositivo, ver a hora que ela marca e digitar a hora certa; o app calcula o ajuste e diz em uma frase o que vai acontecer, antes da prévia.
 
 ---
 
@@ -212,6 +221,7 @@ Os caminhos são guardados **relativos à raiz da fonte**, para que a troca da l
 - Cada conteúdo tem **data e hora da captura com precisão de segundos** (e subsegundos quando o arquivo tiver, ex.: `SubSecTimeOriginal`), guardadas como instante normalizado (UTC) **e** como hora local vivida, com a origem e a confiança (§8).
 - A ordenação da linha do tempo e dos momentos usa o **instante real** (UTC); a tela mostra a hora local. Fotos de dispositivos diferentes ficam intercaladas corretamente mesmo com fusos diferentes.
 - **Níveis de confiança:** alta (EXIF com fuso ou vídeo em UTC conhecido), média (EXIF sem fuso, assumindo o fuso padrão; data no nome do arquivo), **baixa** (só data do sistema de arquivos, que muda com cópias e restaurações). Hora de baixa confiança é sinalizada em toda a interface.
+- **Relógio zerado:** data de 1º de janeiro às 00:00:00 em ponto (a que câmeras e celulares gravam sem data configurada) também é baixa confiança e vai para "Hora a confirmar" (ajuste de 2026-10-29).
 
 ### 8.2. Correção de relógio por dispositivo de captura
 - Para câmeras com relógio errado: o usuário escolhe um **dispositivo de captura** (fabricante + modelo + número de série do corpo quando o EXIF tiver; ex.: "Canon X") e informa um deslocamento ("+1 h", "−3 min 20 s") ou um ajuste de ano/data ("ano errado: 2015 → 2025"), opcionalmente limitado a um período ou a fontes específicas.

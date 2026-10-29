@@ -19,7 +19,10 @@ void main() {
 
 /// Abre o core (catálogo, helper, monitor de dispositivos) e mostra o app.
 class FotoAtlasApp extends StatefulWidget {
-  const FotoAtlasApp({super.key, this.openCore, this.demoMode});
+  const FotoAtlasApp({super.key, this.openCore, this.demoMode, this.firstRunGuide = true});
+
+  /// Mostra o guia de primeiros passos se ainda não foi visto (testes desligam).
+  final bool firstRunGuide;
 
   /// Substituível em testes.
   final Future<FotoAtlasCore> Function()? openCore;
@@ -154,7 +157,7 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
             backendProvider.overrideWithValue(CoreBackend(core)),
             libraryBackendProvider.overrideWithValue(CoreLibraryBackend(core)),
           ],
-          child: _app(const AppShell(), navigatorKey: _navigatorKey),
+          child: _app(AppShell(firstRunGuide: widget.firstRunGuide), navigatorKey: _navigatorKey),
         );
       },
     );

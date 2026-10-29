@@ -27,13 +27,13 @@ void main() {
   });
 
   test('contadores de situação com plural e concordância', () {
-    expect(backupStateCount(BackupState.single, 1), '1 arquivo com só 1 cópia');
-    expect(backupStateCount(BackupState.single, 3), '3 arquivos com só 1 cópia');
-    expect(backupStateCount(BackupState.verified, 1), '1 cópia conferida');
-    expect(backupStateCount(BackupState.verified, 4), '4 cópias conferidas');
-    expect(backupStateCount(BackupState.probable, 2), '2 copiados, falta conferir');
-    expect(backupStateCount(BackupState.independent, 1), '1 arquivo com backup em disco independente');
-    expect(backupStateCount(BackupState.unknown, 1200), '1.200 arquivos em situação desconhecida');
+    expect(backupStateCount(BackupState.single, 1), '1 arquivo sem backup (só em 1 lugar)');
+    expect(backupStateCount(BackupState.single, 3), '3 arquivos sem backup (só em 1 lugar)');
+    expect(backupStateCount(BackupState.verified, 1), '1 arquivo com cópia conferida');
+    expect(backupStateCount(BackupState.verified, 4), '4 arquivos com cópia conferida');
+    expect(backupStateCount(BackupState.probable, 2), '2 arquivos parecem ter cópia (falta conferir)');
+    expect(backupStateCount(BackupState.independent, 1), '1 arquivo com backup em outro disco');
+    expect(backupStateCount(BackupState.unknown, 1200), '1.200 arquivos que ainda não dá para saber');
   });
 
   test('caminhos com um só separador', () {

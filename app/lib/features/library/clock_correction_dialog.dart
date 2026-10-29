@@ -4,13 +4,26 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
 import '../../l10n/format.dart';
+import 'date_dialogs.dart';
 import 'library_controller.dart';
 
 final _devicesProvider = FutureProvider.autoDispose<List<CaptureDevice>>(
   (ref) => ref.watch(libraryBackendProvider).captureDevices(),
 );
 
-enum _Kind { shift, year, align }
+enum _Kind { photo, shift, year, align }
+
+/// Fotos de um dispositivo (para "sei a hora certa desta foto").
+final _samplesProvider = FutureProvider.autoDispose.family<List<LibraryItem>, String>((ref, camera) async {
+  final b = ref.watch(libraryBackendProvider);
+  final index = await b.index(
+    LibraryFilter([
+      FilterCondition(FilterKind.cameras, values: [camera]),
+    ]),
+    ascending: true,
+  );
+  return b.items(index.ids.take(50).toList());
+});
 
 /// Assistente "Corrigir o relógio de um dispositivo" (spec §8.2): escolher o
 /// dispositivo, dizer o erro, ver a prévia "antes → depois" e aplicar. Só no
@@ -30,8 +43,10 @@ class ClockCorrectionDialog extends ConsumerStatefulWidget {
 
 class _ClockCorrectionDialogState extends ConsumerState<ClockCorrectionDialog> {
   CaptureDevice? _device;
-  _Kind _kind = _Kind.shift;
+  _Kind _kind = _Kind.photo;
   bool _ahead = true;
+  LibraryItem? _sample;
+  final _rightTime = TextEditingController();
   final _h = TextEditingController(text: '0');
   final _m = TextEditingController(text: '0');
   final _s = TextEditingController(text: '0');
@@ -47,7 +62,7 @@ class _ClockCorrectionDialogState extends ConsumerState<ClockCorrectionDialog> {
 
   @override
   void dispose() {
-    for (final c in [_h, _m, _s, _yearFrom, _yearTo, _periodFrom, _periodTo]) {
+    for (final c in [_h, _m, _s, _yearFrom, _yearTo, _periodFrom, _periodTo, _rightTime]) {
       c.dispose();
     }
     super.dispose();
@@ -61,6 +76,12 @@ class _ClockCorrectionDialogState extends ConsumerState<ClockCorrectionDialog> {
     var offset = Duration.zero;
     var years = 0;
     switch (_kind) {
+      case _Kind.photo:
+        final shown = _sample?.local;
+        final right = parseBrDateTime(_rightTime.text);
+        if (shown == null || right == null) return null;
+        // Segundos inteiros: a hora digitada não tem frações.
+        offset = Duration(seconds: right.difference(shown).inMilliseconds ~/ 1000);
       case _Kind.shift:
         final total = Duration(hours: _int(_h), minutes: _int(_m), seconds: _int(_s));
         // "Estava adiantado" → a hora certa é mais cedo.
@@ -155,6 +176,70 @@ class _ClockCorrectionDialogState extends ConsumerState<ClockCorrectionDialog> {
     );
   }
 
+  /// "Sei a hora certa de uma foto": escolhe uma foto do dispositivo, mostra a
+  /// hora que ela marca e pergunta a hora certa; o ajuste sai da diferença.
+  Widget _photoMode(ThemeData theme) {
+    final d = _device;
+    if (d == null) return Text('Escolha o dispositivo primeiro.', style: theme.textTheme.bodySmall);
+    final samples = ref.watch(_samplesProvider('${d.make ?? ''}\u0001${d.model ?? ''}')).value ?? const [];
+    if (samples.isEmpty) return const LinearProgressIndicator();
+    // Uma foto já marcada na Biblioteca, se for deste dispositivo.
+    if (_sample == null) {
+      final marked = samples.where((s) => widget.referenceIds.contains(s.contentId)).firstOrNull;
+      _sample = marked ?? samples.first;
+      _rightTime.text = _sample!.local == null ? '' : formatWallDateTime(_sample!.local!);
+    }
+    final shown = _sample!.local;
+    final right = parseBrDateTime(_rightTime.text);
+    final diff = shown == null || right == null
+        ? null
+        : Duration(seconds: right.difference(shown).inMilliseconds ~/ 1000);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButton<int>(
+          key: const ValueKey('clock-sample'),
+          isExpanded: true,
+          value: _sample!.contentId,
+          items: [
+            for (final s in samples)
+              DropdownMenuItem(
+                value: s.contentId,
+                child: Text('${s.name} — marca ${s.local == null ? 'sem data' : formatWallDateTime(s.local!)}'),
+              ),
+          ],
+          onChanged: (id) => setState(() {
+            _sample = samples.firstWhere((s) => s.contentId == id);
+            _rightTime.text = _sample!.local == null ? '' : formatWallDateTime(_sample!.local!);
+            _preview = null;
+          }),
+        ),
+        const SizedBox(height: 8),
+        Text('Esta foto marca ${shown == null ? '—' : formatWallDateTime(shown)}. Quando ela foi tirada de verdade?'),
+        SizedBox(
+          width: 260,
+          child: TextField(
+            key: const ValueKey('clock-right-time'),
+            controller: _rightTime,
+            decoration: const InputDecoration(labelText: 'Hora certa (dd/mm/aaaa hh:mm:ss)', isDense: true),
+            onChanged: (_) => setState(() => _preview = null),
+          ),
+        ),
+        const SizedBox(height: 6),
+        if (diff != null && diff != Duration.zero)
+          Text(
+            'O relógio estava ${diff.isNegative ? 'adiantado' : 'atrasado'} ${formatShift(diff.abs()).substring(1)}: '
+            'todas as fotos e vídeos de ${d.label} vão ficar ${formatShift(diff.abs()).substring(1)} '
+            '${diff.isNegative ? 'mais cedo' : 'mais tarde'}.',
+            key: const ValueKey('clock-summary'),
+            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          )
+        else if (right == null && _rightTime.text.isNotEmpty)
+          Text('Use o formato 01/05/2024 10:00:20.', style: TextStyle(color: theme.colorScheme.error)),
+      ],
+    );
+  }
+
   Widget _num(TextEditingController c, String label, {double width = 70}) => SizedBox(
     width: width,
     child: TextField(
@@ -205,16 +290,35 @@ class _ClockCorrectionDialogState extends ConsumerState<ClockCorrectionDialog> {
                   _device = d;
                   _preview = null;
                   _aligned = null;
+                  _sample = null;
                 }),
               ),
               const SizedBox(height: 16),
-              const Text('2. O que estava errado'),
+              const Text('2. Como você sabe que o relógio estava errado?'),
               const SizedBox(height: 6),
               SegmentedButton<_Kind>(
+                key: const ValueKey('clock-kind'),
                 segments: const [
-                  ButtonSegment(value: _Kind.shift, label: Text('A hora')),
-                  ButtonSegment(value: _Kind.year, label: Text('O ano')),
-                  ButtonSegment(value: _Kind.align, label: Text('Alinhar com outra foto')),
+                  ButtonSegment(
+                    value: _Kind.photo,
+                    label: Text('Sei a hora certa de uma foto'),
+                    tooltip: 'O jeito mais fácil: escolha uma foto e diga quando ela foi tirada de verdade.',
+                  ),
+                  ButtonSegment(
+                    value: _Kind.shift,
+                    label: Text('Sei quanto estava errado'),
+                    tooltip: 'Ex.: o relógio estava 1 hora adiantado (esqueceu do horário de verão).',
+                  ),
+                  ButtonSegment(
+                    value: _Kind.year,
+                    label: Text('O ano'),
+                    tooltip: 'Ex.: a câmera marcava 2015, mas era 2025.',
+                  ),
+                  ButtonSegment(
+                    value: _Kind.align,
+                    label: Text('Comparar fotos'),
+                    tooltip: 'Duas fotos tiradas no mesmo instante: uma deste dispositivo e outra com a hora certa.',
+                  ),
                 ],
                 selected: {_kind},
                 onSelectionChanged: (s) => setState(() {
@@ -224,6 +328,7 @@ class _ClockCorrectionDialogState extends ConsumerState<ClockCorrectionDialog> {
               ),
               const SizedBox(height: 8),
               switch (_kind) {
+                _Kind.photo => _photoMode(theme),
                 _Kind.shift => Wrap(
                   spacing: 12,
                   crossAxisAlignment: WrapCrossAlignment.end,

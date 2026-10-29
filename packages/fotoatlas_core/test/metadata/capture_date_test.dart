@@ -169,4 +169,14 @@ void main() {
       expect(back.map((x) => x.toJson()), c.map((x) => x.toJson()));
     });
   });
+
+  test('1º de janeiro à meia-noite em ponto parece relógio zerado: hora incerta', () {
+    const s = DateStrategy();
+    final zerado = s.resolve([DateCandidate(source: DateSource.exifOriginal, wall: wallTime(2023, 1, 1))])!;
+    expect(zerado.confidence, DateConfidence.low);
+    final umSegundo = s.resolve([DateCandidate(source: DateSource.exifOriginal, wall: wallTime(2023, 1, 1, 0, 0, 1))])!;
+    expect(umSegundo.confidence, DateConfidence.medium);
+    final outroDia = s.resolve([DateCandidate(source: DateSource.exifOriginal, wall: wallTime(2023, 1, 2))])!;
+    expect(outroDia.confidence, DateConfidence.medium);
+  });
 }

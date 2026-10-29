@@ -47,12 +47,18 @@ class SelectionBar extends ConsumerWidget {
             if (summary != null)
               for (final s in [BackupState.single, BackupState.verified, BackupState.independent])
                 if ((summary.backup[s] ?? 0) > 0) BackupStateBadge(s, count: summary.backup[s]),
-            TextButton(
-              key: const ValueKey('select-all'),
-              onPressed: c.selectAll,
-              child: Text('Selecionar todos os resultados (${formatInt(state.index.length)})'),
+            Tooltip(
+              message: 'Marca tudo o que o filtro encontrou, não só o que aparece na tela (Ctrl+A).',
+              child: TextButton(
+                key: const ValueKey('select-all'),
+                onPressed: c.selectAll,
+                child: Text('Selecionar todos os resultados (${formatInt(state.index.length)})'),
+              ),
             ),
-            TextButton(onPressed: c.invert, child: const Text('Inverter')),
+            Tooltip(
+              message: 'Desmarca os marcados e marca os outros resultados do filtro.',
+              child: TextButton(onPressed: c.invert, child: const Text('Inverter')),
+            ),
             PopupMenuButton<LibraryFilter>(
               tooltip: 'Tirar da seleção por critério',
               onSelected: (f) async {
@@ -83,7 +89,7 @@ class SelectionBar extends ConsumerWidget {
                   value: LibraryFilter([
                     FilterCondition(FilterKind.backup, values: ['independent']),
                   ]),
-                  child: Text('Tirar os que já têm backup em disco independente'),
+                  child: Text('Tirar os que já têm backup em outro disco'),
                 ),
               ],
               child: const Padding(
@@ -91,21 +97,29 @@ class SelectionBar extends ConsumerWidget {
                 child: Text('Tirar da seleção…'),
               ),
             ),
-            OutlinedButton(
-              key: const ValueKey('confirm-selection'),
-              onPressed: () async {
-                final n = await backend.confirmDates(sel);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Hora confirmada em ${plural(n, 'item', 'itens')} (só no catálogo).')),
-                  );
-                }
-              },
-              child: const Text('A hora está certa'),
+            Tooltip(
+              message:
+                  'Diz ao FotoAtlas que a hora mostrada está certa: os itens saem de "Hora a confirmar". '
+                  'Só muda o catálogo.',
+              child: OutlinedButton(
+                key: const ValueKey('confirm-selection'),
+                onPressed: () async {
+                  final n = await backend.confirmDates(sel);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Hora confirmada em ${plural(n, 'item', 'itens')} (só no catálogo).')),
+                    );
+                  }
+                },
+                child: const Text('A hora está certa'),
+              ),
             ),
-            OutlinedButton(
-              onPressed: () => showManualDateDialog(context, ref, sel.toList()),
-              child: const Text('Corrigir a hora…'),
+            Tooltip(
+              message: 'Define à mão a data e a hora dos itens marcados (só no catálogo; os arquivos não mudam).',
+              child: OutlinedButton(
+                onPressed: () => showManualDateDialog(context, ref, sel.toList()),
+                child: const Text('Corrigir a hora…'),
+              ),
             ),
             const Tooltip(
               message: 'A cópia segura chega na Fase 5.',

@@ -45,16 +45,6 @@ class _ManualDateDialogState extends State<_ManualDateDialog> {
     super.dispose();
   }
 
-  /// "01/05/2024 14:03:12" ou "01/05/2024 14:03".
-  static DateTime? parse(String s) {
-    final m = RegExp(r'^(\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$').firstMatch(s.trim());
-    if (m == null) return null;
-    int g(int i) => int.parse(m.group(i) ?? '0');
-    final d = DateTime.utc(g(3), g(2), g(1), g(4), g(5), g(6));
-    if (d.day != g(1) || d.month != g(2) || g(4) > 23) return null;
-    return d;
-  }
-
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -93,7 +83,7 @@ class _ManualDateDialogState extends State<_ManualDateDialog> {
         FilledButton(
           key: const ValueKey('manual-date-save'),
           onPressed: () {
-            final d = parse(_text.text);
+            final d = parseBrDateTime(_text.text);
             if (d == null) {
               setState(() => _error = 'Use o formato 01/05/2024 14:03:12.');
               return;
@@ -181,4 +171,15 @@ Future<String?> _askMomentName(BuildContext context, MomentView m) {
       ],
     ),
   );
+}
+
+/// "01/05/2024 14:03:12" ou "01/05/2024 14:03" → hora de relógio; `null` se inválida.
+DateTime? parseBrDateTime(String s) {
+  final m = RegExp(r'^(\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$').firstMatch(s.trim());
+  if (m == null) return null;
+  int g(int i) => int.parse(m.group(i) ?? '0');
+  if (g(4) > 23 || g(5) > 59 || g(6) > 59) return null;
+  final d = DateTime.utc(g(3), g(2), g(1), g(4), g(5), g(6));
+  if (d.day != g(1) || d.month != g(2)) return null;
+  return d;
 }

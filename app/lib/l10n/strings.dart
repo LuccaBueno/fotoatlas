@@ -27,23 +27,41 @@ String scanStatusLabel(String status) => switch (status) {
 };
 
 /// Rótulos das situações de backup (spec §3.1).
+/// Dizem o que importa para quem não é técnico: tem backup ou não.
 String backupStateLabel(BackupState state) => switch (state) {
-  BackupState.single => 'Só 1 cópia',
-  BackupState.probable => 'Copiado, falta conferir',
-  BackupState.verified => 'Cópia conferida',
-  BackupState.independent => 'Backup em disco independente',
-  BackupState.unknown => 'Situação desconhecida',
+  BackupState.single => 'Sem backup (só em 1 lugar)',
+  BackupState.probable => 'Parece ter cópia (falta conferir)',
+  BackupState.verified => 'Tem cópia conferida',
+  BackupState.independent => 'Backup em outro disco',
+  BackupState.unknown => 'Ainda não dá para saber',
 };
 
 /// Explicação curta de cada situação.
 String backupStateHint(BackupState state) => switch (state) {
-  BackupState.single => 'Se este dispositivo falhar, estes arquivos se perdem.',
+  BackupState.single => 'Sem backup: só existe em um lugar. Se este dispositivo falhar, se perde.',
   BackupState.probable =>
     'Há um arquivo com o mesmo nome e tamanho em outro lugar; o conteúdo ainda vai ser conferido.',
-  BackupState.verified => 'Há outra cópia com conteúdo idêntico, mas no mesmo disco.',
-  BackupState.independent => 'Há cópia idêntica em outro disco físico.',
-  BackupState.unknown => 'O conteúdo ainda não foi conferido.',
+  BackupState.verified =>
+    'Tem cópia com conteúdo idêntico, mas no mesmo disco: se esse disco falhar, as duas se perdem.',
+  BackupState.independent => 'Backup em outro disco: há cópia idêntica num disco diferente. É a situação mais segura.',
+  BackupState.unknown => 'O conteúdo ainda não foi conferido; a situação aparece depois da conferência.',
 };
+
+/// Dica de um item, com onde ele está: "Sem backup: este arquivo só existe no Pixel de Teste."
+String backupStateItemHint(BackupState state, List<String> places) {
+  final where = switch (places.length) {
+    0 => '',
+    1 => places.first,
+    _ => '${places.take(places.length - 1).join(', ')} e ${places.last}',
+  };
+  return switch (state) {
+    BackupState.single => where.isEmpty ? backupStateHint(state) : 'Sem backup: este arquivo só existe em "$where".',
+    BackupState.verified =>
+      'Tem cópia conferida${where.isEmpty ? '' : ' (em $where)'}, mas no mesmo disco: se ele falhar, as cópias se perdem.',
+    BackupState.independent => 'Backup em outro disco${where.isEmpty ? '' : ': está em $where'}.',
+    _ => backupStateHint(state),
+  };
+}
 
 /// Explicação dos 🟢 quando parte das cópias está em outro disco que o Windows
 /// não identifica com certeza (ex.: SSD NVMe com número de série zerado, R1):
@@ -71,13 +89,13 @@ String scopeTypeLabel(ScopeFileType type) => switch (type) {
   ScopeFileType.other => 'Outros arquivos',
 };
 
-/// Contador com concordância: "1 arquivo com só 1 cópia", "4 cópias conferidas".
+/// Contador com concordância: "1 arquivo sem backup (só em 1 lugar)", "4 arquivos com cópia conferida".
 String backupStateCount(BackupState state, int n) => switch (state) {
-  BackupState.single => '${plural(n, 'arquivo', 'arquivos')} com só 1 cópia',
-  BackupState.probable => '${plural(n, 'copiado', 'copiados')}, falta conferir',
-  BackupState.verified => plural(n, 'cópia conferida', 'cópias conferidas'),
-  BackupState.independent => '${plural(n, 'arquivo', 'arquivos')} com backup em disco independente',
-  BackupState.unknown => '${plural(n, 'arquivo', 'arquivos')} em situação desconhecida',
+  BackupState.single => '${plural(n, 'arquivo', 'arquivos')} sem backup (só em 1 lugar)',
+  BackupState.probable => '${plural(n, 'arquivo parece', 'arquivos parecem')} ter cópia (falta conferir)',
+  BackupState.verified => '${plural(n, 'arquivo', 'arquivos')} com cópia conferida',
+  BackupState.independent => '${plural(n, 'arquivo', 'arquivos')} com backup em outro disco',
+  BackupState.unknown => '${plural(n, 'arquivo', 'arquivos')} que ainda não dá para saber',
 };
 
 /// Caminho com um só separador: "HD_antigo › pasta2 › notas.txt".

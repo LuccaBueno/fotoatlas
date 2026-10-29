@@ -106,7 +106,7 @@ Future<void> _openLibrary(WidgetTester tester, FotoAtlasCore core) async {
     ..physicalSize = const Size(1600, 1000)
     ..devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(FotoAtlasApp(openCore: () async => core));
+  await tester.pumpWidget(FotoAtlasApp(firstRunGuide: false, openCore: () async => core));
   await _until(tester, () => find.text('Biblioteca').evaluate().isNotEmpty);
   await tester.tap(find.text('Biblioteca').first);
   await _until(tester, () => find.byKey(const ValueKey('tile-1')).evaluate().isNotEmpty);
@@ -178,7 +178,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('time-apply')));
     await _until(tester, () => find.text('1 item').evaluate().isNotEmpty);
     expect(find.text('1 item'), findsOneWidget);
-    expect(find.textContaining('Horário: manhã'), findsOneWidget);
+    expect(find.textContaining('Horário do dia: manhã'), findsOneWidget);
     await _tap(tester, find.text('Limpar filtros'));
     await _until(tester, () => find.text('6 itens').evaluate().isNotEmpty);
 
@@ -250,7 +250,13 @@ void main() {
     await _settle(tester);
     await tester.tap(find.textContaining('Canon EOS X —').last);
     await _settle(tester);
-    await tester.enterText(find.widgetWithText(TextField, 'horas'), '1');
+    // Modo padrão: "Sei a hora certa de uma foto" — a primeira foto da câmera marca 14:03:12.
+    final rightTime = find.byKey(const ValueKey('clock-right-time'));
+    await _until(tester, () => rightTime.evaluate().isNotEmpty);
+    expect(find.textContaining('Esta foto marca 01/05/2024 14:03:12'), findsOneWidget);
+    await tester.enterText(rightTime, '01/05/2024 13:03:12');
+    await tester.pump();
+    expect(find.textContaining('O relógio estava adiantado 1 h'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('clock-preview-button')));
     await _until(tester, () => find.byKey(const ValueKey('clock-preview')).evaluate().isNotEmpty);
     expect(find.text('3. Prévia: 2 itens mudam de hora'), findsOneWidget);
@@ -292,6 +298,8 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
   for (var i = 0; i < 5; i++) {
     await tester.pump(const Duration(milliseconds: 100));
   }
+  await tester.ensureVisible(finder.first);
+  await tester.pump();
   await tester.tap(finder.first);
   await tester.pump();
 }

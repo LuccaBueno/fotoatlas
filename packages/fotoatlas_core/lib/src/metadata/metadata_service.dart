@@ -57,6 +57,9 @@ class MetadataStatus {
 abstract final class MetadataSettingKeys {
   static const zone = 'metadata.timezone';
   static const priority = 'metadata.datePriority';
+
+  /// Versão das regras de escolha da data já aplicada ao catálogo.
+  static const strategyVersion = 'metadata.strategyVersion';
 }
 
 class _Instance {
@@ -143,7 +146,26 @@ class MetadataService {
       final list = [for (final s in pr) DateSource.fromSql(s as String?)].where((s) => s != DateSource.none).toList();
       if (list.isNotEmpty) priority = list;
     }
+    // Regras novas (ex.: relógio zerado vira hora incerta): reescolhe as datas
+    // pelas candidatas já guardadas, sem ler os arquivos de novo.
+    final applied = await settings.get(MetadataSettingKeys.strategyVersion);
+    if (applied != currentStrategyVersion) {
+      if (applied != null || await _hasMetadata()) {
+        await reresolveAll();
+        reresolvedOnInit = true;
+      }
+      await settings.set(MetadataSettingKeys.strategyVersion, currentStrategyVersion);
+    }
   }
+
+  /// As datas foram reescolhidas ao abrir (os momentos precisam ser recalculados).
+  bool reresolvedOnInit = false;
+
+  /// Sobe quando as regras de [DateStrategy] mudam.
+  static const currentStrategyVersion = 2;
+
+  Future<bool> _hasMetadata() async =>
+      (await db.customSelect('SELECT EXISTS (SELECT 1 FROM media_metadata) AS e').getSingle()).read<int>('e') == 1;
 
   DateStrategy get strategy => DateStrategy(zone: zone, priority: priority);
 

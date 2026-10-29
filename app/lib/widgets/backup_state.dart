@@ -35,16 +35,21 @@ class BackupStateBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = backupStateColor(context, state);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(backupStateIcon(state), size: 16, color: color),
-        const SizedBox(width: 4),
-        Text(
-          count == null ? backupStateLabel(state) : backupStateCount(state, count!),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
-        ),
-      ],
+    return Tooltip(
+      message: backupStateHint(state),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(backupStateIcon(state), size: 16, color: color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              count == null ? backupStateLabel(state) : backupStateCount(state, count!),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -179,6 +179,17 @@ class FakeBackend implements AppBackend {
     calls.add('backup');
     return CatalogBackupInfo('x', DateTime.utc(2026), 1024);
   }
+
+  bool guideDone = true;
+
+  @override
+  Future<bool> isFirstRunGuideDone() async => guideDone;
+
+  @override
+  Future<void> setFirstRunGuideDone() async {
+    calls.add('guide-done');
+    guideDone = true;
+  }
 }
 
 ScanRow completedScan({int id = 1, String sourceId = 's1', String coverage = 'complete', int errors = 0}) => ScanRow(

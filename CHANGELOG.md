@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+### Ajustes de usabilidade (depois do teste da Fase 4)
+- Situações de backup com nomes claros: **"Sem backup (só em 1 lugar)"**, "Parece ter cópia (falta conferir)", "Tem cópia conferida", **"Backup em outro disco"**, "Ainda não dá para saber".
+- Filtros **"Horário do dia"** e **"Hora confiável?"** (antes "Horário" e "Hora"); "Mostrar tudo, menos os marcados" no lugar de "Excluir os marcados (NÃO)"; contagens com unidade.
+- Momentos: nome descritivo quando não têm nome ("Sábado de manhã"); um instante só mostra "09:00"; botão "Opções" maior e menu pelo clique direito no cabeçalho.
+- **Ajuda**: dica em ícones, selos, chips e botões (o selo de backup diz onde o arquivo está); botão **"?"** na navegação com a ajuda e a legenda da tela aberta; **guia de primeiros passos** na primeira abertura (pode pular e rever pelo "?").
+- **Corrigir o relógio**: novo modo padrão "Sei a hora certa de uma foto", com a frase do que vai mudar antes da prévia.
+- Data de **1º de janeiro às 00:00:00** em ponto (relógio zerado) passa a ser hora incerta e vai para "Hora a confirmar"; catálogos existentes são recalculados ao abrir, sem reler os arquivos.
+
 ### Adicionado — Fase 4: Metadados e Biblioteca
 - **Biblioteca** com três visões: **linha do tempo única** pela hora real da captura (até os segundos), intercalando fotos e vídeos de todos os dispositivos, com cabeçalhos de mês, dia e **momento**; **grade**; e **lista**. Navegação ano → mês → dia → momento ao lado. Conteúdo idêntico em vários lugares aparece uma vez.
 - **Data e hora da captura**: lidas do EXIF (com subsegundos e fuso), do vídeo (UTC), do nome do arquivo (celular, câmera, WhatsApp, Pixel, prints, Dropbox) ou da data do arquivo, nessa ordem (configurável). Cada item guarda a origem e a confiança (confiável, provável, incerta); **hora incerta** aparece sinalizada, com "A hora está certa" e "Corrigir a hora…". Fuso padrão America/Sao_Paulo, com o antigo horário de verão.

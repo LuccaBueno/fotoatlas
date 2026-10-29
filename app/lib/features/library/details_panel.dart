@@ -148,6 +148,18 @@ class _Content extends ConsumerWidget {
                     'Atenção: as datas encontradas não batem (veja "Detalhes").',
                     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
                   ),
+                if (item.uncertain && local != null && looksLikeClockReset(local))
+                  Text(
+                    '1º de janeiro à meia-noite em ponto costuma ser a data de um relógio zerado '
+                    '(câmera ou celular sem data configurada). Confirme ou corrija a hora.',
+                    key: const ValueKey('clock-reset-note'),
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+                  ),
+                if (item.uncertain && !(local != null && looksLikeClockReset(local)))
+                  Text(
+                    'Hora incerta: entra na linha do tempo, mas fica fora dos momentos até ser confirmada ou corrigida.',
+                    style: theme.textTheme.bodySmall,
+                  ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,

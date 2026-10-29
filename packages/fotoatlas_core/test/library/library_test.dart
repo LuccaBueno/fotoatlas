@@ -28,6 +28,7 @@ void main() {
     expect(await lib.count(verified), 1, reason: 'b.jpg tem cópia em outra pasta');
     final items = await lib.items((await lib.index(LibraryFilter.empty)).ids.toList());
     expect({for (final i in items) i.name: i.backup}, {'a.jpg': BackupState.single, 'b.jpg': BackupState.verified});
+    expect(items.firstWhere((i) => i.name == 'a.jpg').places, ['Fotos', 'HD inteiro']);
   });
 
   test('filtro vai e volta do JSON (filtros salvos); condição desconhecida é ignorada', () {
