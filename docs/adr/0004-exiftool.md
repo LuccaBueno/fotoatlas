@@ -1,6 +1,7 @@
 # 0004 — ExifTool para metadados de foto
 
 - Status: aceita (2026-10-26: usuário aprovou o plano com "pode seguir direto"; Q4 sem objeção → recomendação aceita)
+- Atualização (2026-10-29, Fase 4): versão fixada 13.60 (SHA-256 conferido com o checksums.txt oficial), baixada do SourceForge (o exiftool.org só guarda a versão mais nova) para `third_party/bin/exiftool/`. Argumentos com `-G1 -n -fast -charset filename=utf8` e lista de tags; teste garante que nenhum argumento começa com `-` contendo `=` ou `<` e que nenhuma opção de gravação aparece.
 - Data: 2026-10-26
 
 ## Contexto

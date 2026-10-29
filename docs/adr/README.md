@@ -33,3 +33,5 @@ Modelo:
 | [0011](0011-comparacao-por-escopo.md) | Comparação A × B com escopo livre | aceita |
 | [0012](0012-celular-wpd-somente-leitura.md) | Celular pelo WPD, somente leitura (interop próprio, celulares simulados) | aceita |
 | [0013](0013-encerramento-com-prazo.md) | Encerramento com prazo: fechar o app sempre funciona (helper finalizado se travar) | aceita |
+| [0014](0014-fusos-horarios-timezone.md) | Fusos horários com o pacote `timezone` (base IANA embutida) | aceita |
+| [0015](0015-metadados-momentos-miniaturas.md) | Metadados, data efetiva, momentos e miniaturas | aceita |

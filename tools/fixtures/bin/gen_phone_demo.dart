@@ -29,6 +29,7 @@ void main(List<String> args) {
   stdout
     ..writeln('Celulares simulados: ${p.canonicalize(demo.devicesDir)}')
     ..writeln('HD de backup (cadastre como pasta): ${p.canonicalize(demo.hdDir)}')
+    ..writeln('Câmera com o relógio 1 h adiantado (cadastre como pasta): ${p.canonicalize(demo.cameraDir)}')
     ..writeln('Esperado (Pixel × HD): faltam 3 · nos dois 3 · só em B 1')
     ..writeln('Desplugar o Pixel: renomeie pixel.json para pixel.json.off');
   if (delayMs != null && delayMs > 0) stdout.writeln('Leitura lenta no Pixel: $delayMs ms por arquivo');

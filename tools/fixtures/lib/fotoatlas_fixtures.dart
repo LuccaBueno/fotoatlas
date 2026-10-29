@@ -12,6 +12,10 @@ import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
 
+import 'media_fixtures.dart';
+
+export 'media_fixtures.dart';
+
 /// Resumo do que foi gerado (para conferência nos testes).
 class FixtureManifest {
   FixtureManifest(this.root);
@@ -197,13 +201,17 @@ String _nameFor(String folder, DateTime t, int counter, Random random) {
 
 /// Resultado de [generatePhoneDemo].
 class PhoneDemo {
-  const PhoneDemo(this.devicesDir, this.hdDir);
+  const PhoneDemo(this.devicesDir, this.hdDir, this.cameraDir);
 
   /// Pasta para `FOTOATLAS_FAKE_DEVICES` (um `.json` por celular simulado).
   final String devicesDir;
 
   /// Pasta que faz o papel do HD de backup (cadastrar como pasta).
   final String hdDir;
+
+  /// Fotos de uma câmera com o relógio 1 h adiantado, tiradas junto com as do
+  /// Pixel (Fase 4: linha do tempo, momentos e correção de relógio).
+  final String cameraDir;
 
   /// Arquivo do Pixel simulado: apagar/renomear = desplugar o celular.
   String get pixelJson => p.join(devicesDir, 'pixel.json');
@@ -231,14 +239,54 @@ PhoneDemo generatePhoneDemo(String outDir, {bool stableIds = false, Map<String, 
     f.writeAsBytesSync(bytes);
   }
 
+  // Fotos com EXIF de verdade (Fase 4: datas, câmera, miniatura embutida),
+  // completadas com bytes aleatórios depois do fim da imagem para ter um
+  // tamanho realista.
+  List<int> photo(ExifSpec spec, int seed, int size) {
+    final jpeg = jpegWithExif(spec);
+    return [...jpeg, ...content(seed, size - jpeg.length)];
+  }
+
+  const pixelCam = ('Google', 'Pixel 9');
   final blobs = <String, List<int>>{
-    'c1': content(11, 900 * 1024),
-    'c2': content(12, 1100 * 1024),
-    'c3': content(13, 3 * 1024 * 1024),
-    'c4': content(14, 150 * 1024),
-    'c5': content(15, 400 * 1024),
-    'c6': content(16, 700 * 1024),
-    'c7': content(17, 500 * 1024),
+    'c1': photo(
+      ExifSpec(dateTimeOriginal: DateTime(2024, 5, 1, 10), make: pixelCam.$1, model: pixelCam.$2, uniqueId: 'c1'),
+      11,
+      900 * 1024,
+    ),
+    'c2': photo(
+      ExifSpec(
+        dateTimeOriginal: DateTime(2024, 5, 2, 12),
+        subSecMs: 250,
+        make: pixelCam.$1,
+        model: pixelCam.$2,
+        uniqueId: 'c2',
+        color: 1,
+      ),
+      12,
+      1100 * 1024,
+    ),
+    'c3': mp4WithCreationTime(DateTime.utc(2024, 5, 3, 12), durationMs: 12000, salt: 13),
+    // WhatsApp tira o EXIF: só o nome diz o dia.
+    'c4': photo(const ExifSpec(uniqueId: 'c4', color: 2, thumbnail: false), 14, 150 * 1024),
+    'c5': photo(const ExifSpec(uniqueId: 'c5', color: 3, thumbnail: false), 15, 400 * 1024),
+    'c6': photo(
+      ExifSpec(dateTimeOriginal: DateTime(2023, 1, 1), make: pixelCam.$1, model: pixelCam.$2, uniqueId: 'c6'),
+      16,
+      700 * 1024,
+    ),
+    'c7': photo(
+      ExifSpec(
+        dateTimeOriginal: DateTime(2024, 6, 1, 9),
+        offset: '-03:00',
+        make: 'Apple',
+        model: 'iPhone 13',
+        uniqueId: 'c7',
+        color: 1,
+      ),
+      17,
+      500 * 1024,
+    ),
     'cx': content(18, 4 * 1024),
   };
   for (final e in blobs.entries) {
@@ -305,5 +353,27 @@ PhoneDemo generatePhoneDemo(String outDir, {bool stableIds = false, Map<String, 
   write(p.join(hd, 'Backup do celular', '2024', '2024-05', 'video.mp4'), blobs['c3']!);
   write(p.join(hd, 'Backup do celular', '2023', 'ano novo.jpg'), blobs['c6']!);
   write(p.join(hd, 'Backup do celular', '2023', 'antiga.jpg'), blobs['c7']!);
-  return PhoneDemo(devices, hd);
+  final camera = p.join(outDir, 'Câmera');
+  for (final (name, shown, seed) in [
+    ('IMG_0001.JPG', DateTime(2024, 5, 1, 11, 0, 20), 21),
+    ('IMG_0002.JPG', DateTime(2024, 5, 1, 11, 5), 22),
+    ('IMG_0003.JPG', DateTime(2024, 5, 2, 13, 0, 5), 23),
+  ]) {
+    write(
+      p.join(camera, name),
+      photo(
+        ExifSpec(
+          dateTimeOriginal: shown,
+          make: 'Canon',
+          model: 'Canon EOS X',
+          serial: '0123',
+          uniqueId: name,
+          color: seed,
+        ),
+        seed,
+        2 * 1024 * 1024,
+      ),
+    );
+  }
+  return PhoneDemo(devices, hd, camera);
 }

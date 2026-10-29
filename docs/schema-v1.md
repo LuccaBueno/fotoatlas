@@ -420,3 +420,66 @@ Uso das colunas existentes por um celular:
 | `file_instances.rel_path` | começa pelo nome do armazenamento: `Armazenamento interno compartilhado/DCIM/Camera/IMG_0001.jpg` (L7) |
 | `file_instances.mtime` / `ctime` | datas do WPD convertidas para FILETIME UTC; `NULL` se o aparelho não informa |
 | `file_instances.attributes` | `NULL` |
+
+## 9. v4 (Fase 4, 2026-10-29) — mudanças aditivas
+
+Migração `v3 → v4` numa transação, depois do backup `pre-migracao-v3-<data>.db`. Testada a partir dos *snapshots* v1, v2 e v3 (`drift_schemas/drift_schema_v4.json`), com um teste de dados preservados (v3 → v4).
+
+```sql
+-- media_metadata: a data EXTRAÍDA continua em capture_* (com a origem, a confiança e as candidatas);
+-- a data EFETIVA (extraída + correção de relógio + correção manual) vai para eff_*, que a linha do
+-- tempo, os momentos e os filtros usam. As derivadas (ano, mês, dia, minuto do dia, dia da semana,
+-- pela hora local) existem só para os filtros responderem rápido (100 mil itens < 1 s).
+ALTER TABLE media_metadata ADD COLUMN body_serial TEXT;           -- nº de série do corpo (EXIF)
+ALTER TABLE media_metadata ADD COLUMN meta_status TEXT NOT NULL DEFAULT 'full'
+  CHECK (meta_status IN ('full','partial','error'));               -- partial = só nome e data do arquivo
+ALTER TABLE media_metadata ADD COLUMN meta_error TEXT;
+ALTER TABLE media_metadata ADD COLUMN eff_utc_ms INTEGER;
+ALTER TABLE media_metadata ADD COLUMN eff_local TEXT;              -- 'AAAA-MM-DDTHH:MM:SS[.mmm]'
+ALTER TABLE media_metadata ADD COLUMN eff_offset_min INTEGER;
+ALTER TABLE media_metadata ADD COLUMN eff_source TEXT;
+ALTER TABLE media_metadata ADD COLUMN eff_confidence TEXT;
+ALTER TABLE media_metadata ADD COLUMN clock_correction_id INTEGER REFERENCES clock_corrections(id);
+ALTER TABLE media_metadata ADD COLUMN eff_year INTEGER;
+ALTER TABLE media_metadata ADD COLUMN eff_month INTEGER;
+ALTER TABLE media_metadata ADD COLUMN eff_day TEXT;                -- 'AAAA-MM-DD'
+ALTER TABLE media_metadata ADD COLUMN eff_minute INTEGER;          -- 0..1439
+ALTER TABLE media_metadata ADD COLUMN eff_weekday INTEGER;         -- 1 = segunda … 7 = domingo
+ALTER TABLE media_metadata ADD COLUMN moment_id INTEGER REFERENCES moments(id) ON DELETE SET NULL;
+CREATE INDEX ix_mm_eff    ON media_metadata(eff_utc_ms);
+CREATE INDEX ix_mm_ym     ON media_metadata(eff_year, eff_month);
+CREATE INDEX ix_mm_moment ON media_metadata(moment_id);
+
+-- Momentos (spec §8.3). 'edited' = nomeado, juntado ou separado: intervalo fixo, nunca desfeito por recálculo.
+CREATE TABLE moments (
+  id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('auto','edited')), name TEXT,
+  start_utc_ms INTEGER NOT NULL, end_utc_ms INTEGER NOT NULL, item_count INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
+);
+CREATE INDEX ix_moments_start ON moments(start_utc_ms);
+
+-- Histórico das edições de momentos.
+CREATE TABLE moment_edits (
+  id INTEGER PRIMARY KEY, moment_id INTEGER,
+  op TEXT NOT NULL CHECK (op IN ('rename','merge','split','reset')),   -- "action" é reservado no drift
+  detail_json TEXT, created_at INTEGER NOT NULL
+);
+
+-- Correção de relógio por dispositivo de captura (spec §8.2): só catálogo; desfeita marcando undone_at.
+CREATE TABLE clock_corrections (
+  id INTEGER PRIMARY KEY, make TEXT, model TEXT, body_serial TEXT,
+  offset_ms INTEGER NOT NULL DEFAULT 0, years INTEGER NOT NULL DEFAULT 0,
+  period_start_utc_ms INTEGER, period_end_utc_ms INTEGER, source_ids_json TEXT,
+  note TEXT, created_at INTEGER NOT NULL, undone_at INTEGER
+);
+```
+
+Regras:
+
+- **Data efetiva** = correção manual vigente (`date_corrections`, vale acima de tudo) **ou** data extraída + correções de relógio ativas que casam (fabricante + modelo + série quando houver, período e fontes opcionais), na ordem de criação. A correção de relógio só vale para datas vindas da câmera (EXIF, vídeo, nome do arquivo), nunca para a data do sistema de arquivos.
+- **Confirmar a hora** grava uma correção manual com a hora atual (sai de "Hora a confirmar").
+- **Momentos:** entram os itens com `eff_confidence` alta ou média (ou manual). Itens dentro do intervalo de um momento editado ficam nele; o resto é agrupado por intervalos sem fotos maiores que `moments.gapMinutes` (configuração, padrão 120). O recálculo reaproveita o ID do momento automático com mais itens em comum.
+- **Configurações** (tabela `settings`): `metadata.timezone` (padrão `America/Sao_Paulo`), `metadata.datePriority`, `moments.gapMinutes`.
+- **Filtros salvos** usam a tabela `saved_filters` da v1 (`definition_json` = `LibraryFilter.toJson()`, `v: 1`).
+- **Escopo da Comparar** (`saved_scopes.definition_json`): `v: 2` quando tem momentos (`"moments":[{"moment":id,"source":?}]`) ou filtro (`"filter":{…}`); escopos só com pastas continuam `v: 1`.
+- **Miniaturas:** não há tabela `thumbnail_cache` (prevista na §6): o arquivo `thumbs\<2 primeiros do sha>\<sha256>_256.jpg` existe ou não; o cache é descartável.

@@ -158,18 +158,22 @@ Para testes e demonstração (o core repassa `FOTOATLAS_FAKE_DEVICES`). Cada `*.
 - `status` diferente de `ok`: o aparelho aparece sem armazenamentos.
 - `tools/fixtures/bin/gen_phone_demo.dart` gera um Pixel e um iPhone (sem autorização) mais uma pasta "HD" com parte das fotos.
 
-### 5.4. Miniaturas (Fase 4)
+### 5.4. Miniaturas e leitura parcial do celular (Fase 4)
 
 | Método | Params | Resultado |
 |---|---|---|
-| `thumbnails.get` | `{"path"` **ou** `"deviceId"+"objectId", "size":256, "outPath"}` | grava JPEG em `outPath` (dentro de `--cache-dir`, `CreateNew`); `{"width","height"}`. Usa `IShellItemImageFactory::GetImage`; se falhar, `not_found`/`io_error` e o core tenta o FFmpeg. |
+| `thumbnails.get` | `{"path","size":256,"outPath"}` | Miniatura do Shell (`IShellItemImageFactory::GetImage` com `SIIGBF_THUMBNAILONLY`, num thread STA), codificada em JPEG pelo WIC **em memória** e gravada em `outPath` (dentro de `--cache-dir`, `CreateNew`); `{"width","height","bytes"}`. Caminhos `\\?\Volume{GUID}\…` são trocados pelo ponto de montagem atual (o Shell não os abre). Sem miniatura (formato sem codec, arquivo ilegível): `not_found`; o core tenta o FFmpeg (vídeo) ou a miniatura embutida no EXIF. |
+| `devices.readHead` | `{"deviceId","objectId","outPath","maxBytes":262144}` | Copia no máximo `maxBytes` (1 B a 16 MB) do **começo** do objeto para `outPath` (dentro de `--cache-dir`, `CreateNew`); `{"bytes":N}`. Serve para o ExifTool ler o EXIF de fotos do celular sem trazer o arquivo inteiro pelo USB. O stream WPD é liberado na hora (ADR 0012). |
+
+- O destino é conferido **antes** de ler a origem; arquivo de destino já existente: `already_exists` (nunca sobrescreve).
+- O core publica a miniatura renomeando o temporário (`<sha>_256.jpg.<id>.tmp` → `<sha>_256.jpg`) e apaga as leituras parciais (`_leitura/`) depois de usar.
 
 ## 6. Regras de escrita do helper (defesa em profundidade)
 
 O helper **recusa** (`write_refused`) qualquer escrita que não cumpra todas as regras:
 
 1. `devices.pullToFile`: `destPath` absoluto, com componente de pasta `.fotoatlas-tmp`, terminando em `.part` e sem `..` após a normalização.
-2. `thumbnails.get`: `outPath` dentro do `--cache-dir` recebido na inicialização.
+2. `thumbnails.get` e `devices.readHead`: `outPath` dentro do `--cache-dir` recebido na inicialização (`--cache-dir`, a pasta de miniaturas do core).
 3. Sempre `FileMode.CreateNew` (nunca sobrescreve) e `FileShare.None` durante a escrita.
 4. Nenhum método abre arquivo de origem com acesso de escrita; nenhum método apaga, move ou renomeia.
 

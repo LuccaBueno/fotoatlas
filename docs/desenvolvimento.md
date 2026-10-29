@@ -2,6 +2,15 @@
 
 Requisitos: Windows 10/11, Flutter 3.47.7 stable, Visual Studio Build Tools 2022 (C++ desktop), .NET SDK 10, Git.
 
+## Ferramentas de metadados (uma vez)
+
+ExifTool 13.60 e FFmpeg 8.1 LGPL (ADR 0004 e 0005), com versão e SHA-256 fixados, baixados para `third_party\bin\` (não versionado). Sem eles o app funciona, mas as datas vêm só do nome e da data do arquivo, e vídeos ficam sem miniatura; os testes que precisam deles são pulados (na CI, falham).
+
+```powershell
+cd C:\dev\fotoatlas
+powershell -ExecutionPolicy Bypass -File tools\scripts\get-tools.ps1
+```
+
 ## Tudo de uma vez
 
 ```powershell
@@ -105,6 +114,9 @@ dart run bin/gen_tree.dart --out "$env:TEMP\fotoatlas_arvore" --files 50000
 | `FOTOATLAS_HOME` | Pasta do catálogo, backups, cache e logs (substitui `%APPDATA%`/`%LOCALAPPDATA%`) |
 | `FOTOATLAS_HELPER` | Caminho do `fotoatlas_helper.exe` |
 | `FOTOATLAS_CRASHPOINT` | Só para testes de falha: `nome[:n]` bloqueia na n-ésima passagem pelo ponto (ADR 0007) |
+| `FOTOATLAS_EXIFTOOL`, `FOTOATLAS_FFPROBE`, `FOTOATLAS_FFMPEG` | Caminhos das ferramentas de metadados (senão: `tools\` ao lado do executável ou `third_party\bin\` do repositório) |
+| `FOTOATLAS_REQUIRE_TOOLS` | `1` (CI): testes com ExifTool/ffprobe reais falham em vez de serem pulados se a ferramenta faltar |
+| `FOTOATLAS_DEMO` | Definida pelo `run-app.ps1`: `descartavel` ou `persistente` (faixa "Modo demonstração") |
 
 ## Convenções
 

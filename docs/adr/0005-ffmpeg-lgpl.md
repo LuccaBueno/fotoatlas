@@ -1,6 +1,7 @@
 # 0005 — FFprobe/FFmpeg em build LGPL
 
 - Status: aceita
+- Atualização (2026-10-29, Fase 4): build mensal do BtbN `autobuild-2026-09-30-13-08` (FFmpeg n8.1.3 LGPL), SHA-256 fixado no `get-tools.ps1`, instalado em `third_party/bin/ffmpeg/` (só `ffprobe.exe`, `ffmpeg.exe` e a licença). Miniatura de vídeo com `-n` (nunca sobrescreve) num arquivo novo do cache.
 - Data: 2026-10-26
 
 ## Contexto

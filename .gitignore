@@ -6,6 +6,8 @@
 *.sqlite3
 *.fotoatlas-backup
 thumbnails/
+# exceção: código-fonte do helper (o Windows não diferencia maiúsculas)
+!native/fotoatlas_helper/FotoAtlas.Helper/Thumbnails/
 thumb_cache/
 .fotoatlas-tmp/
 *.part
