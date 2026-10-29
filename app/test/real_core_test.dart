@@ -171,6 +171,38 @@ void main() {
     }
     expect(find.text('Celular › IMG_2.jpg'), findsOneWidget);
 
+    // Copiar para B de verdade: prévia → confirmar → Tarefas mostra concluída.
+    await tester.tap(find.byType(Checkbox).first);
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('copy-to-b')));
+    final summary = find.textContaining('Vai copiar 1 arquivo');
+    for (var i = 0; i < 50 && summary.evaluate().isEmpty; i++) {
+      await settle();
+    }
+    expect(summary, findsOneWidget);
+    expect(
+      find.textContaining('vai para a pasta "Sem data confirmada"'),
+      findsOneWidget,
+      reason: 'sem metadados lidos',
+    );
+    await tester.tap(find.byKey(const ValueKey('copy-confirm')));
+    await settle();
+    // Deixa a animação de fechar o assistente terminar (a barreira dele bloqueia toques).
+    await tester.pump(const Duration(seconds: 1));
+    final goToTasks = find.text('Ver em Tarefas');
+    for (var i = 0; i < 20 && goToTasks.evaluate().isEmpty; i++) {
+      await settle();
+    }
+    await tester.pump(const Duration(seconds: 1)); // a faixa termina de entrar na tela
+    await tester.tap(goToTasks);
+    final done = find.textContaining('Concluída — tudo conferido');
+    for (var i = 0; i < 100 && done.evaluate().isEmpty; i++) {
+      await settle();
+    }
+    expect(done, findsOneWidget);
+    final copied = File(p.join(temp.path, 'vol', 'Backup', 'Sem data confirmada', 'IMG_2.jpg'));
+    expect(await tester.runAsync(copied.readAsBytes), List.filled(400, 2));
+
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 5));
   });

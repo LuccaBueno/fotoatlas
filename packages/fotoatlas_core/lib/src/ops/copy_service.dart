@@ -438,8 +438,18 @@ class CopyService {
         case PumpStopped():
           await _discardAndRequeue(op.id, item.id, ItemState.copying, part, 'Pausada no meio do arquivo.');
           return const _Stopped();
-        case PumpFailed(:final failure, :final message):
-          return _onCopyFailure(op.id, item.id, part, failure, message, srcRoot: srcRoot);
+        case PumpFailed(:final failure, :final message, :final win32):
+          // Gravação falhou com o disco sem espaço de verdade (o código de erro
+          // nem sempre é ERROR_DISK_FULL): é falta de espaço, não defeito.
+          final full = failure == PumpFailure.writeError && _reallyFull(root, item.expectedSize);
+          return _onCopyFailure(
+            op.id,
+            item.id,
+            part,
+            full ? PumpFailure.diskFull : failure,
+            win32 == null ? message : '$message [Win32 $win32]',
+            srcRoot: srcRoot,
+          );
       }
     }
     crashpoint('copy.after_flush');
@@ -722,6 +732,13 @@ class CopyService {
         await _transition(opId, itemId, ItemState.copying, ItemState.failed, set: _err(_codeOf(failure), message));
         return const _Next();
     }
+  }
+
+  /// Espaço livre medido no disco (não o [FreeSpaceProbe] injetável): o `.part`
+  /// parcial já foi descontado do livre, então compara com o que faltava.
+  static bool _reallyFull(String root, int size) {
+    final free = diskFreeBytes(root);
+    return free != null && free < size;
   }
 
   static String _codeOf(PumpFailure f) => switch (f) {

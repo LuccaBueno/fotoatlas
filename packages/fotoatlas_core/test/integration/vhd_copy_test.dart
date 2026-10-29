@@ -160,7 +160,8 @@ void main() {
       );
       await core.copies.waitIdle();
       final view = (await core.copies.view(op))!;
-      expect(view.status, OpStatus.paused);
+      final why = [for (final i in await core.copies.items(op)) '${i.state} ${i.errorCode} ${i.errorMessage}'];
+      expect(view.status, OpStatus.paused, reason: why.join('\n'));
       expect(view.pauseReason, contains('espaço'));
       expect(view.published, inInclusiveRange(1, 2));
       final tmp = Directory('${root}Backup\\.fotoatlas-tmp');

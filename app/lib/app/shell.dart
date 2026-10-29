@@ -6,7 +6,7 @@ import '../features/compare/compare_page.dart';
 import '../features/devices/devices_page.dart';
 import '../features/home/home_page.dart';
 import '../features/library/library_page.dart';
-import '../features/placeholder/coming_soon_page.dart';
+import '../features/tasks/tasks_page.dart';
 import '../features/settings/settings_page.dart';
 import 'help.dart';
 import 'providers.dart';
@@ -25,16 +25,7 @@ final _destinations = [
   _Destination('Biblioteca', Icons.photo_library_outlined, Icons.photo_library, () => const LibraryPage()),
   _Destination('Dispositivos', Icons.storage_outlined, Icons.storage, () => const DevicesPage()),
   _Destination('Comparar', Icons.compare_arrows_outlined, Icons.compare_arrows, () => const ComparePage()),
-  _Destination(
-    'Tarefas',
-    Icons.task_alt_outlined,
-    Icons.task_alt,
-    () => const ComingSoonPage(
-      title: 'Tarefas',
-      description: 'Cópias em andamento e o histórico completo de tudo o que foi gravado.',
-      phase: 'Fase 5',
-    ),
-  ),
+  _Destination('Tarefas', Icons.task_alt_outlined, Icons.task_alt, () => const TasksPage()),
   _Destination('Configurações', Icons.settings_outlined, Icons.settings, () => const SettingsPage()),
 ];
 
@@ -43,6 +34,9 @@ const devicesDestination = 2;
 
 /// Índice do destino "Comparar".
 const compareDestination = 3;
+
+/// Índice do destino "Tarefas".
+const tasksDestination = 4;
 
 /// Navegação lateral com as 6 telas da spec (§3.2).
 class AppShell extends ConsumerStatefulWidget {

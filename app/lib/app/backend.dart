@@ -59,6 +59,31 @@ abstract interface class AppBackend {
   /// voltando.
   Stream<HelperStatus> watchHelperStatus();
 
+  // Cópia segura (Fase 5).
+  /// Todos os conteúdos de A que faltam em B ("Selecionar todos os resultados").
+  Future<List<int>> compareMissingContentIds(Scope a, Scope b);
+
+  /// Prévia: só lê (regra 6).
+  Future<CopyPreview> previewCopy(CopyRequest request);
+
+  /// Confirma a prévia e põe a cópia na fila. Devolve o id da operação.
+  Future<String> startCopy(CopyPreview preview);
+  Stream<List<OperationView>> watchOperations();
+  Stream<CopyProgress> get copyProgress;
+  CopyProgress? get currentCopy;
+  Future<void> pauseCopy(String operationId);
+  Future<void> resumeCopy(String operationId);
+  Future<void> cancelCopy(String operationId);
+  Future<int> retryFailedCopies(String operationId);
+  Future<void> resolveConflict(int itemId, {required bool rename});
+  Future<List<OperationItemView>> operationItems(String operationId, {Set<String>? states});
+
+  /// Relatório em CSV.
+  Future<String> exportOperation(String operationId);
+
+  /// Arquivos desconhecidos na pasta temporária do destino (`null` = desconectado).
+  Future<List<TempLeftover>?> tempLeftovers(String destSourceId);
+
   // Backup do catálogo.
   List<CatalogBackupInfo> catalogBackups();
 
@@ -168,6 +193,50 @@ class CoreBackend implements AppBackend {
 
   @override
   Stream<HelperStatus> watchHelperStatus() => core.helperStatus;
+
+  @override
+  Future<List<int>> compareMissingContentIds(Scope a, Scope b) => core.compare.missingContentIds(a, b);
+
+  @override
+  Future<CopyPreview> previewCopy(CopyRequest request) => core.copies.preview(request);
+
+  @override
+  Future<String> startCopy(CopyPreview preview) => core.copies.start(preview);
+
+  @override
+  Stream<List<OperationView>> watchOperations() => core.copies.watch();
+
+  @override
+  Stream<CopyProgress> get copyProgress => core.copies.progress;
+
+  @override
+  CopyProgress? get currentCopy => core.copies.current;
+
+  @override
+  Future<void> pauseCopy(String operationId) => core.copies.pause(operationId);
+
+  @override
+  Future<void> resumeCopy(String operationId) => core.copies.resume(operationId);
+
+  @override
+  Future<void> cancelCopy(String operationId) => core.copies.cancel(operationId);
+
+  @override
+  Future<int> retryFailedCopies(String operationId) => core.copies.retryFailed(operationId);
+
+  @override
+  Future<void> resolveConflict(int itemId, {required bool rename}) =>
+      core.copies.resolveConflict(itemId, rename: rename);
+
+  @override
+  Future<List<OperationItemView>> operationItems(String operationId, {Set<String>? states}) =>
+      core.copies.items(operationId, states: states);
+
+  @override
+  Future<String> exportOperation(String operationId) => core.copies.exportCsv(operationId);
+
+  @override
+  Future<List<TempLeftover>?> tempLeftovers(String destSourceId) => core.copies.tempLeftovers(destSourceId);
 
   @override
   List<CatalogBackupInfo> catalogBackups() => core.backups.list();

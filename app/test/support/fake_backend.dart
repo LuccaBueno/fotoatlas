@@ -180,6 +180,80 @@ class FakeBackend implements AppBackend {
     return CatalogBackupInfo('x', DateTime.utc(2026), 1024);
   }
 
+  // Cópia segura.
+  List<int> missingIds = const [];
+  CopyPreview Function(CopyRequest request)? onPreview;
+  CopyRequest? lastRequest;
+  List<OperationView> operations = [];
+  Map<String, List<OperationItemView>> opItems = {};
+  final _operations = StreamController<List<OperationView>>.broadcast();
+  final copyProgressController = StreamController<CopyProgress>.broadcast();
+  List<TempLeftover>? leftovers = const [];
+
+  void emitOperations(List<OperationView> list) {
+    operations = List.of(list);
+    _operations.add(operations);
+  }
+
+  @override
+  Future<List<int>> compareMissingContentIds(Scope a, Scope b) async => missingIds;
+
+  @override
+  Future<CopyPreview> previewCopy(CopyRequest request) async {
+    lastRequest = request;
+    calls.add('preview:${request.contentIds.length}:${request.destSourceId}:${request.destFolder}:${request.template}');
+    return onPreview!(request);
+  }
+
+  @override
+  Future<String> startCopy(CopyPreview preview) async {
+    calls.add('start-copy:${preview.items.length}');
+    return 'op1';
+  }
+
+  @override
+  Stream<List<OperationView>> watchOperations() async* {
+    yield operations;
+    yield* _operations.stream;
+  }
+
+  @override
+  Stream<CopyProgress> get copyProgress => copyProgressController.stream;
+
+  @override
+  CopyProgress? currentCopy;
+
+  @override
+  Future<void> pauseCopy(String operationId) async => calls.add('pause-copy:$operationId');
+
+  @override
+  Future<void> resumeCopy(String operationId) async => calls.add('resume-copy:$operationId');
+
+  @override
+  Future<void> cancelCopy(String operationId) async => calls.add('cancel-copy:$operationId');
+
+  @override
+  Future<int> retryFailedCopies(String operationId) async {
+    calls.add('retry-copy:$operationId');
+    return 1;
+  }
+
+  @override
+  Future<void> resolveConflict(int itemId, {required bool rename}) async =>
+      calls.add('conflict:$itemId:${rename ? 'rename' : 'skip'}');
+
+  @override
+  Future<List<OperationItemView>> operationItems(String operationId, {Set<String>? states}) async => [
+    for (final i in opItems[operationId] ?? const <OperationItemView>[])
+      if (states == null || states.contains(i.state)) i,
+  ];
+
+  @override
+  Future<String> exportOperation(String operationId) async => 'item;estado\n1;published\n';
+
+  @override
+  Future<List<TempLeftover>?> tempLeftovers(String destSourceId) async => leftovers;
+
   bool guideDone = true;
 
   @override

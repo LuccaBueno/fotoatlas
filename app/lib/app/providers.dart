@@ -108,3 +108,13 @@ final libraryFacetsProvider = FutureProvider<LibraryFacets>((ref) {
 final savedFiltersProvider = FutureProvider<List<SavedFilter>>(
   (ref) => ref.watch(libraryBackendProvider).savedFilters(),
 );
+
+/// Operações de cópia (tela Tarefas), reativas.
+final operationsProvider = StreamProvider<List<OperationView>>((ref) => ref.watch(backendProvider).watchOperations());
+
+/// Progresso da cópia em andamento (começa pelo valor atual).
+final copyProgressProvider = StreamProvider<CopyProgress?>((ref) async* {
+  final backend = ref.watch(backendProvider);
+  yield backend.currentCopy;
+  yield* backend.copyProgress;
+});

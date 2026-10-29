@@ -69,8 +69,10 @@ const helpTopics = [
       'Salvar um escopo com nome para usar de novo.',
     ],
   ),
-  HelpTopic('Tarefas', 'Cópias em andamento e o histórico do que foi gravado (chega na Fase 5).', [
-    'Acompanhar e pausar cópias.',
+  HelpTopic('Tarefas', 'Cópias em andamento e o histórico de tudo o que o FotoAtlas gravou.', [
+    'Acompanhar, pausar, continuar ou cancelar uma cópia (o que já foi copiado fica).',
+    'Decidir o que fazer quando um nome já existe no destino.',
+    'Tentar de novo os arquivos que não foram copiados e exportar o relatório.',
   ]),
   HelpTopic('Configurações', 'Ajustes do FotoAtlas. Nada aqui mexe nos seus arquivos.', [
     'Fazer backup do catálogo (o que o FotoAtlas sabe sobre seus arquivos).',

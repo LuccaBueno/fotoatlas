@@ -51,7 +51,7 @@ void main() {
     expect(find.textContaining('O FotoAtlas só lê'), findsOneWidget);
   });
 
-  testWidgets('navegação lateral tem as 6 telas; as futuras explicam o que vem', (tester) async {
+  testWidgets('navegação lateral tem as 6 telas, todas prontas', (tester) async {
     await tester.pumpWidget(harness(FakeBackend()));
     await tester.pumpAndSettle();
     for (final label in ['Início', 'Biblioteca', 'Dispositivos', 'Comparar', 'Tarefas', 'Configurações']) {
@@ -59,7 +59,8 @@ void main() {
     }
     await tester.tap(find.text('Tarefas'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Disponível em breve'), findsOneWidget);
+    expect(find.byKey(const ValueKey('tasks-empty')), findsOneWidget);
+    expect(find.textContaining('Disponível em breve'), findsNothing);
   });
 
   testWidgets('dispositivo conectado mostra contagens em PT-BR e escaneia', (tester) async {

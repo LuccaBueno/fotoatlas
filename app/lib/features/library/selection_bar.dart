@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
+import '../../app/shell.dart' show tasksDestination;
 import '../../l10n/format.dart';
 import '../../widgets/backup_state.dart';
+import '../tasks/copy_wizard.dart';
 import 'date_dialogs.dart';
 import 'library_controller.dart';
 
@@ -121,9 +123,28 @@ class SelectionBar extends ConsumerWidget {
                 child: const Text('Corrigir a hora…'),
               ),
             ),
-            const Tooltip(
-              message: 'A cópia segura chega na Fase 5.',
-              child: FilledButton(onPressed: null, child: Text('Copiar para…')),
+            Tooltip(
+              message:
+                  'Copia os itens marcados para um disco, com conferência. Abre a prévia antes: nada é gravado sem '
+                  'você confirmar.',
+              child: FilledButton(
+                key: const ValueKey('library-copy'),
+                onPressed: () async {
+                  final ids = sel.toList();
+                  final id = await showCopyWizard(context, contents: () async => ids, origin: 'library');
+                  if (id == null || !context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Cópia iniciada. Acompanhe em Tarefas.'),
+                      action: SnackBarAction(
+                        label: 'Ver em Tarefas',
+                        onPressed: () => ref.read(navigationIndexProvider.notifier).select(tasksDestination),
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Copiar para…'),
+              ),
             ),
             IconButton(tooltip: 'Limpar seleção (Esc)', onPressed: c.clearSelection, icon: const Icon(Icons.close)),
           ],

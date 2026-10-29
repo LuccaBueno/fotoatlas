@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
+import '../../app/shell.dart' show tasksDestination;
 import '../../app/theme.dart';
 import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
+import '../tasks/copy_wizard.dart';
 import 'compare_controller.dart';
 
 /// Frase principal do resultado (spec §9): nunca "100%" com pendências.
@@ -273,6 +275,41 @@ class _ItemListState extends ConsumerState<_ItemList> {
     });
   }
 
+  /// Abre o assistente com o destino sugerido pelo lado B (o primeiro disco).
+  Future<void> _copyToB() async {
+    final state = ref.read(compareControllerProvider);
+    final a = state.resultA, b = state.resultB;
+    if (a == null || b == null) return;
+    final backend = ref.read(backendProvider);
+    final sources = {for (final s in ref.read(sourcesProvider).value ?? const <SourceView>[]) s.id: s};
+    final dest = b.entries.where((e) => !(sources[e.sourceId]?.isPhone ?? true)).firstOrNull;
+    final selected = _selected.toList();
+    final all = _all;
+    final id = await showCopyWizard(
+      context,
+      contents: () async => all ? backend.compareMissingContentIds(a, b) : selected,
+      destSourceId: dest?.sourceId,
+      destFolder: dest?.relPath ?? '',
+      preferSourceIds: a.sourceIds.toList(),
+      origin: 'compare',
+    );
+    if (id == null || !mounted) return;
+    setState(() {
+      _selected.clear();
+      _all = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        key: const ValueKey('copy-started'),
+        content: const Text('Cópia iniciada. Acompanhe em Tarefas.'),
+        action: SnackBarAction(
+          label: 'Ver em Tarefas',
+          onPressed: () => ref.read(navigationIndexProvider.notifier).select(tasksDestination),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -319,9 +356,12 @@ class _ItemListState extends ConsumerState<_ItemList> {
                   ),
                   const SizedBox(width: 8),
                   Tooltip(
-                    message: 'A cópia segura (com conferência) chega na próxima fase.',
+                    message:
+                        'Abre a prévia: quanto vai copiar, espaço livre, nomes repetidos e pastas. '
+                        'Nada é gravado antes de você confirmar.',
                     child: FilledButton.icon(
-                      onPressed: null,
+                      key: const ValueKey('copy-to-b'),
+                      onPressed: selectedCount == 0 ? null : _copyToB,
                       icon: const Icon(Icons.copy_all),
                       label: const Text('Copiar para B…'),
                     ),
