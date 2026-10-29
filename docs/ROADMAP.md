@@ -143,22 +143,31 @@ Observações:
 - [x] `run-app.ps1 -DemoPersistente`: sempre `%TEMP%\fotoatlas_demo_persistente`, não apagada ao fechar (só pelo `clean-temp.ps1`); com `-CelularSimulado`, celulares gerados uma vez e Pixel com leitura lenta (3 s por arquivo) para fechar no meio da conferência
 - [x] Testes: modo pelo ambiente, textos da pergunta nos 3 modos, faixa, e fechar com core real com e sem demonstração
 
-## Fase 4 — Metadados e Biblioteca
-- [ ] Script para baixar ExifTool e FFmpeg (não versionados)
-- [ ] ExifTool `-stay_open`, FFprobe, estratégia de datas e fusos, padrões de nome (WhatsApp etc.)
-- [ ] **Data e hora da captura como cidadã de primeira classe** (requisito ajustado em 2026-10-27, spec §3.2, §8.1–8.3, §10)
-  - [ ] Hora até os segundos (+ subsegundos), instante UTC + hora local, origem e confiança (alta/média/baixa); "hora incerta" sinalizada
-  - [ ] Linha do tempo única intercalando todos os dispositivos pela hora real (ano → mês → dia → momento)
-  - [ ] Momentos automáticos por intervalo sem fotos (padrão 2 h, configurável); baixa confiança fica em "Hora a confirmar"
-  - [ ] Nomear, juntar e separar momentos (só catálogo), preservados em recálculos
-  - [ ] Correção de relógio por dispositivo de captura ("+1 h", "ano errado"), com prévia, só no catálogo, reversível
-  - [ ] Momento como escopo na Comparar (entrada nova no JSON do escopo, `v: 2`) e como filtro
-  - [ ] Schema: tabelas novas para momentos, edições de momentos e correções por dispositivo (migração aditiva v3 → v4)
-- [ ] Miniaturas em cache (Shell API + fallback)
-- [ ] Biblioteca: grade, lista, linha do tempo, painel de detalhes
-- [ ] Filtros em chips + avançado, seleção em massa, filtros salvos — incluindo faixa de horário, período do dia, dia da semana, momento e confiança da hora
-- [ ] Critérios da spec (100 mil itens, < 1 s)
+## Fase 4 — Metadados e Biblioteca (implementada em 2026-10-29; aguarda o teste do usuário)
+- [x] Script para baixar ExifTool e FFmpeg (não versionados)
+- [x] ExifTool `-stay_open`, FFprobe, estratégia de datas e fusos, padrões de nome (WhatsApp etc.)
+- [x] **Data e hora da captura como cidadã de primeira classe** (requisito ajustado em 2026-10-27, spec §3.2, §8.1–8.3, §10)
+  - [x] Hora até os segundos (+ subsegundos), instante UTC + hora local, origem e confiança (alta/média/baixa); "hora incerta" sinalizada
+  - [x] Linha do tempo única intercalando todos os dispositivos pela hora real (ano → mês → dia → momento)
+  - [x] Momentos automáticos por intervalo sem fotos (padrão 2 h, configurável); baixa confiança fica em "Hora a confirmar"
+  - [x] Nomear, juntar e separar momentos (só catálogo), preservados em recálculos
+  - [x] Correção de relógio por dispositivo de captura ("+1 h", "ano errado"), com prévia, só no catálogo, reversível
+  - [x] Momento como escopo na Comparar (entrada nova no JSON do escopo, `v: 2`) e como filtro
+  - [x] Schema: tabelas novas para momentos, edições de momentos e correções por dispositivo (migração aditiva v3 → v4)
+- [x] Miniaturas em cache (Shell API + fallback)
+- [x] Biblioteca: grade, lista, linha do tempo, painel de detalhes
+- [x] Filtros em chips + avançado, seleção em massa, filtros salvos — incluindo faixa de horário, período do dia, dia da semana, momento e confiança da hora
+- [x] Critérios da spec (100 mil itens, < 1 s)
+- [ ] Teste do usuário (celular simulado com `-DemoPersistente -CelularSimulado`; depois, se quiser, uma pasta real só leitura)
 - [ ] Tag `v0.4.0`
+
+Observações da Fase 4:
+- Evidências: core — datas (15 testes: padrões de nome, EXIF com subsegundos/fuso, horário de verão antigo de SP, vídeo UTC, WhatsApp, conflito), ExifTool/ffprobe reais (arquivos intactos, nenhum arquivo novo), cenário completo com câmera + Europa (+02:00) + vídeo + WhatsApp + sem data + celular simulado lido pelo começo do arquivo (ordem real, momentos, editar/juntar/separar sobrevivendo a 3 recálculos, confirmar hora, correção de relógio com prévia/aplicar/desfazer e hash dos arquivos igual antes e depois, filtros, Comparar com momento); desempenho com 100 mil itens: 13 consultas entre 100 e 370 ms, momentos em ~1,4 s. App — linha do tempo intercalando dispositivos, hora a confirmar, filtro de período, seleção Ctrl/“todos”, nomear momento pelo cabeçalho, momento na Comparar, correção de relógio com ExifTool real. Helper — miniatura real pelo Shell (inclusive por caminho `\\?\Volume{GUID}`), recusas de escrita, `readHead`.
+- Itens só aparecem na Biblioteca depois de conferidos (há aviso com a contagem). Vídeo de celular com o índice no fim fica com a data do nome ou do arquivo (lemos só o começo pelo USB).
+- Miniaturas de HEIC/RAW dependem dos codecs do Windows (Shell); sem codec, ícone do tipo.
+- A CLI ainda não tem comandos de Biblioteca/momentos (o core é testado direto); fica para quando a Fase 5 precisar dos testes por processo.
+- O `.gitignore` ignorava `thumbnails/` (dados pessoais) e, no Windows, pegou a pasta de código `Thumbnails/` do helper: a CI quebrou em 2 runs até a exceção ser adicionada.
+- Um teste de widget travou localmente (consulta em tempo real esperando uma gravação feita no relógio do teste); corrigido com prazo e nova tentativa. O processo do teste travado ficou preso segurando `app\build\native_assets\windows\sqlite3.dll` — os testes do app foram rodados numa cópia de trabalho separada (`.wt/`, ignorada).
 
 ## Fase 5 — Cópia segura
 - [ ] Diário de operações e máquina de estados por item
@@ -202,3 +211,4 @@ Observações:
 - 2026-10-28 — Ajustes de interface antes da Fase 4 — "Adicionar dispositivo" único (celulares, unidades e "Escolher uma pasta…") em Dispositivos e na Comparar; "Escanear" com "Tudo" ou "Só algumas pastas" (árvore ao vivo, tamanho estimado, várias pastas num scan); cartão com as pastas já escaneadas. Spec §3.2/§7 atualizada. Fase 4 **não iniciada**: aguarda o usuário.
 - 2026-10-29 — Correções do teste dos ajustes — app não fechava pelo X (close() de stream com ouvinte pausado + esperas sem prazo): encerramento com prazo e "Encerrando com segurança…" (ADR 0013); botão duplicado na Dispositivos vazia. Fase 4 **não iniciada**: aguarda o usuário.
 - 2026-10-29 — Correções do fechamento com celular real — exceção solta `helper_crashed` (pedido órfão no HelperClient), pergunta antes de fechar com tarefas em andamento, aviso de queda do helper, conferência do celular gravada arquivo a arquivo (retoma exato). Fase 4 **não iniciada**: aguarda o usuário.
+- 2026-10-29 — Ajustes do modo demonstração + Fase 4 — faixa "Modo demonstração" e textos ao fechar; run-app.ps1 -DemoPersistente. Fase 4: get-tools.ps1 (ExifTool/FFmpeg), datas da captura com fusos/origem/confiança, fila de metadados (celular pelo começo do arquivo), schema v4, momentos editáveis, correção de relógio com prévia, Biblioteca (linha do tempo, grade, lista, filtros E/OU/NÃO, filtros salvos, seleção, detalhes), miniaturas, Comparar com momento, 100 mil itens < 1 s. Tag v0.4.0 aguarda o teste do usuário.

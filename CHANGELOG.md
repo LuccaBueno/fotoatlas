@@ -4,6 +4,24 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+### Adicionado — Fase 4: Metadados e Biblioteca
+- **Biblioteca** com três visões: **linha do tempo única** pela hora real da captura (até os segundos), intercalando fotos e vídeos de todos os dispositivos, com cabeçalhos de mês, dia e **momento**; **grade**; e **lista**. Navegação ano → mês → dia → momento ao lado. Conteúdo idêntico em vários lugares aparece uma vez.
+- **Data e hora da captura**: lidas do EXIF (com subsegundos e fuso), do vídeo (UTC), do nome do arquivo (celular, câmera, WhatsApp, Pixel, prints, Dropbox) ou da data do arquivo, nessa ordem (configurável). Cada item guarda a origem e a confiança (confiável, provável, incerta); **hora incerta** aparece sinalizada, com "A hora está certa" e "Corrigir a hora…". Fuso padrão America/Sao_Paulo, com o antigo horário de verão.
+- **Momentos automáticos** por intervalo sem fotos (padrão 2 h, configurável), considerando todos os dispositivos. **Nomear, juntar, separar** e voltar ao automático pelo cabeçalho; as edições ficam fixas nos recálculos. Hora incerta fica em **"Hora a confirmar"** até ser confirmada.
+- **Corrigir o relógio de um dispositivo** (ex.: câmera 1 h adiantada, ano errado), com prévia "antes → depois", o item de outro dispositivo que fica ao lado e o efeito nos momentos; também calcula o deslocamento por duas fotos tiradas no mesmo instante. Só no catálogo; **Desfazer** na hora ou em Configurações.
+- **Filtros em chips**: ano, dispositivo, câmera, tipo, situação de backup, **horário** (faixa, inclusive atravessando a meia-noite; período do dia; dia da semana), **momento**, hora (confiança, a confirmar, corrigidas, conflitantes) e mais (período de datas, sem data, tamanho, resolução, duração, GPS, erro de leitura); busca por nome, pasta ou momento; **filtro avançado E/OU/NÃO**; **filtros salvos**.
+- **Seleção em massa**: clique, Ctrl+clique, Shift+clique, Ctrl+A ("todos os resultados", não só os visíveis), inverter, tirar da seleção por critério; barra fixa com itens, tamanho, arquivos e situação de backup.
+- **Painel de detalhes** com todas as localizações (conectado/desconectado), câmera, dimensões, exposição, GPS, duração e todas as datas encontradas.
+- **Miniaturas em cache** (Shell do Windows pelo helper; FFmpeg para vídeos; miniatura embutida no EXIF, inclusive do celular lendo só o começo do arquivo).
+- **Comparar**: momento como parte do escopo (em todos os dispositivos ou só num) e filtro por período/câmera; escopos salvos guardam os dois.
+- **Configurações › Datas e momentos**: intervalo dos momentos, fuso, ordem das datas, histórico de correções de relógio com desfazer, situação do leitor de metadados.
+- Leitura de metadados automática depois da conferência (ExifTool e ffprobe, só leitura), com progresso, pausa e "ler de novo os que deram erro"; sem o ExifTool, as datas vêm do nome e da data do arquivo e se completam quando ele existir.
+- `tools/scripts/get-tools.ps1`: baixa ExifTool 13.60 e FFmpeg 8.1 LGPL com SHA-256 conferido (não versionados).
+- Celular simulado com fotos com EXIF de verdade e uma pasta **"Câmera"** com o relógio 1 h adiantado (para testar a linha do tempo, os momentos e a correção).
+- Helper: `thumbnails.get` e `devices.readHead` (grava só arquivos novos dentro da pasta de cache).
+- Catálogo v4 (aditivo): data efetiva, momentos, edições de momentos e correções de relógio (ADR 0014 e 0015).
+- Desempenho medido: 100 mil itens — filtros de 100 a 370 ms (exigido < 1 s), recálculo dos momentos em ~1,4 s.
+
 ### Mudado
 - **Modo demonstração avisado na tela**: com `run-app.ps1 -Demo` ou `-CelularSimulado`, uma faixa fixa no topo diz "Modo demonstração — tudo será descartado ao fechar", e a pergunta ao fechar e a tela "Encerrando com segurança…" avisam que nada será mantido (antes prometiam "continua de onde parou", o que não vale nesse modo).
 - **Fechar com tarefas em andamento pergunta antes**: "Há tarefas em andamento: …" com o progresso de cada uma (escaneamento, conferência, backup do catálogo) e "Continuar trabalhando" (padrão) ou "Fechar mesmo assim". Sem nada em andamento, fecha direto.
