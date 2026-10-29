@@ -4414,6 +4414,1021 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
   }
 }
 
+class ClockCorrections extends Table with TableInfo<ClockCorrections, ClockCorrectionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  ClockCorrections(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _makeMeta = const VerificationMeta('make');
+  late final GeneratedColumn<String> make = GeneratedColumn<String>(
+    'make',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _modelMeta = const VerificationMeta('model');
+  late final GeneratedColumn<String> model = GeneratedColumn<String>(
+    'model',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _bodySerialMeta = const VerificationMeta('bodySerial');
+  late final GeneratedColumn<String> bodySerial = GeneratedColumn<String>(
+    'body_serial',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _offsetMsMeta = const VerificationMeta('offsetMs');
+  late final GeneratedColumn<int> offsetMs = GeneratedColumn<int>(
+    'offset_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _yearsMeta = const VerificationMeta('years');
+  late final GeneratedColumn<int> years = GeneratedColumn<int>(
+    'years',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _periodStartUtcMsMeta = const VerificationMeta('periodStartUtcMs');
+  late final GeneratedColumn<int> periodStartUtcMs = GeneratedColumn<int>(
+    'period_start_utc_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _periodEndUtcMsMeta = const VerificationMeta('periodEndUtcMs');
+  late final GeneratedColumn<int> periodEndUtcMs = GeneratedColumn<int>(
+    'period_end_utc_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _sourceIdsJsonMeta = const VerificationMeta('sourceIdsJson');
+  late final GeneratedColumn<String> sourceIdsJson = GeneratedColumn<String>(
+    'source_ids_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _undoneAtMeta = const VerificationMeta('undoneAt');
+  late final GeneratedColumn<int> undoneAt = GeneratedColumn<int>(
+    'undone_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    make,
+    model,
+    bodySerial,
+    offsetMs,
+    years,
+    periodStartUtcMs,
+    periodEndUtcMs,
+    sourceIdsJson,
+    note,
+    createdAt,
+    undoneAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'clock_corrections';
+  @override
+  VerificationContext validateIntegrity(Insertable<ClockCorrectionRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('make')) {
+      context.handle(_makeMeta, make.isAcceptableOrUnknown(data['make']!, _makeMeta));
+    }
+    if (data.containsKey('model')) {
+      context.handle(_modelMeta, model.isAcceptableOrUnknown(data['model']!, _modelMeta));
+    }
+    if (data.containsKey('body_serial')) {
+      context.handle(_bodySerialMeta, bodySerial.isAcceptableOrUnknown(data['body_serial']!, _bodySerialMeta));
+    }
+    if (data.containsKey('offset_ms')) {
+      context.handle(_offsetMsMeta, offsetMs.isAcceptableOrUnknown(data['offset_ms']!, _offsetMsMeta));
+    }
+    if (data.containsKey('years')) {
+      context.handle(_yearsMeta, years.isAcceptableOrUnknown(data['years']!, _yearsMeta));
+    }
+    if (data.containsKey('period_start_utc_ms')) {
+      context.handle(
+        _periodStartUtcMsMeta,
+        periodStartUtcMs.isAcceptableOrUnknown(data['period_start_utc_ms']!, _periodStartUtcMsMeta),
+      );
+    }
+    if (data.containsKey('period_end_utc_ms')) {
+      context.handle(
+        _periodEndUtcMsMeta,
+        periodEndUtcMs.isAcceptableOrUnknown(data['period_end_utc_ms']!, _periodEndUtcMsMeta),
+      );
+    }
+    if (data.containsKey('source_ids_json')) {
+      context.handle(
+        _sourceIdsJsonMeta,
+        sourceIdsJson.isAcceptableOrUnknown(data['source_ids_json']!, _sourceIdsJsonMeta),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(_noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('undone_at')) {
+      context.handle(_undoneAtMeta, undoneAt.isAcceptableOrUnknown(data['undone_at']!, _undoneAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ClockCorrectionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ClockCorrectionRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      make: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}make']),
+      model: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}model']),
+      bodySerial: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}body_serial']),
+      offsetMs: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}offset_ms'])!,
+      years: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}years'])!,
+      periodStartUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}period_start_utc_ms'],
+      ),
+      periodEndUtcMs: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}period_end_utc_ms']),
+      sourceIdsJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source_ids_json']),
+      note: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}note']),
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      undoneAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}undone_at']),
+    );
+  }
+
+  @override
+  ClockCorrections createAlias(String alias) {
+    return ClockCorrections(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class ClockCorrectionRow extends DataClass implements Insertable<ClockCorrectionRow> {
+  final int id;
+  final String? make;
+  final String? model;
+  final String? bodySerial;
+  final int offsetMs;
+  final int years;
+
+  /// "ano errado": soma anos no calendário
+  final int? periodStartUtcMs;
+
+  /// opcional: só itens neste período (data extraída)
+  final int? periodEndUtcMs;
+  final String? sourceIdsJson;
+
+  /// opcional: só itens com cópia nestas fontes
+  final String? note;
+  final int createdAt;
+  final int? undoneAt;
+  const ClockCorrectionRow({
+    required this.id,
+    this.make,
+    this.model,
+    this.bodySerial,
+    required this.offsetMs,
+    required this.years,
+    this.periodStartUtcMs,
+    this.periodEndUtcMs,
+    this.sourceIdsJson,
+    this.note,
+    required this.createdAt,
+    this.undoneAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || make != null) {
+      map['make'] = Variable<String>(make);
+    }
+    if (!nullToAbsent || model != null) {
+      map['model'] = Variable<String>(model);
+    }
+    if (!nullToAbsent || bodySerial != null) {
+      map['body_serial'] = Variable<String>(bodySerial);
+    }
+    map['offset_ms'] = Variable<int>(offsetMs);
+    map['years'] = Variable<int>(years);
+    if (!nullToAbsent || periodStartUtcMs != null) {
+      map['period_start_utc_ms'] = Variable<int>(periodStartUtcMs);
+    }
+    if (!nullToAbsent || periodEndUtcMs != null) {
+      map['period_end_utc_ms'] = Variable<int>(periodEndUtcMs);
+    }
+    if (!nullToAbsent || sourceIdsJson != null) {
+      map['source_ids_json'] = Variable<String>(sourceIdsJson);
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || undoneAt != null) {
+      map['undone_at'] = Variable<int>(undoneAt);
+    }
+    return map;
+  }
+
+  ClockCorrectionsCompanion toCompanion(bool nullToAbsent) {
+    return ClockCorrectionsCompanion(
+      id: Value(id),
+      make: make == null && nullToAbsent ? const Value.absent() : Value(make),
+      model: model == null && nullToAbsent ? const Value.absent() : Value(model),
+      bodySerial: bodySerial == null && nullToAbsent ? const Value.absent() : Value(bodySerial),
+      offsetMs: Value(offsetMs),
+      years: Value(years),
+      periodStartUtcMs: periodStartUtcMs == null && nullToAbsent ? const Value.absent() : Value(periodStartUtcMs),
+      periodEndUtcMs: periodEndUtcMs == null && nullToAbsent ? const Value.absent() : Value(periodEndUtcMs),
+      sourceIdsJson: sourceIdsJson == null && nullToAbsent ? const Value.absent() : Value(sourceIdsJson),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      createdAt: Value(createdAt),
+      undoneAt: undoneAt == null && nullToAbsent ? const Value.absent() : Value(undoneAt),
+    );
+  }
+
+  factory ClockCorrectionRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ClockCorrectionRow(
+      id: serializer.fromJson<int>(json['id']),
+      make: serializer.fromJson<String?>(json['make']),
+      model: serializer.fromJson<String?>(json['model']),
+      bodySerial: serializer.fromJson<String?>(json['body_serial']),
+      offsetMs: serializer.fromJson<int>(json['offset_ms']),
+      years: serializer.fromJson<int>(json['years']),
+      periodStartUtcMs: serializer.fromJson<int?>(json['period_start_utc_ms']),
+      periodEndUtcMs: serializer.fromJson<int?>(json['period_end_utc_ms']),
+      sourceIdsJson: serializer.fromJson<String?>(json['source_ids_json']),
+      note: serializer.fromJson<String?>(json['note']),
+      createdAt: serializer.fromJson<int>(json['created_at']),
+      undoneAt: serializer.fromJson<int?>(json['undone_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'make': serializer.toJson<String?>(make),
+      'model': serializer.toJson<String?>(model),
+      'body_serial': serializer.toJson<String?>(bodySerial),
+      'offset_ms': serializer.toJson<int>(offsetMs),
+      'years': serializer.toJson<int>(years),
+      'period_start_utc_ms': serializer.toJson<int?>(periodStartUtcMs),
+      'period_end_utc_ms': serializer.toJson<int?>(periodEndUtcMs),
+      'source_ids_json': serializer.toJson<String?>(sourceIdsJson),
+      'note': serializer.toJson<String?>(note),
+      'created_at': serializer.toJson<int>(createdAt),
+      'undone_at': serializer.toJson<int?>(undoneAt),
+    };
+  }
+
+  ClockCorrectionRow copyWith({
+    int? id,
+    Value<String?> make = const Value.absent(),
+    Value<String?> model = const Value.absent(),
+    Value<String?> bodySerial = const Value.absent(),
+    int? offsetMs,
+    int? years,
+    Value<int?> periodStartUtcMs = const Value.absent(),
+    Value<int?> periodEndUtcMs = const Value.absent(),
+    Value<String?> sourceIdsJson = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+    int? createdAt,
+    Value<int?> undoneAt = const Value.absent(),
+  }) => ClockCorrectionRow(
+    id: id ?? this.id,
+    make: make.present ? make.value : this.make,
+    model: model.present ? model.value : this.model,
+    bodySerial: bodySerial.present ? bodySerial.value : this.bodySerial,
+    offsetMs: offsetMs ?? this.offsetMs,
+    years: years ?? this.years,
+    periodStartUtcMs: periodStartUtcMs.present ? periodStartUtcMs.value : this.periodStartUtcMs,
+    periodEndUtcMs: periodEndUtcMs.present ? periodEndUtcMs.value : this.periodEndUtcMs,
+    sourceIdsJson: sourceIdsJson.present ? sourceIdsJson.value : this.sourceIdsJson,
+    note: note.present ? note.value : this.note,
+    createdAt: createdAt ?? this.createdAt,
+    undoneAt: undoneAt.present ? undoneAt.value : this.undoneAt,
+  );
+  ClockCorrectionRow copyWithCompanion(ClockCorrectionsCompanion data) {
+    return ClockCorrectionRow(
+      id: data.id.present ? data.id.value : this.id,
+      make: data.make.present ? data.make.value : this.make,
+      model: data.model.present ? data.model.value : this.model,
+      bodySerial: data.bodySerial.present ? data.bodySerial.value : this.bodySerial,
+      offsetMs: data.offsetMs.present ? data.offsetMs.value : this.offsetMs,
+      years: data.years.present ? data.years.value : this.years,
+      periodStartUtcMs: data.periodStartUtcMs.present ? data.periodStartUtcMs.value : this.periodStartUtcMs,
+      periodEndUtcMs: data.periodEndUtcMs.present ? data.periodEndUtcMs.value : this.periodEndUtcMs,
+      sourceIdsJson: data.sourceIdsJson.present ? data.sourceIdsJson.value : this.sourceIdsJson,
+      note: data.note.present ? data.note.value : this.note,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      undoneAt: data.undoneAt.present ? data.undoneAt.value : this.undoneAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ClockCorrectionRow(')
+          ..write('id: $id, ')
+          ..write('make: $make, ')
+          ..write('model: $model, ')
+          ..write('bodySerial: $bodySerial, ')
+          ..write('offsetMs: $offsetMs, ')
+          ..write('years: $years, ')
+          ..write('periodStartUtcMs: $periodStartUtcMs, ')
+          ..write('periodEndUtcMs: $periodEndUtcMs, ')
+          ..write('sourceIdsJson: $sourceIdsJson, ')
+          ..write('note: $note, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('undoneAt: $undoneAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    make,
+    model,
+    bodySerial,
+    offsetMs,
+    years,
+    periodStartUtcMs,
+    periodEndUtcMs,
+    sourceIdsJson,
+    note,
+    createdAt,
+    undoneAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ClockCorrectionRow &&
+          other.id == this.id &&
+          other.make == this.make &&
+          other.model == this.model &&
+          other.bodySerial == this.bodySerial &&
+          other.offsetMs == this.offsetMs &&
+          other.years == this.years &&
+          other.periodStartUtcMs == this.periodStartUtcMs &&
+          other.periodEndUtcMs == this.periodEndUtcMs &&
+          other.sourceIdsJson == this.sourceIdsJson &&
+          other.note == this.note &&
+          other.createdAt == this.createdAt &&
+          other.undoneAt == this.undoneAt);
+}
+
+class ClockCorrectionsCompanion extends UpdateCompanion<ClockCorrectionRow> {
+  final Value<int> id;
+  final Value<String?> make;
+  final Value<String?> model;
+  final Value<String?> bodySerial;
+  final Value<int> offsetMs;
+  final Value<int> years;
+  final Value<int?> periodStartUtcMs;
+  final Value<int?> periodEndUtcMs;
+  final Value<String?> sourceIdsJson;
+  final Value<String?> note;
+  final Value<int> createdAt;
+  final Value<int?> undoneAt;
+  const ClockCorrectionsCompanion({
+    this.id = const Value.absent(),
+    this.make = const Value.absent(),
+    this.model = const Value.absent(),
+    this.bodySerial = const Value.absent(),
+    this.offsetMs = const Value.absent(),
+    this.years = const Value.absent(),
+    this.periodStartUtcMs = const Value.absent(),
+    this.periodEndUtcMs = const Value.absent(),
+    this.sourceIdsJson = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.undoneAt = const Value.absent(),
+  });
+  ClockCorrectionsCompanion.insert({
+    this.id = const Value.absent(),
+    this.make = const Value.absent(),
+    this.model = const Value.absent(),
+    this.bodySerial = const Value.absent(),
+    this.offsetMs = const Value.absent(),
+    this.years = const Value.absent(),
+    this.periodStartUtcMs = const Value.absent(),
+    this.periodEndUtcMs = const Value.absent(),
+    this.sourceIdsJson = const Value.absent(),
+    this.note = const Value.absent(),
+    required int createdAt,
+    this.undoneAt = const Value.absent(),
+  }) : createdAt = Value(createdAt);
+  static Insertable<ClockCorrectionRow> custom({
+    Expression<int>? id,
+    Expression<String>? make,
+    Expression<String>? model,
+    Expression<String>? bodySerial,
+    Expression<int>? offsetMs,
+    Expression<int>? years,
+    Expression<int>? periodStartUtcMs,
+    Expression<int>? periodEndUtcMs,
+    Expression<String>? sourceIdsJson,
+    Expression<String>? note,
+    Expression<int>? createdAt,
+    Expression<int>? undoneAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (make != null) 'make': make,
+      if (model != null) 'model': model,
+      if (bodySerial != null) 'body_serial': bodySerial,
+      if (offsetMs != null) 'offset_ms': offsetMs,
+      if (years != null) 'years': years,
+      if (periodStartUtcMs != null) 'period_start_utc_ms': periodStartUtcMs,
+      if (periodEndUtcMs != null) 'period_end_utc_ms': periodEndUtcMs,
+      if (sourceIdsJson != null) 'source_ids_json': sourceIdsJson,
+      if (note != null) 'note': note,
+      if (createdAt != null) 'created_at': createdAt,
+      if (undoneAt != null) 'undone_at': undoneAt,
+    });
+  }
+
+  ClockCorrectionsCompanion copyWith({
+    Value<int>? id,
+    Value<String?>? make,
+    Value<String?>? model,
+    Value<String?>? bodySerial,
+    Value<int>? offsetMs,
+    Value<int>? years,
+    Value<int?>? periodStartUtcMs,
+    Value<int?>? periodEndUtcMs,
+    Value<String?>? sourceIdsJson,
+    Value<String?>? note,
+    Value<int>? createdAt,
+    Value<int?>? undoneAt,
+  }) {
+    return ClockCorrectionsCompanion(
+      id: id ?? this.id,
+      make: make ?? this.make,
+      model: model ?? this.model,
+      bodySerial: bodySerial ?? this.bodySerial,
+      offsetMs: offsetMs ?? this.offsetMs,
+      years: years ?? this.years,
+      periodStartUtcMs: periodStartUtcMs ?? this.periodStartUtcMs,
+      periodEndUtcMs: periodEndUtcMs ?? this.periodEndUtcMs,
+      sourceIdsJson: sourceIdsJson ?? this.sourceIdsJson,
+      note: note ?? this.note,
+      createdAt: createdAt ?? this.createdAt,
+      undoneAt: undoneAt ?? this.undoneAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (make.present) {
+      map['make'] = Variable<String>(make.value);
+    }
+    if (model.present) {
+      map['model'] = Variable<String>(model.value);
+    }
+    if (bodySerial.present) {
+      map['body_serial'] = Variable<String>(bodySerial.value);
+    }
+    if (offsetMs.present) {
+      map['offset_ms'] = Variable<int>(offsetMs.value);
+    }
+    if (years.present) {
+      map['years'] = Variable<int>(years.value);
+    }
+    if (periodStartUtcMs.present) {
+      map['period_start_utc_ms'] = Variable<int>(periodStartUtcMs.value);
+    }
+    if (periodEndUtcMs.present) {
+      map['period_end_utc_ms'] = Variable<int>(periodEndUtcMs.value);
+    }
+    if (sourceIdsJson.present) {
+      map['source_ids_json'] = Variable<String>(sourceIdsJson.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (undoneAt.present) {
+      map['undone_at'] = Variable<int>(undoneAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ClockCorrectionsCompanion(')
+          ..write('id: $id, ')
+          ..write('make: $make, ')
+          ..write('model: $model, ')
+          ..write('bodySerial: $bodySerial, ')
+          ..write('offsetMs: $offsetMs, ')
+          ..write('years: $years, ')
+          ..write('periodStartUtcMs: $periodStartUtcMs, ')
+          ..write('periodEndUtcMs: $periodEndUtcMs, ')
+          ..write('sourceIdsJson: $sourceIdsJson, ')
+          ..write('note: $note, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('undoneAt: $undoneAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class Moments extends Table with TableInfo<Moments, MomentRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Moments(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (kind IN (\'auto\', \'edited\'))',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _startUtcMsMeta = const VerificationMeta('startUtcMs');
+  late final GeneratedColumn<int> startUtcMs = GeneratedColumn<int>(
+    'start_utc_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _endUtcMsMeta = const VerificationMeta('endUtcMs');
+  late final GeneratedColumn<int> endUtcMs = GeneratedColumn<int>(
+    'end_utc_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _itemCountMeta = const VerificationMeta('itemCount');
+  late final GeneratedColumn<int> itemCount = GeneratedColumn<int>(
+    'item_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, kind, name, startUtcMs, endUtcMs, itemCount, createdAt, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'moments';
+  @override
+  VerificationContext validateIntegrity(Insertable<MomentRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('kind')) {
+      context.handle(_kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(_nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    }
+    if (data.containsKey('start_utc_ms')) {
+      context.handle(_startUtcMsMeta, startUtcMs.isAcceptableOrUnknown(data['start_utc_ms']!, _startUtcMsMeta));
+    } else if (isInserting) {
+      context.missing(_startUtcMsMeta);
+    }
+    if (data.containsKey('end_utc_ms')) {
+      context.handle(_endUtcMsMeta, endUtcMs.isAcceptableOrUnknown(data['end_utc_ms']!, _endUtcMsMeta));
+    } else if (isInserting) {
+      context.missing(_endUtcMsMeta);
+    }
+    if (data.containsKey('item_count')) {
+      context.handle(_itemCountMeta, itemCount.isAcceptableOrUnknown(data['item_count']!, _itemCountMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MomentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MomentRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      kind: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
+      name: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name']),
+      startUtcMs: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}start_utc_ms'])!,
+      endUtcMs: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}end_utc_ms'])!,
+      itemCount: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}item_count'])!,
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  Moments createAlias(String alias) {
+    return Moments(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class MomentRow extends DataClass implements Insertable<MomentRow> {
+  final int id;
+  final String kind;
+  final String? name;
+  final int startUtcMs;
+  final int endUtcMs;
+  final int itemCount;
+  final int createdAt;
+  final int updatedAt;
+  const MomentRow({
+    required this.id,
+    required this.kind,
+    this.name,
+    required this.startUtcMs,
+    required this.endUtcMs,
+    required this.itemCount,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
+    map['start_utc_ms'] = Variable<int>(startUtcMs);
+    map['end_utc_ms'] = Variable<int>(endUtcMs);
+    map['item_count'] = Variable<int>(itemCount);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  MomentsCompanion toCompanion(bool nullToAbsent) {
+    return MomentsCompanion(
+      id: Value(id),
+      kind: Value(kind),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      startUtcMs: Value(startUtcMs),
+      endUtcMs: Value(endUtcMs),
+      itemCount: Value(itemCount),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory MomentRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MomentRow(
+      id: serializer.fromJson<int>(json['id']),
+      kind: serializer.fromJson<String>(json['kind']),
+      name: serializer.fromJson<String?>(json['name']),
+      startUtcMs: serializer.fromJson<int>(json['start_utc_ms']),
+      endUtcMs: serializer.fromJson<int>(json['end_utc_ms']),
+      itemCount: serializer.fromJson<int>(json['item_count']),
+      createdAt: serializer.fromJson<int>(json['created_at']),
+      updatedAt: serializer.fromJson<int>(json['updated_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'kind': serializer.toJson<String>(kind),
+      'name': serializer.toJson<String?>(name),
+      'start_utc_ms': serializer.toJson<int>(startUtcMs),
+      'end_utc_ms': serializer.toJson<int>(endUtcMs),
+      'item_count': serializer.toJson<int>(itemCount),
+      'created_at': serializer.toJson<int>(createdAt),
+      'updated_at': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  MomentRow copyWith({
+    int? id,
+    String? kind,
+    Value<String?> name = const Value.absent(),
+    int? startUtcMs,
+    int? endUtcMs,
+    int? itemCount,
+    int? createdAt,
+    int? updatedAt,
+  }) => MomentRow(
+    id: id ?? this.id,
+    kind: kind ?? this.kind,
+    name: name.present ? name.value : this.name,
+    startUtcMs: startUtcMs ?? this.startUtcMs,
+    endUtcMs: endUtcMs ?? this.endUtcMs,
+    itemCount: itemCount ?? this.itemCount,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  MomentRow copyWithCompanion(MomentsCompanion data) {
+    return MomentRow(
+      id: data.id.present ? data.id.value : this.id,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      name: data.name.present ? data.name.value : this.name,
+      startUtcMs: data.startUtcMs.present ? data.startUtcMs.value : this.startUtcMs,
+      endUtcMs: data.endUtcMs.present ? data.endUtcMs.value : this.endUtcMs,
+      itemCount: data.itemCount.present ? data.itemCount.value : this.itemCount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MomentRow(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('name: $name, ')
+          ..write('startUtcMs: $startUtcMs, ')
+          ..write('endUtcMs: $endUtcMs, ')
+          ..write('itemCount: $itemCount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, kind, name, startUtcMs, endUtcMs, itemCount, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MomentRow &&
+          other.id == this.id &&
+          other.kind == this.kind &&
+          other.name == this.name &&
+          other.startUtcMs == this.startUtcMs &&
+          other.endUtcMs == this.endUtcMs &&
+          other.itemCount == this.itemCount &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class MomentsCompanion extends UpdateCompanion<MomentRow> {
+  final Value<int> id;
+  final Value<String> kind;
+  final Value<String?> name;
+  final Value<int> startUtcMs;
+  final Value<int> endUtcMs;
+  final Value<int> itemCount;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  const MomentsCompanion({
+    this.id = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.name = const Value.absent(),
+    this.startUtcMs = const Value.absent(),
+    this.endUtcMs = const Value.absent(),
+    this.itemCount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  MomentsCompanion.insert({
+    this.id = const Value.absent(),
+    required String kind,
+    this.name = const Value.absent(),
+    required int startUtcMs,
+    required int endUtcMs,
+    this.itemCount = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+  }) : kind = Value(kind),
+       startUtcMs = Value(startUtcMs),
+       endUtcMs = Value(endUtcMs),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<MomentRow> custom({
+    Expression<int>? id,
+    Expression<String>? kind,
+    Expression<String>? name,
+    Expression<int>? startUtcMs,
+    Expression<int>? endUtcMs,
+    Expression<int>? itemCount,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (kind != null) 'kind': kind,
+      if (name != null) 'name': name,
+      if (startUtcMs != null) 'start_utc_ms': startUtcMs,
+      if (endUtcMs != null) 'end_utc_ms': endUtcMs,
+      if (itemCount != null) 'item_count': itemCount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  MomentsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? kind,
+    Value<String?>? name,
+    Value<int>? startUtcMs,
+    Value<int>? endUtcMs,
+    Value<int>? itemCount,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+  }) {
+    return MomentsCompanion(
+      id: id ?? this.id,
+      kind: kind ?? this.kind,
+      name: name ?? this.name,
+      startUtcMs: startUtcMs ?? this.startUtcMs,
+      endUtcMs: endUtcMs ?? this.endUtcMs,
+      itemCount: itemCount ?? this.itemCount,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (startUtcMs.present) {
+      map['start_utc_ms'] = Variable<int>(startUtcMs.value);
+    }
+    if (endUtcMs.present) {
+      map['end_utc_ms'] = Variable<int>(endUtcMs.value);
+    }
+    if (itemCount.present) {
+      map['item_count'] = Variable<int>(itemCount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MomentsCompanion(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('name: $name, ')
+          ..write('startUtcMs: $startUtcMs, ')
+          ..write('endUtcMs: $endUtcMs, ')
+          ..write('itemCount: $itemCount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -4672,6 +5687,142 @@ class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _bodySerialMeta = const VerificationMeta('bodySerial');
+  late final GeneratedColumn<String> bodySerial = GeneratedColumn<String>(
+    'body_serial',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _metaStatusMeta = const VerificationMeta('metaStatus');
+  late final GeneratedColumn<String> metaStatus = GeneratedColumn<String>(
+    'meta_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'full\' CHECK (meta_status IN (\'full\', \'partial\', \'error\'))',
+    defaultValue: const CustomExpression('\'full\''),
+  );
+  static const VerificationMeta _metaErrorMeta = const VerificationMeta('metaError');
+  late final GeneratedColumn<String> metaError = GeneratedColumn<String>(
+    'meta_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _effUtcMsMeta = const VerificationMeta('effUtcMs');
+  late final GeneratedColumn<int> effUtcMs = GeneratedColumn<int>(
+    'eff_utc_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _effLocalMeta = const VerificationMeta('effLocal');
+  late final GeneratedColumn<String> effLocal = GeneratedColumn<String>(
+    'eff_local',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _effOffsetMinMeta = const VerificationMeta('effOffsetMin');
+  late final GeneratedColumn<int> effOffsetMin = GeneratedColumn<int>(
+    'eff_offset_min',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _effSourceMeta = const VerificationMeta('effSource');
+  late final GeneratedColumn<String> effSource = GeneratedColumn<String>(
+    'eff_source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _effConfidenceMeta = const VerificationMeta('effConfidence');
+  late final GeneratedColumn<String> effConfidence = GeneratedColumn<String>(
+    'eff_confidence',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _clockCorrectionIdMeta = const VerificationMeta('clockCorrectionId');
+  late final GeneratedColumn<int> clockCorrectionId = GeneratedColumn<int>(
+    'clock_correction_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'REFERENCES clock_corrections(id)',
+  );
+  static const VerificationMeta _effYearMeta = const VerificationMeta('effYear');
+  late final GeneratedColumn<int> effYear = GeneratedColumn<int>(
+    'eff_year',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _effMonthMeta = const VerificationMeta('effMonth');
+  late final GeneratedColumn<int> effMonth = GeneratedColumn<int>(
+    'eff_month',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _effDayMeta = const VerificationMeta('effDay');
+  late final GeneratedColumn<String> effDay = GeneratedColumn<String>(
+    'eff_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _effMinuteMeta = const VerificationMeta('effMinute');
+  late final GeneratedColumn<int> effMinute = GeneratedColumn<int>(
+    'eff_minute',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _effWeekdayMeta = const VerificationMeta('effWeekday');
+  late final GeneratedColumn<int> effWeekday = GeneratedColumn<int>(
+    'eff_weekday',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _momentIdMeta = const VerificationMeta('momentId');
+  late final GeneratedColumn<int> momentId = GeneratedColumn<int>(
+    'moment_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'REFERENCES moments(id)ON DELETE SET NULL',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     contentId,
@@ -4702,6 +5853,21 @@ class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow
     software,
     extractor,
     extractedAt,
+    bodySerial,
+    metaStatus,
+    metaError,
+    effUtcMs,
+    effLocal,
+    effOffsetMin,
+    effSource,
+    effConfidence,
+    clockCorrectionId,
+    effYear,
+    effMonth,
+    effDay,
+    effMinute,
+    effWeekday,
+    momentId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4802,6 +5968,57 @@ class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow
     if (data.containsKey('extracted_at')) {
       context.handle(_extractedAtMeta, extractedAt.isAcceptableOrUnknown(data['extracted_at']!, _extractedAtMeta));
     }
+    if (data.containsKey('body_serial')) {
+      context.handle(_bodySerialMeta, bodySerial.isAcceptableOrUnknown(data['body_serial']!, _bodySerialMeta));
+    }
+    if (data.containsKey('meta_status')) {
+      context.handle(_metaStatusMeta, metaStatus.isAcceptableOrUnknown(data['meta_status']!, _metaStatusMeta));
+    }
+    if (data.containsKey('meta_error')) {
+      context.handle(_metaErrorMeta, metaError.isAcceptableOrUnknown(data['meta_error']!, _metaErrorMeta));
+    }
+    if (data.containsKey('eff_utc_ms')) {
+      context.handle(_effUtcMsMeta, effUtcMs.isAcceptableOrUnknown(data['eff_utc_ms']!, _effUtcMsMeta));
+    }
+    if (data.containsKey('eff_local')) {
+      context.handle(_effLocalMeta, effLocal.isAcceptableOrUnknown(data['eff_local']!, _effLocalMeta));
+    }
+    if (data.containsKey('eff_offset_min')) {
+      context.handle(_effOffsetMinMeta, effOffsetMin.isAcceptableOrUnknown(data['eff_offset_min']!, _effOffsetMinMeta));
+    }
+    if (data.containsKey('eff_source')) {
+      context.handle(_effSourceMeta, effSource.isAcceptableOrUnknown(data['eff_source']!, _effSourceMeta));
+    }
+    if (data.containsKey('eff_confidence')) {
+      context.handle(
+        _effConfidenceMeta,
+        effConfidence.isAcceptableOrUnknown(data['eff_confidence']!, _effConfidenceMeta),
+      );
+    }
+    if (data.containsKey('clock_correction_id')) {
+      context.handle(
+        _clockCorrectionIdMeta,
+        clockCorrectionId.isAcceptableOrUnknown(data['clock_correction_id']!, _clockCorrectionIdMeta),
+      );
+    }
+    if (data.containsKey('eff_year')) {
+      context.handle(_effYearMeta, effYear.isAcceptableOrUnknown(data['eff_year']!, _effYearMeta));
+    }
+    if (data.containsKey('eff_month')) {
+      context.handle(_effMonthMeta, effMonth.isAcceptableOrUnknown(data['eff_month']!, _effMonthMeta));
+    }
+    if (data.containsKey('eff_day')) {
+      context.handle(_effDayMeta, effDay.isAcceptableOrUnknown(data['eff_day']!, _effDayMeta));
+    }
+    if (data.containsKey('eff_minute')) {
+      context.handle(_effMinuteMeta, effMinute.isAcceptableOrUnknown(data['eff_minute']!, _effMinuteMeta));
+    }
+    if (data.containsKey('eff_weekday')) {
+      context.handle(_effWeekdayMeta, effWeekday.isAcceptableOrUnknown(data['eff_weekday']!, _effWeekdayMeta));
+    }
+    if (data.containsKey('moment_id')) {
+      context.handle(_momentIdMeta, momentId.isAcceptableOrUnknown(data['moment_id']!, _momentIdMeta));
+    }
     return context;
   }
 
@@ -4839,6 +6056,24 @@ class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow
       software: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}software']),
       extractor: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}extractor']),
       extractedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}extracted_at']),
+      bodySerial: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}body_serial']),
+      metaStatus: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}meta_status'])!,
+      metaError: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}meta_error']),
+      effUtcMs: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}eff_utc_ms']),
+      effLocal: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}eff_local']),
+      effOffsetMin: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}eff_offset_min']),
+      effSource: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}eff_source']),
+      effConfidence: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}eff_confidence']),
+      clockCorrectionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}clock_correction_id'],
+      ),
+      effYear: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}eff_year']),
+      effMonth: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}eff_month']),
+      effDay: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}eff_day']),
+      effMinute: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}eff_minute']),
+      effWeekday: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}eff_weekday']),
+      momentId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}moment_id']),
     );
   }
 
@@ -4880,6 +6115,35 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
   final String? software;
   final String? extractor;
   final int? extractedAt;
+
+  /// v4 (Fase 4): número de série do corpo da câmera (correção de relógio por dispositivo).
+  final String? bodySerial;
+
+  /// v4: 'full' = arquivo lido (EXIF/vídeo); 'partial' = só nome e data do arquivo
+  /// (nenhuma cópia acessível ainda); 'error' = leitura falhou (meta_error diz o motivo).
+  final String metaStatus;
+  final String? metaError;
+
+  /// v4: data EFETIVA = extraída (capture_*) + correção de relógio + correção manual.
+  /// É a que a linha do tempo, os momentos e os filtros usam (eff_* derivadas, para índices).
+  final int? effUtcMs;
+  final String? effLocal;
+  final int? effOffsetMin;
+  final String? effSource;
+  final String? effConfidence;
+  final int? clockCorrectionId;
+  final int? effYear;
+  final int? effMonth;
+  final String? effDay;
+
+  /// 'AAAA-MM-DD' (hora local)
+  final int? effMinute;
+
+  /// minuto do dia (0..1439), hora local
+  final int? effWeekday;
+
+  /// 1 = segunda … 7 = domingo
+  final int? momentId;
   const MediaMetadataRow({
     required this.contentId,
     this.captureUtcMs,
@@ -4909,6 +6173,21 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
     this.software,
     this.extractor,
     this.extractedAt,
+    this.bodySerial,
+    required this.metaStatus,
+    this.metaError,
+    this.effUtcMs,
+    this.effLocal,
+    this.effOffsetMin,
+    this.effSource,
+    this.effConfidence,
+    this.clockCorrectionId,
+    this.effYear,
+    this.effMonth,
+    this.effDay,
+    this.effMinute,
+    this.effWeekday,
+    this.momentId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4993,6 +6272,49 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
     if (!nullToAbsent || extractedAt != null) {
       map['extracted_at'] = Variable<int>(extractedAt);
     }
+    if (!nullToAbsent || bodySerial != null) {
+      map['body_serial'] = Variable<String>(bodySerial);
+    }
+    map['meta_status'] = Variable<String>(metaStatus);
+    if (!nullToAbsent || metaError != null) {
+      map['meta_error'] = Variable<String>(metaError);
+    }
+    if (!nullToAbsent || effUtcMs != null) {
+      map['eff_utc_ms'] = Variable<int>(effUtcMs);
+    }
+    if (!nullToAbsent || effLocal != null) {
+      map['eff_local'] = Variable<String>(effLocal);
+    }
+    if (!nullToAbsent || effOffsetMin != null) {
+      map['eff_offset_min'] = Variable<int>(effOffsetMin);
+    }
+    if (!nullToAbsent || effSource != null) {
+      map['eff_source'] = Variable<String>(effSource);
+    }
+    if (!nullToAbsent || effConfidence != null) {
+      map['eff_confidence'] = Variable<String>(effConfidence);
+    }
+    if (!nullToAbsent || clockCorrectionId != null) {
+      map['clock_correction_id'] = Variable<int>(clockCorrectionId);
+    }
+    if (!nullToAbsent || effYear != null) {
+      map['eff_year'] = Variable<int>(effYear);
+    }
+    if (!nullToAbsent || effMonth != null) {
+      map['eff_month'] = Variable<int>(effMonth);
+    }
+    if (!nullToAbsent || effDay != null) {
+      map['eff_day'] = Variable<String>(effDay);
+    }
+    if (!nullToAbsent || effMinute != null) {
+      map['eff_minute'] = Variable<int>(effMinute);
+    }
+    if (!nullToAbsent || effWeekday != null) {
+      map['eff_weekday'] = Variable<int>(effWeekday);
+    }
+    if (!nullToAbsent || momentId != null) {
+      map['moment_id'] = Variable<int>(momentId);
+    }
     return map;
   }
 
@@ -5026,6 +6348,21 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
       software: software == null && nullToAbsent ? const Value.absent() : Value(software),
       extractor: extractor == null && nullToAbsent ? const Value.absent() : Value(extractor),
       extractedAt: extractedAt == null && nullToAbsent ? const Value.absent() : Value(extractedAt),
+      bodySerial: bodySerial == null && nullToAbsent ? const Value.absent() : Value(bodySerial),
+      metaStatus: Value(metaStatus),
+      metaError: metaError == null && nullToAbsent ? const Value.absent() : Value(metaError),
+      effUtcMs: effUtcMs == null && nullToAbsent ? const Value.absent() : Value(effUtcMs),
+      effLocal: effLocal == null && nullToAbsent ? const Value.absent() : Value(effLocal),
+      effOffsetMin: effOffsetMin == null && nullToAbsent ? const Value.absent() : Value(effOffsetMin),
+      effSource: effSource == null && nullToAbsent ? const Value.absent() : Value(effSource),
+      effConfidence: effConfidence == null && nullToAbsent ? const Value.absent() : Value(effConfidence),
+      clockCorrectionId: clockCorrectionId == null && nullToAbsent ? const Value.absent() : Value(clockCorrectionId),
+      effYear: effYear == null && nullToAbsent ? const Value.absent() : Value(effYear),
+      effMonth: effMonth == null && nullToAbsent ? const Value.absent() : Value(effMonth),
+      effDay: effDay == null && nullToAbsent ? const Value.absent() : Value(effDay),
+      effMinute: effMinute == null && nullToAbsent ? const Value.absent() : Value(effMinute),
+      effWeekday: effWeekday == null && nullToAbsent ? const Value.absent() : Value(effWeekday),
+      momentId: momentId == null && nullToAbsent ? const Value.absent() : Value(momentId),
     );
   }
 
@@ -5060,6 +6397,21 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
       software: serializer.fromJson<String?>(json['software']),
       extractor: serializer.fromJson<String?>(json['extractor']),
       extractedAt: serializer.fromJson<int?>(json['extracted_at']),
+      bodySerial: serializer.fromJson<String?>(json['body_serial']),
+      metaStatus: serializer.fromJson<String>(json['meta_status']),
+      metaError: serializer.fromJson<String?>(json['meta_error']),
+      effUtcMs: serializer.fromJson<int?>(json['eff_utc_ms']),
+      effLocal: serializer.fromJson<String?>(json['eff_local']),
+      effOffsetMin: serializer.fromJson<int?>(json['eff_offset_min']),
+      effSource: serializer.fromJson<String?>(json['eff_source']),
+      effConfidence: serializer.fromJson<String?>(json['eff_confidence']),
+      clockCorrectionId: serializer.fromJson<int?>(json['clock_correction_id']),
+      effYear: serializer.fromJson<int?>(json['eff_year']),
+      effMonth: serializer.fromJson<int?>(json['eff_month']),
+      effDay: serializer.fromJson<String?>(json['eff_day']),
+      effMinute: serializer.fromJson<int?>(json['eff_minute']),
+      effWeekday: serializer.fromJson<int?>(json['eff_weekday']),
+      momentId: serializer.fromJson<int?>(json['moment_id']),
     );
   }
   @override
@@ -5094,6 +6446,21 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
       'software': serializer.toJson<String?>(software),
       'extractor': serializer.toJson<String?>(extractor),
       'extracted_at': serializer.toJson<int?>(extractedAt),
+      'body_serial': serializer.toJson<String?>(bodySerial),
+      'meta_status': serializer.toJson<String>(metaStatus),
+      'meta_error': serializer.toJson<String?>(metaError),
+      'eff_utc_ms': serializer.toJson<int?>(effUtcMs),
+      'eff_local': serializer.toJson<String?>(effLocal),
+      'eff_offset_min': serializer.toJson<int?>(effOffsetMin),
+      'eff_source': serializer.toJson<String?>(effSource),
+      'eff_confidence': serializer.toJson<String?>(effConfidence),
+      'clock_correction_id': serializer.toJson<int?>(clockCorrectionId),
+      'eff_year': serializer.toJson<int?>(effYear),
+      'eff_month': serializer.toJson<int?>(effMonth),
+      'eff_day': serializer.toJson<String?>(effDay),
+      'eff_minute': serializer.toJson<int?>(effMinute),
+      'eff_weekday': serializer.toJson<int?>(effWeekday),
+      'moment_id': serializer.toJson<int?>(momentId),
     };
   }
 
@@ -5126,6 +6493,21 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
     Value<String?> software = const Value.absent(),
     Value<String?> extractor = const Value.absent(),
     Value<int?> extractedAt = const Value.absent(),
+    Value<String?> bodySerial = const Value.absent(),
+    String? metaStatus,
+    Value<String?> metaError = const Value.absent(),
+    Value<int?> effUtcMs = const Value.absent(),
+    Value<String?> effLocal = const Value.absent(),
+    Value<int?> effOffsetMin = const Value.absent(),
+    Value<String?> effSource = const Value.absent(),
+    Value<String?> effConfidence = const Value.absent(),
+    Value<int?> clockCorrectionId = const Value.absent(),
+    Value<int?> effYear = const Value.absent(),
+    Value<int?> effMonth = const Value.absent(),
+    Value<String?> effDay = const Value.absent(),
+    Value<int?> effMinute = const Value.absent(),
+    Value<int?> effWeekday = const Value.absent(),
+    Value<int?> momentId = const Value.absent(),
   }) => MediaMetadataRow(
     contentId: contentId ?? this.contentId,
     captureUtcMs: captureUtcMs.present ? captureUtcMs.value : this.captureUtcMs,
@@ -5155,6 +6537,21 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
     software: software.present ? software.value : this.software,
     extractor: extractor.present ? extractor.value : this.extractor,
     extractedAt: extractedAt.present ? extractedAt.value : this.extractedAt,
+    bodySerial: bodySerial.present ? bodySerial.value : this.bodySerial,
+    metaStatus: metaStatus ?? this.metaStatus,
+    metaError: metaError.present ? metaError.value : this.metaError,
+    effUtcMs: effUtcMs.present ? effUtcMs.value : this.effUtcMs,
+    effLocal: effLocal.present ? effLocal.value : this.effLocal,
+    effOffsetMin: effOffsetMin.present ? effOffsetMin.value : this.effOffsetMin,
+    effSource: effSource.present ? effSource.value : this.effSource,
+    effConfidence: effConfidence.present ? effConfidence.value : this.effConfidence,
+    clockCorrectionId: clockCorrectionId.present ? clockCorrectionId.value : this.clockCorrectionId,
+    effYear: effYear.present ? effYear.value : this.effYear,
+    effMonth: effMonth.present ? effMonth.value : this.effMonth,
+    effDay: effDay.present ? effDay.value : this.effDay,
+    effMinute: effMinute.present ? effMinute.value : this.effMinute,
+    effWeekday: effWeekday.present ? effWeekday.value : this.effWeekday,
+    momentId: momentId.present ? momentId.value : this.momentId,
   );
   MediaMetadataRow copyWithCompanion(MediaMetadataCompanion data) {
     return MediaMetadataRow(
@@ -5186,6 +6583,21 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
       software: data.software.present ? data.software.value : this.software,
       extractor: data.extractor.present ? data.extractor.value : this.extractor,
       extractedAt: data.extractedAt.present ? data.extractedAt.value : this.extractedAt,
+      bodySerial: data.bodySerial.present ? data.bodySerial.value : this.bodySerial,
+      metaStatus: data.metaStatus.present ? data.metaStatus.value : this.metaStatus,
+      metaError: data.metaError.present ? data.metaError.value : this.metaError,
+      effUtcMs: data.effUtcMs.present ? data.effUtcMs.value : this.effUtcMs,
+      effLocal: data.effLocal.present ? data.effLocal.value : this.effLocal,
+      effOffsetMin: data.effOffsetMin.present ? data.effOffsetMin.value : this.effOffsetMin,
+      effSource: data.effSource.present ? data.effSource.value : this.effSource,
+      effConfidence: data.effConfidence.present ? data.effConfidence.value : this.effConfidence,
+      clockCorrectionId: data.clockCorrectionId.present ? data.clockCorrectionId.value : this.clockCorrectionId,
+      effYear: data.effYear.present ? data.effYear.value : this.effYear,
+      effMonth: data.effMonth.present ? data.effMonth.value : this.effMonth,
+      effDay: data.effDay.present ? data.effDay.value : this.effDay,
+      effMinute: data.effMinute.present ? data.effMinute.value : this.effMinute,
+      effWeekday: data.effWeekday.present ? data.effWeekday.value : this.effWeekday,
+      momentId: data.momentId.present ? data.momentId.value : this.momentId,
     );
   }
 
@@ -5219,7 +6631,22 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
           ..write('bitrate: $bitrate, ')
           ..write('software: $software, ')
           ..write('extractor: $extractor, ')
-          ..write('extractedAt: $extractedAt')
+          ..write('extractedAt: $extractedAt, ')
+          ..write('bodySerial: $bodySerial, ')
+          ..write('metaStatus: $metaStatus, ')
+          ..write('metaError: $metaError, ')
+          ..write('effUtcMs: $effUtcMs, ')
+          ..write('effLocal: $effLocal, ')
+          ..write('effOffsetMin: $effOffsetMin, ')
+          ..write('effSource: $effSource, ')
+          ..write('effConfidence: $effConfidence, ')
+          ..write('clockCorrectionId: $clockCorrectionId, ')
+          ..write('effYear: $effYear, ')
+          ..write('effMonth: $effMonth, ')
+          ..write('effDay: $effDay, ')
+          ..write('effMinute: $effMinute, ')
+          ..write('effWeekday: $effWeekday, ')
+          ..write('momentId: $momentId')
           ..write(')'))
         .toString();
   }
@@ -5254,6 +6681,21 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
     software,
     extractor,
     extractedAt,
+    bodySerial,
+    metaStatus,
+    metaError,
+    effUtcMs,
+    effLocal,
+    effOffsetMin,
+    effSource,
+    effConfidence,
+    clockCorrectionId,
+    effYear,
+    effMonth,
+    effDay,
+    effMinute,
+    effWeekday,
+    momentId,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -5286,7 +6728,22 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
           other.bitrate == this.bitrate &&
           other.software == this.software &&
           other.extractor == this.extractor &&
-          other.extractedAt == this.extractedAt);
+          other.extractedAt == this.extractedAt &&
+          other.bodySerial == this.bodySerial &&
+          other.metaStatus == this.metaStatus &&
+          other.metaError == this.metaError &&
+          other.effUtcMs == this.effUtcMs &&
+          other.effLocal == this.effLocal &&
+          other.effOffsetMin == this.effOffsetMin &&
+          other.effSource == this.effSource &&
+          other.effConfidence == this.effConfidence &&
+          other.clockCorrectionId == this.clockCorrectionId &&
+          other.effYear == this.effYear &&
+          other.effMonth == this.effMonth &&
+          other.effDay == this.effDay &&
+          other.effMinute == this.effMinute &&
+          other.effWeekday == this.effWeekday &&
+          other.momentId == this.momentId);
 }
 
 class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
@@ -5318,6 +6775,21 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
   final Value<String?> software;
   final Value<String?> extractor;
   final Value<int?> extractedAt;
+  final Value<String?> bodySerial;
+  final Value<String> metaStatus;
+  final Value<String?> metaError;
+  final Value<int?> effUtcMs;
+  final Value<String?> effLocal;
+  final Value<int?> effOffsetMin;
+  final Value<String?> effSource;
+  final Value<String?> effConfidence;
+  final Value<int?> clockCorrectionId;
+  final Value<int?> effYear;
+  final Value<int?> effMonth;
+  final Value<String?> effDay;
+  final Value<int?> effMinute;
+  final Value<int?> effWeekday;
+  final Value<int?> momentId;
   const MediaMetadataCompanion({
     this.contentId = const Value.absent(),
     this.captureUtcMs = const Value.absent(),
@@ -5347,6 +6819,21 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
     this.software = const Value.absent(),
     this.extractor = const Value.absent(),
     this.extractedAt = const Value.absent(),
+    this.bodySerial = const Value.absent(),
+    this.metaStatus = const Value.absent(),
+    this.metaError = const Value.absent(),
+    this.effUtcMs = const Value.absent(),
+    this.effLocal = const Value.absent(),
+    this.effOffsetMin = const Value.absent(),
+    this.effSource = const Value.absent(),
+    this.effConfidence = const Value.absent(),
+    this.clockCorrectionId = const Value.absent(),
+    this.effYear = const Value.absent(),
+    this.effMonth = const Value.absent(),
+    this.effDay = const Value.absent(),
+    this.effMinute = const Value.absent(),
+    this.effWeekday = const Value.absent(),
+    this.momentId = const Value.absent(),
   });
   MediaMetadataCompanion.insert({
     this.contentId = const Value.absent(),
@@ -5377,6 +6864,21 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
     this.software = const Value.absent(),
     this.extractor = const Value.absent(),
     this.extractedAt = const Value.absent(),
+    this.bodySerial = const Value.absent(),
+    this.metaStatus = const Value.absent(),
+    this.metaError = const Value.absent(),
+    this.effUtcMs = const Value.absent(),
+    this.effLocal = const Value.absent(),
+    this.effOffsetMin = const Value.absent(),
+    this.effSource = const Value.absent(),
+    this.effConfidence = const Value.absent(),
+    this.clockCorrectionId = const Value.absent(),
+    this.effYear = const Value.absent(),
+    this.effMonth = const Value.absent(),
+    this.effDay = const Value.absent(),
+    this.effMinute = const Value.absent(),
+    this.effWeekday = const Value.absent(),
+    this.momentId = const Value.absent(),
   });
   static Insertable<MediaMetadataRow> custom({
     Expression<int>? contentId,
@@ -5407,6 +6909,21 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
     Expression<String>? software,
     Expression<String>? extractor,
     Expression<int>? extractedAt,
+    Expression<String>? bodySerial,
+    Expression<String>? metaStatus,
+    Expression<String>? metaError,
+    Expression<int>? effUtcMs,
+    Expression<String>? effLocal,
+    Expression<int>? effOffsetMin,
+    Expression<String>? effSource,
+    Expression<String>? effConfidence,
+    Expression<int>? clockCorrectionId,
+    Expression<int>? effYear,
+    Expression<int>? effMonth,
+    Expression<String>? effDay,
+    Expression<int>? effMinute,
+    Expression<int>? effWeekday,
+    Expression<int>? momentId,
   }) {
     return RawValuesInsertable({
       if (contentId != null) 'content_id': contentId,
@@ -5437,6 +6954,21 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
       if (software != null) 'software': software,
       if (extractor != null) 'extractor': extractor,
       if (extractedAt != null) 'extracted_at': extractedAt,
+      if (bodySerial != null) 'body_serial': bodySerial,
+      if (metaStatus != null) 'meta_status': metaStatus,
+      if (metaError != null) 'meta_error': metaError,
+      if (effUtcMs != null) 'eff_utc_ms': effUtcMs,
+      if (effLocal != null) 'eff_local': effLocal,
+      if (effOffsetMin != null) 'eff_offset_min': effOffsetMin,
+      if (effSource != null) 'eff_source': effSource,
+      if (effConfidence != null) 'eff_confidence': effConfidence,
+      if (clockCorrectionId != null) 'clock_correction_id': clockCorrectionId,
+      if (effYear != null) 'eff_year': effYear,
+      if (effMonth != null) 'eff_month': effMonth,
+      if (effDay != null) 'eff_day': effDay,
+      if (effMinute != null) 'eff_minute': effMinute,
+      if (effWeekday != null) 'eff_weekday': effWeekday,
+      if (momentId != null) 'moment_id': momentId,
     });
   }
 
@@ -5469,6 +7001,21 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
     Value<String?>? software,
     Value<String?>? extractor,
     Value<int?>? extractedAt,
+    Value<String?>? bodySerial,
+    Value<String>? metaStatus,
+    Value<String?>? metaError,
+    Value<int?>? effUtcMs,
+    Value<String?>? effLocal,
+    Value<int?>? effOffsetMin,
+    Value<String?>? effSource,
+    Value<String?>? effConfidence,
+    Value<int?>? clockCorrectionId,
+    Value<int?>? effYear,
+    Value<int?>? effMonth,
+    Value<String?>? effDay,
+    Value<int?>? effMinute,
+    Value<int?>? effWeekday,
+    Value<int?>? momentId,
   }) {
     return MediaMetadataCompanion(
       contentId: contentId ?? this.contentId,
@@ -5499,6 +7046,21 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
       software: software ?? this.software,
       extractor: extractor ?? this.extractor,
       extractedAt: extractedAt ?? this.extractedAt,
+      bodySerial: bodySerial ?? this.bodySerial,
+      metaStatus: metaStatus ?? this.metaStatus,
+      metaError: metaError ?? this.metaError,
+      effUtcMs: effUtcMs ?? this.effUtcMs,
+      effLocal: effLocal ?? this.effLocal,
+      effOffsetMin: effOffsetMin ?? this.effOffsetMin,
+      effSource: effSource ?? this.effSource,
+      effConfidence: effConfidence ?? this.effConfidence,
+      clockCorrectionId: clockCorrectionId ?? this.clockCorrectionId,
+      effYear: effYear ?? this.effYear,
+      effMonth: effMonth ?? this.effMonth,
+      effDay: effDay ?? this.effDay,
+      effMinute: effMinute ?? this.effMinute,
+      effWeekday: effWeekday ?? this.effWeekday,
+      momentId: momentId ?? this.momentId,
     );
   }
 
@@ -5589,6 +7151,51 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
     if (extractedAt.present) {
       map['extracted_at'] = Variable<int>(extractedAt.value);
     }
+    if (bodySerial.present) {
+      map['body_serial'] = Variable<String>(bodySerial.value);
+    }
+    if (metaStatus.present) {
+      map['meta_status'] = Variable<String>(metaStatus.value);
+    }
+    if (metaError.present) {
+      map['meta_error'] = Variable<String>(metaError.value);
+    }
+    if (effUtcMs.present) {
+      map['eff_utc_ms'] = Variable<int>(effUtcMs.value);
+    }
+    if (effLocal.present) {
+      map['eff_local'] = Variable<String>(effLocal.value);
+    }
+    if (effOffsetMin.present) {
+      map['eff_offset_min'] = Variable<int>(effOffsetMin.value);
+    }
+    if (effSource.present) {
+      map['eff_source'] = Variable<String>(effSource.value);
+    }
+    if (effConfidence.present) {
+      map['eff_confidence'] = Variable<String>(effConfidence.value);
+    }
+    if (clockCorrectionId.present) {
+      map['clock_correction_id'] = Variable<int>(clockCorrectionId.value);
+    }
+    if (effYear.present) {
+      map['eff_year'] = Variable<int>(effYear.value);
+    }
+    if (effMonth.present) {
+      map['eff_month'] = Variable<int>(effMonth.value);
+    }
+    if (effDay.present) {
+      map['eff_day'] = Variable<String>(effDay.value);
+    }
+    if (effMinute.present) {
+      map['eff_minute'] = Variable<int>(effMinute.value);
+    }
+    if (effWeekday.present) {
+      map['eff_weekday'] = Variable<int>(effWeekday.value);
+    }
+    if (momentId.present) {
+      map['moment_id'] = Variable<int>(momentId.value);
+    }
     return map;
   }
 
@@ -5622,7 +7229,22 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
           ..write('bitrate: $bitrate, ')
           ..write('software: $software, ')
           ..write('extractor: $extractor, ')
-          ..write('extractedAt: $extractedAt')
+          ..write('extractedAt: $extractedAt, ')
+          ..write('bodySerial: $bodySerial, ')
+          ..write('metaStatus: $metaStatus, ')
+          ..write('metaError: $metaError, ')
+          ..write('effUtcMs: $effUtcMs, ')
+          ..write('effLocal: $effLocal, ')
+          ..write('effOffsetMin: $effOffsetMin, ')
+          ..write('effSource: $effSource, ')
+          ..write('effConfidence: $effConfidence, ')
+          ..write('clockCorrectionId: $clockCorrectionId, ')
+          ..write('effYear: $effYear, ')
+          ..write('effMonth: $effMonth, ')
+          ..write('effDay: $effDay, ')
+          ..write('effMinute: $effMinute, ')
+          ..write('effWeekday: $effWeekday, ')
+          ..write('momentId: $momentId')
           ..write(')'))
         .toString();
   }
@@ -9756,6 +11378,264 @@ class SavedScopesCompanion extends UpdateCompanion<SavedScopeRow> {
   }
 }
 
+class MomentEdits extends Table with TableInfo<MomentEdits, MomentEditRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  MomentEdits(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _momentIdMeta = const VerificationMeta('momentId');
+  late final GeneratedColumn<int> momentId = GeneratedColumn<int>(
+    'moment_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _detailJsonMeta = const VerificationMeta('detailJson');
+  late final GeneratedColumn<String> detailJson = GeneratedColumn<String>(
+    'detail_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, momentId, detailJson, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'moment_edits';
+  @override
+  VerificationContext validateIntegrity(Insertable<MomentEditRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('moment_id')) {
+      context.handle(_momentIdMeta, momentId.isAcceptableOrUnknown(data['moment_id']!, _momentIdMeta));
+    }
+    if (data.containsKey('detail_json')) {
+      context.handle(_detailJsonMeta, detailJson.isAcceptableOrUnknown(data['detail_json']!, _detailJsonMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MomentEditRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MomentEditRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      momentId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}moment_id']),
+      detailJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}detail_json']),
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  MomentEdits createAlias(String alias) {
+    return MomentEdits(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
+  final int id;
+  final int? momentId;
+  final String? detailJson;
+  final int createdAt;
+  const MomentEditRow({required this.id, this.momentId, this.detailJson, required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || momentId != null) {
+      map['moment_id'] = Variable<int>(momentId);
+    }
+    if (!nullToAbsent || detailJson != null) {
+      map['detail_json'] = Variable<String>(detailJson);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  MomentEditsCompanion toCompanion(bool nullToAbsent) {
+    return MomentEditsCompanion(
+      id: Value(id),
+      momentId: momentId == null && nullToAbsent ? const Value.absent() : Value(momentId),
+      detailJson: detailJson == null && nullToAbsent ? const Value.absent() : Value(detailJson),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory MomentEditRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MomentEditRow(
+      id: serializer.fromJson<int>(json['id']),
+      momentId: serializer.fromJson<int?>(json['moment_id']),
+      detailJson: serializer.fromJson<String?>(json['detail_json']),
+      createdAt: serializer.fromJson<int>(json['created_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'moment_id': serializer.toJson<int?>(momentId),
+      'detail_json': serializer.toJson<String?>(detailJson),
+      'created_at': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  MomentEditRow copyWith({
+    int? id,
+    Value<int?> momentId = const Value.absent(),
+    Value<String?> detailJson = const Value.absent(),
+    int? createdAt,
+  }) => MomentEditRow(
+    id: id ?? this.id,
+    momentId: momentId.present ? momentId.value : this.momentId,
+    detailJson: detailJson.present ? detailJson.value : this.detailJson,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  MomentEditRow copyWithCompanion(MomentEditsCompanion data) {
+    return MomentEditRow(
+      id: data.id.present ? data.id.value : this.id,
+      momentId: data.momentId.present ? data.momentId.value : this.momentId,
+      detailJson: data.detailJson.present ? data.detailJson.value : this.detailJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MomentEditRow(')
+          ..write('id: $id, ')
+          ..write('momentId: $momentId, ')
+          ..write('detailJson: $detailJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, momentId, detailJson, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MomentEditRow &&
+          other.id == this.id &&
+          other.momentId == this.momentId &&
+          other.detailJson == this.detailJson &&
+          other.createdAt == this.createdAt);
+}
+
+class MomentEditsCompanion extends UpdateCompanion<MomentEditRow> {
+  final Value<int> id;
+  final Value<int?> momentId;
+  final Value<String?> detailJson;
+  final Value<int> createdAt;
+  const MomentEditsCompanion({
+    this.id = const Value.absent(),
+    this.momentId = const Value.absent(),
+    this.detailJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  MomentEditsCompanion.insert({
+    this.id = const Value.absent(),
+    this.momentId = const Value.absent(),
+    this.detailJson = const Value.absent(),
+    required int createdAt,
+  }) : createdAt = Value(createdAt);
+  static Insertable<MomentEditRow> custom({
+    Expression<int>? id,
+    Expression<int>? momentId,
+    Expression<String>? detailJson,
+    Expression<int>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (momentId != null) 'moment_id': momentId,
+      if (detailJson != null) 'detail_json': detailJson,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  MomentEditsCompanion copyWith({
+    Value<int>? id,
+    Value<int?>? momentId,
+    Value<String?>? detailJson,
+    Value<int>? createdAt,
+  }) {
+    return MomentEditsCompanion(
+      id: id ?? this.id,
+      momentId: momentId ?? this.momentId,
+      detailJson: detailJson ?? this.detailJson,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (momentId.present) {
+      map['moment_id'] = Variable<int>(momentId.value);
+    }
+    if (detailJson.present) {
+      map['detail_json'] = Variable<String>(detailJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MomentEditsCompanion(')
+          ..write('id: $id, ')
+          ..write('momentId: $momentId, ')
+          ..write('detailJson: $detailJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$CatalogDatabase extends GeneratedDatabase {
   _$CatalogDatabase(QueryExecutor e) : super(e);
   $CatalogDatabaseManager get managers => $CatalogDatabaseManager(this);
@@ -9803,12 +11683,17 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     'CREATE INDEX ix_fi_last_seen ON file_instances (source_id, last_seen_scan_id)',
   );
   late final Index ixFiExt = Index('ix_fi_ext', 'CREATE INDEX ix_fi_ext ON file_instances (ext)');
+  late final ClockCorrections clockCorrections = ClockCorrections(this);
+  late final Moments moments = Moments(this);
   late final MediaMetadata mediaMetadata = MediaMetadata(this);
   late final Index ixMmCapture = Index(
     'ix_mm_capture',
     'CREATE INDEX ix_mm_capture ON media_metadata (capture_utc_ms)',
   );
   late final Index ixMmCamera = Index('ix_mm_camera', 'CREATE INDEX ix_mm_camera ON media_metadata (make, model)');
+  late final Index ixMmEff = Index('ix_mm_eff', 'CREATE INDEX ix_mm_eff ON media_metadata (eff_utc_ms)');
+  late final Index ixMmYm = Index('ix_mm_ym', 'CREATE INDEX ix_mm_ym ON media_metadata (eff_year, eff_month)');
+  late final Index ixMmMoment = Index('ix_mm_moment', 'CREATE INDEX ix_mm_moment ON media_metadata (moment_id)');
   late final DateCorrections dateCorrections = DateCorrections(this);
   late final Index ixDcContent = Index(
     'ix_dc_content',
@@ -9833,6 +11718,11 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     'CREATE INDEX ix_ic_instance ON integrity_checks (instance_id, checked_at DESC)',
   );
   late final SavedScopes savedScopes = SavedScopes(this);
+  late final Index ixMomentsStart = Index(
+    'ix_moments_start',
+    'CREATE INDEX ix_moments_start ON moments (start_utc_ms)',
+  );
+  late final MomentEdits momentEdits = MomentEdits(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
@@ -9857,9 +11747,14 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     ixFiHashPending,
     ixFiLastSeen,
     ixFiExt,
+    clockCorrections,
+    moments,
     mediaMetadata,
     ixMmCapture,
     ixMmCamera,
+    ixMmEff,
+    ixMmYm,
+    ixMmMoment,
     dateCorrections,
     ixDcContent,
     operations,
@@ -9875,6 +11770,8 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     integrityChecks,
     ixIcInstance,
     savedScopes,
+    ixMomentsStart,
+    momentEdits,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -9885,6 +11782,10 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     WritePropagation(
       on: TableUpdateQuery.onTableName('scans', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('scan_errors', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('moments', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('media_metadata', kind: UpdateKind.update)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName('selection_sets', limitUpdateKind: UpdateKind.delete),
@@ -13390,6 +15291,607 @@ typedef $FileInstancesProcessedTableManager =
         bool integrityChecksRefs,
       })
     >;
+typedef $ClockCorrectionsCreateCompanionBuilder = ClockCorrectionsCompanion Function({
+  Value<int> id,
+  Value<String?> make,
+  Value<String?> model,
+  Value<String?> bodySerial,
+  Value<int> offsetMs,
+  Value<int> years,
+  Value<int?> periodStartUtcMs,
+  Value<int?> periodEndUtcMs,
+  Value<String?> sourceIdsJson,
+  Value<String?> note,
+  required int createdAt,
+  Value<int?> undoneAt,
+});
+typedef $ClockCorrectionsUpdateCompanionBuilder = ClockCorrectionsCompanion Function({
+  Value<int> id,
+  Value<String?> make,
+  Value<String?> model,
+  Value<String?> bodySerial,
+  Value<int> offsetMs,
+  Value<int> years,
+  Value<int?> periodStartUtcMs,
+  Value<int?> periodEndUtcMs,
+  Value<String?> sourceIdsJson,
+  Value<String?> note,
+  Value<int> createdAt,
+  Value<int?> undoneAt,
+});
+
+final class $ClockCorrectionsReferences
+    extends BaseReferences<_$CatalogDatabase, ClockCorrections, ClockCorrectionRow> {
+  $ClockCorrectionsReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<MediaMetadata, List<MediaMetadataRow>> _mediaMetadataRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.mediaMetadata,
+        aliasName: 'clock_corrections__id__media_metadata__clock_correction_id',
+      );
+
+  $MediaMetadataProcessedTableManager get mediaMetadataRefs {
+    final manager = $MediaMetadataTableManager(
+      $_db,
+      $_db.mediaMetadata,
+    ).filter((f) => f.clockCorrectionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_mediaMetadataRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $ClockCorrectionsFilterComposer extends Composer<_$CatalogDatabase, ClockCorrections> {
+  $ClockCorrectionsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get make => $composableBuilder(column: $table.make, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get model =>
+      $composableBuilder(column: $table.model, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get bodySerial =>
+      $composableBuilder(column: $table.bodySerial, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get offsetMs =>
+      $composableBuilder(column: $table.offsetMs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get years => $composableBuilder(column: $table.years, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get periodStartUtcMs =>
+      $composableBuilder(column: $table.periodStartUtcMs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get periodEndUtcMs =>
+      $composableBuilder(column: $table.periodEndUtcMs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sourceIdsJson =>
+      $composableBuilder(column: $table.sourceIdsJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get note => $composableBuilder(column: $table.note, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get undoneAt =>
+      $composableBuilder(column: $table.undoneAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> mediaMetadataRefs(Expression<bool> Function($MediaMetadataFilterComposer f) f) {
+    final $MediaMetadataFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.mediaMetadata,
+      getReferencedColumn: (t) => t.clockCorrectionId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaMetadataFilterComposer(
+            $db: $db,
+            $table: $db.mediaMetadata,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $ClockCorrectionsOrderingComposer extends Composer<_$CatalogDatabase, ClockCorrections> {
+  $ClockCorrectionsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get make =>
+      $composableBuilder(column: $table.make, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get model =>
+      $composableBuilder(column: $table.model, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get bodySerial =>
+      $composableBuilder(column: $table.bodySerial, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get offsetMs =>
+      $composableBuilder(column: $table.offsetMs, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get years =>
+      $composableBuilder(column: $table.years, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get periodStartUtcMs =>
+      $composableBuilder(column: $table.periodStartUtcMs, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get periodEndUtcMs =>
+      $composableBuilder(column: $table.periodEndUtcMs, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sourceIdsJson =>
+      $composableBuilder(column: $table.sourceIdsJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get undoneAt =>
+      $composableBuilder(column: $table.undoneAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $ClockCorrectionsAnnotationComposer extends Composer<_$CatalogDatabase, ClockCorrections> {
+  $ClockCorrectionsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get make => $composableBuilder(column: $table.make, builder: (column) => column);
+
+  GeneratedColumn<String> get model => $composableBuilder(column: $table.model, builder: (column) => column);
+
+  GeneratedColumn<String> get bodySerial => $composableBuilder(column: $table.bodySerial, builder: (column) => column);
+
+  GeneratedColumn<int> get offsetMs => $composableBuilder(column: $table.offsetMs, builder: (column) => column);
+
+  GeneratedColumn<int> get years => $composableBuilder(column: $table.years, builder: (column) => column);
+
+  GeneratedColumn<int> get periodStartUtcMs =>
+      $composableBuilder(column: $table.periodStartUtcMs, builder: (column) => column);
+
+  GeneratedColumn<int> get periodEndUtcMs =>
+      $composableBuilder(column: $table.periodEndUtcMs, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceIdsJson =>
+      $composableBuilder(column: $table.sourceIdsJson, builder: (column) => column);
+
+  GeneratedColumn<String> get note => $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get undoneAt => $composableBuilder(column: $table.undoneAt, builder: (column) => column);
+
+  Expression<T> mediaMetadataRefs<T extends Object>(Expression<T> Function($MediaMetadataAnnotationComposer a) f) {
+    final $MediaMetadataAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.mediaMetadata,
+      getReferencedColumn: (t) => t.clockCorrectionId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaMetadataAnnotationComposer(
+            $db: $db,
+            $table: $db.mediaMetadata,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $ClockCorrectionsTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          ClockCorrections,
+          ClockCorrectionRow,
+          $ClockCorrectionsFilterComposer,
+          $ClockCorrectionsOrderingComposer,
+          $ClockCorrectionsAnnotationComposer,
+          $ClockCorrectionsCreateCompanionBuilder,
+          $ClockCorrectionsUpdateCompanionBuilder,
+          (ClockCorrectionRow, $ClockCorrectionsReferences),
+          ClockCorrectionRow,
+          PrefetchHooks Function({bool mediaMetadataRefs})
+        > {
+  $ClockCorrectionsTableManager(_$CatalogDatabase db, ClockCorrections table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $ClockCorrectionsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $ClockCorrectionsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $ClockCorrectionsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> make = const Value.absent(),
+                Value<String?> model = const Value.absent(),
+                Value<String?> bodySerial = const Value.absent(),
+                Value<int> offsetMs = const Value.absent(),
+                Value<int> years = const Value.absent(),
+                Value<int?> periodStartUtcMs = const Value.absent(),
+                Value<int?> periodEndUtcMs = const Value.absent(),
+                Value<String?> sourceIdsJson = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int?> undoneAt = const Value.absent(),
+              }) => ClockCorrectionsCompanion(
+                id: id,
+                make: make,
+                model: model,
+                bodySerial: bodySerial,
+                offsetMs: offsetMs,
+                years: years,
+                periodStartUtcMs: periodStartUtcMs,
+                periodEndUtcMs: periodEndUtcMs,
+                sourceIdsJson: sourceIdsJson,
+                note: note,
+                createdAt: createdAt,
+                undoneAt: undoneAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> make = const Value.absent(),
+                Value<String?> model = const Value.absent(),
+                Value<String?> bodySerial = const Value.absent(),
+                Value<int> offsetMs = const Value.absent(),
+                Value<int> years = const Value.absent(),
+                Value<int?> periodStartUtcMs = const Value.absent(),
+                Value<int?> periodEndUtcMs = const Value.absent(),
+                Value<String?> sourceIdsJson = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                required int createdAt,
+                Value<int?> undoneAt = const Value.absent(),
+              }) => ClockCorrectionsCompanion.insert(
+                id: id,
+                make: make,
+                model: model,
+                bodySerial: bodySerial,
+                offsetMs: offsetMs,
+                years: years,
+                periodStartUtcMs: periodStartUtcMs,
+                periodEndUtcMs: periodEndUtcMs,
+                sourceIdsJson: sourceIdsJson,
+                note: note,
+                createdAt: createdAt,
+                undoneAt: undoneAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<ClockCorrections, ClockCorrectionRow>(table),
+                  $ClockCorrectionsReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({mediaMetadataRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (mediaMetadataRefs) db.mediaMetadata],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (mediaMetadataRefs)
+                    await $_getPrefetchedDataByColumns<
+                      ClockCorrectionRow,
+                      ClockCorrections,
+                      MediaMetadataRow,
+                      MediaMetadata
+                    >(
+                      currentTable: table,
+                      referencedTable: $ClockCorrectionsReferences._mediaMetadataRefsTable(db),
+                      managerFromTypedResult: (p0) => $ClockCorrectionsReferences(db, table, p0).mediaMetadataRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'clock_correction_id',
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $ClockCorrectionsProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      ClockCorrections,
+      ClockCorrectionRow,
+      $ClockCorrectionsFilterComposer,
+      $ClockCorrectionsOrderingComposer,
+      $ClockCorrectionsAnnotationComposer,
+      $ClockCorrectionsCreateCompanionBuilder,
+      $ClockCorrectionsUpdateCompanionBuilder,
+      (ClockCorrectionRow, $ClockCorrectionsReferences),
+      ClockCorrectionRow,
+      PrefetchHooks Function({bool mediaMetadataRefs})
+    >;
+typedef $MomentsCreateCompanionBuilder = MomentsCompanion Function({
+  Value<int> id,
+  required String kind,
+  Value<String?> name,
+  required int startUtcMs,
+  required int endUtcMs,
+  Value<int> itemCount,
+  required int createdAt,
+  required int updatedAt,
+});
+typedef $MomentsUpdateCompanionBuilder = MomentsCompanion Function({
+  Value<int> id,
+  Value<String> kind,
+  Value<String?> name,
+  Value<int> startUtcMs,
+  Value<int> endUtcMs,
+  Value<int> itemCount,
+  Value<int> createdAt,
+  Value<int> updatedAt,
+});
+
+final class $MomentsReferences extends BaseReferences<_$CatalogDatabase, Moments, MomentRow> {
+  $MomentsReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<MediaMetadata, List<MediaMetadataRow>> _mediaMetadataRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.mediaMetadata, aliasName: 'moments__id__media_metadata__moment_id');
+
+  $MediaMetadataProcessedTableManager get mediaMetadataRefs {
+    final manager = $MediaMetadataTableManager(
+      $_db,
+      $_db.mediaMetadata,
+    ).filter((f) => f.momentId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_mediaMetadataRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $MomentsFilterComposer extends Composer<_$CatalogDatabase, Moments> {
+  $MomentsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get startUtcMs =>
+      $composableBuilder(column: $table.startUtcMs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get endUtcMs =>
+      $composableBuilder(column: $table.endUtcMs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get itemCount =>
+      $composableBuilder(column: $table.itemCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> mediaMetadataRefs(Expression<bool> Function($MediaMetadataFilterComposer f) f) {
+    final $MediaMetadataFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.mediaMetadata,
+      getReferencedColumn: (t) => t.momentId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaMetadataFilterComposer(
+            $db: $db,
+            $table: $db.mediaMetadata,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $MomentsOrderingComposer extends Composer<_$CatalogDatabase, Moments> {
+  $MomentsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get startUtcMs =>
+      $composableBuilder(column: $table.startUtcMs, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get endUtcMs =>
+      $composableBuilder(column: $table.endUtcMs, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get itemCount =>
+      $composableBuilder(column: $table.itemCount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $MomentsAnnotationComposer extends Composer<_$CatalogDatabase, Moments> {
+  $MomentsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get name => $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get startUtcMs => $composableBuilder(column: $table.startUtcMs, builder: (column) => column);
+
+  GeneratedColumn<int> get endUtcMs => $composableBuilder(column: $table.endUtcMs, builder: (column) => column);
+
+  GeneratedColumn<int> get itemCount => $composableBuilder(column: $table.itemCount, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> mediaMetadataRefs<T extends Object>(Expression<T> Function($MediaMetadataAnnotationComposer a) f) {
+    final $MediaMetadataAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.mediaMetadata,
+      getReferencedColumn: (t) => t.momentId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaMetadataAnnotationComposer(
+            $db: $db,
+            $table: $db.mediaMetadata,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $MomentsTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          Moments,
+          MomentRow,
+          $MomentsFilterComposer,
+          $MomentsOrderingComposer,
+          $MomentsAnnotationComposer,
+          $MomentsCreateCompanionBuilder,
+          $MomentsUpdateCompanionBuilder,
+          (MomentRow, $MomentsReferences),
+          MomentRow,
+          PrefetchHooks Function({bool mediaMetadataRefs})
+        > {
+  $MomentsTableManager(_$CatalogDatabase db, Moments table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $MomentsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $MomentsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $MomentsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<int> startUtcMs = const Value.absent(),
+                Value<int> endUtcMs = const Value.absent(),
+                Value<int> itemCount = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+              }) => MomentsCompanion(
+                id: id,
+                kind: kind,
+                name: name,
+                startUtcMs: startUtcMs,
+                endUtcMs: endUtcMs,
+                itemCount: itemCount,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String kind,
+                Value<String?> name = const Value.absent(),
+                required int startUtcMs,
+                required int endUtcMs,
+                Value<int> itemCount = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+              }) => MomentsCompanion.insert(
+                id: id,
+                kind: kind,
+                name: name,
+                startUtcMs: startUtcMs,
+                endUtcMs: endUtcMs,
+                itemCount: itemCount,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable<Moments, MomentRow>(table), $MomentsReferences(db, table, e))).toList(),
+          prefetchHooksCallback: ({mediaMetadataRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (mediaMetadataRefs) db.mediaMetadata],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (mediaMetadataRefs)
+                    await $_getPrefetchedDataByColumns<MomentRow, Moments, MediaMetadataRow, MediaMetadata>(
+                      currentTable: table,
+                      referencedTable: $MomentsReferences._mediaMetadataRefsTable(db),
+                      managerFromTypedResult: (p0) => $MomentsReferences(db, table, p0).mediaMetadataRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'moment_id',
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $MomentsProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      Moments,
+      MomentRow,
+      $MomentsFilterComposer,
+      $MomentsOrderingComposer,
+      $MomentsAnnotationComposer,
+      $MomentsCreateCompanionBuilder,
+      $MomentsUpdateCompanionBuilder,
+      (MomentRow, $MomentsReferences),
+      MomentRow,
+      PrefetchHooks Function({bool mediaMetadataRefs})
+    >;
 typedef $MediaMetadataCreateCompanionBuilder = MediaMetadataCompanion Function({
   Value<int> contentId,
   Value<int?> captureUtcMs,
@@ -13419,6 +15921,21 @@ typedef $MediaMetadataCreateCompanionBuilder = MediaMetadataCompanion Function({
   Value<String?> software,
   Value<String?> extractor,
   Value<int?> extractedAt,
+  Value<String?> bodySerial,
+  Value<String> metaStatus,
+  Value<String?> metaError,
+  Value<int?> effUtcMs,
+  Value<String?> effLocal,
+  Value<int?> effOffsetMin,
+  Value<String?> effSource,
+  Value<String?> effConfidence,
+  Value<int?> clockCorrectionId,
+  Value<int?> effYear,
+  Value<int?> effMonth,
+  Value<String?> effDay,
+  Value<int?> effMinute,
+  Value<int?> effWeekday,
+  Value<int?> momentId,
 });
 typedef $MediaMetadataUpdateCompanionBuilder = MediaMetadataCompanion Function({
   Value<int> contentId,
@@ -13449,6 +15966,21 @@ typedef $MediaMetadataUpdateCompanionBuilder = MediaMetadataCompanion Function({
   Value<String?> software,
   Value<String?> extractor,
   Value<int?> extractedAt,
+  Value<String?> bodySerial,
+  Value<String> metaStatus,
+  Value<String?> metaError,
+  Value<int?> effUtcMs,
+  Value<String?> effLocal,
+  Value<int?> effOffsetMin,
+  Value<String?> effSource,
+  Value<String?> effConfidence,
+  Value<int?> clockCorrectionId,
+  Value<int?> effYear,
+  Value<int?> effMonth,
+  Value<String?> effDay,
+  Value<int?> effMinute,
+  Value<int?> effWeekday,
+  Value<int?> momentId,
 });
 
 final class $MediaMetadataReferences extends BaseReferences<_$CatalogDatabase, MediaMetadata, MediaMetadataRow> {
@@ -13462,6 +15994,30 @@ final class $MediaMetadataReferences extends BaseReferences<_$CatalogDatabase, M
 
     final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contentIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static ClockCorrections _clockCorrectionIdTable(_$CatalogDatabase db) =>
+      db.clockCorrections.createAlias('media_metadata__clock_correction_id__clock_corrections__id');
+
+  $ClockCorrectionsProcessedTableManager? get clockCorrectionId {
+    final $_column = $_itemColumn<int>('clock_correction_id');
+    if ($_column == null) return null;
+    final manager = $ClockCorrectionsTableManager($_db, $_db.clockCorrections).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_clockCorrectionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static Moments _momentIdTable(_$CatalogDatabase db) =>
+      db.moments.createAlias('media_metadata__moment_id__moments__id');
+
+  $MomentsProcessedTableManager? get momentId {
+    final $_column = $_itemColumn<int>('moment_id');
+    if ($_column == null) return null;
+    final manager = $MomentsTableManager($_db, $_db.moments).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_momentIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
@@ -13549,6 +16105,45 @@ class $MediaMetadataFilterComposer extends Composer<_$CatalogDatabase, MediaMeta
   ColumnFilters<int> get extractedAt =>
       $composableBuilder(column: $table.extractedAt, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get bodySerial =>
+      $composableBuilder(column: $table.bodySerial, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metaStatus =>
+      $composableBuilder(column: $table.metaStatus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metaError =>
+      $composableBuilder(column: $table.metaError, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get effUtcMs =>
+      $composableBuilder(column: $table.effUtcMs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get effLocal =>
+      $composableBuilder(column: $table.effLocal, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get effOffsetMin =>
+      $composableBuilder(column: $table.effOffsetMin, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get effSource =>
+      $composableBuilder(column: $table.effSource, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get effConfidence =>
+      $composableBuilder(column: $table.effConfidence, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get effYear =>
+      $composableBuilder(column: $table.effYear, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get effMonth =>
+      $composableBuilder(column: $table.effMonth, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get effDay =>
+      $composableBuilder(column: $table.effDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get effMinute =>
+      $composableBuilder(column: $table.effMinute, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get effWeekday =>
+      $composableBuilder(column: $table.effWeekday, builder: (column) => ColumnFilters(column));
+
   $ContentsFilterComposer get contentId {
     final $ContentsFilterComposer composer = $composerBuilder(
       composer: this,
@@ -13559,6 +16154,42 @@ class $MediaMetadataFilterComposer extends Composer<_$CatalogDatabase, MediaMeta
           $ContentsFilterComposer(
             $db: $db,
             $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ClockCorrectionsFilterComposer get clockCorrectionId {
+    final $ClockCorrectionsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.clockCorrectionId,
+      referencedTable: $db.clockCorrections,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ClockCorrectionsFilterComposer(
+            $db: $db,
+            $table: $db.clockCorrections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $MomentsFilterComposer get momentId {
+    final $MomentsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.momentId,
+      referencedTable: $db.moments,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MomentsFilterComposer(
+            $db: $db,
+            $table: $db.moments,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
@@ -13656,6 +16287,45 @@ class $MediaMetadataOrderingComposer extends Composer<_$CatalogDatabase, MediaMe
   ColumnOrderings<int> get extractedAt =>
       $composableBuilder(column: $table.extractedAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get bodySerial =>
+      $composableBuilder(column: $table.bodySerial, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metaStatus =>
+      $composableBuilder(column: $table.metaStatus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metaError =>
+      $composableBuilder(column: $table.metaError, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get effUtcMs =>
+      $composableBuilder(column: $table.effUtcMs, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get effLocal =>
+      $composableBuilder(column: $table.effLocal, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get effOffsetMin =>
+      $composableBuilder(column: $table.effOffsetMin, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get effSource =>
+      $composableBuilder(column: $table.effSource, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get effConfidence =>
+      $composableBuilder(column: $table.effConfidence, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get effYear =>
+      $composableBuilder(column: $table.effYear, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get effMonth =>
+      $composableBuilder(column: $table.effMonth, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get effDay =>
+      $composableBuilder(column: $table.effDay, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get effMinute =>
+      $composableBuilder(column: $table.effMinute, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get effWeekday =>
+      $composableBuilder(column: $table.effWeekday, builder: (column) => ColumnOrderings(column));
+
   $ContentsOrderingComposer get contentId {
     final $ContentsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -13666,6 +16336,42 @@ class $MediaMetadataOrderingComposer extends Composer<_$CatalogDatabase, MediaMe
           $ContentsOrderingComposer(
             $db: $db,
             $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ClockCorrectionsOrderingComposer get clockCorrectionId {
+    final $ClockCorrectionsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.clockCorrectionId,
+      referencedTable: $db.clockCorrections,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ClockCorrectionsOrderingComposer(
+            $db: $db,
+            $table: $db.clockCorrections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $MomentsOrderingComposer get momentId {
+    final $MomentsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.momentId,
+      referencedTable: $db.moments,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MomentsOrderingComposer(
+            $db: $db,
+            $table: $db.moments,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
@@ -13741,6 +16447,33 @@ class $MediaMetadataAnnotationComposer extends Composer<_$CatalogDatabase, Media
 
   GeneratedColumn<int> get extractedAt => $composableBuilder(column: $table.extractedAt, builder: (column) => column);
 
+  GeneratedColumn<String> get bodySerial => $composableBuilder(column: $table.bodySerial, builder: (column) => column);
+
+  GeneratedColumn<String> get metaStatus => $composableBuilder(column: $table.metaStatus, builder: (column) => column);
+
+  GeneratedColumn<String> get metaError => $composableBuilder(column: $table.metaError, builder: (column) => column);
+
+  GeneratedColumn<int> get effUtcMs => $composableBuilder(column: $table.effUtcMs, builder: (column) => column);
+
+  GeneratedColumn<String> get effLocal => $composableBuilder(column: $table.effLocal, builder: (column) => column);
+
+  GeneratedColumn<int> get effOffsetMin => $composableBuilder(column: $table.effOffsetMin, builder: (column) => column);
+
+  GeneratedColumn<String> get effSource => $composableBuilder(column: $table.effSource, builder: (column) => column);
+
+  GeneratedColumn<String> get effConfidence =>
+      $composableBuilder(column: $table.effConfidence, builder: (column) => column);
+
+  GeneratedColumn<int> get effYear => $composableBuilder(column: $table.effYear, builder: (column) => column);
+
+  GeneratedColumn<int> get effMonth => $composableBuilder(column: $table.effMonth, builder: (column) => column);
+
+  GeneratedColumn<String> get effDay => $composableBuilder(column: $table.effDay, builder: (column) => column);
+
+  GeneratedColumn<int> get effMinute => $composableBuilder(column: $table.effMinute, builder: (column) => column);
+
+  GeneratedColumn<int> get effWeekday => $composableBuilder(column: $table.effWeekday, builder: (column) => column);
+
   $ContentsAnnotationComposer get contentId {
     final $ContentsAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -13751,6 +16484,42 @@ class $MediaMetadataAnnotationComposer extends Composer<_$CatalogDatabase, Media
           $ContentsAnnotationComposer(
             $db: $db,
             $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ClockCorrectionsAnnotationComposer get clockCorrectionId {
+    final $ClockCorrectionsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.clockCorrectionId,
+      referencedTable: $db.clockCorrections,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ClockCorrectionsAnnotationComposer(
+            $db: $db,
+            $table: $db.clockCorrections,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $MomentsAnnotationComposer get momentId {
+    final $MomentsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.momentId,
+      referencedTable: $db.moments,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MomentsAnnotationComposer(
+            $db: $db,
+            $table: $db.moments,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
@@ -13773,7 +16542,7 @@ class $MediaMetadataTableManager
           $MediaMetadataUpdateCompanionBuilder,
           (MediaMetadataRow, $MediaMetadataReferences),
           MediaMetadataRow,
-          PrefetchHooks Function({bool contentId})
+          PrefetchHooks Function({bool contentId, bool clockCorrectionId, bool momentId})
         > {
   $MediaMetadataTableManager(_$CatalogDatabase db, MediaMetadata table)
     : super(
@@ -13813,6 +16582,21 @@ class $MediaMetadataTableManager
                 Value<String?> software = const Value.absent(),
                 Value<String?> extractor = const Value.absent(),
                 Value<int?> extractedAt = const Value.absent(),
+                Value<String?> bodySerial = const Value.absent(),
+                Value<String> metaStatus = const Value.absent(),
+                Value<String?> metaError = const Value.absent(),
+                Value<int?> effUtcMs = const Value.absent(),
+                Value<String?> effLocal = const Value.absent(),
+                Value<int?> effOffsetMin = const Value.absent(),
+                Value<String?> effSource = const Value.absent(),
+                Value<String?> effConfidence = const Value.absent(),
+                Value<int?> clockCorrectionId = const Value.absent(),
+                Value<int?> effYear = const Value.absent(),
+                Value<int?> effMonth = const Value.absent(),
+                Value<String?> effDay = const Value.absent(),
+                Value<int?> effMinute = const Value.absent(),
+                Value<int?> effWeekday = const Value.absent(),
+                Value<int?> momentId = const Value.absent(),
               }) => MediaMetadataCompanion(
                 contentId: contentId,
                 captureUtcMs: captureUtcMs,
@@ -13842,6 +16626,21 @@ class $MediaMetadataTableManager
                 software: software,
                 extractor: extractor,
                 extractedAt: extractedAt,
+                bodySerial: bodySerial,
+                metaStatus: metaStatus,
+                metaError: metaError,
+                effUtcMs: effUtcMs,
+                effLocal: effLocal,
+                effOffsetMin: effOffsetMin,
+                effSource: effSource,
+                effConfidence: effConfidence,
+                clockCorrectionId: clockCorrectionId,
+                effYear: effYear,
+                effMonth: effMonth,
+                effDay: effDay,
+                effMinute: effMinute,
+                effWeekday: effWeekday,
+                momentId: momentId,
               ),
           createCompanionCallback:
               ({
@@ -13873,6 +16672,21 @@ class $MediaMetadataTableManager
                 Value<String?> software = const Value.absent(),
                 Value<String?> extractor = const Value.absent(),
                 Value<int?> extractedAt = const Value.absent(),
+                Value<String?> bodySerial = const Value.absent(),
+                Value<String> metaStatus = const Value.absent(),
+                Value<String?> metaError = const Value.absent(),
+                Value<int?> effUtcMs = const Value.absent(),
+                Value<String?> effLocal = const Value.absent(),
+                Value<int?> effOffsetMin = const Value.absent(),
+                Value<String?> effSource = const Value.absent(),
+                Value<String?> effConfidence = const Value.absent(),
+                Value<int?> clockCorrectionId = const Value.absent(),
+                Value<int?> effYear = const Value.absent(),
+                Value<int?> effMonth = const Value.absent(),
+                Value<String?> effDay = const Value.absent(),
+                Value<int?> effMinute = const Value.absent(),
+                Value<int?> effWeekday = const Value.absent(),
+                Value<int?> momentId = const Value.absent(),
               }) => MediaMetadataCompanion.insert(
                 contentId: contentId,
                 captureUtcMs: captureUtcMs,
@@ -13902,11 +16716,26 @@ class $MediaMetadataTableManager
                 software: software,
                 extractor: extractor,
                 extractedAt: extractedAt,
+                bodySerial: bodySerial,
+                metaStatus: metaStatus,
+                metaError: metaError,
+                effUtcMs: effUtcMs,
+                effLocal: effLocal,
+                effOffsetMin: effOffsetMin,
+                effSource: effSource,
+                effConfidence: effConfidence,
+                clockCorrectionId: clockCorrectionId,
+                effYear: effYear,
+                effMonth: effMonth,
+                effDay: effDay,
+                effMinute: effMinute,
+                effWeekday: effWeekday,
+                momentId: momentId,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable<MediaMetadata, MediaMetadataRow>(table), $MediaMetadataReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({contentId = false}) {
+          prefetchHooksCallback: ({contentId = false, clockCorrectionId = false, momentId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -13934,6 +16763,22 @@ class $MediaMetadataTableManager
                         referencedColumn: $MediaMetadataReferences._contentIdTable(db).id,
                       ) as T;
                     }
+                    if (clockCorrectionId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.clockCorrectionId,
+                        referencedTable: $MediaMetadataReferences._clockCorrectionIdTable(db),
+                        referencedColumn: $MediaMetadataReferences._clockCorrectionIdTable(db).id,
+                      ) as T;
+                    }
+                    if (momentId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.momentId,
+                        referencedTable: $MediaMetadataReferences._momentIdTable(db),
+                        referencedColumn: $MediaMetadataReferences._momentIdTable(db).id,
+                      ) as T;
+                    }
 
                     return state;
                   },
@@ -13958,7 +16803,7 @@ typedef $MediaMetadataProcessedTableManager =
       $MediaMetadataUpdateCompanionBuilder,
       (MediaMetadataRow, $MediaMetadataReferences),
       MediaMetadataRow,
-      PrefetchHooks Function({bool contentId})
+      PrefetchHooks Function({bool contentId, bool clockCorrectionId, bool momentId})
     >;
 typedef $DateCorrectionsCreateCompanionBuilder = DateCorrectionsCompanion Function({
   Value<int> id,
@@ -17581,6 +20426,138 @@ typedef $SavedScopesProcessedTableManager =
       SavedScopeRow,
       PrefetchHooks Function()
     >;
+typedef $MomentEditsCreateCompanionBuilder = MomentEditsCompanion Function({
+  Value<int> id,
+  Value<int?> momentId,
+  Value<String?> detailJson,
+  required int createdAt,
+});
+typedef $MomentEditsUpdateCompanionBuilder = MomentEditsCompanion Function({
+  Value<int> id,
+  Value<int?> momentId,
+  Value<String?> detailJson,
+  Value<int> createdAt,
+});
+
+class $MomentEditsFilterComposer extends Composer<_$CatalogDatabase, MomentEdits> {
+  $MomentEditsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get momentId =>
+      $composableBuilder(column: $table.momentId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get detailJson =>
+      $composableBuilder(column: $table.detailJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $MomentEditsOrderingComposer extends Composer<_$CatalogDatabase, MomentEdits> {
+  $MomentEditsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get momentId =>
+      $composableBuilder(column: $table.momentId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get detailJson =>
+      $composableBuilder(column: $table.detailJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $MomentEditsAnnotationComposer extends Composer<_$CatalogDatabase, MomentEdits> {
+  $MomentEditsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get momentId => $composableBuilder(column: $table.momentId, builder: (column) => column);
+
+  GeneratedColumn<String> get detailJson => $composableBuilder(column: $table.detailJson, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $MomentEditsTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          MomentEdits,
+          MomentEditRow,
+          $MomentEditsFilterComposer,
+          $MomentEditsOrderingComposer,
+          $MomentEditsAnnotationComposer,
+          $MomentEditsCreateCompanionBuilder,
+          $MomentEditsUpdateCompanionBuilder,
+          (MomentEditRow, BaseReferences<_$CatalogDatabase, MomentEdits, MomentEditRow>),
+          MomentEditRow,
+          PrefetchHooks Function()
+        > {
+  $MomentEditsTableManager(_$CatalogDatabase db, MomentEdits table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $MomentEditsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $MomentEditsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $MomentEditsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int?> momentId = const Value.absent(),
+            Value<String?> detailJson = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+          }) => MomentEditsCompanion(id: id, momentId: momentId, detailJson: detailJson, createdAt: createdAt),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int?> momentId = const Value.absent(),
+            Value<String?> detailJson = const Value.absent(),
+            required int createdAt,
+          }) => MomentEditsCompanion.insert(id: id, momentId: momentId, detailJson: detailJson, createdAt: createdAt),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<MomentEdits, MomentEditRow>(table),
+                  BaseReferences<_$CatalogDatabase, MomentEdits, MomentEditRow>(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $MomentEditsProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      MomentEdits,
+      MomentEditRow,
+      $MomentEditsFilterComposer,
+      $MomentEditsOrderingComposer,
+      $MomentEditsAnnotationComposer,
+      $MomentEditsCreateCompanionBuilder,
+      $MomentEditsUpdateCompanionBuilder,
+      (MomentEditRow, BaseReferences<_$CatalogDatabase, MomentEdits, MomentEditRow>),
+      MomentEditRow,
+      PrefetchHooks Function()
+    >;
 
 class $CatalogDatabaseManager {
   final _$CatalogDatabase _db;
@@ -17594,6 +20571,8 @@ class $CatalogDatabaseManager {
   $ScanErrorsTableManager get scanErrors => $ScanErrorsTableManager(_db, _db.scanErrors);
   $ContentsTableManager get contents => $ContentsTableManager(_db, _db.contents);
   $FileInstancesTableManager get fileInstances => $FileInstancesTableManager(_db, _db.fileInstances);
+  $ClockCorrectionsTableManager get clockCorrections => $ClockCorrectionsTableManager(_db, _db.clockCorrections);
+  $MomentsTableManager get moments => $MomentsTableManager(_db, _db.moments);
   $MediaMetadataTableManager get mediaMetadata => $MediaMetadataTableManager(_db, _db.mediaMetadata);
   $DateCorrectionsTableManager get dateCorrections => $DateCorrectionsTableManager(_db, _db.dateCorrections);
   $OperationsTableManager get operations => $OperationsTableManager(_db, _db.operations);
@@ -17606,4 +20585,5 @@ class $CatalogDatabaseManager {
   $ContentTagsTableManager get contentTags => $ContentTagsTableManager(_db, _db.contentTags);
   $IntegrityChecksTableManager get integrityChecks => $IntegrityChecksTableManager(_db, _db.integrityChecks);
   $SavedScopesTableManager get savedScopes => $SavedScopesTableManager(_db, _db.savedScopes);
+  $MomentEditsTableManager get momentEdits => $MomentEditsTableManager(_db, _db.momentEdits);
 }

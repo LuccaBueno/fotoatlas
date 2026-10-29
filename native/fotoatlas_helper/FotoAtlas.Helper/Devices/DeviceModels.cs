@@ -51,6 +51,13 @@ internal interface IDeviceBackend
     /// tamanho ou a data mudarem durante a leitura, ou se o tamanho não for o esperado.
     /// </summary>
     DeviceHashResult Hash(string deviceId, string objectId, long? expectedSize, Action<long> onProgress, CancellationToken ct);
+
+    /// <summary>
+    /// Lê no máximo <paramref name="maxBytes"/> do começo do objeto (o EXIF fica no
+    /// início das fotos) e escreve em <paramref name="destination"/>. Só leitura no
+    /// dispositivo; quem abre o destino é o host, com as regras de escrita (§6).
+    /// </summary>
+    long ReadHead(string deviceId, string objectId, int maxBytes, Stream destination, CancellationToken ct);
 }
 
 internal static class DeviceKinds

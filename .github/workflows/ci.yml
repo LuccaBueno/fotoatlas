@@ -37,6 +37,15 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+      # ExifTool e FFmpeg (versão e SHA-256 fixados no script); cache por versão do script.
+      - name: Ferramentas de metadados — cache
+        uses: actions/cache@v6
+        with:
+          path: third_party/bin
+          key: tools-${{ hashFiles('tools/scripts/get-tools.ps1') }}
+      - name: Ferramentas de metadados — baixar (ExifTool, FFmpeg LGPL)
+        shell: pwsh
+        run: ./tools/scripts/get-tools.ps1
       - name: Build do helper (para o teste com o helper real)
         run: dotnet build native/fotoatlas_helper/fotoatlas_helper.slnx
       - uses: subosito/flutter-action@v2
@@ -68,6 +77,8 @@ jobs:
         env:
           # Runners do GitHub são administradores: VHD com troca de letra (NTFS e FAT32).
           FOTOATLAS_VHD_TESTS: "1"
+          # Testes com ExifTool/ffprobe reais não podem ser pulados na CI.
+          FOTOATLAS_REQUIRE_TOOLS: "1"
         run: dart test -x perf --reporter expanded
       # Sozinho: gerar 50 mil arquivos satura o disco do runner e atrasava os
       # outros testes (gravações com synchronous=FULL) até o limite de 30 s.

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using FotoAtlas.Helper.Devices;
+using FotoAtlas.Helper.Thumbnails;
 using FotoAtlas.Helper.Volumes;
 
 namespace FotoAtlas.Helper.Protocol;
@@ -15,7 +16,13 @@ internal sealed class HelperException(string code, string message, bool retryabl
 }
 
 /// <summary>Host JSON-lines: lê pedidos de <c>input</c>, escreve respostas e eventos em <c>output</c>.</summary>
-internal sealed class ProtocolHost(TextReader input, TextWriter output, IVolumeSource volumes, TextWriter? log = null, IDeviceBackend? devices = null)
+internal sealed class ProtocolHost(
+    TextReader input,
+    TextWriter output,
+    IVolumeSource volumes,
+    TextWriter? log = null,
+    IDeviceBackend? devices = null,
+    string? cacheDir = null)
 {
     public const int ProtocolVersion = 1;
     public const int MaxLineLength = 1 << 20;
@@ -140,6 +147,10 @@ internal sealed class ProtocolHost(TextReader input, TextWriter output, IVolumeS
                 return await ListChildrenAsync(id, parameters, ct);
             case "devices.hashObject":
                 return await HashObjectAsync(id, parameters, ct);
+            case "devices.readHead":
+                return await ReadHeadAsync(parameters, ct);
+            case "thumbnails.get":
+                return await ThumbnailAsync(parameters, ct);
             default:
                 throw new HelperException("bad_request", $"Método desconhecido: '{method}'.");
         }
@@ -196,6 +207,56 @@ internal sealed class ProtocolHost(TextReader input, TextWriter output, IVolumeS
         };
     }
 
+
+    /// <summary>Abre um arquivo novo no cache (§6): dentro do <c>--cache-dir</c>, nunca sobrescreve.</summary>
+    private FileStream CreateInCache(string outPath)
+    {
+        if (!WritePolicy.IsWithinCacheDir(outPath, cacheDir))
+        {
+            throw new HelperException("write_refused", "Destino fora da pasta de cache do FotoAtlas.");
+        }
+        try
+        {
+            return new FileStream(outPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        }
+        catch (IOException) when (File.Exists(outPath))
+        {
+            throw new HelperException("already_exists", "O arquivo de destino já existe (nunca sobrescrevemos).");
+        }
+    }
+
+    private async Task<JsonNode> ReadHeadAsync(JsonObject parameters, CancellationToken ct)
+    {
+        var deviceId = RequiredString(parameters, "deviceId");
+        var objectId = RequiredString(parameters, "objectId");
+        var outPath = RequiredString(parameters, "outPath");
+        var maxBytes = parameters["maxBytes"]?.GetValueKind() == JsonValueKind.Number ? parameters["maxBytes"]!.GetValue<int>() : 256 * 1024;
+        if (maxBytes is < 1 or > 16 * 1024 * 1024) throw new HelperException("bad_request", "maxBytes fora da faixa (1 a 16 MB).");
+        var device = Devices;
+        await using var file = CreateInCache(outPath);
+        var bytes = await Task.Run(() => device.ReadHead(deviceId, objectId, maxBytes, file, ct), ct);
+        await file.FlushAsync(ct);
+        return new JsonObject { ["bytes"] = bytes };
+    }
+
+    private async Task<JsonNode> ThumbnailAsync(JsonObject parameters, CancellationToken ct)
+    {
+        var path = RequiredString(parameters, "path");
+        var outPath = RequiredString(parameters, "outPath");
+        var size = parameters["size"]?.GetValueKind() == JsonValueKind.Number ? parameters["size"]!.GetValue<int>() : 256;
+        if (size is < 16 or > 1024) throw new HelperException("bad_request", "size fora da faixa (16 a 1024).");
+        // Confere o destino antes de ler a origem.
+        if (!WritePolicy.IsWithinCacheDir(outPath, cacheDir))
+        {
+            throw new HelperException("write_refused", "Destino fora da pasta de cache do FotoAtlas.");
+        }
+        var (jpeg, width, height) = await Task.Run(() => ShellThumbnailer.Get(path, size), ct);
+        await using (var file = CreateInCache(outPath))
+        {
+            await file.WriteAsync(jpeg, ct);
+        }
+        return new JsonObject { ["width"] = width, ["height"] = height, ["bytes"] = jpeg.Length };
+    }
     private void EmitError(string? id, string code, string message, bool retryable) =>
         Emit(new JsonObject
         {

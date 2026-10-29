@@ -201,6 +201,45 @@ internal sealed unsafe class WpdBackend : IDeviceBackend
             }
         });
 
+
+    public long ReadHead(string deviceId, string objectId, int maxBytes, Stream destination, CancellationToken ct) =>
+        WithDevice(deviceId, ct, slot =>
+        {
+            slot.Content!.Transfer(out var resources);
+            try
+            {
+                resources.GetStream(objectId, WpdKeys.ResourceDefault, StgmRead, out var optimal, out var rawStream);
+                var stream = new NativeReadStream(rawStream);
+                var buffer = new byte[Math.Clamp((int)optimal, 64 * 1024, 1024 * 1024)];
+                long total = 0;
+                try
+                {
+                    fixed (byte* p = buffer)
+                    {
+                        while (total < maxBytes)
+                        {
+                            ct.ThrowIfCancellationRequested();
+                            var want = (uint)Math.Min(buffer.Length, maxBytes - total);
+                            var hr = stream.Read(p, want, out var read);
+                            if (hr < 0) Marshal.ThrowExceptionForHR(hr);
+                            if (read == 0) break;
+                            destination.Write(buffer, 0, (int)read);
+                            total += read;
+                        }
+                    }
+                }
+                finally
+                {
+                    // Liberar o stream na hora (senão o aparelho fica preso, ADR 0012).
+                    stream.Release();
+                }
+                return total;
+            }
+            finally
+            {
+                Release(resources);
+            }
+        });
     private (long? Size, long? Modified) SizeAndDate(Slot slot, string objectId)
     {
         var keys = KeyCollection(WpdKeys.Size, WpdKeys.DateModified);

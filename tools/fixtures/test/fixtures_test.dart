@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fotoatlas_fixtures/fotoatlas_fixtures.dart';
+import 'package:fotoatlas_fixtures/media_fixtures.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -50,5 +51,17 @@ void main() {
     final onHd = File(p.join(demo.hdDir, 'Backup do celular', '2024', '2024-05', 'foto praia.jpg'));
     expect(blob.readAsBytesSync(), onHd.readAsBytesSync());
     expect(File(p.join(demo.devicesDir, 'iphone.json')).existsSync(), isTrue);
+  });
+
+  test('mídia com metadados: JPEG com EXIF depois do SOI, MP4 com ftyp/moov, determinísticos', () {
+    final spec = ExifSpec(dateTimeOriginal: DateTime(2024, 5, 1, 14, 3, 12), make: 'Canon', offset: '-03:00');
+    final jpeg = jpegWithExif(spec);
+    expect(jpeg.sublist(0, 4), [0xFF, 0xD8, 0xFF, 0xE1]);
+    expect(ascii.decode(jpeg.sublist(6, 10)), 'Exif');
+    expect(jpeg, jpegWithExif(spec), reason: 'determinístico');
+    expect(jpegWithExif(const ExifSpec(uniqueId: 'a')), isNot(jpegWithExif(const ExifSpec(uniqueId: 'b'))));
+    final mp4 = mp4WithCreationTime(DateTime.utc(2024, 5, 1));
+    expect(ascii.decode(mp4.sublist(4, 8)), 'ftyp');
+    expect(mp4, isNot(mp4WithCreationTime(DateTime.utc(2024, 5, 1), salt: 1)));
   });
 }

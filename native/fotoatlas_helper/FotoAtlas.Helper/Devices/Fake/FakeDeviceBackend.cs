@@ -107,6 +107,24 @@ internal sealed class FakeDeviceBackend(string directory) : IDeviceBackend
         return new DeviceHashResult(Convert.ToHexStringLower(SHA256.HashData(bytes)), bytes.LongLength, file.Modified);
     }
 
+    public long ReadHead(string deviceId, string objectId, int maxBytes, Stream destination, CancellationToken ct)
+    {
+        var device = Connected(deviceId);
+        if (device.Info.Status != "ok") throw new HelperException("device_locked", "Dispositivo bloqueado (simulado).", retryable: true);
+        var (index, path) = Parse(device, objectId);
+        var file = device.Storages[index].Files.FirstOrDefault(f => f.Path == path)
+            ?? throw new HelperException("not_found", "Arquivo não existe (simulado).");
+        var bytes = file.Content();
+        if (device.ReadDelayMs > 0)
+        {
+            Task.Delay(device.ReadDelayMs, ct).Wait(ct);
+            Connected(deviceId);
+        }
+        var n = Math.Min(bytes.Length, maxBytes);
+        destination.Write(bytes, 0, n);
+        return n;
+    }
+
     private FakeDevice Connected(string deviceId)
     {
         var device = LoadAll().FirstOrDefault(d => d.Info.DeviceId == deviceId);

@@ -9,7 +9,7 @@ part 'catalog_database.g.dart';
 class CatalogDatabase extends _$CatalogDatabase {
   CatalogDatabase(super.e);
 
-  static const int currentSchemaVersion = 3;
+  static const int currentSchemaVersion = 4;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -28,6 +28,34 @@ class CatalogDatabase extends _$CatalogDatabase {
         await m.addColumn(sources, sources.deviceSerial);
         await m.addColumn(sources, sources.devicePlatform);
         await m.addColumn(fileInstances, fileInstances.deviceObjectId);
+      }
+      if (from < 4) {
+        await m.createTable(moments);
+        await m.createIndex(ixMomentsStart);
+        await m.createTable(momentEdits);
+        await m.createTable(clockCorrections);
+        for (final c in [
+          mediaMetadata.bodySerial,
+          mediaMetadata.metaStatus,
+          mediaMetadata.metaError,
+          mediaMetadata.effUtcMs,
+          mediaMetadata.effLocal,
+          mediaMetadata.effOffsetMin,
+          mediaMetadata.effSource,
+          mediaMetadata.effConfidence,
+          mediaMetadata.clockCorrectionId,
+          mediaMetadata.effYear,
+          mediaMetadata.effMonth,
+          mediaMetadata.effDay,
+          mediaMetadata.effMinute,
+          mediaMetadata.effWeekday,
+          mediaMetadata.momentId,
+        ]) {
+          await m.addColumn(mediaMetadata, c);
+        }
+        await m.createIndex(ixMmEff);
+        await m.createIndex(ixMmYm);
+        await m.createIndex(ixMmMoment);
       }
     },
   );

@@ -1,4 +1,4 @@
--- Schema do catálogo (v3). Fonte da verdade: docs/schema-v1.md (v1 + §7, mudanças da v2 e da v3).
+-- Schema do catálogo (v4). Fonte da verdade: docs/schema-v1.md (v1 + §7, mudanças da v2, v3 e v4).
 -- Datas do app: ms Unix UTC. mtime/ctime: FILETIME bruto (100 ns desde 1601).
 
 CREATE TABLE app_meta (
@@ -154,10 +154,33 @@ CREATE TABLE media_metadata (
   duration_ms INTEGER, fps REAL, video_codec TEXT, audio_codec TEXT, bitrate INTEGER,
   software TEXT,
   extractor         TEXT,
-  extracted_at      INTEGER
+  extracted_at      INTEGER,
+  -- v4 (Fase 4): número de série do corpo da câmera (correção de relógio por dispositivo).
+  body_serial       TEXT,
+  -- v4: 'full' = arquivo lido (EXIF/vídeo); 'partial' = só nome e data do arquivo
+  -- (nenhuma cópia acessível ainda); 'error' = leitura falhou (meta_error diz o motivo).
+  meta_status       TEXT NOT NULL DEFAULT 'full' CHECK (meta_status IN ('full','partial','error')),
+  meta_error        TEXT,
+  -- v4: data EFETIVA = extraída (capture_*) + correção de relógio + correção manual.
+  -- É a que a linha do tempo, os momentos e os filtros usam (eff_* derivadas, para índices).
+  eff_utc_ms          INTEGER,
+  eff_local           TEXT,
+  eff_offset_min      INTEGER,
+  eff_source          TEXT,
+  eff_confidence      TEXT,
+  clock_correction_id INTEGER REFERENCES clock_corrections(id),
+  eff_year            INTEGER,
+  eff_month           INTEGER,
+  eff_day             TEXT,               -- 'AAAA-MM-DD' (hora local)
+  eff_minute          INTEGER,            -- minuto do dia (0..1439), hora local
+  eff_weekday         INTEGER,            -- 1 = segunda … 7 = domingo
+  moment_id           INTEGER REFERENCES moments(id) ON DELETE SET NULL
 ) AS MediaMetadataRow;
 CREATE INDEX ix_mm_capture ON media_metadata(capture_utc_ms);
 CREATE INDEX ix_mm_camera  ON media_metadata(make, model);
+CREATE INDEX ix_mm_eff     ON media_metadata(eff_utc_ms);
+CREATE INDEX ix_mm_ym      ON media_metadata(eff_year, eff_month);
+CREATE INDEX ix_mm_moment  ON media_metadata(moment_id);
 
 CREATE TABLE date_corrections (
   id             INTEGER NOT NULL PRIMARY KEY,
@@ -283,3 +306,44 @@ CREATE TABLE saved_scopes (
   created_at      INTEGER NOT NULL,
   updated_at      INTEGER NOT NULL
 ) AS SavedScopeRow;
+
+-- v4 (Fase 4): momentos (spec §8.3). 'auto' = recalculado pelo intervalo sem fotos;
+-- 'edited' = nomeado, juntado ou separado pelo usuário: o intervalo fica fixo e
+-- nunca é desfeito por um recálculo. Só catálogo; nunca toca em arquivos.
+CREATE TABLE moments (
+  id           INTEGER NOT NULL PRIMARY KEY,
+  kind         TEXT NOT NULL CHECK (kind IN ('auto','edited')),
+  name         TEXT,
+  start_utc_ms INTEGER NOT NULL,
+  end_utc_ms   INTEGER NOT NULL,
+  item_count   INTEGER NOT NULL DEFAULT 0,
+  created_at   INTEGER NOT NULL,
+  updated_at   INTEGER NOT NULL
+) AS MomentRow;
+CREATE INDEX ix_moments_start ON moments(start_utc_ms);
+
+-- v4: histórico das edições de momentos (nomear, juntar, separar, voltar ao automático).
+CREATE TABLE moment_edits (
+  id          INTEGER NOT NULL PRIMARY KEY,
+  moment_id   INTEGER,
+  action      TEXT NOT NULL CHECK (action IN ('rename','merge','split','reset')),
+  detail_json TEXT,
+  created_at  INTEGER NOT NULL
+) AS MomentEditRow;
+
+-- v4: correção de relógio por dispositivo de captura (spec §8.2). Aplicada só no
+-- catálogo, sobre a data extraída; desfeita marcando undone_at (fica no histórico).
+CREATE TABLE clock_corrections (
+  id                  INTEGER NOT NULL PRIMARY KEY,
+  make                TEXT,
+  model               TEXT,
+  body_serial         TEXT,
+  offset_ms           INTEGER NOT NULL DEFAULT 0,
+  years               INTEGER NOT NULL DEFAULT 0,  -- "ano errado": soma anos no calendário
+  period_start_utc_ms INTEGER,                     -- opcional: só itens neste período (data extraída)
+  period_end_utc_ms   INTEGER,
+  source_ids_json     TEXT,                        -- opcional: só itens com cópia nestas fontes
+  note                TEXT,
+  created_at          INTEGER NOT NULL,
+  undone_at           INTEGER
+) AS ClockCorrectionRow;

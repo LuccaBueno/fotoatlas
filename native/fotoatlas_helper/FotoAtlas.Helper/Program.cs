@@ -26,7 +26,9 @@ internal static class Program
         var fakeDevices = ArgValue(args, "--fake-devices");
         IDeviceBackend devices = fakeDevices is not null ? new FakeDeviceBackend(Path.GetFullPath(fakeDevices)) : new WpdBackend();
         if (fakeDevices is not null) Console.Error.WriteLine($"[helper] celulares simulados de {fakeDevices}");
-        var host = new ProtocolHost(stdin, stdout, new VolumeEnumerator(), Console.Error, devices);
+        // --cache-dir: única pasta onde o helper grava (miniaturas e leituras parciais do celular).
+        var cacheDir = ArgValue(args, "--cache-dir");
+        var host = new ProtocolHost(stdin, stdout, new VolumeEnumerator(), Console.Error, devices, cacheDir);
 
         var waiters = new List<Task> { host.RunAsync(), host.ShutdownRequested };
         if (int.TryParse(ArgValue(args, "--parent-pid"), out var parentPid))
