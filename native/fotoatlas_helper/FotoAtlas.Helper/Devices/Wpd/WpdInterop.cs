@@ -87,17 +87,41 @@ internal partial interface IPortableDeviceResources
     void Reserved_GetResourceAttributes();
 
     /// <param name="mode">STGM_READ (0). Nenhum outro modo é usado.</param>
-    void GetStream(string objectId, in PropertyKey key, uint mode, out uint optimalBufferSize, out ISequentialStreamRead stream);
+    /// <param name="stream">IStream cru: quem chama lê com <see cref="NativeReadStream"/> e o libera.</param>
+    void GetStream(string objectId, in PropertyKey key, uint mode, out uint optimalBufferSize, out nint stream);
     // Depois daqui: Delete, CreateResource — propositalmente ausentes.
 }
 
-/// <summary>IStream visto só pelo primeiro método (ISequentialStream::Read).</summary>
-[GeneratedComInterface]
-[Guid("0000000c-0000-0000-C000-000000000046")]
-internal unsafe partial interface ISequentialStreamRead
+/// <summary>
+/// IStream do WPD usado só pelo <c>ISequentialStream::Read</c> (posição 3 da vtable).
+/// Ponteiro cru com <c>Release</c> explícito: o MTP só aceita uma transferência por
+/// vez, e o stream precisa ser fechado de fato antes do próximo arquivo.
+/// </summary>
+internal unsafe sealed class NativeReadStream(nint pointer) : IDisposable
 {
-    [PreserveSig]
-    int Read(byte* buffer, uint count, out uint read);
+    private nint _pointer = pointer;
+
+    public int Read(byte* buffer, uint count, out uint read)
+    {
+        ObjectDisposedException.ThrowIf(_pointer == 0, this);
+        var vtable = *(nint**)_pointer;
+        var fn = (delegate* unmanaged[Stdcall]<nint, byte*, uint, uint*, int>)vtable[3];
+        uint n = 0;
+        var hr = fn(_pointer, buffer, count, &n);
+        read = n;
+        return hr;
+    }
+
+    /// <summary>Contagem de referências que sobrou (0 = fechado).</summary>
+    public int Release()
+    {
+        if (_pointer == 0) return 0;
+        var left = Marshal.Release(_pointer);
+        _pointer = 0;
+        return left;
+    }
+
+    public void Dispose() => Release();
 }
 
 /// <summary>

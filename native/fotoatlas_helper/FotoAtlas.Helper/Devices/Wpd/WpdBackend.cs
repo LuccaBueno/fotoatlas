@@ -144,10 +144,14 @@ internal sealed unsafe class WpdBackend : IDeviceBackend
             {
                 throw new HelperException("changed_during_read", "O arquivo mudou depois do escaneamento. Escaneie de novo.");
             }
+            var step = "Transfer";
             slot.Content!.Transfer(out var resources);
             try
             {
-                resources.GetStream(objectId, WpdKeys.ResourceDefault, StgmRead, out var optimal, out var stream);
+                step = "GetStream";
+                resources.GetStream(objectId, WpdKeys.ResourceDefault, StgmRead, out var optimal, out var rawStream);
+                var stream = new NativeReadStream(rawStream);
+                step = "Read";
                 using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
                 long total = 0, lastReport = 0;
                 var buffer = new byte[Math.Clamp((int)optimal, 64 * 1024, 4 * 1024 * 1024)];
@@ -168,20 +172,28 @@ internal sealed unsafe class WpdBackend : IDeviceBackend
                                 lastReport = total;
                                 onProgress(total);
                             }
-                            if (hr == SFalse) break;
+                            // Lê até Read devolver 0 bytes, como no exemplo do WPD (uma
+                            // leitura curta com S_FALSE não garante o fim do objeto).
                         }
                     }
                 }
                 finally
                 {
-                    Release(stream);
+                    var left = stream.Release();
+                    if (left != 0) Console.Error.WriteLine($"[wpd] stream ainda com {left} referência(s) depois de liberar");
                 }
+                step = "SizeAndDate";
                 var after = SizeAndDate(slot, objectId);
                 if (total != before.Size || after.Size != before.Size || after.Modified != before.Modified)
                 {
                     throw new HelperException("changed_during_read", "O arquivo mudou enquanto era lido. Escaneie de novo.");
                 }
                 return new DeviceHashResult(Convert.ToHexStringLower(sha.GetHashAndReset()), total, before.Modified);
+            }
+            catch (Exception e) when (e is not HelperException and not OperationCanceledException)
+            {
+                Console.Error.WriteLine($"[wpd] conferência falhou em {step}: 0x{e.HResult:X8}");
+                throw;
             }
             finally
             {
