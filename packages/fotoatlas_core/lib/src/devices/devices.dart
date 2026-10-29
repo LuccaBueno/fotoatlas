@@ -213,7 +213,7 @@ class HelperDeviceBackend implements DeviceBackend {
       return await body();
     } on HelperException catch (e) {
       final code = switch (e.code) {
-        'helper_crashed' || 'helper_unavailable' || 'timeout' => 'unavailable',
+        'helper_crashed' || 'helper_unavailable' || 'helper_closed' || 'timeout' => 'unavailable',
         final c => c,
       };
       throw DeviceException(code, e.message);

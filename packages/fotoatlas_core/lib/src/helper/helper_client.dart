@@ -57,6 +57,10 @@ class HelperClient {
   final Duration maxBackoff;
 
   Process? _process;
+  int? _pid;
+
+  /// PID do último processo do helper iniciado (diagnóstico e testes).
+  int? get pid => _pid;
   int _nextId = 1;
   final _pending = <String, Completer<Map<String, Object?>>>{};
   final _eventHandlers = <String, void Function(HelperEvent)>{};
@@ -96,6 +100,7 @@ class HelperClient {
     ];
     final process = await Process.start(executable, args);
     _process = process;
+    _pid = process.pid;
     process.stdout.transform(utf8.decoder).transform(const LineSplitter()).listen(_onLine, onError: (_) {});
     process.stderr.drain<void>().ignore();
     process.exitCode.then((_) => _onExit(process));
@@ -151,7 +156,7 @@ class HelperClient {
       }
       final helperEvent = HelperEvent(event, data, requestId: id);
       if (id != null) _eventHandlers[id]?.call(helperEvent);
-      _events.add(helperEvent);
+      if (!_events.isClosed) _events.add(helperEvent);
       return;
     }
     if (id == null) return;
@@ -262,37 +267,40 @@ class HelperClient {
   void _setStatus(HelperStatus status) {
     if (_status == status) return;
     _status = status;
-    _statusController.add(status);
+    if (!_statusController.isClosed) _statusController.add(status);
   }
 
-  /// Encerra o helper (pede `system.shutdown`; mata se não sair em 2 s).
-  Future<void> close() async {
+  /// Encerra o helper: pede `system.shutdown` e, se ele não sair em
+  /// [grace] (ex.: preso numa leitura do celular), finaliza o processo.
+  /// Termina sempre, em no máximo ~2 × [grace] + 1 s.
+  Future<void> close({Duration grace = const Duration(seconds: 1)}) async {
     _closing = true;
     _restartTimer?.cancel();
     _pingTimer?.cancel();
     final process = _process;
     if (process != null) {
       try {
-        await call('system.shutdown', timeout: const Duration(seconds: 2));
+        await call('system.shutdown', timeout: grace);
       } on Object {
         // segue para o kill
       }
       try {
-        await process.stdin.close();
+        await process.stdin.close().timeout(const Duration(milliseconds: 200));
       } on Object {
-        // stdin já fechado
+        // stdin já fechado ou preso
       }
-      await process.exitCode.timeout(
-        const Duration(seconds: 2),
-        onTimeout: () {
-          process.kill();
-          return -1;
-        },
-      );
+      final exited = await process.exitCode.then((_) => true).timeout(grace, onTimeout: () => false);
+      if (!exited) {
+        process.kill();
+        await process.exitCode.timeout(const Duration(seconds: 1), onTimeout: () => -1);
+      }
+      _failAll(HelperException('helper_closed', 'O FotoAtlas está fechando.', retryable: false));
     }
     _setStatus(HelperStatus.stopped);
-    await _events.close();
-    await _statusController.close();
+    // Sem `await`: um ouvinte pausado (ex.: tela fora de vista) faria o
+    // close() nunca terminar e o app não fecharia.
+    unawaited(_events.close());
+    unawaited(_statusController.close());
   }
 
   /// Procura o helper: `FOTOATLAS_HELPER`, ao lado do executável, ou a saída

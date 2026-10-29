@@ -54,6 +54,13 @@ class FakeDeviceBackend implements DeviceBackend {
   int? goneAfterListCalls;
   int listCalls = 0;
 
+  /// Simula o helper travado (ex.: leitura WPD presa): a partir da
+  /// listagem N, ou em todo hash, a chamada nunca responde e ignora o
+  /// cancelamento.
+  int? stallAfterListCalls;
+  bool stallHash = false;
+  static final Future<Never> _never = Completer<Never>().future;
+
   /// Chamado antes de cada hash (para desplugar no meio, por exemplo).
   void Function(String path)? beforeHash;
   final changedDuringRead = <String>{};
@@ -90,6 +97,8 @@ class FakeDeviceBackend implements DeviceBackend {
   Future<List<DeviceEntry>> listChildren(String deviceId, String objectId) async {
     final phone = _connected(deviceId);
     listCalls++;
+    final stall = stallAfterListCalls;
+    if (stall != null && listCalls > stall) await _never;
     final limit = goneAfterListCalls;
     if (limit != null && listCalls > limit) {
       phones.remove(phone);
@@ -133,6 +142,7 @@ class FakeDeviceBackend implements DeviceBackend {
     if (!objectId.startsWith(prefix)) throw DeviceException('not_found', 'ID de outra sessão.');
     final path = objectId.substring(prefix.length);
     beforeHash?.call(path);
+    if (stallHash) await _never;
     _connected(deviceId);
     final bytes = phone.files[path];
     if (bytes == null) throw DeviceException('not_found', 'Arquivo não existe.');

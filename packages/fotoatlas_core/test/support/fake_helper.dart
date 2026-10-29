@@ -1,6 +1,8 @@
 // Helper falso para testar o HelperClient: fala o protocolo JSON-lines v1.
 //
-// Modos (--mode): normal | crash-once | mute | bad-protocol
+// Modos (--mode): normal | crash-once | mute | bad-protocol | stuck
+// stuck: responde ao ping, mas trava ao receber system.shutdown (como uma
+// leitura WPD presa) e não sai nem com o stdin fechado.
 // --marker <arquivo>: em crash-once, cai só se o marcador ainda não existir.
 import 'dart:convert';
 import 'dart:io';
@@ -36,6 +38,10 @@ void main(List<String> args) async {
           'ok': true,
           'result': {'uptimeMs': 1},
         });
+      case 'system.shutdown' when mode == 'stuck':
+        while (true) {
+          sleep(const Duration(seconds: 1));
+        }
       case 'system.shutdown':
         send({'v': 1, 'id': id, 'ok': true, 'result': <String, Object?>{}});
         await stdout.flush();

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -171,4 +173,99 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 5));
   });
+
+  testWidgets('fechar o app com a conferência travada no celular: "Encerrando com segurança…" e sai', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1400, 900)
+      ..devicePixelRatio = 1;
+    final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
+    FotoAtlasCore? opened;
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+      await tester.runAsync(() async {
+        await opened?.close();
+        await deleteTestDir(temp);
+      });
+    });
+    final phone = _StuckPhone();
+    late FotoAtlasCore core;
+    await tester.runAsync(() async {
+      final fake = _OneVolume((Directory(p.join(temp.path, 'vol'))..createSync()).path);
+      core = opened = await FotoAtlasCore.open(
+        paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
+        volumes: fake,
+        pathResolver: fake,
+        useHelper: false,
+        devices: phone,
+      );
+      await core.sources.refreshConnectivity();
+      final id = (await core.sources.addPhone(phone.deviceId)).sourceId;
+      await core.scans.wait(await core.scans.start(id));
+      unawaited(core.hashes.start());
+      while (!phone.hashing) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+    });
+    await tester.pumpWidget(FotoAtlasApp(openCore: () async => core));
+    for (var i = 0; i < 20 && find.text('Comparar').evaluate().isEmpty; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+    }
+    // Outra tela: os streams das telas fora de vista ficam pausados (era o bug).
+    await tester.tap(find.text('Comparar').first);
+    await tester.pump();
+
+    final state = tester.state<FotoAtlasAppState>(find.byType(FotoAtlasApp));
+    final watch = Stopwatch()..start();
+    AppExitResponse? response;
+    // Em tempo real (os prazos do encerramento são timers de verdade).
+    await tester.runAsync(() async => unawaited(state.requestExit().then((r) => response = r)));
+    expect(identical(state.requestExit(), state.requestExit()), isTrue, reason: 'clicar no X de novo não recomeça');
+    var sawOverlay = false, sawHashStep = false;
+    for (var i = 0; i < 200 && response == null; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+      sawOverlay |= find.text('Encerrando com segurança…').evaluate().isNotEmpty;
+      sawHashStep |= find.textContaining('Pausando a conferência').evaluate().isNotEmpty;
+    }
+    expect(response, AppExitResponse.exit);
+    expect(watch.elapsed, lessThan(const Duration(seconds: 8)), reason: 'termina em poucos segundos');
+    expect(sawOverlay, isTrue);
+    expect(sawHashStep, isTrue, reason: 'mostra o que falta');
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 5));
+  });
+}
+
+/// Celular que trava na leitura (como uma chamada WPD presa): o hash nunca
+/// responde e ignora o cancelamento.
+class _StuckPhone implements DeviceBackend {
+  final deviceId = 'wpd:travado';
+  bool hashing = false;
+
+  @override
+  Future<List<DeviceInfo>> list() async => [
+    DeviceInfo(
+      deviceId: deviceId,
+      friendlyName: 'Celular travado',
+      serial: 'TRAVADO-1',
+      platform: 'android',
+      storages: const [DeviceStorage(storageId: 'st', name: 'Interno')],
+    ),
+  ];
+
+  @override
+  Future<List<DeviceEntry>> listChildren(String deviceId, String objectId) async => switch (objectId) {
+    '' => const [DeviceEntry(objectId: 'st', name: 'Interno', isFolder: true)],
+    'st' => const [DeviceEntry(objectId: 'f1', name: 'IMG_1.jpg', isFolder: false, size: 10, modified: 1)],
+    _ => const [],
+  };
+
+  @override
+  Future<DeviceHash> hash(String deviceId, String objectId, {required int expectedSize, Future<void>? cancel}) {
+    hashing = true;
+    return Completer<DeviceHash>().future;
+  }
 }

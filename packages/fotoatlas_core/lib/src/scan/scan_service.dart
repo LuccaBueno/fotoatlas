@@ -255,7 +255,7 @@ class ScanService {
 
     void onProgress(ScanProgress p) {
       running.last = p;
-      _progress.add(p);
+      if (!_progress.isClosed) _progress.add(p);
       if (p.isFinal) {
         _running.remove(scanId);
         if (!running.done.isCompleted) running.done.complete(p);
@@ -267,11 +267,20 @@ class ScanService {
     final phone = source.kind == 'phone';
     if (!useIsolate || phone) {
       ScanEngine(
-        db,
-        scanId: scanId,
-        sourceId: source.id,
-        lister: phone ? PhoneScanLister(sources.devices!, root) : Win32ScanLister(root, isVolumeRoot: isVolumeRoot),
-      ).run(stopRequested: () => running.pendingStop, onProgress: onProgress).then(onProgress);
+            db,
+            scanId: scanId,
+            sourceId: source.id,
+            lister: phone ? PhoneScanLister(sources.devices!, root) : Win32ScanLister(root, isVolumeRoot: isVolumeRoot),
+          )
+          .run(stopRequested: () => running.pendingStop, onProgress: onProgress)
+          .then(
+            onProgress,
+            // Fechando o app: o catálogo pode já estar fechado; o scan fica
+            // `running` e vira `interrupted` na próxima abertura.
+            onError: (Object e, StackTrace st) {
+              if (!_disposing) Error.throwWithStackTrace(e, st);
+            },
+          );
       return;
     }
 
@@ -290,7 +299,7 @@ class ScanService {
     exit.listen((_) async {
       exit.close();
       events.close();
-      if (!running.done.isCompleted) {
+      if (!running.done.isCompleted && !_disposing) {
         // O worker morreu sem relatar o fim: o scan pode ser retomado.
         await db.customUpdate(
           "UPDATE scans SET status = 'interrupted' WHERE id = ? AND status = 'running'",
@@ -315,13 +324,20 @@ class ScanService {
     );
   }
 
-  Future<void> dispose() async {
-    for (final r in _running.values.toList()) {
+  /// Pausa os scans em andamento (o ponto de parada fica no banco a cada
+  /// lote) e espera no máximo [timeout]. Um scan que não parar a tempo fica
+  /// `running` no banco e vira `interrupted` ao abrir de novo ([init]):
+  /// retoma das pastas pendentes, sem confirmar ausências.
+  Future<void> dispose({Duration timeout = const Duration(seconds: 3)}) async {
+    _disposing = true;
+    final running = _running.values.toList();
+    for (final r in running) {
       await _requestStop(r.scanId, ScanStop.pause);
     }
-    for (final r in _running.values.toList()) {
-      await r.done.future.timeout(const Duration(seconds: 10), onTimeout: () => readScanProgress(db, r.scanId));
-    }
-    await _progress.close();
+    await Future.wait([for (final r in running) r.done.future]).timeout(timeout, onTimeout: () => const []);
+    // Sem `await`: um ouvinte pausado faria o close() nunca terminar.
+    unawaited(_progress.close());
   }
+
+  bool _disposing = false;
 }

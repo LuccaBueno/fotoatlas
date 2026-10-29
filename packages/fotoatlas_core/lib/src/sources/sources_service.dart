@@ -824,7 +824,8 @@ class SourcesService {
 
   Future<void> dispose() async {
     _monitor?.cancel();
-    await _stateChanges.close();
+    // Sem `await`: um ouvinte pausado faria o close() nunca terminar.
+    unawaited(_stateChanges.close());
   }
 
   static String _stateKey(MatchResult? m) => switch (m) {

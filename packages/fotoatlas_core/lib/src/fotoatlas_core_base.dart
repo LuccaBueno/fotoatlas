@@ -133,7 +133,10 @@ class FotoAtlasCore {
       );
       if (backupOnOpen) {
         // Em segundo plano; uma falha aqui não impede o app de abrir.
-        core._backupOnOpen = core.backups.maybeBackup().then((_) {}, onError: (Object _) {});
+        core._backupOnOpen = core.backups
+            .maybeBackup()
+            .then((_) {}, onError: (Object _) {})
+            .whenComplete(() => core._backupDone = true);
       }
       if (autoHash) hashes.enableAuto();
       return core;
@@ -145,14 +148,77 @@ class FotoAtlasCore {
     }
   }
 
-  Future<void> close() async {
+  bool _backupDone = false;
+  Future<void>? _closing;
+
+  /// Encerra com segurança e **sempre termina** (em poucos segundos, mesmo
+  /// com o helper travado numa leitura do celular). Cada etapa tem prazo:
+  ///
+  /// 1. pausa os scans (o ponto de parada já está salvo a cada lote) e a fila
+  ///    de conferência (o que falta continua `pending`);
+  /// 2. espera o backup do catálogo, se estiver no meio;
+  /// 3. encerra o helper — se não responder, finaliza o processo dele;
+  /// 4. fecha o catálogo.
+  ///
+  /// O que não terminar a tempo é seguro por construção: scan `running` vira
+  /// `interrupted` ao abrir de novo, arquivo sem hash continua pendente e um
+  /// backup pela metade (`.tmp`) é descartado (regra 7).
+  ///
+  /// [onProgress] recebe a lista de etapas com trabalho (para "Encerrando
+  /// com segurança…"); chamar de novo devolve o mesmo encerramento.
+  Future<void> close({void Function(List<ShutdownStep> steps)? onProgress, Duration stepTimeout = _stepTimeout}) =>
+      _closing ??= _close(onProgress, stepTimeout);
+
+  static const _stepTimeout = Duration(seconds: 3);
+
+  Future<void> _close(void Function(List<ShutdownStep>)? onProgress, Duration stepTimeout) async {
     sources.stopMonitoring();
-    await _backupOnOpen;
-    await hashes.dispose();
-    await scans.dispose();
-    await sources.dispose();
-    await helper?.close();
-    await catalog.close();
+    final runningScans = scans.runningProgress.length;
+    final steps = <ShutdownStep>[
+      if (runningScans > 0)
+        ShutdownStep(
+          'scan',
+          runningScans == 1
+              ? 'Pausando o escaneamento (o ponto de parada fica salvo)'
+              : 'Pausando $runningScans escaneamentos (o ponto de parada fica salvo)',
+        ),
+      if (hashes.isRunning) ShutdownStep('hash', 'Pausando a conferência de conteúdo (o que falta continua na fila)'),
+      if (_backupOnOpen != null && !_backupDone) ShutdownStep('backup', 'Terminando o backup do catálogo'),
+      if (helper != null) ShutdownStep('helper', 'Encerrando a leitura de dispositivos'),
+      ShutdownStep('catalog', 'Fechando o catálogo'),
+    ];
+    void report() => onProgress?.call(List.unmodifiable(steps));
+    Future<void> step(String id, Future<void> Function() action, {Duration? timeout}) async {
+      final s = steps.where((s) => s.id == id).firstOrNull;
+      try {
+        await action().timeout(timeout ?? stepTimeout);
+      } on Object {
+        // Prazo estourado ou erro: segue; o que ficou pela metade é recuperável.
+      }
+      if (s != null) {
+        s.done = true;
+        report();
+      }
+    }
+
+    report();
+    await Future.wait([
+      step('scan', () => scans.dispose(timeout: stepTimeout)),
+      step('hash', () => hashes.dispose(timeout: stepTimeout)),
+    ]);
+    await step('backup', () async => _backupOnOpen);
+    await step('sources', sources.dispose);
+    // O helper tem o próprio prazo (pede para sair; se não sair, é finalizado).
+    await step('helper', () async => helper?.close(), timeout: stepTimeout * 2);
+    await step('catalog', catalog.close);
     await _lock.release();
   }
+}
+
+/// Uma etapa do encerramento, para mostrar o que falta.
+class ShutdownStep {
+  ShutdownStep(this.id, this.label);
+  final String id;
+  final String label;
+  bool done = false;
 }
