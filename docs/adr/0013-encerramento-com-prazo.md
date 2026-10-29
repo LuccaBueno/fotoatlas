@@ -10,8 +10,14 @@ No teste do usuário (app com `-Demo`, celular real conectado, depois de escanea
 2. Esperas de até 10 s **por worker** (hash e scan, em sequência), mais o backup do catálogo e o `close()` do catálogo sem prazo.
 3. Uma leitura WPD presa no helper (arquivo grande pelo USB) só obedecia ao `system.shutdown` depois de terminar.
 
+Depois da primeira correção, a CI mostrou mais dois pontos:
+
+4. O `db.close()` do drift **também** espera os streams de consultas reativas (`watch()`) fecharem — de novo, com ouvinte pausado pelo Riverpod, nunca termina. Reproduzido no core com um `watch()` pausado (5 s, até o prazo estourar).
+5. O `shutdownAll()` do drift responde **antes** de o isolate do banco fechar o arquivo do SQLite: reabrir o catálogo logo em seguida, no mesmo processo, deu "database is locked" na CI.
+
 ## Decisão
 - Nenhum `close()` de stream é aguardado no encerramento (`unawaited`), e emitir num stream fechado é ignorado.
+- `Catalog.close()` não espera o `db.close()` (pelo item 4): pede o `shutdownAll()` e espera o **isolate do banco sair**, o que só acontece depois de ele fechar o SQLite (item 5). O catálogo tem prazo próprio de 5 s e a trava de processo único só é liberada se ele fechou de fato.
 - `FotoAtlasCore.close()` roda etapas com **prazo** (3 s cada por padrão) e relata o que falta (`ShutdownStep`): pausar scans e fila de conferência (em paralelo) → esperar o backup do catálogo → encerrar o helper → fechar o catálogo → soltar a trava. Prazo estourado ou erro numa etapa: segue para a próxima. Chamar `close()` de novo devolve o mesmo encerramento.
 - Helper: `system.shutdown` com prazo de 1 s; se o processo não sair em mais 1 s, é **finalizado** (`kill`); pedidos em voo falham como `helper_closed` (tratado como "dispositivo indisponível", nunca como ausência).
 - App: ao pedir para fechar, mostra **"Encerrando com segurança…"** com as etapas (✓ quando concluídas) e bloqueia cliques; depois de no máximo 12 s sai de qualquer jeito. Clicar no X de novo não recomeça.

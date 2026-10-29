@@ -125,7 +125,8 @@ Observações:
 ## Correções do teste dos ajustes (concluídas em 2026-10-29)
 - [x] Teste do usuário dos ajustes de interface: OK
 - [x] **Bug: o app não fechava pelo X.** Causa: `core.close()` esperava o `close()` de streams com ouvinte pausado (o Riverpod pausa as telas fora de vista), o que nunca termina; somavam-se esperas sem prazo (10 s por worker, backup, catálogo, helper preso numa leitura WPD). Correção: encerramento por etapas com prazo, helper finalizado se não sair, tela "Encerrando com segurança…" com o que falta, saída garantida em até 12 s (ADR 0013)
-- [x] Testes: core (ouvintes pausados — falha com o código antigo; celular travado no scan e na conferência → fecha e retoma exato; scan + hash em isolates; helper falso travado é finalizado) e app (fechar com a conferência travada); 3/3 verdes em sequência
+- [x] Testes: core (ouvintes pausados, inclusive `watch()` do banco — falham com o código antigo; celular travado no scan e na conferência → fecha e retoma exato; scan + hash em isolates; helper falso travado é finalizado; fechar e reabrir o catálogo 20 vezes) e app (fechar com a conferência travada); 3/3 verdes em sequência
+- [x] CI do primeiro push vermelha (run 40812080833): reabrir o catálogo logo após fechar dava "database is locked" — `shutdownAll()` do drift responde antes de fechar o SQLite, e `db.close()` esperava `watch()` pausados. Corrigido no `Catalog.close()` (ADR 0013). Também: teste de desempenho de 100 mil arquivos instável por rodar em paralelo com o de 50 mil → agora em sequência
 - [x] Dispositivos vazia: "Adicionar dispositivo" só no centro (o do topo aparece quando há dispositivos)
 
 ## Fase 4 — Metadados e Biblioteca

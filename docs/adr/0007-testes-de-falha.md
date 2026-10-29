@@ -28,7 +28,7 @@ A prioridade máxima é não perder arquivos, inclusive com interrupção abrupt
 - Um helper de teste aborta se algum caminho de trabalho não estiver dentro do temp do sistema.
 
 ## Atualização (2026-10-26, Fase 1)
-- O teste "a UI não trava" ficou no core (`test/perf/scan_50k_test.dart`) em vez de um `integration_test` do app: ele mede o atraso do event loop do isolate principal (o mesmo da UI no app) durante um scan real de 50 mil arquivos em isolate. Assim o teste fica rápido, determinístico e roda na CI sem abrir janela. O app tem um teste de widget com o core real (`app/test/real_core_test.dart`).
+- O teste "a UI não trava" ficou no core (`test/perf/scan_50k.dart`, rodado por `test/perf/perf_test.dart`) em vez de um `integration_test` do app: ele mede o atraso do event loop do isolate principal (o mesmo da UI no app) durante um scan real de 50 mil arquivos em isolate. Assim o teste fica rápido, determinístico e roda na CI sem abrir janela. O app tem um teste de widget com o core real (`app/test/real_core_test.dart`).
 - Os testes de falha usam a CLI compilada com `dart build cli` (exe + `sqlite3.dll`), porque `Process.kill()` precisa atingir o processo que segura o catálogo.
 - O catálogo tem trava de processo único (`catalog.lock`); depois de um kill, o SO libera a trava sozinho, e o teste confirma isso ao retomar.
 
