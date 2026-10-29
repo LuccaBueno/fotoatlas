@@ -15,6 +15,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - Core: `scans.listFolders`, `sources.folderStats`, `sources.listDrives`, `SourceView.scannedFolders`/`wholeScannedAt`/`scannedAt()`.
 
 ### Corrigido
+- **O app não fechava pelo X** (o botão ficava vermelho e a janela continuava aberta). O encerramento esperava, sem prazo, o fim de streams cujos ouvintes estavam pausados (telas fora de vista) — o que nunca acontece no Dart — e ainda até 10 s por worker de scan/conferência, o backup do catálogo e o helper. Agora fechar **sempre funciona**: aparece "Encerrando com segurança…" com o que falta (pausar o escaneamento, pausar a conferência, terminar o backup, encerrar a leitura de dispositivos, fechar o catálogo); cada etapa tem prazo, o helper é finalizado se não responder (ex.: preso numa leitura do celular) e o app sai em no máximo 12 s. O que ficou pela metade continua de onde parou ao abrir de novo (ADR 0013).
+- Na tela Dispositivos vazia, "Adicionar dispositivo" aparecia no topo e no centro; agora só no centro.
 - O cartão dizia "mas 0 pastas não puderam ser lidas" depois de um scan de uma pasta só; agora diz "Só algumas pastas foram escaneadas".
 - "Retomar" de um scan pausado de uma pasta só falhava pelo app (pedia a fonte inteira); agora retoma o mesmo scan.
 

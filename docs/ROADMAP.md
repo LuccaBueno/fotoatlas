@@ -122,6 +122,12 @@ Observações:
 - Pasta nunca escaneada aparece com "tamanho desconhecido": no celular, estimar exigiria percorrer a pasta inteira pelo USB, que já é o próprio scan.
 - O tipo da unidade na janela vem do barramento (USB → "HD externo"; SD → "Cartão de memória"; removível → "Pendrive"; senão "Disco interno").
 
+## Correções do teste dos ajustes (concluídas em 2026-10-29)
+- [x] Teste do usuário dos ajustes de interface: OK
+- [x] **Bug: o app não fechava pelo X.** Causa: `core.close()` esperava o `close()` de streams com ouvinte pausado (o Riverpod pausa as telas fora de vista), o que nunca termina; somavam-se esperas sem prazo (10 s por worker, backup, catálogo, helper preso numa leitura WPD). Correção: encerramento por etapas com prazo, helper finalizado se não sair, tela "Encerrando com segurança…" com o que falta, saída garantida em até 12 s (ADR 0013)
+- [x] Testes: core (ouvintes pausados — falha com o código antigo; celular travado no scan e na conferência → fecha e retoma exato; scan + hash em isolates; helper falso travado é finalizado) e app (fechar com a conferência travada); 3/3 verdes em sequência
+- [x] Dispositivos vazia: "Adicionar dispositivo" só no centro (o do topo aparece quando há dispositivos)
+
 ## Fase 4 — Metadados e Biblioteca
 - [ ] Script para baixar ExifTool e FFmpeg (não versionados)
 - [ ] ExifTool `-stay_open`, FFprobe, estratégia de datas e fusos, padrões de nome (WhatsApp etc.)
@@ -179,3 +185,4 @@ Observações:
 - 2026-10-27 — Teste do usuário da Fase 2 aprovado (Faltam 2 / Só em B 1 / Nos dois 2). Ajustes de interface: adicionar e escanear pelo seletor da Comparar, plural nos contadores, caminhos com um só separador, resumo arquivos × conteúdos. Tag v0.2.0. Fase 3 **não iniciada**: aguarda o usuário.
 - 2026-10-27 — Fase 3 — Celular só leitura: helper WPD (interop próprio sem métodos de escrita, GENERIC_READ, pendrives filtrados), celulares simulados, schema v3, cadastro pelo serial, scan por pasta com checkpoint e re-resolução de IDs, conferência pelo helper, celular × HD, app (Adicionar celular, avisos, "Manter originais"), CLI devices/add-phone. Evidências com o helper real e celular simulado; falta o teste do usuário (simulado e depois real, só leitura) e a tag v0.3.0.
 - 2026-10-28 — Ajustes de interface antes da Fase 4 — "Adicionar dispositivo" único (celulares, unidades e "Escolher uma pasta…") em Dispositivos e na Comparar; "Escanear" com "Tudo" ou "Só algumas pastas" (árvore ao vivo, tamanho estimado, várias pastas num scan); cartão com as pastas já escaneadas. Spec §3.2/§7 atualizada. Fase 4 **não iniciada**: aguarda o usuário.
+- 2026-10-29 — Correções do teste dos ajustes — app não fechava pelo X (close() de stream com ouvinte pausado + esperas sem prazo): encerramento com prazo e "Encerrando com segurança…" (ADR 0013); botão duplicado na Dispositivos vazia. Fase 4 **não iniciada**: aguarda o usuário.

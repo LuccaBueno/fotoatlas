@@ -32,3 +32,4 @@ Modelo:
 | [0010](0010-fila-de-hash.md) | Fila de conferência de conteúdo (SHA-256) e `package:crypto` | aceita |
 | [0011](0011-comparacao-por-escopo.md) | Comparação A × B com escopo livre | aceita |
 | [0012](0012-celular-wpd-somente-leitura.md) | Celular pelo WPD, somente leitura (interop próprio, celulares simulados) | aceita |
+| [0013](0013-encerramento-com-prazo.md) | Encerramento com prazo: fechar o app sempre funciona (helper finalizado se travar) | aceita |
