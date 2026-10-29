@@ -5,6 +5,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 ## [Não lançado]
 
 ### Mudado
+- **Modo demonstração avisado na tela**: com `run-app.ps1 -Demo` ou `-CelularSimulado`, uma faixa fixa no topo diz "Modo demonstração — tudo será descartado ao fechar", e a pergunta ao fechar e a tela "Encerrando com segurança…" avisam que nada será mantido (antes prometiam "continua de onde parou", o que não vale nesse modo).
 - **Fechar com tarefas em andamento pergunta antes**: "Há tarefas em andamento: …" com o progresso de cada uma (escaneamento, conferência, backup do catálogo) e "Continuar trabalhando" (padrão) ou "Fechar mesmo assim". Sem nada em andamento, fecha direto.
 - **Se a leitura de dispositivos cair** (fora do fechamento), o app avisa: o que estava em andamento foi interrompido sem perder nada; a conferência continua sozinha quando o celular volta e o escaneamento continua em "Retomar".
 - **Um botão só, "Adicionar dispositivo"**, em Dispositivos e no seletor da Comparar, no lugar de "Adicionar pasta", "Adicionar celular" e "Adicionar unidade". A janela lista sozinha o que está conectado: celulares com a situação ("Pronto", "Bloqueado", "Falta permitir o acesso"), unidades (HD, SSD, pendrive, cartão — as já cadastradas aparecem como "Já cadastrada") e "Escolher uma pasta…", com "Procurar de novo".
@@ -12,6 +13,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - Na Comparar, depois de adicionar um dispositivo novo, a mesma pergunta aparece antes de escanear.
 
 ### Adicionado
+- **`run-app.ps1 -DemoPersistente`**: demonstração mantida entre aberturas, sempre em `%TEMP%\fotoatlas_demo_persistente` (apagável pelo `clean-temp.ps1`), para testar a retomada de verdade. Com `-CelularSimulado`, os celulares simulados são gerados uma vez na mesma pasta e o Pixel lê devagar (3 s por arquivo), para dar tempo de fechar no meio da conferência. O gerador ganhou `--leitura-lenta MS`.
 - **Várias pastas num escaneamento só** (core `scans.start(fonte, folders: [...])`; CLI `scan start FONTE --folder A --folder B`). Continua parcial e honesto: só confirma ausências dentro das pastas lidas; a comparação de partes não escaneadas dá "Resultado incompleto".
 - O cartão do dispositivo mostra **quais pastas já foram escaneadas** (e quando) e avisa que o resto ainda não foi; o próximo "Escanear" já sugere as mesmas pastas. Depois de um scan do dispositivo inteiro, pastas escaneadas sozinhas mais tarde aparecem como "atualizadas depois".
 - Core: `scans.listFolders`, `sources.folderStats`, `sources.listDrives`, `SourceView.scannedFolders`/`wholeScannedAt`/`scannedAt()`.

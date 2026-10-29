@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../l10n/format.dart';
+import 'demo_mode.dart';
 
 /// "Há tarefas em andamento…" ao fechar. "Continuar trabalhando" é o padrão
 /// (foco, Esc e clique fora); devolve `true` só em "Fechar mesmo assim".
 class CloseConfirmDialog extends StatelessWidget {
-  const CloseConfirmDialog({super.key, required this.tasks});
+  const CloseConfirmDialog({super.key, required this.tasks, this.demoMode = DemoMode.off});
   final List<RunningTask> tasks;
+  final DemoMode demoMode;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +38,7 @@ class CloseConfirmDialog extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: 12),
-            const Text('Elas serão pausadas e continuam de onde pararam quando você abrir o FotoAtlas de novo.'),
+            Text(demoMode.closeMessage),
           ],
         ),
       ),

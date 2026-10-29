@@ -6,6 +6,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import 'app/backend.dart';
 import 'app/close_confirm_dialog.dart';
+import 'app/demo_mode.dart';
 import 'app/providers.dart';
 import 'app/shell.dart';
 import 'app/theme.dart';
@@ -17,10 +18,13 @@ void main() {
 
 /// Abre o core (catálogo, helper, monitor de dispositivos) e mostra o app.
 class FotoAtlasApp extends StatefulWidget {
-  const FotoAtlasApp({super.key, this.openCore});
+  const FotoAtlasApp({super.key, this.openCore, this.demoMode});
 
   /// Substituível em testes.
   final Future<FotoAtlasCore> Function()? openCore;
+
+  /// Padrão: `FOTOATLAS_DEMO` (definido pelo `run-app.ps1`).
+  final DemoMode? demoMode;
 
   /// Prazo máximo do encerramento: depois disso o app sai de qualquer jeito
   /// (o que ficou pela metade é recuperável ao abrir de novo).
@@ -34,6 +38,7 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
   late final Future<FotoAtlasCore> _core =
       (widget.openCore ?? () => FotoAtlasCore.open(monitor: true, autoHash: true, backupOnOpen: true))();
   late final AppLifecycleListener _lifecycle;
+  late final DemoMode _demo = widget.demoMode ?? DemoMode.fromEnvironment();
 
   /// Etapas do encerramento em andamento (`null` = não está fechando).
   List<ShutdownStep>? _closingSteps;
@@ -71,7 +76,7 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
       if (tasks.isNotEmpty && context != null && context.mounted) {
         final close = await showDialog<bool>(
           context: context,
-          builder: (_) => CloseConfirmDialog(tasks: tasks),
+          builder: (_) => CloseConfirmDialog(tasks: tasks, demoMode: _demo),
         );
         if (close != true) {
           _exit = null; // o próximo X pergunta de novo
@@ -110,12 +115,23 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
     home: home,
     navigatorKey: navigatorKey,
     builder: (context, child) {
+      // A faixa fica acima do navegador: visível também com diálogos abertos.
+      if (_demo != DemoMode.off) {
+        child = Column(
+          children: [
+            DemoBanner(mode: _demo),
+            Expanded(child: child!),
+          ],
+        );
+      }
       final steps = _closingSteps;
       if (steps == null) return child!;
       return Stack(
         children: [
           child!,
-          Positioned.fill(child: _ClosingOverlay(steps: steps)),
+          Positioned.fill(
+            child: _ClosingOverlay(steps: steps, demoMode: _demo),
+          ),
         ],
       );
     },
@@ -186,8 +202,9 @@ class _StartupError extends StatelessWidget {
 
 /// "Encerrando com segurança…" por cima de tudo, com o que falta.
 class _ClosingOverlay extends StatelessWidget {
-  const _ClosingOverlay({required this.steps});
+  const _ClosingOverlay({required this.steps, required this.demoMode});
   final List<ShutdownStep> steps;
+  final DemoMode demoMode;
 
   @override
   Widget build(BuildContext context) {
@@ -231,11 +248,7 @@ class _ClosingOverlay extends StatelessWidget {
                         ),
                       ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Leva só alguns segundos. Nada se perde: o que estava em andamento continua de onde parou '
-                      'quando você abrir o FotoAtlas de novo.',
-                      style: theme.textTheme.bodySmall,
-                    ),
+                    Text(demoMode.closingMessage, style: theme.textTheme.bodySmall),
                   ],
                 ),
               ),

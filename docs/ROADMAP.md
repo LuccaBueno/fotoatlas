@@ -137,6 +137,12 @@ Observações:
 - [x] CI vermelha em 2 runs (40820342568, 40823014535): testes de encerramento estouravam o limite de 30 s **só na CI**, por rodarem junto com a geração dos 50 mil arquivos (119,7 s nessa rodada, ~78 s aqui), que satura o disco do runner (gravações com `synchronous=FULL` esperando o disco); com o teste estourado, o corpo seguia rodando durante a limpeza e a pasta ficava presa. Não reproduziu aqui nem com CPU sufocada. Correção: testes de desempenho (tag `perf`) rodam sozinhos depois dos outros na CI; diagnóstico novo (arquivos que sobram, etapas do encerramento que estouram o prazo)
 - [x] Conferência do celular grava cada arquivo na hora (antes: lotes de 32, perdidos ao fechar no meio). Retomar exato confirmado em teste (lê 3, fecha, reabre → 3 continuam, só o resto é lido) e com o helper real (celular simulado com leitura lenta: 3 ao fechar, 3 ao reabrir, os 5 restantes em 3,6 s ≈ 5 leituras)
 
+## Ajustes do modo demonstração (concluídos em 2026-10-29)
+- [x] Teste do usuário do fechamento: pergunta, "Continuar trabalhando", "Fechar mesmo assim" e "Encerrando…" OK, sem exceção. Achado: com `-Demo` a conferência não continuou ao reabrir — o catálogo temporário é apagado ao fechar — mas os textos prometiam "continua de onde parou"
+- [x] Faixa fixa "Modo demonstração — tudo será descartado ao fechar" (`FOTOATLAS_DEMO`, definido pelo `run-app.ps1`); pergunta ao fechar e "Encerrando…" avisam que nada será mantido nesse modo
+- [x] `run-app.ps1 -DemoPersistente`: sempre `%TEMP%\fotoatlas_demo_persistente`, não apagada ao fechar (só pelo `clean-temp.ps1`); com `-CelularSimulado`, celulares gerados uma vez e Pixel com leitura lenta (3 s por arquivo) para fechar no meio da conferência
+- [x] Testes: modo pelo ambiente, textos da pergunta nos 3 modos, faixa, e fechar com core real com e sem demonstração
+
 ## Fase 4 — Metadados e Biblioteca
 - [ ] Script para baixar ExifTool e FFmpeg (não versionados)
 - [ ] ExifTool `-stay_open`, FFprobe, estratégia de datas e fusos, padrões de nome (WhatsApp etc.)

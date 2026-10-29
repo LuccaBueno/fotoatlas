@@ -38,11 +38,16 @@ powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -Demo
 # Catálogo temporário + celulares simulados (Pixel e iPhone) e uma pasta "HD" — sem celular real
 powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -CelularSimulado
 
+# Demonstração MANTIDA entre aberturas (sempre %TEMP%\fotoatlas_demo_persistente),
+# para testar a retomada: fechar no meio do scan/conferência e abrir de novo.
+# Com -CelularSimulado, o Pixel simulado lê devagar (3 s por arquivo).
+powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -DemoPersistente -CelularSimulado
+
 # Catálogo real em %APPDATA%\FotoAtlas
 powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1
 ```
 
-Com `-Demo` ou `-CelularSimulado`, as pastas temporárias (`%TEMP%\fotoatlas_demo_*`, `fotoatlas_celular_*`) são apagadas quando o app fecha (`-ManterDemo` guarda). Para limpar sobras de testes interrompidos ou de demonstrações antigas — só pastas de `%TEMP%` que começam com `fotoatlas_`; as que estão em uso ficam intactas:
+Com `-Demo` ou `-CelularSimulado`, o app mostra a faixa "Modo demonstração — tudo será descartado ao fechar" e as pastas temporárias (`%TEMP%\fotoatlas_demo_*`, `fotoatlas_celular_*`) são apagadas quando o app fecha (`-ManterDemo` guarda para inspeção, mas a próxima abertura começa do zero). Com `-DemoPersistente`, a faixa avisa que os dados são mantidos e a pasta só é apagada pelo `clean-temp.ps1` (com o app fechado). Para limpar sobras de testes interrompidos ou de demonstrações antigas — só pastas de `%TEMP%` que começam com `fotoatlas_`; as que estão em uso ficam intactas:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools\scripts\clean-temp.ps1 -Simular   # só lista

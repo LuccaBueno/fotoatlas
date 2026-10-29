@@ -4,6 +4,7 @@ import 'dart:ui' show AppExitResponse;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fotoatlas/app/demo_mode.dart';
 import 'package:fotoatlas/main.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 import 'package:path/path.dart' as p;
@@ -270,47 +271,58 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
   });
 
-  testWidgets('fechar sem nada em andamento: fecha direto, sem perguntar', (tester) async {
-    final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
-    FotoAtlasCore? opened;
-    addTearDown(() async {
+  for (final demo in [DemoMode.off, DemoMode.discarded]) {
+    testWidgets('fechar sem nada em andamento ($demo): fecha direto, sem perguntar', (tester) async {
+      final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
+      FotoAtlasCore? opened;
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(seconds: 5));
+        await tester.runAsync(() async {
+          await opened?.close();
+          await deleteTestDir(temp);
+        });
+      });
+      late FotoAtlasCore core;
+      await tester.runAsync(() async {
+        final fake = _OneVolume((Directory(p.join(temp.path, 'vol'))..createSync()).path);
+        core = opened = await FotoAtlasCore.open(
+          paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
+          volumes: fake,
+          pathResolver: fake,
+          useHelper: false,
+        );
+      });
+      await tester.pumpWidget(FotoAtlasApp(openCore: () async => core, demoMode: demo));
+      for (var i = 0; i < 20 && find.text('Comparar').evaluate().isEmpty; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+        await tester.pump();
+      }
+      final banner = find.text('Modo demonstração — tudo será descartado ao fechar');
+      expect(banner, demo == DemoMode.discarded ? findsOneWidget : findsNothing);
+      final state = tester.state<FotoAtlasAppState>(find.byType(FotoAtlasApp));
+      AppExitResponse? response;
+      var asked = false;
+      await tester.runAsync(() async => unawaited(state.requestExit().then((r) => response = r)));
+      for (var i = 0; i < 100 && response == null; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+        await tester.pump();
+        asked |= find.byKey(const ValueKey('close-confirm')).evaluate().isNotEmpty;
+      }
+      expect(response, AppExitResponse.exit);
+      expect(asked, isFalse);
+      await tester.pump();
+      // "Encerrando…" não promete continuar quando tudo será descartado.
+      expect(
+        find.textContaining('tudo é descartado ao fechar'),
+        demo == DemoMode.discarded ? findsOneWidget : findsNothing,
+      );
+      expect(find.textContaining('continua de onde parou'), demo == DemoMode.discarded ? findsNothing : findsOneWidget);
+
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 5));
-      await tester.runAsync(() async {
-        await opened?.close();
-        await deleteTestDir(temp);
-      });
     });
-    late FotoAtlasCore core;
-    await tester.runAsync(() async {
-      final fake = _OneVolume((Directory(p.join(temp.path, 'vol'))..createSync()).path);
-      core = opened = await FotoAtlasCore.open(
-        paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
-        volumes: fake,
-        pathResolver: fake,
-        useHelper: false,
-      );
-    });
-    await tester.pumpWidget(FotoAtlasApp(openCore: () async => core));
-    for (var i = 0; i < 20 && find.text('Comparar').evaluate().isEmpty; i++) {
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
-      await tester.pump();
-    }
-    final state = tester.state<FotoAtlasAppState>(find.byType(FotoAtlasApp));
-    AppExitResponse? response;
-    var asked = false;
-    await tester.runAsync(() async => unawaited(state.requestExit().then((r) => response = r)));
-    for (var i = 0; i < 100 && response == null; i++) {
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
-      await tester.pump();
-      asked |= find.byKey(const ValueKey('close-confirm')).evaluate().isNotEmpty;
-    }
-    expect(response, AppExitResponse.exit);
-    expect(asked, isFalse);
-
-    await tester.pumpWidget(const SizedBox());
-    await tester.pump(const Duration(seconds: 5));
-  });
+  }
 }
 
 /// Celular que trava na leitura (como uma chamada WPD presa): o hash nunca
