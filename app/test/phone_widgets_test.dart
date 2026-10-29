@@ -41,10 +41,10 @@ void main() {
     await tester.pumpWidget(harness(backend));
     await tester.pumpAndSettle();
     await openDevices(tester);
-    await tester.tap(find.text('Adicionar celular').first);
+    await tester.tap(find.text('Adicionar dispositivo').first);
     await tester.pumpAndSettle();
 
-    expect(find.text('Qual celular você quer adicionar?'), findsOneWidget);
+    expect(find.text('Celulares'), findsOneWidget, reason: 'janela única lista celulares, unidades e pasta');
     expect(find.textContaining('Pronto · Armazenamento interno'), findsOneWidget);
     expect(find.textContaining('Falta permitir o acesso'), findsOneWidget);
     expect(find.text(unauthorizedMessage), findsOneWidget);
@@ -61,7 +61,7 @@ void main() {
     await tester.pumpWidget(harness(FakeBackend()));
     await tester.pumpAndSettle();
     await openDevices(tester);
-    await tester.tap(find.text('Adicionar celular').first);
+    await tester.tap(find.text('Adicionar dispositivo').first);
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('no-phones')), findsOneWidget);
     expect(find.textContaining('Transferência de arquivos'), findsOneWidget);
@@ -72,7 +72,7 @@ void main() {
     await tester.pumpWidget(harness(backend));
     await tester.pumpAndSettle();
     await openDevices(tester);
-    await tester.tap(find.text('Adicionar celular').first);
+    await tester.tap(find.text('Adicionar dispositivo').first);
     await tester.pumpAndSettle();
     expect(find.text('Já cadastrado'), findsOneWidget);
     await tester.tap(find.text('Pixel de Teste'));
@@ -96,6 +96,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('phone-locked-p1')), findsNothing);
     await tester.tap(find.text('Escanear'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('scan-start')));
     await tester.pumpAndSettle();
     expect(backend.calls, contains('scan:p1'));
   });

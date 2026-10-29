@@ -11,8 +11,9 @@ abstract interface class AppBackend {
   /// Último progresso dos scans em andamento (para quem abre a tela depois).
   Map<int, ScanProgress> get runningScans;
 
-  /// Volumes vistos na última verificação (para "Adicionar unidade").
-  List<VolumeInfo> get volumes;
+  /// Unidades conectadas agora (HD, SSD, pendrive, cartão), com a fonte já
+  /// cadastrada de cada uma.
+  Future<List<(VolumeInfo, String?)>> listDrives();
 
   Future<AddSourceResult> addPath(String path, {String? name});
 
@@ -22,10 +23,18 @@ abstract interface class AppBackend {
   Future<void> rename(String sourceId, String name);
   Future<void> forget(String sourceId);
   Future<void> confirmVolume(String sourceId, String guidPath);
-  Future<int> startScan(String sourceId);
+
+  /// [folders] vazia ou `null` = a fonte inteira.
+  Future<int> startScan(String sourceId, {List<String>? folders});
+  Future<int> resumeScan(int scanId);
   Future<void> pauseScan(int scanId);
   Future<void> cancelScan(int scanId);
-  Future<void> refreshDevices();
+
+  /// Subpastas lidas agora do dispositivo (escolher o que escanear).
+  Future<List<String>> listFolders(String sourceId, String relPath);
+
+  /// Arquivos e bytes já catalogados em cada pasta (estimativa de tamanho).
+  Future<Map<String, FolderStats>> folderStats(String sourceId, List<String> relPaths);
 
   /// Subpastas de uma fonte segundo o catálogo (seletor de escopo).
   Future<List<String>> childFolders(String sourceId, String relPath);
@@ -65,7 +74,7 @@ class CoreBackend implements AppBackend {
   Map<int, ScanProgress> get runningScans => core.scans.runningProgress;
 
   @override
-  List<VolumeInfo> get volumes => core.sources.lastVolumes;
+  Future<List<(VolumeInfo, String?)>> listDrives() => core.sources.listDrives();
 
   @override
   Future<AddSourceResult> addPath(String path, {String? name}) => core.sources.addPath(path, name: name);
@@ -86,16 +95,23 @@ class CoreBackend implements AppBackend {
   Future<void> confirmVolume(String sourceId, String guidPath) => core.sources.confirmVolume(sourceId, guidPath);
 
   @override
-  Future<int> startScan(String sourceId) => core.scans.start(sourceId);
+  Future<int> startScan(String sourceId, {List<String>? folders}) => core.scans.start(sourceId, folders: folders);
+
+  @override
+  Future<int> resumeScan(int scanId) => core.scans.resume(scanId);
+
+  @override
+  Future<List<String>> listFolders(String sourceId, String relPath) => core.scans.listFolders(sourceId, relPath);
+
+  @override
+  Future<Map<String, FolderStats>> folderStats(String sourceId, List<String> relPaths) =>
+      core.sources.folderStats(sourceId, relPaths);
 
   @override
   Future<void> pauseScan(int scanId) => core.scans.pause(scanId);
 
   @override
   Future<void> cancelScan(int scanId) => core.scans.cancel(scanId);
-
-  @override
-  Future<void> refreshDevices() => core.sources.refreshConnectivity();
 
   @override
   Future<List<String>> childFolders(String sourceId, String relPath) => core.sources.childFolders(sourceId, relPath);

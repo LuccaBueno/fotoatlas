@@ -7,6 +7,7 @@ import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
 import '../../widgets/connection_badge.dart';
+import 'scan_dialog.dart';
 
 /// Cartão de uma fonte. Desconectada aparece esmaecida, mas com os dados do
 /// último escaneamento (regra 9).
@@ -72,6 +73,7 @@ class SourceCard extends ConsumerWidget {
               Text(_summary(s), style: theme.textTheme.bodyMedium),
               const SizedBox(height: 4),
               Text(_details(s, scanning), style: theme.textTheme.bodySmall),
+              if (s.scannedFolders.isNotEmpty) _ScannedParts(source: s),
               _CoverageLine(sourceId: s.id),
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -127,8 +129,9 @@ class SourceCard extends ConsumerWidget {
     if (!scanning && scan != null) {
       final when = scan.finishedAt ?? scan.startedAt;
       parts.add(switch (scan.status) {
-        'completed' when scan.coverage == 'partial' =>
+        'completed' when scan.errorCount > 0 =>
           'Escaneado em ${formatEpochMs(when)}, mas ${plural(scan.errorCount, 'pasta não pôde ser lida', 'pastas não puderam ser lidas')}',
+        'completed' when s.partlyScanned => 'Só algumas pastas foram escaneadas',
         'completed' => 'Escaneado em ${formatEpochMs(when)}',
         'paused' => 'Escaneamento pausado — clique em "Retomar" para continuar',
         'interrupted' => 'Escaneamento interrompido — clique em "Retomar" para continuar de onde parou',
@@ -182,7 +185,11 @@ class _Actions extends ConsumerWidget {
           TextButton(onPressed: () => guard(() => backend.cancelScan(running.scanId)), child: const Text('Cancelar')),
         ] else
           FilledButton.tonalIcon(
-            onPressed: source.isReady ? () => guard(() => backend.startScan(source.id)) : null,
+            onPressed: !source.isReady
+                ? null
+                : resumable
+                ? () => guard(() => backend.resumeScan(source.lastScan!.id))
+                : () => startScanFlow(context, ref, source.id),
             icon: Icon(resumable ? Icons.play_arrow : Icons.search),
             label: Text(resumable ? 'Retomar' : 'Escanear'),
           ),
@@ -329,6 +336,39 @@ class _CoverageLine extends ConsumerWidget {
               '${plural(c.duplicateFiles, 'arquivo repetido', 'arquivos repetidos')} (${formatBytes(c.duplicateBytes)})',
               style: Theme.of(context).textTheme.bodySmall,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Quais pastas já foram escaneadas sozinhas e o que ainda falta.
+class _ScannedParts extends StatelessWidget {
+  const _ScannedParts({required this.source});
+  final SourceView source;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = source;
+    final folders = s.scannedFolders.map((f) => '${folderLabel(f.relPath)} (${formatDateTime(f.at)})').join(', ');
+    return Padding(
+      key: ValueKey('scanned-parts-${s.id}'),
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(s.partlyScanned ? Icons.rule_folder_outlined : Icons.update, size: 16),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              s.partlyScanned
+                  ? 'Escaneadas: $folders. O resto ainda não foi escaneado — use "Escanear" para '
+                        'escolher mais pastas ou o dispositivo inteiro.'
+                  : 'Dispositivo inteiro escaneado em ${formatDateTime(s.wholeScannedAt!)}; '
+                        'atualizadas depois: $folders.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
         ],
       ),
     );

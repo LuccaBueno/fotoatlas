@@ -69,12 +69,17 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Dispositivos').first);
     await tester.pump();
-    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
-    await tester.pump();
+    // Cada consulta ao banco precisa de tempo real e de um quadro.
+    for (var i = 0; i < 50 && find.text('Fotos').evaluate().isEmpty; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+    }
     expect(find.text('Fotos'), findsOneWidget);
     expect(find.text('Ainda não escaneado.'), findsOneWidget);
 
     await tester.tap(find.text('Escanear'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('scan-start')));
     // O scan roda de verdade (isolates, banco); alterna tempo real e quadros.
     final result = find.textContaining('25 fotos e vídeos · 26 arquivos');
     for (var i = 0; i < 100 && result.evaluate().isEmpty; i++) {

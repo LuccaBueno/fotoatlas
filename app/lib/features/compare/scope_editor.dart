@@ -6,7 +6,8 @@ import '../../app/providers.dart';
 import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
 import '../../widgets/connection_badge.dart';
-import '../devices/devices_page.dart';
+import '../devices/add_device.dart';
+import '../devices/scan_dialog.dart';
 import 'compare_controller.dart';
 
 /// "HD Backup › Fotos/2020" (ou só o nome da fonte inteira).
@@ -182,24 +183,13 @@ class ScopePickerDialog extends ConsumerStatefulWidget {
 class _ScopePickerDialogState extends ConsumerState<ScopePickerDialog> {
   ScopeEntry? _selected;
 
-  /// Cadastra uma pasta ou unidade nova, já começa a escanear e a deixa
-  /// selecionada — sem sair da Comparar.
-  Future<void> _addNew(String kind) async {
-    const message = 'Adicionado. Escaneando agora; dá para comparar quando terminar.';
-    final add = switch (kind) {
-      'drive' => addDrive,
-      'phone' => addPhone,
-      _ => addFolder,
-    };
-    final id = await add(context, ref, addedMessage: message);
+  /// Cadastra um dispositivo novo, pergunta o que escanear e o deixa
+  /// selecionado — sem sair da Comparar.
+  Future<void> _addNew() async {
+    final id = await addDevice(context, ref, addedMessage: 'Adicionado. Agora escolha o que escanear.');
     if (id == null || !mounted) return;
     setState(() => _selected = ScopeEntry(id));
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await ref.read(backendProvider).startScan(id);
-    } on Exception catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Não foi possível começar a escanear: $e')));
-    }
+    await startScanFlow(context, ref, id);
   }
 
   @override
@@ -226,26 +216,11 @@ class _ScopePickerDialogState extends ConsumerState<ScopePickerDialog> {
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
-                PopupMenuButton<String>(
+                TextButton.icon(
                   key: const ValueKey('picker-add-new'),
-                  tooltip: 'Cadastrar e escanear',
-                  onSelected: _addNew,
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'folder', child: Text('Uma pasta…')),
-                    PopupMenuItem(value: 'drive', child: Text('Uma unidade inteira (HD, pendrive, cartão)…')),
-                    PopupMenuItem(value: 'phone', child: Text('Um celular (pelo cabo USB)…')),
-                  ],
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, size: 18),
-                        SizedBox(width: 4),
-                        Text('Adicionar nova pasta/dispositivo…'),
-                      ],
-                    ),
-                  ),
+                  onPressed: _addNew,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Adicionar dispositivo…'),
                 ),
               ],
             ),

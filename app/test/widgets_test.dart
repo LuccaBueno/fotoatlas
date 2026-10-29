@@ -89,7 +89,10 @@ void main() {
     expect(find.textContaining('500 GB livres de 2,0 TB'), findsOneWidget);
 
     await tester.tap(find.text('Escanear'));
-    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('scan-whole')), findsOneWidget, reason: 'pergunta o que escanear');
+    await tester.tap(find.byKey(const ValueKey('scan-start')));
+    await tester.pumpAndSettle();
     expect(backend.calls, contains('scan:s1'));
 
     backend.emitProgress(
@@ -104,6 +107,8 @@ void main() {
         errorCount: 0,
       ),
     );
+    // A tela acabou de sair de baixo da janela: o Riverpod retoma o stream num quadro e entrega no seguinte.
+    await tester.pump();
     await tester.pump();
     expect(find.text('Pausar'), findsOneWidget);
     expect(find.textContaining('2.500 arquivos encontrados'), findsOneWidget);

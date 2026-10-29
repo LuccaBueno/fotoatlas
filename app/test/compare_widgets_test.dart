@@ -280,18 +280,21 @@ void main() {
     expect(find.textContaining('/'), findsNothing, reason: 'sem misturar › e /');
   });
 
-  testWidgets('seletor: dica e "Adicionar nova pasta/dispositivo…" cadastra e escaneia sem sair', (tester) async {
+  testWidgets('seletor: dica e "Adicionar dispositivo…" cadastra, pergunta o que escanear e não sai', (tester) async {
     final backend = backendWith(summary())
-      ..fakeVolumes = [
-        VolumeInfo(
-          guidPath: r'\?\Volume{1}\',
-          mountPoints: const [r'F:\'],
-          label: 'HD_antigo',
-          fileSystem: 'NTFS',
-          serial: 9,
-          totalBytes: 1 << 30,
-          freeBytes: 1 << 29,
-          driveType: 'fixed',
+      ..fakeDrives = [
+        (
+          VolumeInfo(
+            guidPath: r'\?\Volume{1}\',
+            mountPoints: const [r'F:\'],
+            label: 'HD_antigo',
+            fileSystem: 'NTFS',
+            serial: 9,
+            totalBytes: 1 << 30,
+            freeBytes: 1 << 29,
+            driveType: 'fixed',
+          ),
+          null,
         ),
       ];
     await tester.pumpWidget(harness(backend));
@@ -301,11 +304,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Não encontrou? Ela precisa ser adicionada e escaneada primeiro.'), findsOneWidget);
 
-    await tester.tap(find.text('Adicionar nova pasta/dispositivo…'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Uma unidade inteira (HD, pendrive, cartão)…'));
+    await tester.tap(find.text('Adicionar dispositivo…'));
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('HD_antigo (F:'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('scan-whole')), findsOneWidget, reason: 'pergunta o que escanear');
+    await tester.tap(find.byKey(const ValueKey('scan-start')));
     await tester.pumpAndSettle();
     expect(backend.calls, containsAllInOrder([r'add:F:\', 'scan:novo']));
     backend.emitSources([

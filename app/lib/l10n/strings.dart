@@ -95,3 +95,6 @@ String deviceStatusLabel(String status) => switch (status) {
   'locked' => 'Bloqueado',
   _ => 'Falta permitir o acesso',
 };
+
+/// Pasta sem o nome da fonte: "DCIM › Camera".
+String folderLabel(String relPath) => relPath.split(RegExp(r'[/\\]')).where((p) => p.isNotEmpty).join(' › ');

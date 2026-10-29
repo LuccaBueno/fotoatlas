@@ -12,7 +12,9 @@ class FakeBackend implements AppBackend {
   final _sourcesController = StreamController<List<SourceView>>.broadcast();
   final _progress = StreamController<ScanProgress>.broadcast();
   final calls = <String>[];
-  List<VolumeInfo> fakeVolumes = const [];
+  List<(VolumeInfo, String?)> fakeDrives = const [];
+  Map<String, List<String>> liveFolders = const {};
+  Map<String, FolderStats> stats = const {};
   List<(DeviceInfo, String?)> fakeDevices = const [];
 
   void emitSources(List<SourceView> list) {
@@ -35,7 +37,7 @@ class FakeBackend implements AppBackend {
   Map<int, ScanProgress> get runningScans => const {};
 
   @override
-  List<VolumeInfo> get volumes => fakeVolumes;
+  Future<List<(VolumeInfo, String?)>> listDrives() async => fakeDrives;
 
   @override
   Future<AddSourceResult> addPath(String path, {String? name}) async {
@@ -62,19 +64,32 @@ class FakeBackend implements AppBackend {
   Future<void> confirmVolume(String sourceId, String guidPath) async => calls.add('confirm:$sourceId');
 
   @override
-  Future<int> startScan(String sourceId) async {
-    calls.add('scan:$sourceId');
+  Future<int> startScan(String sourceId, {List<String>? folders}) async {
+    calls.add(folders == null || folders.isEmpty ? 'scan:$sourceId' : 'scan:$sourceId:${folders.join('+')}');
     return 1;
   }
+
+  @override
+  Future<int> resumeScan(int scanId) async {
+    calls.add('resume:$scanId');
+    return scanId;
+  }
+
+  @override
+  Future<List<String>> listFolders(String sourceId, String relPath) async =>
+      liveFolders['$sourceId:$relPath'] ?? const [];
+
+  @override
+  Future<Map<String, FolderStats>> folderStats(String sourceId, List<String> relPaths) async => {
+    for (final r in relPaths)
+      if (stats['$sourceId:$r'] != null) r: stats['$sourceId:$r']!,
+  };
 
   @override
   Future<void> pauseScan(int scanId) async => calls.add('pause:$scanId');
 
   @override
   Future<void> cancelScan(int scanId) async => calls.add('cancel:$scanId');
-
-  @override
-  Future<void> refreshDevices() async => calls.add('refresh');
 
   // --- Fase 2 ---------------------------------------------------------------
 
