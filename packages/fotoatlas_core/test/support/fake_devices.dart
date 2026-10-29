@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
@@ -156,5 +157,23 @@ class FakeDeviceBackend implements DeviceBackend {
       throw DeviceException('changed_during_read', 'O arquivo mudou enquanto era lido.');
     }
     return DeviceHash(Uint8List.fromList(sha256.convert(bytes).bytes), bytes.length, phone.modified[path]);
+  }
+
+  int readHeadCalls = 0;
+
+  @override
+  Future<int> readHead(String deviceId, String objectId, String outPath, {int maxBytes = 256 * 1024}) async {
+    final phone = _connected(deviceId);
+    final prefix = 's${phone.session}|';
+    if (!objectId.startsWith(prefix)) throw DeviceException('not_found', 'ID de outra sessão.');
+    final bytes = phone.files[objectId.substring(prefix.length)];
+    if (bytes == null) throw DeviceException('not_found', 'Arquivo não existe.');
+    readHeadCalls++;
+    final head = bytes.length > maxBytes ? bytes.sublist(0, maxBytes) : bytes;
+    // Como o helper: arquivo novo, nunca sobrescreve.
+    final f = File(outPath);
+    if (f.existsSync()) throw DeviceException('already_exists', 'Já existe.');
+    f.writeAsBytesSync(head, flush: true);
+    return head.length;
   }
 }

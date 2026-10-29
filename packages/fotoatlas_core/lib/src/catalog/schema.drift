@@ -326,7 +326,7 @@ CREATE INDEX ix_moments_start ON moments(start_utc_ms);
 CREATE TABLE moment_edits (
   id          INTEGER NOT NULL PRIMARY KEY,
   moment_id   INTEGER,
-  action      TEXT NOT NULL CHECK (action IN ('rename','merge','split','reset')),
+  op          TEXT NOT NULL CHECK (op IN ('rename','merge','split','reset')),
   detail_json TEXT,
   created_at  INTEGER NOT NULL
 ) AS MomentEditRow;

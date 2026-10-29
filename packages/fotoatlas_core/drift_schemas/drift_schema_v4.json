@@ -3351,6 +3351,16 @@
             "dsl_features": []
           },
           {
+            "name": "op",
+            "getter_name": "op",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": "NOT NULL CHECK (op IN ('rename', 'merge', 'split', 'reset'))",
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
             "name": "detail_json",
             "getter_name": "detailJson",
             "moor_type": "string",
@@ -3779,7 +3789,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"moment_edits\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"moment_id\" INTEGER, \"detail_json\" TEXT, \"created_at\" INTEGER NOT NULL);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"moment_edits\" (\"id\" INTEGER NOT NULL PRIMARY KEY, \"moment_id\" INTEGER, \"op\" TEXT NOT NULL CHECK (op IN ('rename', 'merge', 'split', 'reset')), \"detail_json\" TEXT, \"created_at\" INTEGER NOT NULL);"
         }
       ]
     }

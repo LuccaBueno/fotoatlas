@@ -8,9 +8,15 @@ import 'coverage/coverage_service.dart';
 import 'devices/devices.dart';
 import 'hash/hash_service.dart';
 import 'helper/helper_client.dart';
+import 'library/library_service.dart';
+import 'metadata/dates_service.dart';
+import 'metadata/external_tools.dart';
+import 'metadata/metadata_service.dart';
+import 'metadata/moments_service.dart';
 import 'scan/scan_service.dart';
 import 'sources/sources_service.dart';
 import 'sources/volumes.dart';
+import 'thumbs/thumbnail_service.dart';
 import 'util/instance_lock.dart';
 import 'util/paths.dart';
 
@@ -25,6 +31,11 @@ class FotoAtlasCore {
     required this.coverage,
     required this.compare,
     required this.backups,
+    required this.metadata,
+    required this.moments,
+    required this.dates,
+    required this.library,
+    required this.thumbnails,
     required this.volumes,
     required this.helper,
     required this._lock,
@@ -46,6 +57,21 @@ class FotoAtlasCore {
 
   /// Backup automático do catálogo.
   final CatalogBackupService backups;
+
+  /// Leitura de metadados (ExifTool/ffprobe) e datas da captura.
+  final MetadataService metadata;
+
+  /// Momentos automáticos e edições.
+  final MomentsService moments;
+
+  /// Correção de relógio por dispositivo, hora manual e "confirmar hora".
+  final DatesService dates;
+
+  /// Consultas da Biblioteca (filtros, linha do tempo, detalhes, seleção).
+  final LibraryService library;
+
+  /// Miniaturas em cache.
+  final ThumbnailService thumbnails;
   final VolumeProvider volumes;
 
   /// `null` se o helper não foi encontrado ou não iniciou (o core segue
@@ -71,6 +97,9 @@ class FotoAtlasCore {
   ///   falso); o core o inicia se preciso e o encerra no [close].
   /// - [fakeDevicesDir] (ou `FOTOATLAS_FAKE_DEVICES`): o helper mostra os
   ///   celulares simulados dessa pasta em vez dos reais (testes e demonstração).
+  /// - [tools]: ExifTool/ffprobe/ffmpeg (padrão: [ExternalTools.locate]).
+  /// - [autoMetadata]: lê os metadados sozinho depois da conferência e quando
+  ///   uma fonte conecta (o app liga).
   static Future<FotoAtlasCore> open({
     CorePaths? paths,
     VolumeProvider? volumes,
@@ -85,6 +114,8 @@ class FotoAtlasCore {
     bool backupOnOpen = false,
     DeviceBackend? devices,
     String? fakeDevicesDir,
+    ExternalTools? tools,
+    bool autoMetadata = false,
   }) async {
     final resolvedPaths = paths ?? CorePaths.fromEnvironment();
     Directory(resolvedPaths.dataDir).createSync(recursive: true);
@@ -129,6 +160,19 @@ class FotoAtlasCore {
       final scans = ScanService(catalog, sources, useIsolate: scanInIsolate);
       await scans.init();
       final hashes = HashService(catalog, sources, scans, useIsolate: hashInIsolate);
+      final externalTools = tools ?? ExternalTools.locate();
+      final metadata = MetadataService(
+        catalog,
+        sources,
+        scans,
+        hashes,
+        tools: externalTools,
+        cacheDir: resolvedPaths.thumbsDir,
+      );
+      await metadata.init();
+      metadata.cleanLeftovers();
+      final moments = MomentsService(catalog.db);
+      await moments.init();
       await sources.refreshConnectivity();
       if (monitor) sources.startMonitoring();
       final core = FotoAtlasCore._(
@@ -140,6 +184,17 @@ class FotoAtlasCore {
         coverage: CoverageService(catalog.db),
         compare: CompareService(catalog.db, sources),
         backups: CatalogBackupService(catalog.db, resolvedPaths.catalogPath),
+        metadata: metadata,
+        moments: moments,
+        dates: DatesService(catalog.db, metadata.effective, moments),
+        library: LibraryService(catalog.db),
+        thumbnails: ThumbnailService(
+          catalog.db,
+          sources,
+          cacheDir: resolvedPaths.thumbsDir,
+          helper: helper,
+          tools: externalTools,
+        ),
         volumes: provider,
         helper: helper,
         lock: lock,
@@ -151,7 +206,14 @@ class FotoAtlasCore {
             .then((_) {}, onError: (Object _) {})
             .whenComplete(() => core._backupDone = true);
       }
+      // Datas mudaram (metadados lidos, fuso, prioridade): recalcula os
+      // momentos, agrupando rajadas de mudanças.
+      core._datesSub = metadata.datesChanged.listen((_) {
+        core._momentsTimer?.cancel();
+        core._momentsTimer = Timer(const Duration(seconds: 2), () => moments.recompute().ignore());
+      });
       if (autoHash) hashes.enableAuto();
+      if (autoMetadata) metadata.enableAuto();
       return core;
     } catch (_) {
       await helper?.close();
@@ -163,6 +225,16 @@ class FotoAtlasCore {
 
   bool _backupDone = false;
   Future<void>? _closing;
+  StreamSubscription<void>? _datesSub;
+  Timer? _momentsTimer;
+
+  /// Espera a leitura de metadados terminar e recalcula os momentos na hora
+  /// (testes, CLI e "Atualizar").
+  Future<MomentsRecalc> settleDates() async {
+    await metadata.waitIdle();
+    _momentsTimer?.cancel();
+    return moments.recompute();
+  }
 
   /// O que está em andamento agora (para perguntar antes de fechar). Na
   /// Fase 5 entram as cópias.
@@ -178,6 +250,10 @@ class FotoAtlasCore {
     if (hashes.isRunning) {
       final h = hashes.current;
       tasks.add(RunningTask(RunningTaskKind.hash, done: h.filesDone, total: h.filesTotal));
+    }
+    if (metadata.isRunning) {
+      final m = metadata.current;
+      tasks.add(RunningTask(RunningTaskKind.metadata, done: m.done, total: m.total));
     }
     if (_backupOnOpen != null && !_backupDone) tasks.add(const RunningTask(RunningTaskKind.backup));
     return tasks;
@@ -216,6 +292,8 @@ class FotoAtlasCore {
               : 'Pausando $runningScans escaneamentos (o ponto de parada fica salvo)',
         ),
       if (hashes.isRunning) ShutdownStep('hash', 'Pausando a conferência de conteúdo (o que falta continua na fila)'),
+      if (metadata.isRunning)
+        ShutdownStep('metadata', 'Pausando a leitura das datas e informações das fotos (o que falta continua na fila)'),
       if (_backupOnOpen != null && !_backupDone) ShutdownStep('backup', 'Terminando o backup do catálogo'),
       if (helper != null) ShutdownStep('helper', 'Encerrando a leitura de dispositivos'),
       ShutdownStep('catalog', 'Fechando o catálogo'),
@@ -242,9 +320,18 @@ class FotoAtlasCore {
     }
 
     report();
+    unawaited(_datesSub?.cancel());
+    _momentsTimer?.cancel();
+    thumbnails.close();
     await Future.wait([
       step('scan', () => scans.dispose(timeout: stepTimeout)),
       step('hash', () => hashes.dispose(timeout: stepTimeout)),
+      // Também fecha o ExifTool; um recálculo de momentos em andamento termina numa transação.
+      step('metadata', () async {
+        final ok = await metadata.dispose(timeout: stepTimeout);
+        await moments.waitIdle();
+        return ok;
+      }),
     ]);
     await step('backup', () async => _backupOnOpen);
     await step('sources', sources.dispose);
@@ -270,7 +357,7 @@ class ShutdownStep {
   bool timedOut = false;
 }
 
-enum RunningTaskKind { scan, hash, backup }
+enum RunningTaskKind { scan, hash, metadata, backup }
 
 /// Uma tarefa em andamento. [done]/[total]: arquivos encontrados (scan) ou
 /// conferidos (conferência); `total` 0 = desconhecido.

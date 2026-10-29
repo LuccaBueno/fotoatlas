@@ -354,4 +354,8 @@ class _StuckPhone implements DeviceBackend {
     hashing = true;
     return Completer<DeviceHash>().future;
   }
+
+  @override
+  Future<int> readHead(String deviceId, String objectId, String outPath, {int maxBytes = 256 * 1024}) =>
+      Completer<int>().future;
 }

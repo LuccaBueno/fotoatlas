@@ -2771,6 +2771,15 @@ class MomentEdits extends Table with TableInfo {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  late final GeneratedColumn<String> op = GeneratedColumn<String>(
+    'op',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL CHECK (op IN (\'rename\', \'merge\', \'split\', \'reset\'))',
+  );
   late final GeneratedColumn<String> detailJson = GeneratedColumn<String>(
     'detail_json',
     aliasedName,
@@ -2788,7 +2797,13 @@ class MomentEdits extends Table with TableInfo {
     $customConstraints: 'NOT NULL',
   );
   @override
-  List<GeneratedColumn> get $columns => [id, momentId, detailJson, createdAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    momentId,
+    op,
+    detailJson,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override

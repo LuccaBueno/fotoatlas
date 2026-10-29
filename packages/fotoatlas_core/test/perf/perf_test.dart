@@ -4,6 +4,7 @@ library;
 import 'package:test/test.dart';
 
 import 'coverage_100k.dart' as coverage_100k;
+import 'library_100k.dart' as library_100k;
 import 'scan_50k.dart' as scan_50k;
 
 /// Testes de desempenho num arquivo só, para rodarem **um depois do outro**:
@@ -13,4 +14,5 @@ import 'scan_50k.dart' as scan_50k;
 void main() {
   group('scan de 50 mil arquivos', scan_50k.main);
   group('cobertura de 100 mil arquivos', coverage_100k.main);
+  group('Biblioteca com 100 mil itens', library_100k.main);
 }

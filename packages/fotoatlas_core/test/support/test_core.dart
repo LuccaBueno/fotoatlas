@@ -10,7 +10,8 @@ import 'temp.dart';
 
 /// Ambiente de teste: catálogo em temp + um "volume" simulado (pasta real).
 class TestEnv {
-  TestEnv._(this.temp, this.core, this.volumes, this.volumeDir, this._isolate);
+  TestEnv._(this.temp, this.core, this.volumes, this.volumeDir, this._isolate, this._tools);
+  final ExternalTools? _tools;
 
   final Directory temp;
   FotoAtlasCore core;
@@ -24,6 +25,7 @@ class TestEnv {
     bool isolate = false,
     VolumeInfo Function(String root)? volume,
     DeviceBackend? devices,
+    ExternalTools? tools,
   }) async {
     final temp = await createTestTemp();
     final volumeDir = Directory(p.join(temp.path, 'volume_e'))..createSync();
@@ -37,8 +39,9 @@ class TestEnv {
       scanInIsolate: isolate,
       hashInIsolate: isolate,
       devices: devices,
+      tools: tools,
     );
-    final env = TestEnv._(temp, core, provider, volumeDir, isolate);
+    final env = TestEnv._(temp, core, provider, volumeDir, isolate, tools);
     addTearDown(env.close);
     return env;
   }
@@ -54,6 +57,7 @@ class TestEnv {
       scanInIsolate: _isolate,
       hashInIsolate: _isolate,
       devices: devices,
+      tools: _tools,
     );
   }
 

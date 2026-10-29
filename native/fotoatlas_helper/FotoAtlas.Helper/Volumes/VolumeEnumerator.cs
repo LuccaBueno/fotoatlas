@@ -102,7 +102,7 @@ internal sealed unsafe class VolumeEnumerator : IVolumeSource
         return list;
     }
 
-    private static List<string> GetMountPoints(string guid)
+    internal static List<string> GetMountPoints(string guid)
     {
         uint size = 512;
         while (true)

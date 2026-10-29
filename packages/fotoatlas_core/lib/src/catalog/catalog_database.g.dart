@@ -11401,6 +11401,15 @@ class MomentEdits extends Table with TableInfo<MomentEdits, MomentEditRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _opMeta = const VerificationMeta('op');
+  late final GeneratedColumn<String> op = GeneratedColumn<String>(
+    'op',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (op IN (\'rename\', \'merge\', \'split\', \'reset\'))',
+  );
   static const VerificationMeta _detailJsonMeta = const VerificationMeta('detailJson');
   late final GeneratedColumn<String> detailJson = GeneratedColumn<String>(
     'detail_json',
@@ -11420,7 +11429,7 @@ class MomentEdits extends Table with TableInfo<MomentEdits, MomentEditRow> {
     $customConstraints: 'NOT NULL',
   );
   @override
-  List<GeneratedColumn> get $columns => [id, momentId, detailJson, createdAt];
+  List<GeneratedColumn> get $columns => [id, momentId, op, detailJson, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -11435,6 +11444,11 @@ class MomentEdits extends Table with TableInfo<MomentEdits, MomentEditRow> {
     }
     if (data.containsKey('moment_id')) {
       context.handle(_momentIdMeta, momentId.isAcceptableOrUnknown(data['moment_id']!, _momentIdMeta));
+    }
+    if (data.containsKey('op')) {
+      context.handle(_opMeta, op.isAcceptableOrUnknown(data['op']!, _opMeta));
+    } else if (isInserting) {
+      context.missing(_opMeta);
     }
     if (data.containsKey('detail_json')) {
       context.handle(_detailJsonMeta, detailJson.isAcceptableOrUnknown(data['detail_json']!, _detailJsonMeta));
@@ -11455,6 +11469,7 @@ class MomentEdits extends Table with TableInfo<MomentEdits, MomentEditRow> {
     return MomentEditRow(
       id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       momentId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}moment_id']),
+      op: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}op'])!,
       detailJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}detail_json']),
       createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
     );
@@ -11472,9 +11487,10 @@ class MomentEdits extends Table with TableInfo<MomentEdits, MomentEditRow> {
 class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
   final int id;
   final int? momentId;
+  final String op;
   final String? detailJson;
   final int createdAt;
-  const MomentEditRow({required this.id, this.momentId, this.detailJson, required this.createdAt});
+  const MomentEditRow({required this.id, this.momentId, required this.op, this.detailJson, required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -11482,6 +11498,7 @@ class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
     if (!nullToAbsent || momentId != null) {
       map['moment_id'] = Variable<int>(momentId);
     }
+    map['op'] = Variable<String>(op);
     if (!nullToAbsent || detailJson != null) {
       map['detail_json'] = Variable<String>(detailJson);
     }
@@ -11493,6 +11510,7 @@ class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
     return MomentEditsCompanion(
       id: Value(id),
       momentId: momentId == null && nullToAbsent ? const Value.absent() : Value(momentId),
+      op: Value(op),
       detailJson: detailJson == null && nullToAbsent ? const Value.absent() : Value(detailJson),
       createdAt: Value(createdAt),
     );
@@ -11503,6 +11521,7 @@ class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
     return MomentEditRow(
       id: serializer.fromJson<int>(json['id']),
       momentId: serializer.fromJson<int?>(json['moment_id']),
+      op: serializer.fromJson<String>(json['op']),
       detailJson: serializer.fromJson<String?>(json['detail_json']),
       createdAt: serializer.fromJson<int>(json['created_at']),
     );
@@ -11513,6 +11532,7 @@ class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'moment_id': serializer.toJson<int?>(momentId),
+      'op': serializer.toJson<String>(op),
       'detail_json': serializer.toJson<String?>(detailJson),
       'created_at': serializer.toJson<int>(createdAt),
     };
@@ -11521,11 +11541,13 @@ class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
   MomentEditRow copyWith({
     int? id,
     Value<int?> momentId = const Value.absent(),
+    String? op,
     Value<String?> detailJson = const Value.absent(),
     int? createdAt,
   }) => MomentEditRow(
     id: id ?? this.id,
     momentId: momentId.present ? momentId.value : this.momentId,
+    op: op ?? this.op,
     detailJson: detailJson.present ? detailJson.value : this.detailJson,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -11533,6 +11555,7 @@ class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
     return MomentEditRow(
       id: data.id.present ? data.id.value : this.id,
       momentId: data.momentId.present ? data.momentId.value : this.momentId,
+      op: data.op.present ? data.op.value : this.op,
       detailJson: data.detailJson.present ? data.detailJson.value : this.detailJson,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -11543,6 +11566,7 @@ class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
     return (StringBuffer('MomentEditRow(')
           ..write('id: $id, ')
           ..write('momentId: $momentId, ')
+          ..write('op: $op, ')
           ..write('detailJson: $detailJson, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -11550,13 +11574,14 @@ class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
   }
 
   @override
-  int get hashCode => Object.hash(id, momentId, detailJson, createdAt);
+  int get hashCode => Object.hash(id, momentId, op, detailJson, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is MomentEditRow &&
           other.id == this.id &&
           other.momentId == this.momentId &&
+          other.op == this.op &&
           other.detailJson == this.detailJson &&
           other.createdAt == this.createdAt);
 }
@@ -11564,29 +11589,35 @@ class MomentEditRow extends DataClass implements Insertable<MomentEditRow> {
 class MomentEditsCompanion extends UpdateCompanion<MomentEditRow> {
   final Value<int> id;
   final Value<int?> momentId;
+  final Value<String> op;
   final Value<String?> detailJson;
   final Value<int> createdAt;
   const MomentEditsCompanion({
     this.id = const Value.absent(),
     this.momentId = const Value.absent(),
+    this.op = const Value.absent(),
     this.detailJson = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   MomentEditsCompanion.insert({
     this.id = const Value.absent(),
     this.momentId = const Value.absent(),
+    required String op,
     this.detailJson = const Value.absent(),
     required int createdAt,
-  }) : createdAt = Value(createdAt);
+  }) : op = Value(op),
+       createdAt = Value(createdAt);
   static Insertable<MomentEditRow> custom({
     Expression<int>? id,
     Expression<int>? momentId,
+    Expression<String>? op,
     Expression<String>? detailJson,
     Expression<int>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (momentId != null) 'moment_id': momentId,
+      if (op != null) 'op': op,
       if (detailJson != null) 'detail_json': detailJson,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -11595,12 +11626,14 @@ class MomentEditsCompanion extends UpdateCompanion<MomentEditRow> {
   MomentEditsCompanion copyWith({
     Value<int>? id,
     Value<int?>? momentId,
+    Value<String>? op,
     Value<String?>? detailJson,
     Value<int>? createdAt,
   }) {
     return MomentEditsCompanion(
       id: id ?? this.id,
       momentId: momentId ?? this.momentId,
+      op: op ?? this.op,
       detailJson: detailJson ?? this.detailJson,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -11614,6 +11647,9 @@ class MomentEditsCompanion extends UpdateCompanion<MomentEditRow> {
     }
     if (momentId.present) {
       map['moment_id'] = Variable<int>(momentId.value);
+    }
+    if (op.present) {
+      map['op'] = Variable<String>(op.value);
     }
     if (detailJson.present) {
       map['detail_json'] = Variable<String>(detailJson.value);
@@ -11629,6 +11665,7 @@ class MomentEditsCompanion extends UpdateCompanion<MomentEditRow> {
     return (StringBuffer('MomentEditsCompanion(')
           ..write('id: $id, ')
           ..write('momentId: $momentId, ')
+          ..write('op: $op, ')
           ..write('detailJson: $detailJson, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -20429,12 +20466,14 @@ typedef $SavedScopesProcessedTableManager =
 typedef $MomentEditsCreateCompanionBuilder = MomentEditsCompanion Function({
   Value<int> id,
   Value<int?> momentId,
+  required String op,
   Value<String?> detailJson,
   required int createdAt,
 });
 typedef $MomentEditsUpdateCompanionBuilder = MomentEditsCompanion Function({
   Value<int> id,
   Value<int?> momentId,
+  Value<String> op,
   Value<String?> detailJson,
   Value<int> createdAt,
 });
@@ -20451,6 +20490,8 @@ class $MomentEditsFilterComposer extends Composer<_$CatalogDatabase, MomentEdits
 
   ColumnFilters<int> get momentId =>
       $composableBuilder(column: $table.momentId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get op => $composableBuilder(column: $table.op, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get detailJson =>
       $composableBuilder(column: $table.detailJson, builder: (column) => ColumnFilters(column));
@@ -20472,6 +20513,8 @@ class $MomentEditsOrderingComposer extends Composer<_$CatalogDatabase, MomentEdi
   ColumnOrderings<int> get momentId =>
       $composableBuilder(column: $table.momentId, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get op => $composableBuilder(column: $table.op, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get detailJson =>
       $composableBuilder(column: $table.detailJson, builder: (column) => ColumnOrderings(column));
 
@@ -20490,6 +20533,8 @@ class $MomentEditsAnnotationComposer extends Composer<_$CatalogDatabase, MomentE
   GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<int> get momentId => $composableBuilder(column: $table.momentId, builder: (column) => column);
+
+  GeneratedColumn<String> get op => $composableBuilder(column: $table.op, builder: (column) => column);
 
   GeneratedColumn<String> get detailJson => $composableBuilder(column: $table.detailJson, builder: (column) => column);
 
@@ -20522,15 +20567,24 @@ class $MomentEditsTableManager
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<int?> momentId = const Value.absent(),
+            Value<String> op = const Value.absent(),
             Value<String?> detailJson = const Value.absent(),
             Value<int> createdAt = const Value.absent(),
-          }) => MomentEditsCompanion(id: id, momentId: momentId, detailJson: detailJson, createdAt: createdAt),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int?> momentId = const Value.absent(),
-            Value<String?> detailJson = const Value.absent(),
-            required int createdAt,
-          }) => MomentEditsCompanion.insert(id: id, momentId: momentId, detailJson: detailJson, createdAt: createdAt),
+          }) => MomentEditsCompanion(id: id, momentId: momentId, op: op, detailJson: detailJson, createdAt: createdAt),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int?> momentId = const Value.absent(),
+                required String op,
+                Value<String?> detailJson = const Value.absent(),
+                required int createdAt,
+              }) => MomentEditsCompanion.insert(
+                id: id,
+                momentId: momentId,
+                op: op,
+                detailJson: detailJson,
+                createdAt: createdAt,
+              ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (

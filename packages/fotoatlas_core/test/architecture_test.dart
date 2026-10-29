@@ -51,6 +51,15 @@ const _allowed = {
   // Backup do catálogo: pasta backups/ e rotação dos próprios backups (nunca arquivos de usuário).
   ('catalog/catalog_backup.dart', 'createSync'),
   ('catalog/catalog_backup.dart', 'deleteSync'),
+  // Fase 4: só a pasta de cache (%LOCALAPPDATA%\FotoAtlas\thumbs), nunca arquivos de usuário.
+  // Leituras parciais do celular (_leitura/): cria a pasta e apaga as cópias depois de ler.
+  ('metadata/metadata_service.dart', 'createSync'),
+  ('metadata/metadata_service.dart', 'deleteSync'),
+  // Miniaturas: pasta, arquivo temporário novo, publicação por renomear e limpeza do temporário.
+  ('thumbs/thumbnail_service.dart', 'createSync'),
+  ('thumbs/thumbnail_service.dart', 'writeAsBytes'),
+  ('thumbs/thumbnail_service.dart', 'renameSync'),
+  ('thumbs/thumbnail_service.dart', 'deleteSync'),
 };
 
 void main() {

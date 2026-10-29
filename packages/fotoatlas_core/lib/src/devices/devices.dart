@@ -156,6 +156,10 @@ abstract interface class DeviceBackend {
 
   /// SHA-256 em streaming, calculado no helper. [cancel] interrompe.
   Future<DeviceHash> hash(String deviceId, String objectId, {required int expectedSize, Future<void>? cancel});
+
+  /// Copia no máximo [maxBytes] do começo do arquivo para [outPath] (arquivo
+  /// novo dentro do cache): o bastante para ler o EXIF de uma foto.
+  Future<int> readHead(String deviceId, String objectId, String outPath, {int maxBytes = 256 * 1024});
 }
 
 /// Celulares pelo helper (WPD).
@@ -206,6 +210,17 @@ class HelperDeviceBackend implements DeviceBackend {
           (result['size'] as num).toInt(),
           _fileTime(result['modified']),
         );
+      });
+
+  @override
+  Future<int> readHead(String deviceId, String objectId, String outPath, {int maxBytes = 256 * 1024}) =>
+      _guard(() async {
+        final result = await client.call(
+          'devices.readHead',
+          params: {'deviceId': deviceId, 'objectId': objectId, 'outPath': outPath, 'maxBytes': maxBytes},
+          timeout: const Duration(minutes: 1),
+        );
+        return (result['bytes'] as num).toInt();
       });
 
   static Future<T> _guard<T>(Future<T> Function() body) async {

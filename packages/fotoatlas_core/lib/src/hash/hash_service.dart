@@ -156,6 +156,9 @@ class HashService {
   HashStatus get current => _current;
   bool get isRunning => _workers.isNotEmpty;
 
+  /// Algum worker está lendo esta fonte agora (o celular tem um leitor só).
+  bool isReading(String sourceId) => _workers.values.any((w) => w.sourceIds.contains(sourceId));
+
   /// Conferência automática: depois de cada scan concluído e quando uma fonte
   /// conecta. Respeita a pausa do usuário.
   void enableAuto() {

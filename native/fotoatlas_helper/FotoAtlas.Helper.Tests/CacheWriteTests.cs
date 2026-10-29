@@ -56,6 +56,24 @@ public sealed class CacheWriteTests : IDisposable
     }
 
     [Fact]
+    public async Task MiniaturaPeloCaminhoDoVolumeGuid()
+    {
+        // O core acessa as fontes por \\?\Volume{GUID}\…; o Shell só abre pela letra.
+        var foto = Path.Combine(_dir.FullName, "guid.jpg");
+        File.WriteAllBytes(foto, Jpeg);
+        var root = Path.GetPathRoot(foto)!;
+        var volume = new FotoAtlas.Helper.Volumes.VolumeEnumerator().List()
+            .First(v => v.MountPoints.Any(m => string.Equals(m, root, StringComparison.OrdinalIgnoreCase)));
+        var guidPath = volume.GuidPath + foto[root.Length..];
+        Assert.Equal(foto, Thumbnails.ShellThumbnailer.ShellPath(guidPath), ignoreCase: true);
+        var outPath = Path.Combine(Cache, "guid.jpg");
+        var response = await Run(
+            $$$"""{"v":1,"id":"1","method":"thumbnails.get","params":{"path":{{{Json(guidPath)}}},"outPath":{{{Json(outPath)}}}}}""");
+        Assert.Null(response("1")["error"]?.ToJsonString());
+        Assert.True(File.Exists(outPath));
+    }
+
+    [Fact]
     public async Task MiniaturaRecusaForaDoCacheArquivoExistenteEOrigemQueNaoExiste()
     {
         var foto = Path.Combine(_dir.FullName, "a.jpg");

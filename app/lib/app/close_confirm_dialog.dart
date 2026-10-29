@@ -61,6 +61,7 @@ class CloseConfirmDialog extends StatelessWidget {
   static IconData _icon(RunningTaskKind kind) => switch (kind) {
     RunningTaskKind.scan => Icons.search,
     RunningTaskKind.hash => Icons.fact_check_outlined,
+    RunningTaskKind.metadata => Icons.event_note_outlined,
     RunningTaskKind.backup => Icons.backup_outlined,
   };
 }
@@ -75,5 +76,8 @@ String runningTaskLabel(RunningTask t) => switch (t.kind) {
     'Conferindo o conteúdo — ${formatInt(t.done)} de ${plural(t.total, 'arquivo', 'arquivos')} '
         '(${(t.done * 100 ~/ t.total)}%)',
   RunningTaskKind.hash => 'Conferindo o conteúdo — ${plural(t.done, 'arquivo conferido', 'arquivos conferidos')}',
+  RunningTaskKind.metadata when t.total > 0 =>
+    'Lendo as datas e informações das fotos — ${formatInt(t.done)} de ${plural(t.total, 'item', 'itens')}',
+  RunningTaskKind.metadata => 'Lendo as datas e informações das fotos',
   RunningTaskKind.backup => 'Fazendo o backup do catálogo',
 };
