@@ -73,7 +73,7 @@ void main() {
     expect(find.text('Adicionar pasta'), findsNothing);
     expect(find.text('Adicionar celular'), findsNothing);
     expect(find.text('Adicionar unidade'), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('add-device')));
+    await tester.tap(find.byKey(const ValueKey('add-device-empty')));
     await tester.pumpAndSettle();
 
     final dialog = find.byType(AlertDialog);
@@ -220,5 +220,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsNothing);
     expect(backend.calls, contains('resume:7'));
+  });
+
+  testWidgets('Dispositivos vazia: "Adicionar dispositivo" só no centro; com dispositivo, no topo', (tester) async {
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend));
+    await tester.pumpAndSettle();
+    await openDevices(tester);
+    expect(find.widgetWithText(FilledButton, 'Adicionar dispositivo'), findsOneWidget);
+    expect(find.byKey(const ValueKey('add-device-empty')), findsOneWidget);
+    expect(find.byKey(const ValueKey('add-device')), findsNothing);
+
+    backend.emitSources([phone()]);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('add-device')), findsOneWidget);
+    expect(find.byKey(const ValueKey('add-device-empty')), findsNothing);
   });
 }

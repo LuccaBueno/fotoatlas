@@ -16,14 +16,17 @@ class DevicesPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dispositivos'),
+        // Sem dispositivos, o botão fica só no centro da tela.
         actions: [
-          FilledButton.icon(
-            key: const ValueKey('add-device'),
-            onPressed: () => addDevice(context, ref),
-            icon: const Icon(Icons.add),
-            label: const Text('Adicionar dispositivo'),
-          ),
-          const SizedBox(width: 16),
+          if (sources.value?.isNotEmpty ?? false) ...[
+            FilledButton.icon(
+              key: const ValueKey('add-device'),
+              onPressed: () => addDevice(context, ref),
+              icon: const Icon(Icons.add),
+              label: const Text('Adicionar dispositivo'),
+            ),
+            const SizedBox(width: 16),
+          ],
         ],
       ),
       body: sources.when(
