@@ -236,4 +236,17 @@ void main() {
     expect(find.byKey(const ValueKey('add-device')), findsOneWidget);
     expect(find.byKey(const ValueKey('add-device-empty')), findsNothing);
   });
+
+  testWidgets('helper caiu (fora do encerramento): avisa que foi interrompido sem perder nada', (tester) async {
+    final backend = FakeBackend([phone()]);
+    await tester.pumpWidget(harness(backend));
+    await tester.pumpAndSettle();
+    backend.helperStatus.add(HelperStatus.restarting);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byKey(const ValueKey('helper-restarting')), findsOneWidget);
+    expect(find.textContaining('está sendo reiniciada'), findsOneWidget);
+    expect(find.textContaining('"Retomar"'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 11));
+  });
 }

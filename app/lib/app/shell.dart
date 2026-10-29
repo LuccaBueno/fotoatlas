@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../features/compare/compare_page.dart';
 import '../features/devices/devices_page.dart';
@@ -7,6 +8,7 @@ import '../features/home/home_page.dart';
 import '../features/placeholder/coming_soon_page.dart';
 import '../features/settings/settings_page.dart';
 import 'providers.dart';
+import '../l10n/strings.dart';
 
 class _Destination {
   const _Destination(this.label, this.icon, this.selectedIcon, this.builder);
@@ -55,6 +57,19 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // O helper caiu (fora do encerramento): avisa; o core já interrompeu o
+    // scan/conferência de forma segura e reinicia o helper.
+    ref.listen(helperStatusProvider, (previous, next) {
+      if (next.value == HelperStatus.restarting && previous?.value != HelperStatus.restarting) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            key: ValueKey('helper-restarting'),
+            content: Text(helperRestartingMessage),
+            duration: Duration(seconds: 10),
+          ),
+        );
+      }
+    });
     final index = ref.watch(navigationIndexProvider);
     final wide = MediaQuery.sizeOf(context).width >= 1100;
     return Scaffold(

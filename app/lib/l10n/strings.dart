@@ -98,3 +98,8 @@ String deviceStatusLabel(String status) => switch (status) {
 
 /// Pasta sem o nome da fonte: "DCIM › Camera".
 String folderLabel(String relPath) => relPath.split(RegExp(r'[/\\]')).where((p) => p.isNotEmpty).join(' › ');
+
+/// Aviso quando o helper (leitura de dispositivos) cai fora do encerramento.
+const helperRestartingMessage =
+    'A leitura de dispositivos parou inesperadamente e está sendo reiniciada. O que estava em andamento '
+    'foi interrompido sem perder nada: a conferência continua sozinha e o escaneamento continua em "Retomar".';

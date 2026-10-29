@@ -174,7 +174,9 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
   });
 
-  testWidgets('fechar o app com a conferência travada no celular: "Encerrando com segurança…" e sai', (tester) async {
+  testWidgets('fechar com a conferência travada no celular: pergunta antes, "Encerrando com segurança…" e sai', (
+    tester,
+  ) async {
     tester.view
       ..physicalSize = const Size(1400, 900)
       ..devicePixelRatio = 1;
@@ -217,11 +219,41 @@ void main() {
     await tester.pump();
 
     final state = tester.state<FotoAtlasAppState>(find.byType(FotoAtlasApp));
-    final watch = Stopwatch()..start();
+    Future<void> frames(bool Function() until, {int max = 100}) async {
+      for (var i = 0; i < max && !until(); i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+        await tester.pump();
+      }
+    }
+
+    // 1º X: há trabalho em andamento → pergunta antes.
     AppExitResponse? response;
     // Em tempo real (os prazos do encerramento são timers de verdade).
     await tester.runAsync(() async => unawaited(state.requestExit().then((r) => response = r)));
-    expect(identical(state.requestExit(), state.requestExit()), isTrue, reason: 'clicar no X de novo não recomeça');
+    expect(identical(state.requestExit(), state.requestExit()), isTrue, reason: 'X de novo não abre outra pergunta');
+    final dialog = find.byKey(const ValueKey('close-confirm'));
+    await frames(() => dialog.evaluate().isNotEmpty);
+    expect(dialog, findsOneWidget);
+    expect(find.text('Há tarefas em andamento:'), findsOneWidget);
+    expect(find.textContaining('Conferindo o conteúdo — 0 de 1 arquivo (0%)'), findsOneWidget);
+    expect(find.textContaining('continuam de onde pararam'), findsOneWidget);
+    final keep = tester.widget<FilledButton>(find.byKey(const ValueKey('keep-working')));
+    expect(keep.autofocus, isTrue, reason: '"Continuar trabalhando" é o padrão');
+
+    // "Continuar trabalhando": não fecha nem pausa nada.
+    await tester.tap(find.byKey(const ValueKey('keep-working')));
+    await frames(() => response != null);
+    expect(response, AppExitResponse.cancel);
+    expect(find.text('Encerrando com segurança…'), findsNothing);
+    expect(core.hashes.isRunning, isTrue, reason: 'a conferência continua');
+
+    // 2º X: pergunta de novo; "Fechar mesmo assim" → "Encerrando com segurança…" e sai.
+    response = null;
+    await tester.runAsync(() async => unawaited(state.requestExit().then((r) => response = r)));
+    await frames(() => dialog.evaluate().isNotEmpty);
+    expect(dialog, findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('close-anyway')));
+    final watch = Stopwatch()..start();
     var sawOverlay = false, sawHashStep = false;
     for (var i = 0; i < 200 && response == null; i++) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
@@ -233,6 +265,48 @@ void main() {
     expect(watch.elapsed, lessThan(const Duration(seconds: 8)), reason: 'termina em poucos segundos');
     expect(sawOverlay, isTrue);
     expect(sawHashStep, isTrue, reason: 'mostra o que falta');
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('fechar sem nada em andamento: fecha direto, sem perguntar', (tester) async {
+    final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
+    FotoAtlasCore? opened;
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+      await tester.runAsync(() async {
+        await opened?.close();
+        await deleteTestDir(temp);
+      });
+    });
+    late FotoAtlasCore core;
+    await tester.runAsync(() async {
+      final fake = _OneVolume((Directory(p.join(temp.path, 'vol'))..createSync()).path);
+      core = opened = await FotoAtlasCore.open(
+        paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
+        volumes: fake,
+        pathResolver: fake,
+        useHelper: false,
+      );
+    });
+    await tester.pumpWidget(FotoAtlasApp(openCore: () async => core));
+    for (var i = 0; i < 20 && find.text('Comparar').evaluate().isEmpty; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+    }
+    final state = tester.state<FotoAtlasAppState>(find.byType(FotoAtlasApp));
+    AppExitResponse? response;
+    var asked = false;
+    await tester.runAsync(() async => unawaited(state.requestExit().then((r) => response = r)));
+    for (var i = 0; i < 100 && response == null; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+      asked |= find.byKey(const ValueKey('close-confirm')).evaluate().isNotEmpty;
+    }
+    expect(response, AppExitResponse.exit);
+    expect(asked, isFalse);
 
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 5));

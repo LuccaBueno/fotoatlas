@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import 'app/backend.dart';
+import 'app/close_confirm_dialog.dart';
 import 'app/providers.dart';
 import 'app/shell.dart';
 import 'app/theme.dart';
@@ -37,6 +38,7 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
   /// Etapas do encerramento em andamento (`null` = não está fechando).
   List<ShutdownStep>? _closingSteps;
   Future<AppExitResponse>? _exit;
+  final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -44,18 +46,47 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
     _lifecycle = AppLifecycleListener(onExitRequested: requestExit);
   }
 
-  /// Ao fechar a janela: mostra "Encerrando com segurança…", pausa o que
-  /// estiver em andamento e fecha o catálogo. Sempre termina com "sair",
-  /// mesmo que o core não responda a tempo. Clicar no X de novo não
-  /// recomeça o encerramento.
-  Future<AppExitResponse> requestExit() => _exit ??= _shutdown();
+  /// Ao fechar a janela: se houver tarefas em andamento, pergunta antes
+  /// ("Continuar trabalhando" é o padrão); depois mostra "Encerrando com
+  /// segurança…", pausa o que estiver em andamento e fecha o catálogo. Uma
+  /// vez confirmado, sempre termina com "sair", mesmo que o core não responda
+  /// a tempo. Clicar no X de novo não abre outra pergunta nem recomeça.
+  Future<AppExitResponse> requestExit() => _exit ??= _confirmAndShutdown();
 
-  Future<AppExitResponse> _shutdown() async {
+  Future<AppExitResponse> _confirmAndShutdown() async {
+    FotoAtlasCore? core;
+    try {
+      core = await _core.timeout(const Duration(seconds: 2));
+    } on Object {
+      // Core não abriu (ou travou abrindo): nada a pausar.
+    }
+    if (core != null) {
+      final List<RunningTask> tasks;
+      try {
+        tasks = await core.runningTasks().timeout(const Duration(seconds: 1));
+      } on Object {
+        return _shutdown(core);
+      }
+      final context = _navigatorKey.currentContext;
+      if (tasks.isNotEmpty && context != null && context.mounted) {
+        final close = await showDialog<bool>(
+          context: context,
+          builder: (_) => CloseConfirmDialog(tasks: tasks),
+        );
+        if (close != true) {
+          _exit = null; // o próximo X pergunta de novo
+          return AppExitResponse.cancel;
+        }
+      }
+    }
+    return _shutdown(core);
+  }
+
+  Future<AppExitResponse> _shutdown(FotoAtlasCore? core) async {
     if (mounted) setState(() => _closingSteps = const []);
     try {
-      final core = await _core.timeout(const Duration(seconds: 2));
       await core
-          .close(onProgress: (steps) => mounted ? setState(() => _closingSteps = steps) : null)
+          ?.close(onProgress: (steps) => mounted ? setState(() => _closingSteps = steps) : null)
           .timeout(FotoAtlasApp.exitDeadline);
     } on Object {
       // Fechar não pode impedir a saída.
@@ -69,12 +100,15 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
     super.dispose();
   }
 
-  MaterialApp _app(Widget home) => MaterialApp(
+  // Só a tela principal usa a chave do navegador: com a mesma chave na tela
+  // de abertura, o Flutter reaproveitaria o navegador (e a página) dela.
+  MaterialApp _app(Widget home, {GlobalKey<NavigatorState>? navigatorKey}) => MaterialApp(
     title: 'FotoAtlas',
     debugShowCheckedModeBanner: false,
     theme: AppTheme.light(),
     darkTheme: AppTheme.dark(),
     home: home,
+    navigatorKey: navigatorKey,
     builder: (context, child) {
       final steps = _closingSteps;
       if (steps == null) return child!;
@@ -99,7 +133,7 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
         // Navigator põe fora da árvore da tela) também enxergam os providers.
         return ProviderScope(
           overrides: [backendProvider.overrideWithValue(CoreBackend(core))],
-          child: _app(const AppShell()),
+          child: _app(const AppShell(), navigatorKey: _navigatorKey),
         );
       },
     );

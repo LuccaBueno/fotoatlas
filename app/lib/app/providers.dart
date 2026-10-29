@@ -54,3 +54,6 @@ class NavigationIndex extends Notifier<int> {
 
   void select(int index) => state = index;
 }
+
+/// Situação do helper (leitura de dispositivos), para avisar quando ele cai.
+final helperStatusProvider = StreamProvider<HelperStatus>((ref) => ref.watch(backendProvider).watchHelperStatus());

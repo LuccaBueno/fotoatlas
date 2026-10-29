@@ -166,6 +166,11 @@ class FakeBackend implements AppBackend {
   @override
   Future<void> removeScope(int id) async => calls.add('remove-scope:$id');
 
+  final helperStatus = StreamController<HelperStatus>.broadcast();
+
+  @override
+  Stream<HelperStatus> watchHelperStatus() => helperStatus.stream;
+
   @override
   List<CatalogBackupInfo> catalogBackups() => backups;
 

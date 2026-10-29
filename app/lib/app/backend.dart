@@ -55,6 +55,10 @@ abstract interface class AppBackend {
   Future<void> renameScope(int id, String name);
   Future<void> removeScope(int id);
 
+  /// Situação da leitura de dispositivos (helper): `restarting` = caiu e está
+  /// voltando.
+  Stream<HelperStatus> watchHelperStatus();
+
   // Backup do catálogo.
   List<CatalogBackupInfo> catalogBackups();
   Future<CatalogBackupInfo> backupCatalogNow();
@@ -157,6 +161,9 @@ class CoreBackend implements AppBackend {
 
   @override
   Future<void> removeScope(int id) => core.compare.removeScope(id);
+
+  @override
+  Stream<HelperStatus> watchHelperStatus() => core.helperStatus;
 
   @override
   List<CatalogBackupInfo> catalogBackups() => core.backups.list();
