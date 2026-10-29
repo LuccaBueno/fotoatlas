@@ -29,10 +29,7 @@ void main() {
     expect(r.exitCode, 0, reason: '${r.stdout}\n${r.stderr}');
     cli = p.join(buildDir.path, 'bundle', 'bin', 'fotoatlas_cli.exe');
   });
-  tearDownAll(() async {
-    assertInTemp(buildDir.path);
-    await buildDir.delete(recursive: true);
-  });
+  tearDownAll(() => deleteTestDir(buildDir));
 
   Future<ProcessResult> run(String home, List<String> args, {Map<String, String>? env}) => Process.run(
     cli,

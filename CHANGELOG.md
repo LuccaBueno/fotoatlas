@@ -2,21 +2,30 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [Não lançado] — Fase 3: Celular (leitura)
+## [0.3.0] — 2026-10-28 — Fase 3: Celular (leitura)
 
 ### Adicionado
 - **Celulares (Android e iPhone) pelo cabo USB, só leitura** (ADR 0012). O helper lê o aparelho pelo Windows Portable Devices com um interop próprio que **não declara nenhum método de gravação, movimentação ou exclusão**, e abre a sessão pedindo só leitura. Pendrives e cartões que o Windows também mostra como "dispositivo portátil" ficam fora da lista de celulares.
 - **Adicionar celular** (Dispositivos e no seletor da Comparar): lista os aparelhos conectados com a situação — "Pronto", "Bloqueado" (desbloqueie e escolha "Transferência de arquivos") ou "Falta permitir o acesso" ("Permitir" no Android, "Confiar" no iPhone). No iPhone, aviso para usar **"Manter originais"** em Ajustes › Fotos.
 - **Escanear o celular** pasta por pasta, com os armazenamentos (interno, cartão SD) como primeiras pastas, pausável e retomável. Pastas privadas de apps (`Android/data`, `Android/obb`) e caches de miniaturas ficam de fora.
 - **Conferência de conteúdo do celular**: o SHA-256 é calculado no helper, lendo o arquivo pelo USB, com detecção de arquivo que mudou depois do scan ou durante a leitura.
-- **Comparar celular × HD**: o celular é uma fonte como as outras (aparelho inteiro, um armazenamento ou uma pasta como DCIM). O celular conta como disco próprio: foto no celular e no HD = backup em disco independente.
+- **Comparar celular × HD**: o celular é uma fonte como as outras (aparelho inteiro, um armazenamento ou uma pasta como DCIM). O celular conta como disco próprio: foto no celular e num HD de identidade confiável = backup em disco independente.
+- **Escanear só uma pasta** (CLI `scan start FONTE --folder P`; no core, `scans.start(fonte, folder: …)`), útil no celular: o scan fica parcial, só confirma ausências dentro da pasta, e a comparação dá "Resultado incompleto" para pastas do escopo que ainda não foram escaneadas.
+- **"Não dá para confirmar que estão em discos diferentes"**: quando uma cópia conferida (🟢) está num disco que o Windows não identifica com certeza (ex.: SSD NVMe com número de série zerado), o Início e o cartão do dispositivo explicam por que ela não aparece como 🔵 disco independente (R1).
+- `tools/scripts/clean-temp.ps1 [-Simular]`: apaga só as pastas de `%TEMP%` que começam com `fotoatlas_`, deixando intactas as que estão em uso.
 - O mesmo celular é reconhecido pelo número de série, mesmo em outra porta USB.
 - **Celulares simulados** para testes e demonstração sem aparelho: `--fake-devices` no helper / `FOTOATLAS_FAKE_DEVICES`, gerador `tools/fixtures/bin/gen_phone_demo.dart` e `run-app.ps1 -CelularSimulado`.
 - **CLI**: `devices` e `sources add-phone CELULAR [--name N]`.
 - **Schema v3** (aditivo): `sources.device_serial`, `sources.device_platform`, `file_instances.device_object_id`, com teste de migração a partir da v1 e da v2.
 - Protocolo do helper: `devices.list`, `devices.listChildren`, `devices.hashObject`; o cliente aceita eventos por pedido e cancelamento (`system.cancel`).
 
+### Corrigido (teste com celular real)
+- **Conferência no celular real falhava em quase todos os arquivos** com "Erro de leitura no dispositivo (0x800700AA)" (aparelho ocupado): o helper não fechava de verdade o stream de leitura de cada arquivo (o wrapper COM do .NET só o liberava quando o coletor de lixo rodava), e o celular aceita uma transferência por vez. Agora o stream é liberado na hora, depois de ler até o fim (ADR 0012, atualização).
+- Testes deixavam pastas em `%TEMP%` (`fotoatlas_app_test_*`, `fotoatlas_test_*`, `fotoatlas_cli_phone_build_*`): a remoção falhava em silêncio quando um arquivo ainda estava preso por instantes, e nos testes do app só era registrada depois da preparação. Agora toda pasta de teste é apagada com novas tentativas (até ~10 s) e o teste **falha** se sobrar algo; o `run-app.ps1` apaga o catálogo de demonstração e os celulares simulados quando o app fecha.
+- Mensagens com acento dos scripts PowerShell saíam trocadas no Windows PowerShell 5.1 (arquivos sem BOM).
+
 ### Segurança
+- Teste de integração com VHD abria o helper sem celulares simulados e listaria um celular real plugado; agora usa uma pasta vazia de simulados, e o teste de arquitetura falha se algum teste abrir o core com acesso a celulares reais.
 - Desconectar, bloquear o celular ou o helper cair no meio do scan ou da conferência **nunca** marca arquivo como ausente nem como erro: o scan fica "interrompido" e retoma das pastas pendentes; o que faltava conferir continua pendente (regras 9 e 10).
 - Uma falha ao ler um item de uma pasta do celular marca a pasta inteira como não lida (nada abaixo dela vira ausente), em vez de pular o item.
 - Teste no helper falha se o interop WPD ganhar qualquer método fora da lista de leitura.
@@ -25,7 +34,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - Celular simulado × HD pela CLI compilada com o **helper real**: lista, cadastra, escaneia (6 arquivos), confere e compara — faltam 3, nos dois 3, só em B 1; com o celular "desplugado", continua listado e a comparação usa o último scan.
 - Desconexão no meio do scan (helper real, após N listagens): `interrupted`, `PRAGMA integrity_check = ok`, nenhum arquivo ausente; reconectado com IDs de objeto novos, retoma e termina com a contagem exata. O mesmo no core com IDs que mudam entre sessões, e foto apagada no celular só vira ausente num scan completo.
 - Kill do processo no meio do scan do celular → retomar termina com 6 arquivos, sem duplicar.
-- Interop WPD real testado sem aparelho (objetos do próprio Windows: propriedades, chaves, gerenciador). **O teste com celular real (somente leitura) é o próximo passo, pelo usuário.**
+- Interop WPD real testado sem aparelho (objetos do próprio Windows: propriedades, chaves, gerenciador).
+- Teste do usuário com celular simulado no app: Pixel × HD → faltam 3, só em B 1, nos dois 3.
+- **Celular real, somente leitura** (Samsung Galaxy M54, Android por MTP, catálogo de demonstração em `%TEMP%`): `devices` → pronto, 1 armazenamento ("Armazenamento interno", 241,6 GB, 49,4 GB livres); scan só de `DCIM/Camera` → **6.596 arquivos** (6.255 JPG, 286 MP4, 55 HEIC; 106,8 GB = 99,5 GiB), 1 pasta, 0 erros; conferência → 6.596 conferidos, 0 erros, 0 alterados, em 47 min (~37 MB/s), nenhum conteúdo repetido. Nada foi gravado no aparelho: a sessão WPD é aberta só para leitura e o interop não tem métodos de gravação. A primeira conferência falhou em 6.575 arquivos (0x800700AA) e levou à correção acima.
 
 ## [0.2.0] — 2026-10-27 — Fase 2: Conteúdo e cobertura
 

@@ -83,7 +83,7 @@ Observações da Fase 2:
 - `last_verified_at` e o selo "conferida recentemente" ficam para a Fase 7.
 - Duplicatas: há a API (`duplicateGroups`) e o espaço repetido por fonte; uma tela de navegação por grupos entra com a Biblioteca (Fase 4).
 
-## Fase 3 — Celular (leitura) — implementada, aguardando o teste do usuário (2026-10-27)
+## Fase 3 — Celular (leitura) (concluída em 2026-10-28)
 - [x] Helper com WPD: listar dispositivos, navegar, ler arquivos em streaming (2026-10-27)
   - [x] Interop COM próprio só de leitura (ADR 0012): métodos de escrita/exclusão não declarados, abertura com `GENERIC_READ`, pendrives (WPD-MSC) filtrados
   - [x] `devices.list` (status ok/bloqueado/sem autorização, armazenamentos), `devices.listChildren` (lotes), `devices.hashObject` (SHA-256 no helper, mudança durante a leitura)
@@ -95,15 +95,21 @@ Observações da Fase 2:
   - [x] Conferência (hash) pelo helper, um leitor por celular
 - [x] Comparar celular × HD (core, CLI com helper real e app) (2026-10-27)
 - [x] App: "Adicionar celular", avisos, cartão do celular; CLI `devices` e `sources add-phone`; fixture de celular simulado
-- [~] Critérios da spec: com celular **simulado** pelo helper real, "listar fotos que não estão no HD" e "desconexão durante o scan não corrompe o catálogo" provados (evidências no CHANGELOG). Falta o celular **real** (somente leitura), quando o usuário pedir
-- [ ] Teste do usuário (celular simulado com `run-app.ps1 -CelularSimulado`; depois celular real, só leitura)
-- [ ] Tag `v0.3.0`
+- [x] Critérios da spec: com celular **simulado** pelo helper real, "listar fotos que não estão no HD" e "desconexão durante o scan não corrompe o catálogo" provados; com celular **real**, scan e conferência de DCIM/Camera sem erros (evidências no CHANGELOG) (2026-10-28)
+- [x] Teste do usuário com celular simulado (2026-10-28): Pixel × HD → Faltam 3 / Só em B 1 / Nos dois 3
+- [x] Ajustes pedidos no teste (2026-10-28)
+  - [x] Testes e `run-app.ps1` limpam as próprias pastas de `%TEMP%` (teste falha se sobrar); `tools/scripts/clean-temp.ps1`
+  - [x] 🟢 em vez de 🔵 no Pixel × HD: confirmado que é o SSD C: (NVMe, serial zerado → identidade fraca, R1); o app agora mostra "não dá para confirmar que estão em discos diferentes"
+- [x] Celular real, **somente leitura** (Samsung Galaxy M54, Android, 2026-10-28): `devices` → pronto, "Armazenamento interno"; scan só de DCIM/Camera → 6.596 arquivos (106,8 GB), 0 erros; conferência → 6.596 conferidos, 0 erros, em 47 min. Achado e corrigido: stream WPD não liberado (0x800700AA) — ADR 0012 atualizado
+- [x] Tag `v0.3.0` (2026-10-28)
 
 Observações da Fase 3:
 - Não existe celular virtual no Windows: a CI cobre o interop WPD real só com objetos em memória do Windows; navegação e leitura num aparelho real dependem do teste do usuário (ADR 0012).
 - `devices.enumerate` (recursivo) virou `devices.listChildren` (por pasta), para o checkpoint por pasta.
 - Sem data do aparelho, o incremental do celular usa tamanho + caminho (não refaz o hash de tudo pelo USB).
 - A migração da Fase 4 passa a ser v3 → v4 (a v3 foi usada aqui).
+- Novo: scan de uma pasta só (`scan start FONTE --folder P`), parcial e honesto na comparação. O app ainda não oferece essa opção (só a CLI); entra junto com a Biblioteca se fizer falta.
+- A primeira conferência real expôs que os testes do helper não cobriam a liberação de objetos COM; o stream agora é ponteiro cru com teste próprio. Os demais objetos (`IPortableDeviceValues` etc.) seguem no wrapper gerado: não prendem o aparelho, mas só são liberados pelo coletor de lixo.
 
 ## Fase 4 — Metadados e Biblioteca
 - [ ] Script para baixar ExifTool e FFmpeg (não versionados)

@@ -6,6 +6,8 @@ import 'package:fotoatlas/main.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 import 'package:path/path.dart' as p;
 
+import 'support/temp.dart';
+
 /// Volume simulado: uma pasta real no temp faz o papel da raiz da unidade.
 class _OneVolume implements VolumeProvider, PathResolver {
   _OneVolume(this.root);
@@ -34,10 +36,19 @@ void main() {
     tester.view
       ..physicalSize = const Size(1400, 900)
       ..devicePixelRatio = 1;
-    late Directory temp;
+    final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
+    FotoAtlasCore? opened;
+    addTearDown(() async {
+      // Desmonta antes de fechar o core (também quando o teste falha no meio).
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+      await tester.runAsync(() async {
+        await opened?.close();
+        await deleteTestDir(temp);
+      });
+    });
     late FotoAtlasCore core;
     await tester.runAsync(() async {
-      temp = await Directory.systemTemp.createTemp('fotoatlas_app_test_');
       final volumeDir = Directory(p.join(temp.path, 'vol'))..createSync();
       final fotos = Directory(p.join(volumeDir.path, 'Fotos'))..createSync();
       for (var i = 0; i < 25; i++) {
@@ -45,7 +56,7 @@ void main() {
       }
       File(p.join(fotos.path, 'notas.txt')).writeAsStringSync('x');
       final fake = _OneVolume(volumeDir.path);
-      core = await FotoAtlasCore.open(
+      core = opened = await FotoAtlasCore.open(
         paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
         volumes: fake,
         pathResolver: fake,
@@ -53,13 +64,6 @@ void main() {
       );
       await core.sources.addPath(fotos.path);
     });
-    addTearDown(() async {
-      await tester.runAsync(() async {
-        await core.close();
-        await temp.delete(recursive: true);
-      });
-    });
-
     await tester.pumpWidget(FotoAtlasApp(openCore: () async => core));
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
     await tester.pump();
@@ -89,10 +93,19 @@ void main() {
     tester.view
       ..physicalSize = const Size(1400, 1100)
       ..devicePixelRatio = 1;
-    late Directory temp;
+    final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
+    FotoAtlasCore? opened;
+    addTearDown(() async {
+      // Desmonta antes de fechar o core (também quando o teste falha no meio).
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+      await tester.runAsync(() async {
+        await opened?.close();
+        await deleteTestDir(temp);
+      });
+    });
     late FotoAtlasCore core;
     await tester.runAsync(() async {
-      temp = await Directory.systemTemp.createTemp('fotoatlas_app_test_');
       final volumeDir = Directory(p.join(temp.path, 'vol'))..createSync();
       void write(String rel, List<int> bytes) {
         final f = File(p.join(volumeDir.path, rel));
@@ -104,7 +117,7 @@ void main() {
       write('Celular/IMG_2.jpg', List.filled(400, 2));
       write('Backup/2020/foto renomeada.jpg', List.filled(300, 1));
       final fake = _OneVolume(volumeDir.path);
-      core = await FotoAtlasCore.open(
+      core = opened = await FotoAtlasCore.open(
         paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
         volumes: fake,
         pathResolver: fake,
@@ -117,16 +130,6 @@ void main() {
       await core.hashes.start();
       await core.hashes.waitIdle();
     });
-    addTearDown(() async {
-      // Desmonta antes de fechar o core (também quando o teste falha no meio).
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump(const Duration(seconds: 5));
-      await tester.runAsync(() async {
-        await core.close();
-        await temp.delete(recursive: true);
-      });
-    });
-
     Future<void> settle() async {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
       await tester.pump();

@@ -43,8 +43,7 @@ void main() {
   });
   tearDownAll(() async {
     if (helper == null) return;
-    assertInTemp(buildDir.path);
-    await buildDir.delete(recursive: true);
+    await deleteTestDir(buildDir);
   });
 
   Map<String, String> env(PhoneDemo demo, [Map<String, String> extra = const {}]) => {

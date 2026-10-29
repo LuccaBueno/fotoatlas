@@ -1,4 +1,4 @@
-# Roda análise e testes de todo o monorepo (helper, fixtures, core, app).
+﻿# Roda análise e testes de todo o monorepo (helper, fixtures, core, app).
 # Uso: powershell -ExecutionPolicy Bypass -File tools\scripts\test-all.ps1 [-SkipSlow]
 param([switch]$SkipSlow)
 

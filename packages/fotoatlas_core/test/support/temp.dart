@@ -9,9 +9,7 @@ import 'package:test/test.dart';
 /// nunca tocam pastas fora do temp do sistema (CLAUDE.md).
 Future<Directory> createTestTemp([String prefix = 'fotoatlas_test_']) async {
   final dir = await Directory.systemTemp.createTemp(prefix);
-  addTearDown(() async {
-    if (await dir.exists()) await _deleteBestEffort(dir);
-  });
+  addTearDown(() => deleteTestDir(dir));
   return dir;
 }
 
@@ -23,14 +21,23 @@ void assertInTemp(String path) {
   }
 }
 
-Future<void> _deleteBestEffort(Directory dir) async {
+/// Apaga uma pasta de teste. No Windows um processo recém-encerrado (CLI
+/// morta, helper saindo pelo vigia do processo pai) ou o antivírus ainda podem
+/// segurar arquivos por alguns instantes: tenta por até ~10 s. Se ainda assim
+/// sobrar, o teste falha — pasta esquecida em %TEMP% é defeito (catálogo ou
+/// processo que não foi fechado), não algo para ignorar.
+Future<void> deleteTestDir(Directory dir) async {
   assertInTemp(dir.path);
-  for (var attempt = 0; attempt < 5; attempt++) {
+  FileSystemException? last;
+  for (var attempt = 0; attempt < 50; attempt++) {
+    if (!await dir.exists()) return;
     try {
       await dir.delete(recursive: true);
       return;
-    } on FileSystemException {
+    } on FileSystemException catch (e) {
+      last = e;
       await Future<void>.delayed(const Duration(milliseconds: 200));
     }
   }
+  fail('Não foi possível apagar a pasta de teste ${dir.path}: $last');
 }

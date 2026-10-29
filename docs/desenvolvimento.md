@@ -42,6 +42,15 @@ powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -CelularSimul
 powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1
 ```
 
+Com `-Demo` ou `-CelularSimulado`, as pastas temporárias (`%TEMP%\fotoatlas_demo_*`, `fotoatlas_celular_*`) são apagadas quando o app fecha (`-ManterDemo` guarda). Para limpar sobras de testes interrompidos ou de demonstrações antigas — só pastas de `%TEMP%` que começam com `fotoatlas_`; as que estão em uso ficam intactas:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\scripts\clean-temp.ps1 -Simular   # só lista
+powershell -ExecutionPolicy Bypass -File tools\scripts\clean-temp.ps1
+```
+
+Os testes apagam as próprias pastas temporárias e **falham** se alguma sobrar (sinal de catálogo ou processo que não foi fechado).
+
 O app procura o helper em `FOTOATLAS_HELPER`, ao lado do executável ou na saída de build de `native\fotoatlas_helper`. Sem o helper, ele segue funcionando, mas sem informações de disco físico nem celulares.
 
 Celulares simulados: `FOTOATLAS_FAKE_DEVICES=<pasta>` faz o helper mostrar os aparelhos descritos nos JSON dessa pasta (formato em `docs/protocolo-helper.md` §5.3.1). Gere uma com `dart run bin/gen_phone_demo.dart --out <pasta no temp>` em `tools/fixtures`.
@@ -54,6 +63,7 @@ $env:FOTOATLAS_HOME = "$env:TEMP\fotoatlas_cli_demo"
 dart run bin/fotoatlas_cli.dart volumes
 dart run bin/fotoatlas_cli.dart sources add "C:\caminho\para\uma\pasta" --name Teste
 dart run bin/fotoatlas_cli.dart scan start Teste
+dart run bin/fotoatlas_cli.dart scan start Celular --folder "Armazenamento interno/DCIM/Camera"   # só uma pasta
 dart run bin/fotoatlas_cli.dart sources list
 dart run bin/fotoatlas_cli.dart hash run                     # confere o conteúdo (Ctrl+C pausa)
 dart run bin/fotoatlas_cli.dart coverage                     # situação de backup

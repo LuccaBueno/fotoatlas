@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart' as sql;
 import 'package:test/test.dart';
 
+import '../support/temp.dart';
 import '../support/test_core.dart';
 
 void main() {
@@ -60,8 +61,7 @@ void main() {
   });
 
   test('ao abrir com backupOnOpen, o core faz o primeiro backup', () async {
-    final temp = await Directory.systemTemp.createTemp('fotoatlas_bkp_');
-    addTearDown(() => temp.delete(recursive: true));
+    final temp = await createTestTemp('fotoatlas_bkp_');
     final core = await FotoAtlasCore.open(
       paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
       volumes: _NoVolumes(),

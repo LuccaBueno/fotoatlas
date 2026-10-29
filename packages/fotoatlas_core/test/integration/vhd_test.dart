@@ -80,6 +80,8 @@ assign letter=$first
         final core = await FotoAtlasCore.open(
           paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
           scanInIsolate: true,
+          // Helper real, mas sem WPD: nenhum celular conectado é lido (CLAUDE.md).
+          fakeDevicesDir: (Directory(p.join(temp.path, 'sem_celulares'))..createSync()).path,
         );
         addTearDown(core.close);
 

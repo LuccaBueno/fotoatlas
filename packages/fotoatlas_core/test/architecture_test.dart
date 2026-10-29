@@ -95,4 +95,28 @@ void main() {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     expect(pubspec, isNot(contains('flutter')));
   });
+
+  test('nenhum teste abre o core com acesso aos celulares reais', () {
+    // Com o helper e sem simulados, o core listaria um celular plugado na
+    // máquina de quem roda os testes (CLAUDE.md: testes nunca tocam aparelhos reais).
+    final offenders = <String>[];
+    for (final dir in ['test', '../../app/test']) {
+      for (final file in Directory(dir).listSync(recursive: true).whereType<File>()) {
+        if (!file.path.endsWith('.dart') || p.basename(file.path) == 'architecture_test.dart') continue;
+        final text = file.readAsStringSync();
+        for (final call in RegExp(r'FotoAtlasCore\.open\(').allMatches(text)) {
+          var depth = 0;
+          var end = call.end - 1;
+          for (; end < text.length; end++) {
+            if (text[end] == '(') depth++;
+            if (text[end] == ')' && --depth == 0) break;
+          }
+          final args = text.substring(call.end, end);
+          final safe = ['useHelper: false', 'fakeDevicesDir:', 'devices:', 'volumes:'].any(args.contains);
+          if (!safe) offenders.add('${file.path}:${'\n'.allMatches(text.substring(0, call.start)).length + 1}');
+        }
+      }
+    }
+    expect(offenders, isEmpty);
+  });
 }
