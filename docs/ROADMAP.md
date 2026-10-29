@@ -187,6 +187,7 @@ Observações da Fase 4:
   - [x] CLI: `copy plan|start|resume|retry|status|export` e `recover`
 - [x] Testes de falha matando o processo em cada estado (11 pontos + morte no meio da própria recuperação; estado conferido no momento da morte; recuperação 3× sem efeito colateral; cópia termina sem perda nem sobrescrita) + falta de espaço, FAT32 > 4 GB (VHD), conflito de nome, origem que some, celular desconectado no meio
 - [x] Tela Tarefas (fila + histórico + exportação): progresso, pausar/continuar/cancelar, decisão de conflito, tentar de novo, temporários desconhecidos (nunca apagados), relatório CSV
+- [x] CI 3× seguidas verde depois das correções: runs 40964865635, 40966178709, 40967412559 (core com kill e VHD, app e helper)
 - [ ] Teste do usuário (roteiro com dados de demonstração)
 - [ ] Tag `v0.5.0`
 
