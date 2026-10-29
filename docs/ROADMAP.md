@@ -108,8 +108,19 @@ Observações da Fase 3:
 - `devices.enumerate` (recursivo) virou `devices.listChildren` (por pasta), para o checkpoint por pasta.
 - Sem data do aparelho, o incremental do celular usa tamanho + caminho (não refaz o hash de tudo pelo USB).
 - A migração da Fase 4 passa a ser v3 → v4 (a v3 foi usada aqui).
-- Novo: scan de uma pasta só (`scan start FONTE --folder P`), parcial e honesto na comparação. O app ainda não oferece essa opção (só a CLI); entra junto com a Biblioteca se fizer falta.
+- Novo: scan de uma pasta só (`scan start FONTE --folder P`), parcial e honesto na comparação. Chegou ao app nos ajustes antes da Fase 4.
 - A primeira conferência real expôs que os testes do helper não cobriam a liberação de objetos COM; o stream agora é ponteiro cru com teste próprio. Os demais objetos (`IPortableDeviceValues` etc.) seguem no wrapper gerado: não prendem o aparelho, mas só são liberados pelo coletor de lixo.
+
+## Ajustes de interface antes da Fase 4 (concluídos em 2026-10-28)
+- [x] Um botão só, **"Adicionar dispositivo"** (Dispositivos e seletor da Comparar), no lugar de "Adicionar pasta", "Adicionar celular" e "Adicionar unidade": janela que lista celulares (pronto/bloqueado/falta permitir), unidades (HD, SSD, pendrive, cartão; as já cadastradas marcadas) e "Escolher uma pasta…" (spec §3.2)
+- [x] Scan por pasta no app: "Escanear" pergunta "Tudo" ou "Só algumas pastas" (árvore lida do dispositivo na hora, só leitura), com tamanho estimado pelo último escaneamento; várias pastas num scan só (core `scans.start(fonte, folders: [...])`, CLI `--folder` repetido) (spec §3.2 e §7)
+- [x] Cartão mostra quais pastas já foram escaneadas (e quando) e que o resto ainda não foi; o próximo "Escanear" sugere as mesmas pastas; "Retomar" continua o scan pausado com as mesmas pastas
+- [x] Testes: core (várias pastas, ausência só dentro delas, retomar com outras pastas recusado, listar pastas de unidade e de celular sem catalogar nada, unidades para cadastrar) e app (janela única, árvore com tamanho e seleção, cartão com pastas escaneadas, "Retomar")
+
+Observações:
+- Sem migração de schema: as pastas de partida de cada scan saem de `scan_dirs` (pasta cuja mãe não está no scan).
+- Pasta nunca escaneada aparece com "tamanho desconhecido": no celular, estimar exigiria percorrer a pasta inteira pelo USB, que já é o próprio scan.
+- O tipo da unidade na janela vem do barramento (USB → "HD externo"; SD → "Cartão de memória"; removível → "Pendrive"; senão "Disco interno").
 
 ## Fase 4 — Metadados e Biblioteca
 - [ ] Script para baixar ExifTool e FFmpeg (não versionados)
@@ -167,3 +178,4 @@ Observações da Fase 3:
 - 2026-10-27 — Ajuste de requisito (sem implementação) — data e hora da captura até segundos, linha do tempo única, momentos (nomear/juntar/separar, escopo e filtro), filtros de horário/período/dia da semana, correção de relógio por dispositivo com prévia, hora de baixa confiança fora dos momentos automáticos, modelo {ano}/{ano}-{mes}-{dia} {momento}/: spec §3.2, §8, §9, §10, §12, §16 e ROADMAP das Fases 4 e 6.
 - 2026-10-27 — Teste do usuário da Fase 2 aprovado (Faltam 2 / Só em B 1 / Nos dois 2). Ajustes de interface: adicionar e escanear pelo seletor da Comparar, plural nos contadores, caminhos com um só separador, resumo arquivos × conteúdos. Tag v0.2.0. Fase 3 **não iniciada**: aguarda o usuário.
 - 2026-10-27 — Fase 3 — Celular só leitura: helper WPD (interop próprio sem métodos de escrita, GENERIC_READ, pendrives filtrados), celulares simulados, schema v3, cadastro pelo serial, scan por pasta com checkpoint e re-resolução de IDs, conferência pelo helper, celular × HD, app (Adicionar celular, avisos, "Manter originais"), CLI devices/add-phone. Evidências com o helper real e celular simulado; falta o teste do usuário (simulado e depois real, só leitura) e a tag v0.3.0.
+- 2026-10-28 — Ajustes de interface antes da Fase 4 — "Adicionar dispositivo" único (celulares, unidades e "Escolher uma pasta…") em Dispositivos e na Comparar; "Escanear" com "Tudo" ou "Só algumas pastas" (árvore ao vivo, tamanho estimado, várias pastas num scan); cartão com as pastas já escaneadas. Spec §3.2/§7 atualizada. Fase 4 **não iniciada**: aguarda o usuário.

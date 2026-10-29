@@ -2,6 +2,22 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Mudado
+- **Um botão só, "Adicionar dispositivo"**, em Dispositivos e no seletor da Comparar, no lugar de "Adicionar pasta", "Adicionar celular" e "Adicionar unidade". A janela lista sozinha o que está conectado: celulares com a situação ("Pronto", "Bloqueado", "Falta permitir o acesso"), unidades (HD, SSD, pendrive, cartão — as já cadastradas aparecem como "Já cadastrada") e "Escolher uma pasta…", com "Procurar de novo".
+- **"Escanear" pergunta o quê**: "Tudo" ou "Só algumas pastas". As pastas aparecem em árvore, lidas do dispositivo na hora (só leitura; abrir a janela não cataloga nada), cada uma com "escaneada em …" ou "ainda não escaneada" e o tamanho pelo último escaneamento ("tamanho desconhecido" se nunca foi escaneada). No celular com um armazenamento só, ele já aparece aberto. Marcar uma pasta inclui as de dentro.
+- Na Comparar, depois de adicionar um dispositivo novo, a mesma pergunta aparece antes de escanear.
+
+### Adicionado
+- **Várias pastas num escaneamento só** (core `scans.start(fonte, folders: [...])`; CLI `scan start FONTE --folder A --folder B`). Continua parcial e honesto: só confirma ausências dentro das pastas lidas; a comparação de partes não escaneadas dá "Resultado incompleto".
+- O cartão do dispositivo mostra **quais pastas já foram escaneadas** (e quando) e avisa que o resto ainda não foi; o próximo "Escanear" já sugere as mesmas pastas. Depois de um scan do dispositivo inteiro, pastas escaneadas sozinhas mais tarde aparecem como "atualizadas depois".
+- Core: `scans.listFolders`, `sources.folderStats`, `sources.listDrives`, `SourceView.scannedFolders`/`wholeScannedAt`/`scannedAt()`.
+
+### Corrigido
+- O cartão dizia "mas 0 pastas não puderam ser lidas" depois de um scan de uma pasta só; agora diz "Só algumas pastas foram escaneadas".
+- "Retomar" de um scan pausado de uma pasta só falhava pelo app (pedia a fonte inteira); agora retoma o mesmo scan.
+
 ## [0.3.0] — 2026-10-28 — Fase 3: Celular (leitura)
 
 ### Adicionado

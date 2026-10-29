@@ -192,7 +192,7 @@ Nenhum `await` de operação longa no isolate da UI. As listas grandes usam `Lis
 
 ### 4.5. Telas da Fase 1
 
-- **Dispositivos**: lista de fontes (nome, tipo, conectada/desconectada, letra atual, último scan, nº de arquivos, espaço). Ações: "Adicionar pasta", "Adicionar unidade", "Escanear", "Pausar", "Retomar", "Renomear". Fontes desconectadas aparecem esmaecidas, com "Visto pela última vez em…" e os dados do último scan.
+- **Dispositivos**: lista de fontes (nome, tipo, conectada/desconectada, letra atual, último scan, nº de arquivos, espaço). Ações: "Adicionar dispositivo" (janela única com celulares, unidades e "Escolher uma pasta…"), "Escanear" (tudo ou só algumas pastas), "Pausar", "Retomar", "Renomear". O cartão mostra quais pastas já foram escaneadas. Fontes desconectadas aparecem esmaecidas, com "Visto pela última vez em…" e os dados do último scan.
 - **Início (básica)**: total de arquivos e de fotos/vídeos (por extensão) por fonte, fontes desconectadas, scans em andamento, atalho para "Adicionar dispositivo".
 
 ### 4.5.1. Telas da Fase 2

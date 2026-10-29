@@ -84,6 +84,8 @@ A interface precisa ser **fácil, útil, completa e, acima de tudo, intuitiva**.
    - Hora de **baixa confiança** (ex.: tirada da data do sistema de arquivos) aparece sinalizada (ícone + texto "hora incerta"), com atalho para confirmar ou corrigir.
    - **Corrigir relógio de um dispositivo** (§8): assistente com prévia "antes → depois" antes de aplicar.
 3. **Dispositivos.** Fontes cadastradas, conectadas e desconectadas, com último escaneamento, espaço e cobertura de backup de cada uma.
+   - **Um botão só, "Adicionar dispositivo"** (aqui e no seletor da Comparar), que abre uma janela listando automaticamente o que está conectado: **celulares** com a situação ("Pronto", "Bloqueado", "Falta permitir o acesso"), **unidades** (HD, SSD, pendrive, cartão de memória; as já cadastradas aparecem marcadas) e a opção **"Escolher uma pasta…"**. Cadastrar só grava no catálogo.
+   - **"Escanear" pergunta o quê:** "Tudo" ou "Só algumas pastas" (ex.: só DCIM › Camera e WhatsApp do celular). As pastas são lidas do dispositivo na hora, em árvore, com o **tamanho estimado** quando a pasta já foi escaneada antes (senão, "tamanho desconhecido"). O cartão mostra **quais pastas já foram escaneadas** (e quando) e avisa que o resto ainda não foi; ao escanear de novo, as mesmas pastas vêm sugeridas.
 4. **Comparar.** Dois **escopos livres**, A e B (ex.: "pasta 1 + pasta 2 do HD antigo" × "pasta Backup do HD novo", ou celular × HD inteiro), montados com uma ou mais pastas/subpastas, dispositivos inteiros e/ou **momentos** (§8.3, a partir da Fase 4), com filtros opcionais. A pergunta principal fica no topo: **"B contém todo o conteúdo de A?"**, com resposta direta — "Sim, 100%" ou "Faltam N arquivos (X GB)" — e a lista do que falta pronta para seleção e cópia. Abaixo, "Só em B" e "Nos dois". Se algum arquivo dos escopos ainda não teve o conteúdo conferido, a resposta é "Resultado incompleto", nunca "100%". Escopos podem ser salvos com nome (ex.: "Fotos do celular antigo") para reutilizar. Regras na seção 9.
 5. **Tarefas.** Fila de operações em andamento e histórico completo (auditoria) com exportação.
 6. **Configurações.** Biblioteca principal, modelos de organização, verificação periódica e backup do catálogo.
@@ -187,6 +189,7 @@ Os caminhos são guardados **relativos à raiz da fonte**, para que a troca da l
 - **Ignorar sem ler os placeholders do OneDrive/arquivos sob demanda** (atributos `RECALL_ON_DATA_ACCESS`/`OFFLINE`), marcando-os como "somente na nuvem".
 - Evitar ciclos (junctions e symlinks); tratar permissão negada e caminhos longos.
 - Uma ausência só é **confirmada** se o scan foi completo e sem erro naquela pasta.
+- **Escanear só algumas pastas** (escolhidas pelo usuário) é permitido: o scan fica parcial, só confirma ausências dentro das pastas lidas, e a comparação de qualquer parte não escaneada dá "Resultado incompleto".
 - Arquivos desconhecidos são catalogados (sem metadados), nunca descartados.
 
 ---
