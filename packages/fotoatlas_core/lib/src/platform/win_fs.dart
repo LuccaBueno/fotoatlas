@@ -16,6 +16,24 @@ class Win32Exception implements Exception {
   String toString() => '$operation falhou (Win32 $code)${path == null ? '' : ': $path'}';
 }
 
+/// Refaz [op] quando ela falha com código 0.
+///
+/// O `GetLastError` lido via FFI às vezes vem zerado (a VM pode chamar APIs
+/// que limpam o erro entre a falha e a leitura; medido ~1 em 2.000). Uma falha
+/// com código 0 não diz o que aconteceu — e "arquivo não encontrado" lido como
+/// "erro desconhecido" muda a decisão. Só para operações que não mudam nada
+/// quando falham (ler atributos, abrir, criar arquivo/pasta novos, mover sem
+/// substituir).
+T retryOnZeroError<T>(T Function() op, {int attempts = 3}) {
+  for (var attempt = 1; ; attempt++) {
+    try {
+      return op();
+    } on Win32Exception catch (e) {
+      if (e.code != 0 || attempt >= attempts) rethrow;
+    }
+  }
+}
+
 /// Uma entrada de diretório, exatamente como o `FindFirstFileExW` devolve.
 class RawDirEntry {
   const RawDirEntry({

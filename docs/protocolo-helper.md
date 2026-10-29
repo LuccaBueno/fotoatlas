@@ -122,7 +122,7 @@ Implementado na Fase 3 (ADR 0012). `devices.enumerate` (recursivo, do plano inic
 | `devices.list` | — | `{"devices":[{"deviceId","friendlyName","manufacturer","model","serial","kind":"android\|iphone\|camera\|other","status":"ok\|locked\|unauthorized","simulated":bool,"storages":[{"storageId","name","totalBytes","freeBytes"}]}]}` |
 | `devices.listChildren` | `{"deviceId","objectId"}` (`""` = raiz: os filhos são os armazenamentos) | eventos `entries` com `{"items":[{"objectId","parentObjectId","name","isFolder","size","modified":"<FILETIME str>\|null","created","persistentId"}]}` em lotes de até 200; resultado `{"count":N}` |
 | `devices.hashObject` | `{"deviceId","objectId","expectedSize?"}` | eventos `progress` `{"bytes":N}` a cada ~4 MiB; resultado `{"sha256":"<hex>","size":N,"modified":"<FILETIME str>\|null"}` |
-| `devices.pullToFile` (Fase 5) | `{"deviceId","objectId","destPath","expectedSize"}` | grava em `destPath` (regras da seção 6), calcula o SHA-256 durante a leitura, faz `FlushFileBuffers`; resultado `{"sha256":"<hex>","bytesWritten":N}` |
+| `devices.pullToFile` (Fase 5) | `{"deviceId","objectId","destPath","expectedSize","modified?":"<FILETIME str>"}` | grava em `destPath` (regras da seção 6, `CreateNew`), calcula o SHA-256 durante a leitura, aplica `modified` como data de modificação e faz `FlushFileBuffers`; eventos `progress`; resultado `{"sha256":"<hex>","bytesWritten":N,"modified"}`; erros extras `disk_full`, `already_exists`, `write_refused` |
 
 - Erros: `device_disconnected` (saiu da lista do Windows no meio), `device_locked`, `device_unauthorized`, `not_found` (objeto não existe **ou o ID é de outra sessão** — o core refaz o caminho pelo nome), `changed_during_read` (tamanho diferente do esperado, ou tamanho/data mudaram durante a leitura, ou bytes lidos ≠ tamanho), `io_error`.
 - Uma falha ao ler as propriedades de um filho derruba a pasta inteira (`io_error`): pular o filho faria o arquivo parecer ausente.
@@ -150,12 +150,14 @@ Para testes e demonstração (o core repassa `FOTOATLAS_FAKE_DEVICES`). Cada `*.
       {"path": "WhatsApp/x.jpg", "base64": "…", "modified": null}
     ]
   }],
-  "faults": {"disconnectAfterListCalls": 4, "changeDuringRead": ["DCIM/Camera/IMG_0002.jpg"], "folderErrors": ["Android"], "readDelayMs": 0}
+  "faults": {"disconnectAfterListCalls": 4, "changeDuringRead": ["DCIM/Camera/IMG_0002.jpg"], "folderErrors": ["Android"], "readDelayMs": 0,
+             "disconnectDuringPull": ["DCIM/Camera/IMG_0001.jpg"]}
 }
 ```
 
 - `stableIds: false` (padrão): os IDs de objeto mudam a cada processo do helper, como no Android.
 - `status` diferente de `ok`: o aparelho aparece sem armazenamentos.
+- `disconnectDuringPull`: `devices.pullToFile` grava metade do arquivo e responde `device_disconnected` (testes da cópia com o celular saindo no meio).
 - `tools/fixtures/bin/gen_phone_demo.dart` gera um Pixel e um iPhone (sem autorização) mais uma pasta "HD" com parte das fotos.
 
 ### 5.4. Miniaturas e leitura parcial do celular (Fase 4)

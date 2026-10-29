@@ -35,3 +35,4 @@ Modelo:
 | [0013](0013-encerramento-com-prazo.md) | Encerramento com prazo: fechar o app sempre funciona (helper finalizado se travar) | aceita |
 | [0014](0014-fusos-horarios-timezone.md) | Fusos horários com o pacote `timezone` (base IANA embutida) | aceita |
 | [0015](0015-metadados-momentos-miniaturas.md) | Metadados, data efetiva, momentos e miniaturas | aceita |
+| [0016](0016-copia-segura.md) | Cópia segura: diário por item, recuperação pelo disco e o que pode ser apagado | aceita |

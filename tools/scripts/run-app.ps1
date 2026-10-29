@@ -76,7 +76,8 @@ try {
             Write-Host "HD de backup (cadastre como pasta): $(Join-Path $celular 'HD')"
             Write-Host "Câmera com o relógio 1 h adiantado (cadastre como pasta): $(Join-Path $celular 'Câmera')"
             Write-Host 'Esperado (Pixel × HD): faltam 3 · nos dois 3 · só em B 1'
-            Write-Host 'O Pixel simulado lê devagar (3 s por arquivo): dá tempo de fechar no meio da conferência.'
+            Write-Host 'O Pixel simulado lê devagar (3 s por arquivo): dá tempo de fechar no meio da conferência ou da cópia.'
+            Write-Host "Desplugar o Pixel no meio da cópia: renomeie $(Join-Path $celular 'celulares\pixel.json') para pixel.json.off"
         }
     } elseif ($Demo -or $CelularSimulado) {
         $env:FOTOATLAS_HOME = Join-Path $env:TEMP ('fotoatlas_demo_' + [guid]::NewGuid().ToString('N').Substring(0, 8))

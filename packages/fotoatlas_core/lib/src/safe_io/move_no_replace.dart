@@ -6,7 +6,9 @@ import '../platform/win_fs.dart';
 /// Move/renomeia [from] para [to] **sem nunca sobrescrever** (regra 5):
 /// `MoveFileExW` sem `MOVEFILE_REPLACE_EXISTING`, com `WRITE_THROUGH`.
 /// Se [to] já existir, lança [Win32Exception] (`ERROR_ALREADY_EXISTS`).
-void moveNoReplace(String from, String to) => using((arena) {
+void moveNoReplace(String from, String to) => retryOnZeroError(() => _move(from, to));
+
+void _move(String from, String to) => using((arena) {
   final ok = moveFileEx(
     toExtendedPath(from).toNativeUtf16(allocator: arena),
     toExtendedPath(to).toNativeUtf16(allocator: arena),

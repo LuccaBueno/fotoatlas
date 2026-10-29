@@ -4,6 +4,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+### Adicionado — Fase 5: Cópia segura
+- **Copiar o que falta**, com conferência: "Copiar para B…" na Comparar (todos os resultados ou os marcados) e "Copiar para…" com itens marcados na Biblioteca abrem um assistente com **prévia** antes de gravar qualquer coisa: quantos arquivos e quanto espaço, o que o destino já tem (mesmo conteúdo, outro nome), espaço livre e quanto sobra, nomes que já existem, arquivos acima de 4 GB num disco FAT32, nomes ajustados para o Windows, itens sem data ou com hora incerta e as pastas que vão ser criadas. Organização por ano e mês (padrão), por dia, por tipo e ano, mantendo a estrutura da origem ou tudo numa pasta.
+- **Cada arquivo é conferido**: gravado numa pasta temporária do destino, enviado ao disco, relido e comparado pelo conteúdo com a origem; só então aparece no destino. Nada é sobrescrito (nome ocupado vira `_1`, `_2`… ou espera a sua decisão) e a origem nunca muda. A data de modificação da origem é mantida.
+- **Celular como origem**: o arquivo é lido pelo cabo USB e gravado direto na pasta temporária do destino; se o celular sair no meio, a cópia pausa sem deixar nada pela metade e continua quando ele voltar.
+- **Diário e recuperação**: toda etapa de cada arquivo fica registrada. Se o FotoAtlas fechar, travar ou o computador desligar no meio, ao abrir ele confere o disco, termina o que já estava copiado e conferido e deixa o resto esperando "Continuar". Rodar a recuperação de novo não muda nada.
+- **Tela Tarefas**: cópias em andamento com progresso (o arquivo do momento e se está copiando ou conferindo), pausar, continuar, cancelar o que falta (o que já foi copiado fica), decidir nomes repetidos ("Copiar com outro nome" ou "Não copiar"), tentar de novo os que não foram copiados, arquivos desconhecidos na pasta temporária (listados, nunca apagados) e **exportar o relatório** (CSV).
+- Falta de espaço, disco de destino ou origem desconectados pausam a cópia com o motivo na tela; uma pasta da origem que sumiu no meio aparece como "não copiado", sem marcar o arquivo como apagado.
+- CLI: `copy plan`, `copy start … --yes`, `copy resume`, `copy retry`, `copy status`, `copy export` e `recover`.
+- Helper: `devices.pullToFile` (grava só arquivos novos `.part` dentro de `.fotoatlas-tmp`).
+- Testes de falha: o processo é morto em cada etapa da cópia (11 pontos) e no meio da própria recuperação; a recuperação roda 3 vezes sem efeito colateral e a cópia termina sem perda nem sobrescrita. Falta de espaço e FAT32 com arquivo de mais de 4 GB em discos virtuais (VHD) na CI.
+- Demonstração: o HD do celular simulado tem um arquivo com o mesmo nome de uma foto que falta (para ver o `_1`); com `-DemoPersistente -CelularSimulado` o Pixel lê devagar e dá para "desplugá-lo" no meio da cópia.
+- Documentos: ADR 0016 (cópia segura) e `docs/backup-e-restauracao.md` (o que é garantido e a limitação de queda de energia).
+
+### Mudado
+- Fechar o app com uma cópia em andamento pergunta antes e, ao fechar, pausa a cópia com segurança (o arquivo do momento volta para a fila).
+
 ## [0.4.0] — 2026-10-29 — Fase 4: Metadados e Biblioteca
 
 ### Ajustes de usabilidade (depois do teste da Fase 4)

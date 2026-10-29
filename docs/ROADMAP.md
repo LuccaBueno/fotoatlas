@@ -177,14 +177,26 @@ Observações da Fase 4:
 - O `.gitignore` ignorava `thumbnails/` (dados pessoais) e, no Windows, pegou a pasta de código `Thumbnails/` do helper: a CI quebrou em 2 runs até a exceção ser adicionada.
 - Um teste de widget travou localmente (consulta em tempo real esperando uma gravação feita no relógio do teste); corrigido com prazo e nova tentativa. O processo do teste travado ficou preso segurando `app\build\native_assets\windows\sqlite3.dll` — os testes do app foram rodados numa cópia de trabalho separada (`.wt/`, ignorada).
 
-## Fase 5 — Cópia segura
-- [ ] Diário de operações e máquina de estados por item
-- [ ] Protocolo de cópia (temp no destino, flush, rehash, publicação sem sobrescrever)
-- [ ] Recuperação idempotente na inicialização
-- [ ] Assistente "Copiar o que falta" (unidades e celular), checagem de espaço e FAT32
-- [ ] Testes de falha matando o processo em cada estado
-- [ ] Tela Tarefas (fila + histórico + exportação)
+## Fase 5 — Cópia segura (implementada em 2026-10-29; aguarda o teste do usuário)
+- [x] Diário de operações e máquina de estados por item (`operation_items` + `operation_events` na mesma transação, commit antes de cada efeito no disco; tabelas já existiam desde a v1, sem migração)
+- [x] Protocolo de cópia (temp no destino, flush, rehash, publicação sem sobrescrever): `.part` com `CREATE_NEW` em `.fotoatlas-tmp` na raiz do destino, SHA-256 da origem durante a leitura, data de modificação preservada, `FlushFileBuffers`, releitura do `.part`, `MoveFileExW` sem substituição, registro no catálogo já conferido (ADR 0016)
+- [x] Recuperação idempotente na inicialização (decide olhando o disco; também antes de "Continuar")
+- [x] Assistente "Copiar o que falta" (unidades e celular), checagem de espaço e FAT32
+  - [x] "Copiar para B…" (Comparar) e "Copiar para…" (Biblioteca) abrem o assistente: destino (sugerido pelo lado B), pasta, organização (ano/mês, ano/dia, tipo/ano, estrutura original, tudo junto), nomes repetidos (sufixo ou perguntar) e prévia (quantidade, tamanho, já no destino, espaço livre, conflitos, FAT32 > 4 GB, nomes ajustados, hora incerta, pastas)
+  - [x] Celular: `devices.pullToFile` no helper (grava o `.part`, SHA-256 na leitura, flush) + releitura no core; desconexão no meio pausa e retoma
+  - [x] CLI: `copy plan|start|resume|retry|status|export` e `recover`
+- [x] Testes de falha matando o processo em cada estado (11 pontos + morte no meio da própria recuperação; estado conferido no momento da morte; recuperação 3× sem efeito colateral; cópia termina sem perda nem sobrescrita) + falta de espaço, FAT32 > 4 GB (VHD), conflito de nome, origem que some, celular desconectado no meio
+- [x] Tela Tarefas (fila + histórico + exportação): progresso, pausar/continuar/cancelar, decisão de conflito, tentar de novo, temporários desconhecidos (nunca apagados), relatório CSV
+- [ ] Teste do usuário (roteiro com dados de demonstração)
 - [ ] Tag `v0.5.0`
+
+Observações da Fase 5:
+- Evidências: core — 14 testes do fluxo (prévia, protocolo completo com eventos em ordem, data preservada, comparação 100% depois, isolate, sufixo sem tocar no existente, "perguntar" com renomear/não copiar, idêntico fora do catálogo não duplica, espaço na prévia e no meio, FAT32 na prévia e no executor, pasta renomeada × unidade inteira saindo, celular desplugado no meio com IDs novos ao voltar, pausar/cancelar, temporário desconhecido intacto, reabrir 3× sem mudança); CLI com kill em 11 pontos + na recuperação (12 testes); helper real com celular simulado desplugando no meio (`pullToFile`); helper `dotnet test` (gravação, recusa fora de `.fotoatlas-tmp`, nunca sobrescreve, parcial na desconexão). App — assistente (destino/pasta de B, prévia, sem gravar antes de confirmar, sem espaço/FAT32 bloqueiam), Tarefas (pausar, continuar, conflito, cancelar, vazio) e cópia de verdade pela interface com o core real.
+- Achado na CI (run 40955686652): no VHD de 64 MB o disco cheio de verdade não deu `ERROR_DISK_FULL` e o item virou "falhou"; agora uma falha de gravação com o disco realmente sem espaço (medido no disco) pausa por falta de espaço.
+- Achado na CI (run 40957864584): um teste antigo da conferência falhou com "Erro de leitura (Win32 0)": o `GetLastError` lido via FFI às vezes vem zerado (já visto no `listDirectory`). Como a cópia decide pelo código de erro, toda abertura, leitura de atributos, criação de `.part`/pasta, publicação e remoção do próprio `.part` agora refaz a operação quando a falha vem com código 0 (`retryOnZeroError`; só operações que não mudam nada quando falham). Suíte do core 3× seguidas verde localmente.
+- Os testes com VHD só rodam como administrador (CI); nesta máquina ficam pulados.
+- O demo do celular ganhou um arquivo no HD com o mesmo nome de uma foto que falta (outra foto, renomeada), para mostrar o sufixo `_1`; a comparação Pixel × HD continua "faltam 3 · nos dois 3 · só em B 1".
+- `{momento}` nos modelos e a prévia em árvore "antes → depois" ficam para a Fase 6 (reorganização).
 
 ## Fase 6 — Reorganização
 - [ ] Modelos de estrutura e prévia em árvore antes → depois
@@ -221,3 +233,4 @@ Observações da Fase 4:
 - 2026-10-29 — Correções do fechamento com celular real — exceção solta `helper_crashed` (pedido órfão no HelperClient), pergunta antes de fechar com tarefas em andamento, aviso de queda do helper, conferência do celular gravada arquivo a arquivo (retoma exato). Fase 4 **não iniciada**: aguarda o usuário.
 - 2026-10-29 — Ajustes do modo demonstração + Fase 4 — faixa "Modo demonstração" e textos ao fechar; run-app.ps1 -DemoPersistente. Fase 4: get-tools.ps1 (ExifTool/FFmpeg), datas da captura com fusos/origem/confiança, fila de metadados (celular pelo começo do arquivo), schema v4, momentos editáveis, correção de relógio com prévia, Biblioteca (linha do tempo, grade, lista, filtros E/OU/NÃO, filtros salvos, seleção, detalhes), miniaturas, Comparar com momento, 100 mil itens < 1 s. Tag v0.4.0 aguarda o teste do usuário.
 - 2026-10-29 — Ajustes de usabilidade da Fase 4 (teste do usuário) — nomes das situações de backup, "Horário do dia"/"Hora confiável?", momentos com nome descritivo e menu pelo clique direito, dicas, botão "?" por tela, guia de primeiros passos, correção de relógio pela hora certa de uma foto, relógio zerado (1º/jan 00:00:00) como hora incerta. Tag v0.4.0. Fase 5 **não iniciada**: aguarda o usuário.
+- 2026-10-29 — Fase 5 — Cópia segura: diário por item, protocolo completo (.part CREATE_NEW, flush, releitura, MoveFileExW sem substituir), recuperação idempotente pelo disco, assistente "Copiar para…" com prévia (Comparar e Biblioteca), tela Tarefas, celular como origem (`devices.pullToFile`), CLI copy/recover; kill em 11 pontos + na recuperação (3× sem efeito colateral), VHD FAT32 > 4 GB e disco cheio na CI. Achados da CI corrigidos (disco cheio sem ERROR_DISK_FULL; GetLastError zerado). Tag v0.5.0 aguarda o teste do usuário.

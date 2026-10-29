@@ -35,6 +35,10 @@ class PartWriter {
   /// Cria o arquivo. Lança [Win32Exception] (ex.: `ERROR_FILE_EXISTS`).
   static PartWriter create(String path) {
     if (!isOwnPartPath(path)) throw ArgumentError.value(path, 'path', 'não é um .part em $tempDirName');
+    return retryOnZeroError(() => _create(path));
+  }
+
+  static PartWriter _create(String path) {
     final handle = using(
       (arena) => createFile(
         toExtendedPath(path).toNativeUtf16(allocator: arena),
@@ -88,12 +92,13 @@ void ensureDirectory(String dirPath) {
   if (_isDirectory(full)) return;
   final parent = p.windows.dirname(full);
   if (parent != full) ensureDirectory(parent);
-  final ok = using((arena) => createDirectory(toExtendedPath(full).toNativeUtf16(allocator: arena), nullptr));
-  if (ok == 0) {
+  retryOnZeroError(() {
+    final ok = using((arena) => createDirectory(toExtendedPath(full).toNativeUtf16(allocator: arena), nullptr));
+    if (ok != 0) return;
     final code = getLastError();
     if (code == errorAlreadyExists && _isDirectory(full)) return;
     throw Win32Exception('CreateDirectoryW', code, full);
-  }
+  });
 }
 
 bool _isDirectory(String path) {
@@ -110,8 +115,12 @@ bool _isDirectory(String path) {
 /// lista de arquivos da pasta temporária.
 bool deleteOwnPart(String path) {
   if (!isOwnPartPath(path)) throw ArgumentError.value(path, 'path', 'não é um .part em $tempDirName');
-  final ok = using((arena) => deleteFile(toExtendedPath(path).toNativeUtf16(allocator: arena)));
-  if (ok != 0) return true;
-  final code = getLastError();
-  return code == errorFileNotFound || code == errorPathNotFound;
+  for (var attempt = 0; attempt < 3; attempt++) {
+    final ok = using((arena) => deleteFile(toExtendedPath(path).toNativeUtf16(allocator: arena)));
+    if (ok != 0) return true;
+    final code = getLastError();
+    // Código 0 = erro perdido pela VM (ver retryOnZeroError): tenta de novo.
+    if (code != 0) return code == errorFileNotFound || code == errorPathNotFound;
+  }
+  return false;
 }

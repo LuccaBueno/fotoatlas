@@ -163,6 +163,8 @@ pending → skipped_identical   (o destino já tem conteúdo idêntico)
 
 A recuperação na inicialização é idempotente e decide **olhando o disco**, não só o diário (spec §11.2 + lacuna L1). Os testes de falha estão descritos no ADR 0007.
 
+Implementado na Fase 5 (ADR 0016): `safe_io/dest_writer.dart` (`.part` com `CREATE_NEW`, flush, data de modificação da origem; só apaga o próprio `.part` não publicado), `ops/` (prévia, bombeamento em isolate, executor, recuperação, relatório). A pasta `.fotoatlas-tmp` fica na raiz da fonte de destino. Pausar ou fechar descarta o arquivo do momento e o devolve para `pending`; falta de espaço e origem ou celular desconectados pausam a operação com o motivo; conflito de nome com a política "perguntar" deixa o `.part` conferido esperando a decisão em Tarefas.
+
 ### 3.7. Celular (Fase 3)
 
 Implementado (ADR 0012): `PhoneScanLister` lista pasta por pasta pelo helper (`devices.listChildren`), com o mesmo checkpoint em `scan_dirs` do scan de disco; a raiz da fonte mostra os armazenamentos como pastas (L7). `PhonePathResolver` guarda os IDs de objeto e refaz o caminho a partir da raiz quando um ID ficou velho (Android muda IDs entre sessões). Desconexão, bloqueio ou helper fora do ar → `interrupted`/`pending`, nunca `missing`. O scan e a conferência do celular rodam no isolate principal (o trabalho é do helper, outro processo). Identidade pelo serial, com o ID WPD como reserva; o celular é um disco físico próprio (`bus_type = 'mtp'`).

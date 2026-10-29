@@ -22,7 +22,9 @@ class SourceFileInfo {
 
 /// Atributos sem abrir o arquivo (`GetFileAttributesExW`). Não dispara o
 /// download de placeholders de nuvem.
-SourceFileInfo attributesOf(String path) => using((arena) {
+SourceFileInfo attributesOf(String path) => retryOnZeroError(() => _attributesOf(path));
+
+SourceFileInfo _attributesOf(String path) => using((arena) {
   final data = arena<Uint8>(win32FileAttributeDataSize);
   if (getFileAttributesEx(toExtendedPath(path).toNativeUtf16(allocator: arena), getFileExInfoStandard, data) == 0) {
     throw Win32Exception('GetFileAttributesExW', getLastError(), path);
@@ -49,7 +51,9 @@ class SourceFile {
   bool _closed = false;
 
   /// Abre [path] para leitura. Lança [Win32Exception] se não conseguir.
-  static SourceFile open(String path) {
+  static SourceFile open(String path) => retryOnZeroError(() => _open(path));
+
+  static SourceFile _open(String path) {
     final handle = using(
       (arena) => createFile(
         toExtendedPath(path).toNativeUtf16(allocator: arena),
