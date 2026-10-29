@@ -129,6 +129,13 @@ Observações:
 - [x] CI do primeiro push vermelha (run 40812080833): reabrir o catálogo logo após fechar dava "database is locked" — `shutdownAll()` do drift responde antes de fechar o SQLite, e `db.close()` esperava `watch()` pausados. Corrigido no `Catalog.close()` (ADR 0013). Também: teste de desempenho de 100 mil arquivos instável por rodar em paralelo com o de 50 mil → agora em sequência
 - [x] Dispositivos vazia: "Adicionar dispositivo" só no centro (o do topo aparece quando há dispositivos)
 
+## Correções do teste de fechamento com celular real (concluídas em 2026-10-29)
+- [x] Teste do usuário: fechar durante a conferência do celular real → "Encerrando com segurança…" e o app fechou, mas o terminal mostrou `Unhandled Exception: HelperException(helper_crashed)`
+- [x] Causa: `HelperClient.call()` registrava o pedido antes de escrever no stdin; com o stdin já fechado (encerrando), o pedido ficava órfão e falhava solto quando o helper era finalizado. O pedido tardio vem da conferência tentando achar o arquivo de novo depois que a leitura presa falha. Corrigido; durante o encerramento nada novo vai ao helper (ADR 0013, atualização)
+- [x] Teste que reproduz com o `HelperClient` real e um helper falso que trava como o WPD (falha com a mensagem exata no código antigo); queda do helper fora do encerramento: no scan (interrompido, retoma exato) e na conferência (pendente sem erro, continua sozinha), helper reinicia e a interface avisa
+- [x] Pergunta antes de fechar com tarefas em andamento ("Continuar trabalhando" padrão / "Fechar mesmo assim"); sem tarefas, fecha direto
+- [x] Conferência do celular grava cada arquivo na hora (antes: lotes de 32, perdidos ao fechar no meio). Retomar exato confirmado em teste (lê 3, fecha, reabre → 3 continuam, só o resto é lido) e com o helper real (celular simulado com leitura lenta: 3 ao fechar, 3 ao reabrir, os 5 restantes em 3,6 s ≈ 5 leituras)
+
 ## Fase 4 — Metadados e Biblioteca
 - [ ] Script para baixar ExifTool e FFmpeg (não versionados)
 - [ ] ExifTool `-stay_open`, FFprobe, estratégia de datas e fusos, padrões de nome (WhatsApp etc.)
@@ -187,3 +194,4 @@ Observações:
 - 2026-10-27 — Fase 3 — Celular só leitura: helper WPD (interop próprio sem métodos de escrita, GENERIC_READ, pendrives filtrados), celulares simulados, schema v3, cadastro pelo serial, scan por pasta com checkpoint e re-resolução de IDs, conferência pelo helper, celular × HD, app (Adicionar celular, avisos, "Manter originais"), CLI devices/add-phone. Evidências com o helper real e celular simulado; falta o teste do usuário (simulado e depois real, só leitura) e a tag v0.3.0.
 - 2026-10-28 — Ajustes de interface antes da Fase 4 — "Adicionar dispositivo" único (celulares, unidades e "Escolher uma pasta…") em Dispositivos e na Comparar; "Escanear" com "Tudo" ou "Só algumas pastas" (árvore ao vivo, tamanho estimado, várias pastas num scan); cartão com as pastas já escaneadas. Spec §3.2/§7 atualizada. Fase 4 **não iniciada**: aguarda o usuário.
 - 2026-10-29 — Correções do teste dos ajustes — app não fechava pelo X (close() de stream com ouvinte pausado + esperas sem prazo): encerramento com prazo e "Encerrando com segurança…" (ADR 0013); botão duplicado na Dispositivos vazia. Fase 4 **não iniciada**: aguarda o usuário.
+- 2026-10-29 — Correções do fechamento com celular real — exceção solta `helper_crashed` (pedido órfão no HelperClient), pergunta antes de fechar com tarefas em andamento, aviso de queda do helper, conferência do celular gravada arquivo a arquivo (retoma exato). Fase 4 **não iniciada**: aguarda o usuário.
