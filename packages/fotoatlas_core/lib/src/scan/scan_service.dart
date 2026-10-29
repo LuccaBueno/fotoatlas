@@ -95,7 +95,12 @@ class ScanService {
   }
 
   /// Escaneia a fonte: retoma um scan pausado/interrompido ou cria um novo.
-  Future<int> start(String sourceId) async {
+  ///
+  /// [folder] (relativa à fonte, ex.: `Armazenamento interno/DCIM/Camera`)
+  /// escaneia só essa pasta e as subpastas; o scan fica `partial` e só
+  /// confirma ausências dentro dela.
+  Future<int> start(String sourceId, {String? folder}) async {
+    final root = (folder ?? '').replaceAll('\\', '/').split('/').where((p) => p.isNotEmpty).join('/');
     for (final r in _running.values) {
       if (r.sourceId == sourceId) return r.scanId;
     }
@@ -105,7 +110,16 @@ class ScanService {
               ..orderBy([(s) => OrderingTerm.desc(s.id)])
               ..limit(1))
             .getSingleOrNull();
-    if (unfinished != null) return resume(unfinished.id);
+    if (unfinished != null) {
+      final unfinishedRoot = await scanRoot(db, unfinished.id);
+      if (unfinishedRoot.toLowerCase() != root.toLowerCase()) {
+        throw SourceException(
+          'Há um escaneamento ${unfinishedRoot.isEmpty ? 'da fonte inteira' : 'de "$unfinishedRoot"'} '
+          'por terminar (#${unfinished.id}). Retome ou cancele esse antes.',
+        );
+      }
+      return resume(unfinished.id);
+    }
 
     final source = await _connectedSource(sourceId);
     final hasCompleted =
@@ -125,7 +139,7 @@ class ScanService {
               mountPathUsed: Value(source.row.lastMountPath),
             ),
           );
-      await db.into(db.scanDirs).insert(ScanDirsCompanion.insert(scanId: id, relPath: '', status: 'pending'));
+      await db.into(db.scanDirs).insert(ScanDirsCompanion.insert(scanId: id, relPath: root, status: 'pending'));
       return id;
     });
     _launch(scanId, source.row, source.root);

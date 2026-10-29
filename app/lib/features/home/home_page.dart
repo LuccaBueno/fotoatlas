@@ -211,7 +211,12 @@ class _CoveragePanel extends ConsumerWidget {
                                 '${backupStateCount(state, report.overall.filesIn(state))} '
                                 '(${formatBytes(report.overall.bytesIn(state))})',
                               ),
-                              Text(backupStateHint(state), style: theme.textTheme.bodySmall),
+                              Text(
+                                state == BackupState.verified
+                                    ? verifiedHint(report.overall.filesIn(state), report.overall.verifiedUncertainDisk)
+                                    : backupStateHint(state),
+                                style: theme.textTheme.bodySmall,
+                              ),
                             ],
                           ),
                         ),

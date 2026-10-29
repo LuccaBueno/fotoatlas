@@ -53,6 +53,8 @@ void main() {
     expect(report.pendingFiles, 0);
     expect(report.perSource[celular]!.counts.filesIn(BackupState.single), 2);
     expect(report.perSource[backup]!.counts.filesIn(BackupState.verified), 1);
+    // A cópia 🟢 está no mesmo disco: nada de "não dá para confirmar".
+    expect(report.overall.verifiedUncertainDisk, 0);
   });
 
   test('disco de identidade fraca nunca conta como independente (R1)', () async {
@@ -66,6 +68,11 @@ void main() {
     await env.scan(b);
     await env.hashAll();
     expect((await env.core.coverage.statesForSource(a))['a.jpg'], BackupState.verified);
+    // Parece outro disco, mas sem identidade confiável: o app avisa que não dá para confirmar.
+    final report = await env.core.coverage.report();
+    expect(report.overall.verifiedUncertainDisk, 1);
+    expect(report.perSource[a]!.counts.verifiedUncertainDisk, 1);
+    expect(report.perSource[b]!.counts.verifiedUncertainDisk, 1);
   });
 
   test('fontes sobrepostas: o mesmo arquivo físico conta como uma cópia só', () async {

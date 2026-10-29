@@ -25,9 +25,13 @@ enum BackupState {
 
 /// Contagem por situação.
 class CoverageCounts {
-  const CoverageCounts(this.files, this.bytes);
+  const CoverageCounts(this.files, this.bytes, {this.verifiedUncertainDisk = 0});
   final Map<BackupState, int> files;
   final Map<BackupState, int> bytes;
+
+  /// Dos 🟢, quantos têm cópia em outro disco que não dá para confirmar como
+  /// diferente (identidade fraca, R1): poderiam ser 🔵, mas não é garantido.
+  final int verifiedUncertainDisk;
 
   int filesIn(BackupState s) => files[s] ?? 0;
   int bytesIn(BackupState s) => bytes[s] ?? 0;
@@ -101,14 +105,16 @@ class CoverageService {
         SELECT fi.id, fi.source_id, fi.content_id, fi.size_bytes, lower(fi.name) AS lname, fi.hash_status,
           COALESCE(lower(s.volume_guid), s.id) || '|' ||
             lower(CASE WHEN s.root_rel_path = '' THEN fi.rel_path ELSE s.root_rel_path || '/' || fi.rel_path END) AS phys,
-          CASE WHEN d.identity_confidence = 'reliable' OR d.user_confirmed THEN d.id END AS rdisk
+          CASE WHEN d.identity_confidence = 'reliable' OR d.user_confirmed THEN d.id END AS rdisk,
+          -- Qualquer disco, confiável ou não (sem disco conhecido: a própria fonte).
+          COALESCE(CAST(s.physical_disk_id AS TEXT), 'src:' || s.id) AS adisk
         FROM file_instances fi
         JOIN sources s ON s.id = fi.source_id AND s.forgotten_at IS NULL
         LEFT JOIN physical_disks d ON d.id = s.physical_disk_id
         WHERE fi.availability = 'present' ${mediaOnly ? 'AND fi.ext IN ${MediaTypes.sqlList(MediaTypes.media)}' : ''}
       ),
       per_content AS MATERIALIZED (
-        SELECT content_id, COUNT(DISTINCT phys) AS copies, COUNT(DISTINCT rdisk) AS disks
+        SELECT content_id, COUNT(DISTINCT phys) AS copies, COUNT(DISTINCT rdisk) AS disks, COUNT(DISTINCT adisk) AS all_disks
         FROM inst WHERE content_id IS NOT NULL AND hash_status = 'done' GROUP BY content_id
       ),
       by_size AS MATERIALIZED (
@@ -135,7 +141,11 @@ class CoverageService {
             WHEN bs.phys_n = 1 THEN 'single'
             WHEN bn.phys_n >= 2 AND bn.src_n >= 2 THEN 'probable'
             ELSE 'unknown'
-          END AS state
+          END AS state,
+          -- 🟢 com cópias em discos que parecem diferentes, mas sem identidade confiável
+          -- (ex.: SSD NVMe com serial zerado): não dá para confirmar que são outro disco.
+          CASE WHEN i.content_id IS NOT NULL AND i.hash_status = 'done' AND pc.disks < 2 AND pc.copies >= 2
+            AND pc.all_disks >= 2 THEN 1 ELSE 0 END AS uncertain
         FROM inst i
         LEFT JOIN per_content pc ON pc.content_id = i.content_id
         JOIN by_size bs ON bs.size_bytes = i.size_bytes
@@ -152,19 +162,19 @@ class CoverageService {
           '''
           WITH $cte,
           units AS (
-            SELECT state, size_bytes FROM classified WHERE content_id IS NOT NULL AND hash_status = 'done'
+            SELECT state, size_bytes, uncertain FROM classified WHERE content_id IS NOT NULL AND hash_status = 'done'
               GROUP BY content_id
             UNION ALL
-            SELECT state, size_bytes FROM classified WHERE content_id IS NULL OR hash_status != 'done' GROUP BY phys
+            SELECT state, size_bytes, uncertain FROM classified WHERE content_id IS NULL OR hash_status != 'done' GROUP BY phys
           )
-          SELECT state, COUNT(*) AS n, COALESCE(SUM(size_bytes), 0) AS b FROM units GROUP BY state
+          SELECT state, COUNT(*) AS n, COALESCE(SUM(size_bytes), 0) AS b, SUM(uncertain) AS u FROM units GROUP BY state
           ''',
           readsFrom: {db.fileInstances, db.sources, db.physicalDisks},
         )
         .get();
     final perRows = await db
         .customSelect(
-          'WITH $cte SELECT source_id, state, COUNT(*) AS n, COALESCE(SUM(size_bytes), 0) AS b '
+          'WITH $cte SELECT source_id, state, COUNT(*) AS n, COALESCE(SUM(size_bytes), 0) AS b, SUM(uncertain) AS u '
           'FROM classified GROUP BY source_id, state',
           readsFrom: {db.fileInstances, db.sources, db.physicalDisks},
         )
@@ -197,12 +207,14 @@ class CoverageService {
     CoverageCounts counts(Iterable<QueryRow> rows) {
       final files = <BackupState, int>{};
       final bytes = <BackupState, int>{};
+      var uncertain = 0;
       for (final r in rows) {
         final s = BackupState.values.byName(r.read<String>('state'));
         files[s] = (files[s] ?? 0) + r.read<int>('n');
         bytes[s] = (bytes[s] ?? 0) + r.read<int>('b');
+        uncertain += r.read<int>('u');
       }
-      return CoverageCounts(files, bytes);
+      return CoverageCounts(files, bytes, verifiedUncertainDisk: uncertain);
     }
 
     final bySource = <String, List<QueryRow>>{};

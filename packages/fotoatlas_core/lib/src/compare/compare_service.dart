@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../catalog/catalog_database.dart';
 import '../hash/hash_engine.dart';
+import '../scan/scan_engine.dart';
 import '../sources/sources_service.dart';
 import '../util/clock.dart';
 import 'scope.dart';
@@ -45,12 +46,14 @@ class UnverifiedFiles extends CompareIssue {
   int get total => pending + errors + changed + cloudOnly;
 }
 
-/// Fonte do escopo que nunca terminou um escaneamento.
+/// Fonte do escopo que nunca terminou um escaneamento. Com [folder]: só
+/// outras partes da fonte foram escaneadas, não esta pasta do escopo.
 class NeverScanned extends CompareIssue {
-  const NeverScanned(this.side, this.sourceId, this.sourceName);
+  const NeverScanned(this.side, this.sourceId, this.sourceName, {this.folder});
   final String side;
   final String sourceId;
   final String sourceName;
+  final String? folder;
 }
 
 /// Pastas do escopo que não puderam ser lidas no último escaneamento.
@@ -378,38 +381,54 @@ class CompareService {
         issues.add(UnknownSource(side, sourceId));
         continue;
       }
-      final scan =
+      final completed =
           await (db.select(db.scans)
                 ..where((s) => s.sourceId.equals(sourceId) & s.status.equals('completed'))
-                ..orderBy([(s) => OrderingTerm.desc(s.id)])
-                ..limit(1))
-              .getSingleOrNull();
-      if (scan == null) {
+                ..orderBy([(s) => OrderingTerm.desc(s.id)]))
+              .get();
+      if (completed.isEmpty) {
         issues.add(NeverScanned(side, sourceId, row.name));
         continue;
       }
       if (sources.stateOf(sourceId) != SourceState.connected) {
+        final last = completed.first;
         warnings.add(
           DisconnectedSource(
             side,
             row.name,
-            scan.finishedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(scan.finishedAt!, isUtc: true),
+            last.finishedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(last.finishedAt!, isUtc: true),
           ),
         );
       }
-      if (scan.coverage == 'complete') continue;
-      final errorDirs = await db
-          .customSelect(
-            "SELECT rel_path FROM scan_dirs WHERE scan_id = ? AND status = 'error' ORDER BY rel_path",
-            variables: [Variable.withInt(scan.id)],
-          )
-          .get();
-      final entries = scope.entries.where((e) => e.sourceId == sourceId).toList();
-      final affected = <String>[
-        for (final r in errorDirs)
-          if (entries.any((e) => _related(e.relPath, r.read<String>('rel_path')))) r.read<String>('rel_path'),
-      ];
-      if (affected.isNotEmpty) issues.add(UnreadFolders(side, sourceId, row.name, affected));
+      // Cada entrada vale pelo último scan concluído que a cobre: o scan de
+      // uma pasta só (ex.: DCIM/Camera) não diz nada sobre o resto da fonte.
+      final roots = <int, String>{};
+      final affected = <String>{};
+      for (final entry in scope.entries.where((e) => e.sourceId == sourceId)) {
+        ScanRow? covering;
+        for (final scan in completed) {
+          final root = roots[scan.id] ??= await scanRoot(db, scan.id);
+          if (root.isEmpty || entry.relPath == root || entry.relPath.startsWith('$root/')) {
+            covering = scan;
+            break;
+          }
+        }
+        if (covering == null) {
+          issues.add(NeverScanned(side, sourceId, row.name, folder: entry.relPath));
+          continue;
+        }
+        if (covering.coverage == 'complete') continue;
+        final errorDirs = await db
+            .customSelect(
+              "SELECT rel_path FROM scan_dirs WHERE scan_id = ? AND status = 'error' ORDER BY rel_path",
+              variables: [Variable.withInt(covering.id)],
+            )
+            .get();
+        for (final r in errorDirs) {
+          if (_related(entry.relPath, r.read<String>('rel_path'))) affected.add(r.read<String>('rel_path'));
+        }
+      }
+      if (affected.isNotEmpty) issues.add(UnreadFolders(side, sourceId, row.name, affected.toList()..sort()));
     }
   }
 

@@ -311,6 +311,14 @@ class _CoverageLine extends ConsumerWidget {
         children: [
           for (final state in BackupState.values)
             if (c.counts.filesIn(state) > 0) BackupStateBadge(state, count: c.counts.filesIn(state)),
+          if (c.counts.verifiedUncertainDisk > 0)
+            Tooltip(
+              message: verifiedHint(c.counts.filesIn(BackupState.verified), c.counts.verifiedUncertainDisk),
+              child: Text(
+                uncertainDiskShort(c.counts.filesIn(BackupState.verified), c.counts.verifiedUncertainDisk),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
           if (c.cloudOnly > 0)
             Text(
               plural(c.cloudOnly, 'arquivo só na nuvem', 'arquivos só na nuvem'),

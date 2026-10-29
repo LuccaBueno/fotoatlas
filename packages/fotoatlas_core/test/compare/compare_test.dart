@@ -173,6 +173,66 @@ void main() {
     expect(r.issues.whereType<NeverScanned>().single.sourceId, novo);
   });
 
+  test('scan de uma pasta só: parcial, ausência só dentro dela e comparação honesta fora', () async {
+    final env = await TestEnv.open();
+    env.write('Cel/DCIM/Camera/a.jpg', bytes(1, 100));
+    env.write('Cel/DCIM/Camera/sub/b.jpg', bytes(2, 101));
+    env.write('Cel/WhatsApp/c.jpg', bytes(3, 102));
+    env.write('HD/a.jpg', bytes(1, 100));
+    final cel = await env.addFolder('Cel');
+    final hd = await env.addFolder('HD');
+    await env.scan(hd);
+
+    final id = await env.core.scans.start(cel, folder: r'DCIM\Camera\');
+    final p = await env.core.scans.wait(id);
+    expect(p.status, 'completed');
+    expect(p.filesSeen, 2, reason: 'só DCIM/Camera e subpastas');
+    final scan = await (env.db.select(env.db.scans)..where((s) => s.id.equals(id))).getSingle();
+    expect(scan.coverage, 'partial');
+    await env.hashAll();
+
+    final camera = Scope([ScopeEntry(cel, 'DCIM/Camera')]);
+    final hdScope = Scope([ScopeEntry(hd)]);
+    var r = await env.core.compare.compare(camera, hdScope);
+    expect(r.verdict, CompareVerdict.missing);
+    expect(r.missing.contents, 1);
+    expect(r.issues, isEmpty);
+
+    // O celular inteiro (ou outra pasta) não foi escaneado: nunca "100%".
+    r = await env.core.compare.compare(Scope([ScopeEntry(cel)]), hdScope);
+    expect(r.verdict, CompareVerdict.incomplete);
+    expect(r.issues.whereType<NeverScanned>().single.folder, '');
+    r = await env.core.compare.compare(Scope([ScopeEntry(cel, 'WhatsApp')]), hdScope);
+    expect(r.issues.whereType<NeverScanned>().single.folder, 'WhatsApp');
+
+    // Apagado dentro da pasta: o próximo scan parcial confirma a ausência.
+    File('${env.volumeDir.path}/Cel/DCIM/Camera/sub/b.jpg').deleteSync();
+    await env.core.scans.wait(await env.core.scans.start(cel, folder: 'DCIM/Camera'));
+    expect(await env.count("SELECT COUNT(*) AS n FROM file_instances WHERE availability = 'missing'"), 1);
+
+    // Scan da fonte inteira cobre tudo e a comparação volta a ser completa.
+    await env.scan(cel);
+    await env.hashAll();
+    r = await env.core.compare.compare(Scope([ScopeEntry(cel)]), hdScope);
+    expect(r.issues, isEmpty);
+    expect(r.missing.contents, 1, reason: 'c.jpg; b.jpg foi apagado');
+  });
+
+  test('scan de pasta não retoma por cima de outro scan pendente de outra pasta', () async {
+    final env = await TestEnv.open();
+    env.write('Cel/DCIM/a.jpg', bytes(1, 100));
+    final cel = await env.addFolder('Cel');
+    final id = await env.core.scans.start(cel, folder: 'DCIM');
+    await env.core.scans.wait(id);
+    await env.db.customStatement("UPDATE scans SET status = 'paused' WHERE id = $id");
+    expect(
+      () => env.core.scans.start(cel),
+      throwsA(isA<SourceException>().having((e) => e.message, 'message', contains('de "DCIM"'))),
+    );
+    expect(await env.core.scans.start(cel, folder: 'DCIM'), id, reason: 'mesma pasta: retoma');
+    await env.core.scans.wait(id);
+  });
+
   test('filtro por tipo: só vídeos de A estão todos em B', () async {
     final s = await Scenario.create();
     final r = await s.compare(Scope(s.a.entries, types: {ScopeFileType.video}), s.b);

@@ -220,7 +220,8 @@ class ScanEngine {
           variables: [Variable.withInt(scanId)],
         )
         .getSingle();
-    final complete = errorDirs.read<int>('n') == 0;
+    // Scan de uma pasta só: é parcial e só confirma ausências nas pastas lidas.
+    final complete = errorDirs.read<int>('n') == 0 && (await scanRoot(db, scanId)).isEmpty;
     final now = nowMs();
     await db.transaction(() async {
       await db.customUpdate(
@@ -268,6 +269,18 @@ class ScanEngine {
 
   Future<ScanProgress> _progress(String status, {String? currentDir, String? message}) =>
       readScanProgress(db, scanId, status: status, currentDir: currentDir, message: message);
+}
+
+/// Pasta onde o scan começou (`''` = a fonte inteira). Toda pasta do scan
+/// descende dela, então é a de caminho mais curto.
+Future<String> scanRoot(CatalogDatabase db, int scanId) async {
+  final row = await db
+      .customSelect(
+        'SELECT rel_path FROM scan_dirs WHERE scan_id = ? ORDER BY length(rel_path), rel_path LIMIT 1',
+        variables: [Variable.withInt(scanId)],
+      )
+      .getSingleOrNull();
+  return row?.read<String>('rel_path') ?? '';
 }
 
 /// Lê o progresso atual de um scan a partir do banco.

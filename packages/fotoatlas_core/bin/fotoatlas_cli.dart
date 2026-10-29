@@ -18,7 +18,8 @@ Comandos:
   sources add-phone CELULAR [--name N]
                                  Cadastra um celular (número da lista de "devices",
                                  nome ou começo do ID)
-  scan start FONTE               Escaneia (retoma se houver um pausado)
+  scan start FONTE [--folder P]  Escaneia (retoma se houver um pausado); --folder
+                                 escaneia só a pasta P (ex.: "Armazenamento interno/DCIM/Camera")
   scan resume ID                 Retoma um escaneamento pelo número
   scan status [FONTE]            Mostra os últimos escaneamentos
   hash run                       Confere o conteúdo dos pendentes (Ctrl+C pausa)
@@ -163,9 +164,9 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
       stdout.writeln('SOURCE ${result.sourceId}');
       return 0;
 
-    case ['scan', 'start', final source]:
+    case ['scan', 'start', final source, ...final rest]:
       final id = await _findSource(core, source);
-      return _follow(core, await core.scans.start(id));
+      return _follow(core, await core.scans.start(id, folder: _option(rest, '--folder')));
 
     case ['scan', 'resume', final scanId]:
       return _follow(core, await core.scans.resume(int.parse(scanId)));
@@ -240,7 +241,8 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
         stdout.writeln(switch (issue) {
           UnverifiedFiles(:final side, :final pending, :final errors, :final changed, :final cloudOnly) =>
             'ISSUE unverified $side pending=$pending errors=$errors changed=$changed cloud=$cloudOnly',
-          NeverScanned(:final side, :final sourceName) => 'ISSUE never_scanned $side $sourceName',
+          NeverScanned(:final side, :final sourceName, :final folder) =>
+            'ISSUE never_scanned $side $sourceName${folder == null ? '' : ':$folder'}',
           UnreadFolders(:final side, :final sourceName, :final folders) =>
             'ISSUE unread_folders $side $sourceName ${folders.join(', ')}',
           UnknownSource(:final side, :final sourceId) => 'ISSUE unknown_source $side $sourceId',

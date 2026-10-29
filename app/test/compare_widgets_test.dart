@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fotoatlas/app/providers.dart';
 import 'package:fotoatlas/app/shell.dart';
 import 'package:fotoatlas/app/theme.dart';
+import 'package:fotoatlas/l10n/strings.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import 'support/fake_backend.dart';
@@ -222,6 +223,48 @@ void main() {
     expect(find.text('3 arquivos com só 1 cópia (3,0 MB)'), findsOneWidget);
     expect(find.text('10 arquivos com backup em disco independente (10,0 MB)'), findsOneWidget);
     expect(find.text('3 arquivos com só 1 cópia'), findsOneWidget, reason: 'por dispositivo');
+  });
+
+  testWidgets('cópias em disco que não dá para identificar: Início e cartão avisam (R1)', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1400, 1000)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const counts = CoverageCounts({BackupState.verified: 3}, {BackupState.verified: 3000}, verifiedUncertainDisk: 3);
+    final backend = FakeBackend([source('s1', 'Pixel')])
+      ..coverage = CoverageReport(
+        overall: counts,
+        perSource: {
+          's1': const SourceCoverage(
+            sourceId: 's1',
+            counts: counts,
+            cloudOnly: 0,
+            duplicateFiles: 0,
+            duplicateBytes: 0,
+          ),
+        },
+        pendingFiles: 0,
+        computedAt: DateTime.utc(2026),
+      );
+    await tester.pumpWidget(harness(backend));
+    await tester.pumpAndSettle();
+    expect(find.text('3 cópias conferidas (2,9 KB)'), findsOneWidget);
+    expect(
+      find.text(
+        'Há outra cópia idêntica, mas não dá para confirmar que estão em discos diferentes: '
+        'o Windows não identifica com certeza um dos discos (ex.: SSD interno).',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Dispositivos').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Não dá para confirmar que estão em discos diferentes'), findsOneWidget);
+  });
+
+  test('dica dos discos incertos só quando há, e com a quantidade quando é parte', () {
+    expect(verifiedHint(4, 0), 'Há outra cópia com conteúdo idêntico, mas no mesmo disco.');
+    expect(verifiedHint(4, 1), contains('Em 1 arquivo, não dá para confirmar'));
+    expect(uncertainDiskShort(4, 2), 'Não dá para confirmar que 2 delas estão em discos diferentes');
   });
 
   testWidgets('resumo deixa claro arquivos × conteúdos e caminhos usam um só separador', (tester) async {

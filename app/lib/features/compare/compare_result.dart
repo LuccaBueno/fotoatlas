@@ -24,7 +24,11 @@ List<String> issueTexts(CompareSummary r) => [
   for (final i in r.issues)
     switch (i) {
       final UnverifiedFiles u => _unverifiedText(u),
-      NeverScanned(:final side, :final sourceName) => '"$sourceName" ($side) nunca foi escaneado por completo.',
+      NeverScanned(:final side, :final sourceName, folder: null) =>
+        '"$sourceName" ($side) nunca foi escaneado por completo.',
+      NeverScanned(:final side, :final sourceName, :final folder?) =>
+        'A pasta "${folder.isEmpty ? sourceName : folder.replaceAll('/', ' › ')}" de "$sourceName" ($side) '
+            'ainda não foi escaneada (só outra parte do dispositivo foi). Escaneie o dispositivo inteiro.',
       UnreadFolders(:final side, :final sourceName, :final folders) =>
         '${plural(folders.length, 'pasta', 'pastas')} de "$sourceName" ($side) não puderam ser lidas '
             'no último escaneamento: ${folders.take(3).join(', ')}${folders.length > 3 ? '…' : ''}.',

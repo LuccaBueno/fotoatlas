@@ -45,6 +45,24 @@ String backupStateHint(BackupState state) => switch (state) {
   BackupState.unknown => 'O conteúdo ainda não foi conferido.',
 };
 
+/// Explicação dos 🟢 quando parte das cópias está em outro disco que o Windows
+/// não identifica com certeza (ex.: SSD NVMe com número de série zerado, R1):
+/// pode ser um disco diferente, mas não dá para garantir.
+String verifiedHint(int verified, int uncertainDisk) {
+  if (uncertainDisk == 0) return backupStateHint(BackupState.verified);
+  const why = 'o Windows não identifica com certeza um dos discos (ex.: SSD interno)';
+  if (uncertainDisk >= verified) {
+    return 'Há outra cópia idêntica, mas não dá para confirmar que estão em discos diferentes: $why.';
+  }
+  return 'Há outra cópia idêntica. Em ${plural(uncertainDisk, 'arquivo', 'arquivos')}, não dá para '
+      'confirmar que as cópias estão em discos diferentes: $why.';
+}
+
+/// Dica curta para o cartão do dispositivo.
+String uncertainDiskShort(int verified, int uncertainDisk) =>
+    'Não dá para confirmar que ${uncertainDisk >= verified ? '' : '${formatInt(uncertainDisk)} delas '}'
+    'estão em discos diferentes';
+
 /// Nome dos tipos do filtro de escopo.
 String scopeTypeLabel(ScopeFileType type) => switch (type) {
   ScopeFileType.photo => 'Fotos',
