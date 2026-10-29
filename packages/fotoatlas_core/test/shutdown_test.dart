@@ -29,6 +29,8 @@ void main() {
       env.core.scans.progress.listen((_) {})..pause(),
       env.core.hashes.status.listen((_) {})..pause(),
       env.core.sources.watch().listen((_) {})..pause(),
+      // Consulta reativa do próprio banco (como as telas do app usam).
+      env.db.select(env.db.sources).watch().listen((_) {})..pause(),
     ];
     addTearDown(() => Future.wait(subs.map((s) => s.cancel())));
     // Prazo padrão (3 s por etapa): terminar bem antes prova que nenhuma

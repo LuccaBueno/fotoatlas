@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
@@ -32,10 +33,14 @@ void applyPragmas(sql.Database db) {
 /// Catálogo aberto: um único escritor (o isolate do drift); outros isolates
 /// se conectam por [connectPort].
 class Catalog {
-  Catalog._(this.db, this._isolate, this.path);
+  Catalog._(this.db, this._isolate, this.path, this._exited);
 
   final CatalogDatabase db;
   final DriftIsolate _isolate;
+
+  /// Completa quando o isolate do drift termina, o que só acontece depois de
+  /// ele fechar o arquivo do SQLite.
+  final Future<void> _exited;
   final String path;
 
   /// Porta para workers abrirem sua própria conexão com o mesmo escritor.
@@ -48,13 +53,23 @@ class Catalog {
   static Future<Catalog> open(String dbPath) async {
     Directory(p.dirname(dbPath)).createSync(recursive: true);
     _preflight(dbPath);
-    final isolate = await DriftIsolate.spawn(() => NativeDatabase(File(dbPath), setup: applyPragmas));
+    final exit = ReceivePort();
+    final exited = exit.first.then((_) => exit.close());
+    final isolate = await DriftIsolate.spawn(
+      _opener(dbPath),
+      isolateSpawn: <T>(entry, message) => Isolate.spawn<T>(entry, message, onExit: exit.sendPort),
+    );
     final db = CatalogDatabase(await isolate.connect(singleClientMode: false));
     // Força a abertura (e a criação/migração) agora, para que erros apareçam
     // aqui e não na primeira consulta da interface.
     await db.customSelect('SELECT 1').get();
-    return Catalog._(db, isolate, dbPath);
+    return Catalog._(db, isolate, dbPath, exited);
   }
+
+  /// Fora de [open] para o closure (enviado ao isolate) não levar junto a
+  /// porta de saída, que não pode ser enviada.
+  static NativeDatabase Function() _opener(String dbPath) =>
+      () => NativeDatabase(File(dbPath), setup: applyPragmas);
 
   /// Conexão de um worker ao escritor único do catálogo.
   static Future<CatalogDatabase> connectWorker(SendPort port) async {
@@ -84,8 +99,17 @@ class Catalog {
     }
   }
 
+  /// Fecha e só volta quando o arquivo foi fechado de verdade: o
+  /// `shutdownAll()` do drift responde antes de o isolate fechar o SQLite, e
+  /// reabrir logo em seguida (no mesmo processo) dava "database is locked".
+  ///
+  /// O `db.close()` do drift espera os streams de consultas reativas
+  /// (`watch()`) fecharem; com um ouvinte pausado (o Riverpod pausa as telas
+  /// fora de vista) isso nunca termina. Por isso não esperamos por ele: quem
+  /// fecha o arquivo é o isolate do banco, no `shutdownAll()`.
   Future<void> close() async {
-    await db.close();
+    unawaited(db.close().then((_) {}, onError: (Object _) {}));
     await _isolate.shutdownAll();
+    await _exited;
   }
 }

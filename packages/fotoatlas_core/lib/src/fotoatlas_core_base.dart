@@ -170,6 +170,7 @@ class FotoAtlasCore {
       _closing ??= _close(onProgress, stepTimeout);
 
   static const _stepTimeout = Duration(seconds: 3);
+  static const _catalogTimeout = Duration(seconds: 5);
 
   Future<void> _close(void Function(List<ShutdownStep>)? onProgress, Duration stepTimeout) async {
     sources.stopMonitoring();
@@ -188,17 +189,22 @@ class FotoAtlasCore {
       ShutdownStep('catalog', 'Fechando o catálogo'),
     ];
     void report() => onProgress?.call(List.unmodifiable(steps));
-    Future<void> step(String id, Future<void> Function() action, {Duration? timeout}) async {
+
+    /// `true` se a etapa terminou dentro do prazo.
+    Future<bool> step(String id, Future<void> Function() action, {Duration? timeout}) async {
       final s = steps.where((s) => s.id == id).firstOrNull;
+      var ok = true;
       try {
         await action().timeout(timeout ?? stepTimeout);
       } on Object {
         // Prazo estourado ou erro: segue; o que ficou pela metade é recuperável.
+        ok = false;
       }
       if (s != null) {
         s.done = true;
         report();
       }
+      return ok;
     }
 
     report();
@@ -210,8 +216,12 @@ class FotoAtlasCore {
     await step('sources', sources.dispose);
     // O helper tem o próprio prazo (pede para sair; se não sair, é finalizado).
     await step('helper', () async => helper?.close(), timeout: stepTimeout * 2);
-    await step('catalog', catalog.close);
-    await _lock.release();
+    // O catálogo tem prazo próprio, maior: fechar o SQLite é rápido, mas numa
+    // máquina lenta pode passar do prazo curto das outras etapas.
+    final catalogClosed = await step('catalog', catalog.close, timeout: _catalogTimeout);
+    // Catálogo ainda aberto: a trava continua com este processo (que vai
+    // sair) para nenhum outro abrir o mesmo arquivo ao mesmo tempo.
+    if (catalogClosed) await _lock.release();
   }
 }
 

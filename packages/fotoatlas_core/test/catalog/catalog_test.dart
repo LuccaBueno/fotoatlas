@@ -90,4 +90,20 @@ void main() {
     final row = await catalog.db.customSelect("SELECT value FROM app_meta WHERE key = 'catalog_id'").getSingle();
     expect(row.read<String>('value'), 'abc');
   });
+
+  test('close() só volta com o arquivo fechado: reabrir na hora funciona', () async {
+    final path = p.join(home.path, 'catalog.db');
+    for (var i = 0; i < 20; i++) {
+      final catalog = await Catalog.open(path);
+      await catalog.db.customStatement("INSERT INTO settings (key, value_json, updated_at) VALUES ('k$i', '1', 0)");
+      await catalog.close();
+      // A última conexão do SQLite em WAL apaga o -wal ao fechar: se ele ainda
+      // existe, o arquivo continuava aberto (o shutdownAll() do drift responde
+      // antes de o isolate fechar o banco).
+      expect(File('$path-wal').existsSync(), isFalse, reason: 'rodada $i');
+    }
+    final raw = sql.sqlite3.open(path, mode: sql.OpenMode.readOnly);
+    addTearDown(raw.close);
+    expect(raw.select('SELECT COUNT(*) AS n FROM settings').first['n'], greaterThanOrEqualTo(20));
+  });
 }
