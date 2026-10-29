@@ -39,5 +39,15 @@ Future<void> deleteTestDir(Directory dir) async {
       await Future<void>.delayed(const Duration(milliseconds: 200));
     }
   }
-  fail('Não foi possível apagar a pasta de teste ${dir.path}: $last');
+  // Diagnóstico: quais arquivos ficaram presos.
+  final List<String> left;
+  try {
+    left = [
+      for (final e in dir.listSync(recursive: true))
+        if (e is File) p.relative(e.path, from: dir.path),
+    ];
+  } on FileSystemException catch (e) {
+    fail('Não foi possível apagar a pasta de teste ${dir.path}: $last (nem listar: $e)');
+  }
+  fail('Não foi possível apagar a pasta de teste ${dir.path}: $last. Sobraram: ${left.join(', ')}');
 }

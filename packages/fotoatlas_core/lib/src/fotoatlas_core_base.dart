@@ -223,17 +223,19 @@ class FotoAtlasCore {
     void report() => onProgress?.call(List.unmodifiable(steps));
 
     /// `true` se a etapa terminou dentro do prazo.
-    Future<bool> step(String id, Future<void> Function() action, {Duration? timeout}) async {
+    /// [action] pode devolver `false` para dizer que não terminou tudo a tempo.
+    Future<bool> step(String id, Future<Object?> Function() action, {Duration? timeout}) async {
       final s = steps.where((s) => s.id == id).firstOrNull;
       var ok = true;
       try {
-        await action().timeout(timeout ?? stepTimeout);
+        ok = await action().timeout(timeout ?? stepTimeout) != false;
       } on Object {
         // Prazo estourado ou erro: segue; o que ficou pela metade é recuperável.
         ok = false;
       }
       if (s != null) {
         s.done = true;
+        s.timedOut = !ok;
         report();
       }
       return ok;
@@ -263,6 +265,9 @@ class ShutdownStep {
   final String id;
   final String label;
   bool done = false;
+
+  /// A etapa estourou o prazo (ou deu erro) e o encerramento seguiu sem ela.
+  bool timedOut = false;
 }
 
 enum RunningTaskKind { scan, hash, backup }

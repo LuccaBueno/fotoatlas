@@ -328,15 +328,19 @@ class ScanService {
   /// lote) e espera no máximo [timeout]. Um scan que não parar a tempo fica
   /// `running` no banco e vira `interrupted` ao abrir de novo ([init]):
   /// retoma das pastas pendentes, sem confirmar ausências.
-  Future<void> dispose({Duration timeout = const Duration(seconds: 3)}) async {
+  /// Devolve `false` se algum scan não parou a tempo.
+  Future<bool> dispose({Duration timeout = const Duration(seconds: 3)}) async {
     _disposing = true;
     final running = _running.values.toList();
     for (final r in running) {
       await _requestStop(r.scanId, ScanStop.pause);
     }
-    await Future.wait([for (final r in running) r.done.future]).timeout(timeout, onTimeout: () => const []);
+    final stopped = await Future.wait([for (final r in running) r.done.future])
+        .then((_) => true)
+        .timeout(timeout, onTimeout: () => false);
     // Sem `await`: um ouvinte pausado faria o close() nunca terminar.
     unawaited(_progress.close());
+    return stopped;
   }
 
   bool _disposing = false;

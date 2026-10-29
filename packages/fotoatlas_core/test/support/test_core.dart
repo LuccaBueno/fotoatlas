@@ -61,7 +61,16 @@ class TestEnv {
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
-    await core.close();
+    var steps = const <ShutdownStep>[];
+    await core.close(onProgress: (s) => steps = s);
+    // Diagnóstico: etapa do encerramento que estourou o prazo (ex.: catálogo
+    // ainda aberto deixaria a pasta do teste presa).
+    final late = [
+      for (final s in steps)
+        if (s.timedOut) s.id,
+    ];
+    // ignore: avoid_print
+    if (late.isNotEmpty) print('Encerramento: etapas que estouraram o prazo: ${late.join(', ')}');
   }
 
   CatalogDatabase get db => core.catalog.db;

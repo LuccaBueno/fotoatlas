@@ -382,7 +382,8 @@ class HashService {
   /// Para os workers e espera no máximo [timeout]. Quem não parar a tempo
   /// (ex.: lendo um arquivo grande pelo USB) é abandonado: o arquivo continua
   /// `pending` no banco e é conferido na próxima vez.
-  Future<void> dispose({Duration timeout = const Duration(seconds: 3)}) async {
+  /// Devolve `false` se algum worker foi abandonado.
+  Future<bool> dispose({Duration timeout = const Duration(seconds: 3)}) async {
     _disposed = true;
     unawaited(_autoScan?.cancel());
     unawaited(_autoSources?.cancel());
@@ -390,8 +391,11 @@ class HashService {
     for (final w in running) {
       w.stop();
     }
-    await Future.wait([for (final w in running) w.done.future]).timeout(timeout, onTimeout: () => const []);
+    final stopped = await Future.wait([for (final w in running) w.done.future])
+        .then((_) => true)
+        .timeout(timeout, onTimeout: () => false);
     // Sem `await`: um ouvinte pausado faria o close() nunca terminar.
     unawaited(_status.close());
+    return stopped;
   }
 }
