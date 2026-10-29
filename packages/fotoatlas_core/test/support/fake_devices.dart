@@ -59,6 +59,9 @@ class FakeDeviceBackend implements DeviceBackend {
   /// cancelamento.
   int? stallAfterListCalls;
   bool stallHash = false;
+
+  /// Depois de N leituras concluídas, a próxima trava (fechar no meio).
+  int? stallAfterHashCalls;
   static final Future<Never> _never = Completer<Never>().future;
 
   /// Chamado antes de cada hash (para desplugar no meio, por exemplo).
@@ -143,6 +146,8 @@ class FakeDeviceBackend implements DeviceBackend {
     final path = objectId.substring(prefix.length);
     beforeHash?.call(path);
     if (stallHash) await _never;
+    final stallAt = stallAfterHashCalls;
+    if (stallAt != null && hashCalls >= stallAt) await _never;
     _connected(deviceId);
     final bytes = phone.files[path];
     if (bytes == null) throw DeviceException('not_found', 'Arquivo não existe.');

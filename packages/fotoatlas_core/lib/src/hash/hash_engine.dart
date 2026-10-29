@@ -225,7 +225,10 @@ class HashEngine {
               continue;
             }
             if (outcome is HashInterrupted) break;
-            results.add((row, outcome));
+            // Celular: grava na hora. Cada arquivo pelo USB pode levar
+            // minutos; esperar o lote faria um fechamento (ou queda do
+            // aparelho) no meio refazer tudo o que já foi lido.
+            await _apply([(row, outcome)]);
             onFile?.call(HashFileEvent(row.sourceId, row.size, _kind(outcome)));
             continue;
           }

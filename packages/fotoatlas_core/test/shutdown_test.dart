@@ -121,4 +121,72 @@ void main() {
       expect('${r.stdout}', isNot(contains('${client.pid}')));
     }
   });
+
+  test('conferência do celular interrompida ao fechar retoma exatamente de onde parou', () async {
+    final phone = pixel();
+    // Mais arquivos que o necessário para caber num lote só.
+    for (var i = 0; i < 6; i++) {
+      phone.put('Interno/DCIM/Camera/EXTRA_$i.jpg', List.generate(500 + i, (b) => (b * 7 + i) & 0xff));
+    }
+    final devices = FakeDeviceBackend()..phones.add(phone);
+    final env = await TestEnv.open(devices: devices);
+    await env.core.sources.refreshConnectivity();
+    final id = (await env.core.sources.addPhone(devices.phones.single.deviceId)).sourceId;
+    await env.scan(id);
+    final total = await env.count('SELECT COUNT(*) FROM file_instances');
+    expect(total, 10);
+
+    devices.stallAfterHashCalls = 3; // lê 3 arquivos e trava no 4º
+    unawaited(env.core.hashes.start());
+    while (devices.hashCalls < 3) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    await timedClose(env.core);
+
+    devices.stallAfterHashCalls = null;
+    await env.reopen(devices: devices);
+    expect(
+      await env.count("SELECT COUNT(*) FROM file_instances WHERE hash_status = 'done'"),
+      3,
+      reason: 'os 3 lidos antes de fechar ficam gravados',
+    );
+    await env.core.sources.refreshConnectivity();
+    final before = devices.hashCalls;
+    await env.hashAll();
+    expect(devices.hashCalls - before, total - 3, reason: 'só lê pelo USB o que faltava');
+    expect(await env.count("SELECT COUNT(*) FROM file_instances WHERE hash_status = 'done'"), total);
+  });
+
+  test('tarefas em andamento (para perguntar antes de fechar): nenhuma, scan e conferência', () async {
+    final devices = FakeDeviceBackend()
+      ..phones.add(pixel())
+      ..stallAfterListCalls = 2;
+    final env = await TestEnv.open(devices: devices);
+    expect(await env.core.runningTasks(), isEmpty, reason: 'nada rodando: fecha sem perguntar');
+    await env.core.sources.refreshConnectivity();
+    final id = (await env.core.sources.addPhone(devices.phones.single.deviceId)).sourceId;
+    await env.core.scans.start(id);
+    while (env.core.scans.runningProgress.isEmpty) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    final tasks = await env.core.runningTasks();
+    expect(tasks.single.kind, RunningTaskKind.scan);
+    expect(tasks.single.sourceName, 'Pixel de Teste');
+    await timedClose(env.core);
+
+    devices
+      ..stallAfterListCalls = null
+      ..stallHash = true;
+    await env.reopen(devices: devices);
+    await env.core.sources.refreshConnectivity();
+    await env.core.scans.wait(await env.core.scans.start(id));
+    unawaited(env.core.hashes.start());
+    while (!env.core.hashes.isRunning) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    final hash = (await env.core.runningTasks()).single;
+    expect(hash.kind, RunningTaskKind.hash);
+    expect(hash.total, 4);
+  });
 }

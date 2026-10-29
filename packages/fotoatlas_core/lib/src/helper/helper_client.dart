@@ -103,6 +103,9 @@ class HelperClient {
     _pid = process.pid;
     process.stdout.transform(utf8.decoder).transform(const LineSplitter()).listen(_onLine, onError: (_) {});
     process.stderr.drain<void>().ignore();
+    // Escrever para um helper que acabou de morrer falha no `done` do stdin;
+    // isso já aparece como saída do processo (`_onExit`), não como erro solto.
+    process.stdin.done.ignore();
     process.exitCode.then((_) => _onExit(process));
 
     try {
@@ -230,14 +233,29 @@ class HelperClient {
     Future<void>? cancel,
   }) {
     final process = _process;
+    // Encerrando: nada novo vai para o helper (o shutdown é o único pedido).
+    if (_closing && method != 'system.shutdown') {
+      return Future.error(HelperException('helper_closed', 'O FotoAtlas está fechando.'));
+    }
     if (process == null || _status != HelperStatus.ready) {
       return Future.error(HelperException('helper_unavailable', 'O helper não está em execução.', retryable: true));
     }
     final id = '${_nextId++}';
+    // Escreve ANTES de registrar o pedido: se o stdin já fechou, o pedido não
+    // pode ficar pendente sem ninguém esperando — quando o helper saísse, a
+    // falha dele viraria "Unhandled Exception: HelperException(helper_crashed)".
+    try {
+      process.stdin.write(
+        '${jsonEncode({'v': helperProtocolVersion, 'id': id, 'method': method, 'params': params})}\n',
+      );
+    } on Object {
+      return Future.error(
+        HelperException('helper_unavailable', 'O helper não está recebendo pedidos.', retryable: true),
+      );
+    }
     final completer = Completer<Map<String, Object?>>();
     _pending[id] = completer;
     if (onEvent != null) _eventHandlers[id] = onEvent;
-    process.stdin.write('${jsonEncode({'v': helperProtocolVersion, 'id': id, 'method': method, 'params': params})}\n');
     cancel?.then((_) {
       if (_pending.containsKey(id) && _process == process) {
         call('system.cancel', params: {'target': id}).ignore();

@@ -9,7 +9,12 @@ import '../support/temp.dart';
 
 final String fakeScript = p.join('test', 'support', 'fake_helper.dart');
 
-HelperClient fakeClient(String mode, {String? marker, Duration ping = const Duration(seconds: 5)}) {
+HelperClient fakeClient(
+  String mode, {
+  String? marker,
+  Duration ping = const Duration(seconds: 5),
+  List<String> extra = const [],
+}) {
   final client = HelperClient(
     executable: Platform.resolvedExecutable,
     arguments: [
@@ -17,6 +22,7 @@ HelperClient fakeClient(String mode, {String? marker, Duration ping = const Dura
       '--mode',
       mode,
       if (marker != null) ...['--marker', marker],
+      ...extra,
     ],
     pingInterval: ping,
     pingTimeout: ping,

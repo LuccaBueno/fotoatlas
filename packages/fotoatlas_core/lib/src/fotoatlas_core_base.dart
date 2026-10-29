@@ -51,6 +51,10 @@ class FotoAtlasCore {
   /// `null` se o helper não foi encontrado ou não iniciou (o core segue
   /// funcionando com a listagem de volumes via Win32, sem discos físicos).
   final HelperClient? helper;
+
+  /// Situação do helper (ex.: `restarting` quando ele caiu e está voltando),
+  /// para a interface avisar. Vazio sem helper.
+  Stream<HelperStatus> get helperStatus => helper?.statusChanges ?? const Stream.empty();
   final InstanceLock _lock;
   Future<void>? _backupOnOpen;
 
@@ -63,6 +67,8 @@ class FotoAtlasCore {
   ///   uma fonte conecta (o app liga; testes e CLI controlam na mão).
   /// - [backupOnOpen]: faz backup do catálogo se o último tiver mais de 24 h.
   /// - [devices]: celulares explícitos (testes). Sem ele, usa o helper.
+  /// - [helperClient]: cliente do helper já montado (testes com um helper
+  ///   falso); o core o inicia se preciso e o encerra no [close].
   /// - [fakeDevicesDir] (ou `FOTOATLAS_FAKE_DEVICES`): o helper mostra os
   ///   celulares simulados dessa pasta em vez dos reais (testes e demonstração).
   static Future<FotoAtlasCore> open({
@@ -70,6 +76,7 @@ class FotoAtlasCore {
     VolumeProvider? volumes,
     PathResolver? pathResolver,
     String? helperPath,
+    HelperClient? helperClient,
     bool useHelper = true,
     bool monitor = false,
     bool scanInIsolate = true,
@@ -89,6 +96,12 @@ class FotoAtlasCore {
     try {
       catalog = await Catalog.open(resolvedPaths.catalogPath);
       var provider = volumes;
+      if (helperClient != null) {
+        helper = helperClient;
+        if (helper.status == HelperStatus.stopped) await helper.start();
+        provider ??= HelperVolumeProvider(helper, fallback: Win32VolumeProvider());
+        deviceBackend ??= HelperDeviceBackend(helper);
+      }
       if (provider == null) {
         final win32 = Win32VolumeProvider();
         final exe = useHelper ? (helperPath ?? HelperClient.locate()) : null;
@@ -150,6 +163,25 @@ class FotoAtlasCore {
 
   bool _backupDone = false;
   Future<void>? _closing;
+
+  /// O que está em andamento agora (para perguntar antes de fechar). Na
+  /// Fase 5 entram as cópias.
+  Future<List<RunningTask>> runningTasks() async {
+    final tasks = <RunningTask>[];
+    final scansNow = scans.runningProgress.values.toList();
+    if (scansNow.isNotEmpty) {
+      final names = {for (final s in await catalog.db.select(catalog.db.sources).get()) s.id: s.name};
+      for (final p in scansNow) {
+        tasks.add(RunningTask(RunningTaskKind.scan, sourceName: names[p.sourceId], done: p.filesSeen));
+      }
+    }
+    if (hashes.isRunning) {
+      final h = hashes.current;
+      tasks.add(RunningTask(RunningTaskKind.hash, done: h.filesDone, total: h.filesTotal));
+    }
+    if (_backupOnOpen != null && !_backupDone) tasks.add(const RunningTask(RunningTaskKind.backup));
+    return tasks;
+  }
 
   /// Encerra com segurança e **sempre termina** (em poucos segundos, mesmo
   /// com o helper travado numa leitura do celular). Cada etapa tem prazo:
@@ -231,4 +263,16 @@ class ShutdownStep {
   final String id;
   final String label;
   bool done = false;
+}
+
+enum RunningTaskKind { scan, hash, backup }
+
+/// Uma tarefa em andamento. [done]/[total]: arquivos encontrados (scan) ou
+/// conferidos (conferência); `total` 0 = desconhecido.
+class RunningTask {
+  const RunningTask(this.kind, {this.sourceName, this.done = 0, this.total = 0});
+  final RunningTaskKind kind;
+  final String? sourceName;
+  final int done;
+  final int total;
 }
