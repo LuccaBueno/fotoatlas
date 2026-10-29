@@ -143,7 +143,7 @@ Observações:
 - [x] `run-app.ps1 -DemoPersistente`: sempre `%TEMP%\fotoatlas_demo_persistente`, não apagada ao fechar (só pelo `clean-temp.ps1`); com `-CelularSimulado`, celulares gerados uma vez e Pixel com leitura lenta (3 s por arquivo) para fechar no meio da conferência
 - [x] Testes: modo pelo ambiente, textos da pergunta nos 3 modos, faixa, e fechar com core real com e sem demonstração
 
-## Fase 4 — Metadados e Biblioteca (implementada em 2026-10-29; aguarda o teste do usuário)
+## Fase 4 — Metadados e Biblioteca (concluída em 2026-10-29)
 - [x] Script para baixar ExifTool e FFmpeg (não versionados)
 - [x] ExifTool `-stay_open`, FFprobe, estratégia de datas e fusos, padrões de nome (WhatsApp etc.)
 - [x] **Data e hora da captura como cidadã de primeira classe** (requisito ajustado em 2026-10-27, spec §3.2, §8.1–8.3, §10)
@@ -167,7 +167,7 @@ Observações:
   - [x] Dicas em ícones, selos, chips e botões (selo de backup diz onde o arquivo está: "Sem backup: este arquivo só existe em 'Pixel de Teste'"); botão "?" na navegação com a ajuda da tela aberta e a legenda das cores; guia de primeiros passos (4 passos) que pode ser pulado e reaberto pelo "?"
   - [x] Correção de relógio mais intuitiva: modo padrão "Sei a hora certa de uma foto" (escolhe a foto, vê a hora que ela marca, digita a hora certa) com a frase "O relógio estava adiantado 1 h: todas as fotos… vão ficar 1 h mais cedo"
   - [x] Testes: guia (passos, pular, não volta sozinho), "?" por tela e reabrir o guia (achou e corrigiu um erro ao reabrir o guia pelo "?"), nomes de momento, dica de backup com o lugar, regra do relógio zerado e recálculo ao abrir
-- [ ] Tag `v0.4.0`
+- [x] Tag `v0.4.0` em 90cb75b (2026-10-29), CI run 40918675886 verde
 
 Observações da Fase 4:
 - Evidências: core — datas (15 testes: padrões de nome, EXIF com subsegundos/fuso, horário de verão antigo de SP, vídeo UTC, WhatsApp, conflito), ExifTool/ffprobe reais (arquivos intactos, nenhum arquivo novo), cenário completo com câmera + Europa (+02:00) + vídeo + WhatsApp + sem data + celular simulado lido pelo começo do arquivo (ordem real, momentos, editar/juntar/separar sobrevivendo a 3 recálculos, confirmar hora, correção de relógio com prévia/aplicar/desfazer e hash dos arquivos igual antes e depois, filtros, Comparar com momento); desempenho com 100 mil itens: 13 consultas entre 100 e 370 ms, momentos em ~1,4 s. App — linha do tempo intercalando dispositivos, hora a confirmar, filtro de período, seleção Ctrl/“todos”, nomear momento pelo cabeçalho, momento na Comparar, correção de relógio com ExifTool real. Helper — miniatura real pelo Shell (inclusive por caminho `\\?\Volume{GUID}`), recusas de escrita, `readHead`.
@@ -220,3 +220,4 @@ Observações da Fase 4:
 - 2026-10-29 — Correções do teste dos ajustes — app não fechava pelo X (close() de stream com ouvinte pausado + esperas sem prazo): encerramento com prazo e "Encerrando com segurança…" (ADR 0013); botão duplicado na Dispositivos vazia. Fase 4 **não iniciada**: aguarda o usuário.
 - 2026-10-29 — Correções do fechamento com celular real — exceção solta `helper_crashed` (pedido órfão no HelperClient), pergunta antes de fechar com tarefas em andamento, aviso de queda do helper, conferência do celular gravada arquivo a arquivo (retoma exato). Fase 4 **não iniciada**: aguarda o usuário.
 - 2026-10-29 — Ajustes do modo demonstração + Fase 4 — faixa "Modo demonstração" e textos ao fechar; run-app.ps1 -DemoPersistente. Fase 4: get-tools.ps1 (ExifTool/FFmpeg), datas da captura com fusos/origem/confiança, fila de metadados (celular pelo começo do arquivo), schema v4, momentos editáveis, correção de relógio com prévia, Biblioteca (linha do tempo, grade, lista, filtros E/OU/NÃO, filtros salvos, seleção, detalhes), miniaturas, Comparar com momento, 100 mil itens < 1 s. Tag v0.4.0 aguarda o teste do usuário.
+- 2026-10-29 — Ajustes de usabilidade da Fase 4 (teste do usuário) — nomes das situações de backup, "Horário do dia"/"Hora confiável?", momentos com nome descritivo e menu pelo clique direito, dicas, botão "?" por tela, guia de primeiros passos, correção de relógio pela hora certa de uma foto, relógio zerado (1º/jan 00:00:00) como hora incerta. Tag v0.4.0. Fase 5 **não iniciada**: aguarda o usuário.

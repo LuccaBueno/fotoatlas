@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [0.4.0] — 2026-10-29 — Fase 4: Metadados e Biblioteca
+
 ### Ajustes de usabilidade (depois do teste da Fase 4)
 - Situações de backup com nomes claros: **"Sem backup (só em 1 lugar)"**, "Parece ter cópia (falta conferir)", "Tem cópia conferida", **"Backup em outro disco"**, "Ainda não dá para saber".
 - Filtros **"Horário do dia"** e **"Hora confiável?"** (antes "Horário" e "Hora"); "Mostrar tudo, menos os marcados" no lugar de "Excluir os marcados (NÃO)"; contagens com unidade.
