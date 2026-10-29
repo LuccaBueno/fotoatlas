@@ -220,8 +220,8 @@ class ScanEngine {
           variables: [Variable.withInt(scanId)],
         )
         .getSingle();
-    // Scan de uma pasta só: é parcial e só confirma ausências nas pastas lidas.
-    final complete = errorDirs.read<int>('n') == 0 && (await scanRoot(db, scanId)).isEmpty;
+    // Scan de algumas pastas: é parcial e só confirma ausências nas pastas lidas.
+    final complete = errorDirs.read<int>('n') == 0 && (await scanRoots(db, scanId)).first.isEmpty;
     final now = nowMs();
     await db.transaction(() async {
       await db.customUpdate(
@@ -271,16 +271,59 @@ class ScanEngine {
       readScanProgress(db, scanId, status: status, currentDir: currentDir, message: message);
 }
 
-/// Pasta onde o scan começou (`''` = a fonte inteira). Toda pasta do scan
-/// descende dela, então é a de caminho mais curto.
-Future<String> scanRoot(CatalogDatabase db, int scanId) async {
-  final row = await db
+/// Pastas onde o scan começou (`['']` = a fonte inteira). Uma pasta do scan é
+/// ponto de partida quando a mãe dela não faz parte do scan (toda subpasta
+/// encontrada entra junto com a mãe).
+Future<List<String>> scanRoots(CatalogDatabase db, int scanId) async {
+  final whole = await db
       .customSelect(
-        'SELECT rel_path FROM scan_dirs WHERE scan_id = ? ORDER BY length(rel_path), rel_path LIMIT 1',
+        "SELECT 1 FROM scan_dirs WHERE scan_id = ? AND rel_path = ''",
         variables: [Variable.withInt(scanId)],
       )
       .getSingleOrNull();
-  return row?.read<String>('rel_path') ?? '';
+  if (whole != null) return const [''];
+  final rows = await db
+      .customSelect('SELECT rel_path FROM scan_dirs WHERE scan_id = ?', variables: [Variable.withInt(scanId)])
+      .get();
+  final all = {for (final r in rows) r.read<String>('rel_path')};
+  if (all.isEmpty) return const [''];
+  return [
+    for (final path in all)
+      if (!all.contains(parentRelPath(path))) path,
+  ]..sort();
+}
+
+/// `a/b/c` → `a/b`; `a` → `''`.
+String parentRelPath(String relPath) {
+  final slash = relPath.lastIndexOf('/');
+  return slash < 0 ? '' : relPath.substring(0, slash);
+}
+
+/// Normaliza as pastas pedidas para um scan: separador `/`, sem repetidas e
+/// sem as que ficam dentro de outra da lista. Vazia (ou com `''`) = a fonte
+/// inteira.
+List<String> normalizeScanRoots(Iterable<String>? folders) {
+  final cleaned = <String>{
+    for (final f in folders ?? const <String>[])
+      f.replaceAll(r'\', '/').split('/').where((p) => p.isNotEmpty).join('/'),
+  };
+  if (cleaned.isEmpty || cleaned.contains('')) return const [''];
+  final byLength = cleaned.toList()..sort((a, b) => a.length.compareTo(b.length));
+  final roots = <String>[];
+  for (final f in byLength) {
+    if (!isUnderScanRoots(f, roots, ignoreCase: true)) roots.add(f);
+  }
+  return roots..sort();
+}
+
+/// [relPath] fica dentro de alguma das [roots] (ou é uma delas).
+bool isUnderScanRoots(String relPath, List<String> roots, {bool ignoreCase = false}) {
+  final path = ignoreCase ? relPath.toLowerCase() : relPath;
+  for (final root in roots) {
+    final r = ignoreCase ? root.toLowerCase() : root;
+    if (r.isEmpty || path == r || path.startsWith('$r/')) return true;
+  }
+  return false;
 }
 
 /// Lê o progresso atual de um scan a partir do banco.

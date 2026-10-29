@@ -18,8 +18,9 @@ Comandos:
   sources add-phone CELULAR [--name N]
                                  Cadastra um celular (número da lista de "devices",
                                  nome ou começo do ID)
-  scan start FONTE [--folder P]  Escaneia (retoma se houver um pausado); --folder
-                                 escaneia só a pasta P (ex.: "Armazenamento interno/DCIM/Camera")
+  scan start FONTE [--folder P]… Escaneia (retoma se houver um pausado); --folder
+                                 escaneia só a pasta P (ex.: "Armazenamento interno/DCIM/Camera");
+                                 repita --folder para escanear várias pastas de uma vez
   scan resume ID                 Retoma um escaneamento pelo número
   scan status [FONTE]            Mostra os últimos escaneamentos
   hash run                       Confere o conteúdo dos pendentes (Ctrl+C pausa)
@@ -166,7 +167,7 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
 
     case ['scan', 'start', final source, ...final rest]:
       final id = await _findSource(core, source);
-      return _follow(core, await core.scans.start(id, folder: _option(rest, '--folder')));
+      return _follow(core, await core.scans.start(id, folders: _options(rest, '--folder')));
 
     case ['scan', 'resume', final scanId]:
       return _follow(core, await core.scans.resume(int.parse(scanId)));
@@ -436,3 +437,9 @@ String _bytes(int? b) {
   }
   return '${v.toStringAsFixed(i == 0 ? 0 : 1)} ${units[i]}';
 }
+
+/// Todos os valores de uma opção que pode se repetir (`--folder A --folder B`).
+List<String> _options(List<String> args, String name) => [
+  for (var i = 0; i + 1 < args.length; i++)
+    if (args[i] == name) args[i + 1],
+];

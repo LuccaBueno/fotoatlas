@@ -96,11 +96,11 @@ class ScanService {
 
   /// Escaneia a fonte: retoma um scan pausado/interrompido ou cria um novo.
   ///
-  /// [folder] (relativa à fonte, ex.: `Armazenamento interno/DCIM/Camera`)
-  /// escaneia só essa pasta e as subpastas; o scan fica `partial` e só
-  /// confirma ausências dentro dela.
-  Future<int> start(String sourceId, {String? folder}) async {
-    final root = (folder ?? '').replaceAll('\\', '/').split('/').where((p) => p.isNotEmpty).join('/');
+  /// [folders] (relativas à fonte, ex.: `Armazenamento interno/DCIM/Camera`)
+  /// escaneia só essas pastas e as subpastas; o scan fica `partial` e só
+  /// confirma ausências dentro delas. Vazia ou `null` = a fonte inteira.
+  Future<int> start(String sourceId, {List<String>? folders}) async {
+    final roots = normalizeScanRoots(folders);
     for (final r in _running.values) {
       if (r.sourceId == sourceId) return r.scanId;
     }
@@ -111,11 +111,14 @@ class ScanService {
               ..limit(1))
             .getSingleOrNull();
     if (unfinished != null) {
-      final unfinishedRoot = await scanRoot(db, unfinished.id);
-      if (unfinishedRoot.toLowerCase() != root.toLowerCase()) {
+      final unfinishedRoots = await scanRoots(db, unfinished.id);
+      String key(List<String> l) => (l.map((r) => r.toLowerCase()).toList()..sort()).join('\n');
+      if (key(unfinishedRoots) != key(roots)) {
+        final what = unfinishedRoots.first.isEmpty
+            ? 'da fonte inteira'
+            : 'de ${unfinishedRoots.map((r) => '"$r"').join(', ')}';
         throw SourceException(
-          'Há um escaneamento ${unfinishedRoot.isEmpty ? 'da fonte inteira' : 'de "$unfinishedRoot"'} '
-          'por terminar (#${unfinished.id}). Retome ou cancele esse antes.',
+          'Há um escaneamento $what por terminar (#${unfinished.id}). Retome ou cancele esse antes.',
         );
       }
       return resume(unfinished.id);
@@ -139,11 +142,37 @@ class ScanService {
               mountPathUsed: Value(source.row.lastMountPath),
             ),
           );
-      await db.into(db.scanDirs).insert(ScanDirsCompanion.insert(scanId: id, relPath: root, status: 'pending'));
+      for (final root in roots) {
+        await db.into(db.scanDirs).insert(ScanDirsCompanion.insert(scanId: id, relPath: root, status: 'pending'));
+      }
       return id;
     });
     _launch(scanId, source.row, source.root);
     return scanId;
+  }
+
+  /// Subpastas de [relPath] lidas agora do dispositivo (não do catálogo), para
+  /// escolher o que escanear. Só lista: nada é gravado no catálogo nem na fonte.
+  /// Pastas que o scan sempre ignora (lixeira, miniaturas…) não aparecem.
+  Future<List<String>> listFolders(String sourceId, [String relPath = '']) async {
+    final source = await _connectedSource(sourceId);
+    final ListedDir listed;
+    try {
+      if (source.row.kind == 'phone') {
+        listed = await PhoneScanLister(sources.devices!, source.root).list(relPath);
+      } else {
+        final root = source.root;
+        final isVolumeRoot = source.row.rootRelPath.isEmpty;
+        // Pasta com muitos arquivos: lê fora do isolate da interface.
+        listed = await Isolate.run(() => Win32ScanLister(root, isVolumeRoot: isVolumeRoot).list(relPath));
+      }
+    } on SourceGone catch (e) {
+      throw SourceException(e.message);
+    }
+    if (listed.isError) {
+      throw SourceException('Não foi possível ler esta pasta (${listed.errorMessage ?? listed.errorKind}).');
+    }
+    return listed.childDirs..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
   }
 
   /// Retoma um scan `paused` ou `interrupted` de onde parou.

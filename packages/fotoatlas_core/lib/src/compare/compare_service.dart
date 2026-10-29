@@ -401,14 +401,13 @@ class CompareService {
         );
       }
       // Cada entrada vale pelo último scan concluído que a cobre: o scan de
-      // uma pasta só (ex.: DCIM/Camera) não diz nada sobre o resto da fonte.
-      final roots = <int, String>{};
+      // algumas pastas (ex.: DCIM/Camera) não diz nada sobre o resto da fonte.
+      final roots = <int, List<String>>{};
       final affected = <String>{};
       for (final entry in scope.entries.where((e) => e.sourceId == sourceId)) {
         ScanRow? covering;
         for (final scan in completed) {
-          final root = roots[scan.id] ??= await scanRoot(db, scan.id);
-          if (root.isEmpty || entry.relPath == root || entry.relPath.startsWith('$root/')) {
+          if (isUnderScanRoots(entry.relPath, roots[scan.id] ??= await scanRoots(db, scan.id))) {
             covering = scan;
             break;
           }

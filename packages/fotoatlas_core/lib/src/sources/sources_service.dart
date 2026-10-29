@@ -9,6 +9,7 @@ import '../devices/devices.dart';
 import '../platform/win_fs.dart';
 import '../util/clock.dart';
 import '../util/uuid.dart';
+import '../scan/scan_engine.dart' show isUnderScanRoots, scanRoots;
 import 'identity.dart';
 import 'media_types.dart';
 import 'volumes.dart';
@@ -65,6 +66,8 @@ class SourceView {
     this.devicePlatform,
     this.deviceStatus,
     this.deviceSimulated = false,
+    this.wholeScannedAt,
+    this.scannedFolders = const [],
   });
 
   final String id;
@@ -98,6 +101,25 @@ class SourceView {
   /// Celular simulado (demonstração/testes).
   final bool deviceSimulated;
 
+  /// Fim do último escaneamento concluído da fonte inteira (`null` = nunca).
+  final DateTime? wholeScannedAt;
+
+  /// Pastas escaneadas sozinhas depois de [wholeScannedAt] (ou desde sempre,
+  /// se a fonte inteira nunca foi escaneada), da mais recente para a mais antiga.
+  final List<ScannedFolder> scannedFolders;
+
+  /// Só algumas pastas foram escaneadas; o resto da fonte, nunca.
+  bool get partlyScanned => wholeScannedAt == null && scannedFolders.isNotEmpty;
+
+  /// Quando [relPath] foi escaneada pela última vez (por ela mesma, por uma
+  /// pasta acima ou pela fonte inteira); `null` = nunca.
+  DateTime? scannedAt(String relPath) {
+    for (final f in scannedFolders) {
+      if (isUnderScanRoots(relPath, [f.relPath])) return f.at;
+    }
+    return wholeScannedAt;
+  }
+
   bool get isPhone => kind == 'phone';
 
   /// Conectado e pronto para ler (celular desbloqueado e autorizado).
@@ -111,6 +133,21 @@ class SourceView {
     if (mount == null) return null;
     return rootRelPath.isEmpty ? mount : joinNative(mount, rootRelPath);
   }
+}
+
+/// Pasta escaneada sozinha (scan de algumas pastas) e quando terminou.
+class ScannedFolder {
+  const ScannedFolder(this.relPath, this.at);
+  final String relPath;
+  final DateTime at;
+}
+
+/// Quantos arquivos o catálogo conhece numa pasta (estimativa para escolher o
+/// que escanear; só vale o que já foi escaneado alguma vez).
+class FolderStats {
+  const FolderStats(this.files, this.bytes);
+  final int files;
+  final int bytes;
 }
 
 /// Resultado do cadastro: a fonte e avisos (ex.: sobreposição com outra fonte).
@@ -234,6 +271,25 @@ class SourcesService {
     final phones = await (db.select(db.sources)..where((s) => s.forgottenAt.isNull() & s.kind.equals('phone'))).get();
     return [for (final d in list) (d, _phoneRowFor(d, phones)?.id)];
   }
+
+  /// Unidades conectadas agora que dá para cadastrar inteiras (HD, SSD,
+  /// pendrive, cartão), com a fonte já cadastrada de cada uma, se houver.
+  /// Ficam de fora a partição do sistema, unidades sem letra, rede e CD/DVD.
+  Future<List<(VolumeInfo, String?)>> listDrives() async {
+    final all = _lastVolumes = await volumes.list();
+    final registered = await (db.select(
+      db.sources,
+    )..where((s) => s.forgottenAt.isNull() & s.volumeGuid.isNotNull() & s.rootRelPath.equals(''))).get();
+    return [
+      for (final v in all)
+        if (!v.isSystem && v.displayMount != null && v.driveType != 'network' && v.driveType != 'cdrom')
+          (v, registered.where((s) => _normGuid(s.volumeGuid!) == _normGuid(v.guidPath)).firstOrNull?.id),
+    ];
+  }
+
+  /// Tipo de fonte de uma unidade inteira (`external_hd`, `internal`,
+  /// `usb_stick` ou `memory_card`).
+  static String kindForVolume(VolumeInfo v) => _kindFor(v);
 
   /// Cadastra um celular conectado. Só grava no catálogo (nada no aparelho).
   Future<AddSourceResult> addPhone(String deviceId, {String? name}) async {
@@ -547,10 +603,20 @@ class SourcesService {
           final scans = scanIds.isEmpty
               ? <int, ScanRow>{}
               : {for (final s in await (db.select(db.scans)..where((t) => t.id.isIn(scanIds))).get()) s.id: s};
+          final completed = <String, List<QueryRow>>{};
+          for (final s
+              in await db
+                  .customSelect(
+                    "SELECT id, source_id, finished_at FROM scans WHERE status = 'completed' ORDER BY id DESC",
+                  )
+                  .get()) {
+            completed.putIfAbsent(s.read<String>('source_id'), () => []).add(s);
+          }
           return [
             for (final r in rows)
-              _SourceAggregate(
+              await _withScannedParts(
                 db.sources.map(r.data),
+                completed: completed[r.read<String>('id')] ?? const [],
                 fileCount: r.read<int>('file_count'),
                 fileBytes: r.read<int>('file_bytes'),
                 mediaCount: r.read<int>('media_count'),
@@ -559,6 +625,71 @@ class SourcesService {
               ),
           ];
         });
+  }
+
+  /// Pastas de partida de scans concluídos (não mudam mais).
+  final Map<int, List<String>> _rootsByScan = {};
+
+  /// Junta o que já foi escaneado: a fonte inteira e/ou pastas sozinhas.
+  /// [completed]: scans concluídos da fonte, do mais novo para o mais antigo.
+  Future<_SourceAggregate> _withScannedParts(
+    SourceRow row, {
+    required List<QueryRow> completed,
+    required int fileCount,
+    required int fileBytes,
+    required int mediaCount,
+    required int missingCount,
+    required ScanRow? lastScan,
+  }) async {
+    DateTime? wholeAt;
+    final folders = <ScannedFolder>[];
+    for (final scan in completed) {
+      final id = scan.read<int>('id');
+      final roots = _rootsByScan[id] ??= await scanRoots(db, id);
+      final at = DateTime.fromMillisecondsSinceEpoch(scan.readNullable<int>('finished_at') ?? 0, isUtc: true);
+      if (roots.first.isEmpty) {
+        wholeAt = at;
+        break;
+      }
+      for (final root in roots) {
+        if (!isUnderScanRoots(root, [for (final f in folders) f.relPath])) folders.add(ScannedFolder(root, at));
+      }
+    }
+    return _SourceAggregate(
+      row,
+      fileCount: fileCount,
+      fileBytes: fileBytes,
+      mediaCount: mediaCount,
+      missingCount: missingCount,
+      lastScan: lastScan,
+      wholeScannedAt: wholeAt,
+      scannedFolders: folders,
+    );
+  }
+
+  /// Arquivos e bytes que o catálogo conhece em cada pasta (e subpastas).
+  Future<Map<String, FolderStats>> folderStats(String sourceId, List<String> relPaths) async {
+    final result = <String, FolderStats>{};
+    for (final rel in relPaths) {
+      // `dir >= 'x/' AND dir < 'x0'` ('0' vem logo depois de '/') usa o índice.
+      final row = await db
+          .customSelect(
+            'SELECT COUNT(*) AS n, COALESCE(SUM(size_bytes), 0) AS b FROM file_instances '
+            "WHERE source_id = ?1 AND availability != 'missing' "
+            "${rel.isEmpty ? '' : 'AND (dir_rel_path = ?2 OR (dir_rel_path >= ?3 AND dir_rel_path < ?4))'}",
+            variables: [
+              Variable.withString(sourceId),
+              if (rel.isNotEmpty) ...[
+                Variable.withString(rel),
+                Variable.withString('$rel/'),
+                Variable.withString('${rel}0'),
+              ],
+            ],
+          )
+          .getSingle();
+      result[rel] = FolderStats(row.read<int>('n'), row.read<int>('b'));
+    }
+    return result;
   }
 
   SourceView _toView(_SourceAggregate a) {
@@ -588,6 +719,8 @@ class SourcesService {
         mediaCount: a.mediaCount,
         missingCount: a.missingCount,
         lastScan: a.lastScan,
+        wholeScannedAt: a.wholeScannedAt,
+        scannedFolders: a.scannedFolders,
         devicePlatform: row.devicePlatform,
         deviceStatus: phone?.status,
         deviceSimulated: phone?.simulated ?? false,
@@ -610,6 +743,8 @@ class SourcesService {
       mediaCount: a.mediaCount,
       missingCount: a.missingCount,
       lastScan: a.lastScan,
+      wholeScannedAt: a.wholeScannedAt,
+      scannedFolders: a.scannedFolders,
       candidates: match is Ambiguous ? [for (final c in match.candidates) c.$1] : const [],
     );
   }
@@ -742,6 +877,8 @@ class _SourceAggregate {
     required this.mediaCount,
     required this.missingCount,
     required this.lastScan,
+    required this.wholeScannedAt,
+    required this.scannedFolders,
   });
   final SourceRow row;
   final int fileCount;
@@ -749,4 +886,6 @@ class _SourceAggregate {
   final int mediaCount;
   final int missingCount;
   final ScanRow? lastScan;
+  final DateTime? wholeScannedAt;
+  final List<ScannedFolder> scannedFolders;
 }

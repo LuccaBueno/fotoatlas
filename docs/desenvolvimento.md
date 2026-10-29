@@ -64,6 +64,7 @@ dart run bin/fotoatlas_cli.dart volumes
 dart run bin/fotoatlas_cli.dart sources add "C:\caminho\para\uma\pasta" --name Teste
 dart run bin/fotoatlas_cli.dart scan start Teste
 dart run bin/fotoatlas_cli.dart scan start Celular --folder "Armazenamento interno/DCIM/Camera"   # só uma pasta
+dart run bin/fotoatlas_cli.dart scan start Celular --folder "Armazenamento interno/DCIM/Camera" --folder "Armazenamento interno/WhatsApp"   # várias pastas
 dart run bin/fotoatlas_cli.dart sources list
 dart run bin/fotoatlas_cli.dart hash run                     # confere o conteúdo (Ctrl+C pausa)
 dart run bin/fotoatlas_cli.dart coverage                     # situação de backup

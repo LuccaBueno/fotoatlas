@@ -183,7 +183,7 @@ void main() {
     final hd = await env.addFolder('HD');
     await env.scan(hd);
 
-    final id = await env.core.scans.start(cel, folder: r'DCIM\Camera\');
+    final id = await env.core.scans.start(cel, folders: [r'DCIM\Camera\']);
     final p = await env.core.scans.wait(id);
     expect(p.status, 'completed');
     expect(p.filesSeen, 2, reason: 'só DCIM/Camera e subpastas');
@@ -207,7 +207,7 @@ void main() {
 
     // Apagado dentro da pasta: o próximo scan parcial confirma a ausência.
     File('${env.volumeDir.path}/Cel/DCIM/Camera/sub/b.jpg').deleteSync();
-    await env.core.scans.wait(await env.core.scans.start(cel, folder: 'DCIM/Camera'));
+    await env.core.scans.wait(await env.core.scans.start(cel, folders: ['DCIM/Camera']));
     expect(await env.count("SELECT COUNT(*) AS n FROM file_instances WHERE availability = 'missing'"), 1);
 
     // Scan da fonte inteira cobre tudo e a comparação volta a ser completa.
@@ -222,14 +222,14 @@ void main() {
     final env = await TestEnv.open();
     env.write('Cel/DCIM/a.jpg', bytes(1, 100));
     final cel = await env.addFolder('Cel');
-    final id = await env.core.scans.start(cel, folder: 'DCIM');
+    final id = await env.core.scans.start(cel, folders: ['DCIM']);
     await env.core.scans.wait(id);
     await env.db.customStatement("UPDATE scans SET status = 'paused' WHERE id = $id");
     expect(
       () => env.core.scans.start(cel),
       throwsA(isA<SourceException>().having((e) => e.message, 'message', contains('de "DCIM"'))),
     );
-    expect(await env.core.scans.start(cel, folder: 'DCIM'), id, reason: 'mesma pasta: retoma');
+    expect(await env.core.scans.start(cel, folders: ['DCIM']), id, reason: 'mesma pasta: retoma');
     await env.core.scans.wait(id);
   });
 

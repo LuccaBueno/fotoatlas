@@ -124,4 +124,18 @@ void main() {
     expect(states.first, SourceState.connected);
     expect(states.last, SourceState.disconnected);
   });
+
+  test('unidades para "Adicionar dispositivo": cadastradas marcadas, pasta não conta como unidade', () async {
+    final env = await TestEnv.open();
+    env.addVolume('Pendrive', mount: r'F:\');
+    await env.addFolder('Fotos');
+    var drives = await env.core.sources.listDrives();
+    expect(drives.map((d) => d.$1.displayMount), [r'E:\', r'F:\']);
+    expect(drives.every((d) => d.$2 == null), isTrue, reason: 'só uma pasta de E: foi cadastrada');
+    final id = (await env.core.sources.addPath(env.volumeDir.path)).sourceId;
+    drives = await env.core.sources.listDrives();
+    expect(drives.first.$2, id);
+    expect(drives.last.$2, isNull);
+    expect(SourcesService.kindForVolume(drives.first.$1), 'external_hd');
+  });
 }
