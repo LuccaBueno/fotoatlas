@@ -27,7 +27,7 @@ cd C:\dev\fotoatlas\tools\fixtures; dart pub get; dart test
 cd C:\dev\fotoatlas\app; flutter pub get; flutter analyze; flutter test
 ```
 
-Os testes do core marcados `slow` (50 mil arquivos) podem ser pulados com `dart test -x slow`.
+Os testes do core marcados `slow` (50 mil arquivos, CLI) podem ser pulados com `dart test -x slow`. Os de desempenho (`perf`: geram 50 mil arquivos e saturam o disco) rodam sozinhos na CI, depois dos outros: `dart test -x perf` e depois `dart test -t perf`.
 
 ## Rodar o app
 

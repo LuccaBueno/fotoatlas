@@ -1,4 +1,4 @@
-@Tags(['slow'])
+@Tags(['slow', 'perf'])
 library;
 
 import 'package:test/test.dart';

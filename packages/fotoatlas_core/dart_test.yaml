@@ -3,3 +3,7 @@ tags:
     timeout: 5x
   slow:
     timeout: 10x
+  # Desempenho: gera 50 mil arquivos e mede tempos. Satura o disco, então na
+  # CI roda sozinho, depois dos outros (dart test -x perf; dart test -t perf).
+  perf:
+    timeout: 10x

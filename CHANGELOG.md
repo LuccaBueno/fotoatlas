@@ -22,6 +22,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - Teste de desempenho da cobertura (100 mil arquivos) falhava às vezes na suíte completa por rodar em paralelo com o de 50 mil arquivos (1,5 s sozinho; até 5,4 s competindo, limite de 5 s). Os dois agora rodam em sequência, num arquivo só (`test/perf/perf_test.dart`).
 - Na tela Dispositivos vazia, "Adicionar dispositivo" aparecia no topo e no centro; agora só no centro.
 - Ao fechar durante a conferência do celular, o terminal mostrava `Unhandled Exception: HelperException(helper_crashed)`: um pedido ao helper feito com o encerramento em andamento ficava pendente sem ninguém esperando e falhava quando o helper era finalizado. Agora nenhum pedido fica órfão e nada novo vai para o helper durante o encerramento (ADR 0013).
+- CI: os testes de desempenho (geram 50 mil arquivos e saturam o disco) passam a rodar sozinhos, depois dos outros; rodando juntos, atrasavam testes de encerramento até o limite de 30 s.
 - A conferência do celular gravava os resultados em lotes de 32: fechar no meio refazia pelo USB o que já tinha sido lido. Agora cada arquivo é gravado na hora e, ao reabrir, a conferência continua exatamente de onde parou.
 - O cartão dizia "mas 0 pastas não puderam ser lidas" depois de um scan de uma pasta só; agora diz "Só algumas pastas foram escaneadas".
 - "Retomar" de um scan pausado de uma pasta só falhava pelo app (pedia a fonte inteira); agora retoma o mesmo scan.
