@@ -3,6 +3,7 @@ library;
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:fotoatlas_fixtures/fotoatlas_fixtures.dart';
 import 'package:path/path.dart' as p;
@@ -19,9 +20,12 @@ void main() {
   test('50 mil arquivos: scan completo e event loop principal responsivo', () async {
     final env = await TestEnv.open(isolate: true);
     final genWatch = Stopwatch()..start();
-    final manifest = generateTree(
-      p.join(env.volumeDir.path, 'Fotos'),
-      const FixtureOptions(files: 50000, seed: 50, maxFileBytes: 512),
+    // Gera a árvore em outro isolate: o lixo de criar 50 mil arquivos não pode
+    // ficar no heap do isolate medido (uma coleta grande no meio do scan
+    // aparecia como atraso do event loop — run 40962539372, 205 ms).
+    final root = p.join(env.volumeDir.path, 'Fotos');
+    final files = await Isolate.run(
+      () => generateTree(root, const FixtureOptions(files: 50000, seed: 50, maxFileBytes: 512)).files,
     );
     genWatch.stop();
     final id = await env.addFolder('Fotos');
@@ -52,8 +56,8 @@ void main() {
     stdout.writeln(report);
 
     expect(result.status, 'completed');
-    expect(result.filesSeen, manifest.files);
-    expect(await env.count('SELECT COUNT(*) FROM file_instances'), manifest.files);
+    expect(result.filesSeen, files);
+    expect(await env.count('SELECT COUNT(*) FROM file_instances'), files);
     expect(maxLagMs, lessThan(100), reason: report);
   }, timeout: const Timeout(Duration(minutes: 15)));
 }
