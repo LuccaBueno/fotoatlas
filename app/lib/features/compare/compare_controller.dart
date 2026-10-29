@@ -9,9 +9,21 @@ enum CompareSide { a, b }
 
 /// Um lado da comparação sendo montado na tela.
 class ScopeDraft {
-  const ScopeDraft({this.entries = const [], this.types = const {}, this.savedName});
+  const ScopeDraft({
+    this.entries = const [],
+    this.types = const {},
+    this.savedName,
+    this.moments = const [],
+    this.filter,
+  });
 
   final List<ScopeEntry> entries;
+
+  /// Momentos (em todos os dispositivos ou só numa fonte).
+  final List<MomentScopeEntry> moments;
+
+  /// Filtro por data/câmera (`null` = nenhum).
+  final LibraryFilter? filter;
 
   /// Vazio = todos os tipos.
   final Set<ScopeFileType> types;
@@ -19,18 +31,23 @@ class ScopeDraft {
   /// Nome do escopo salvo de onde veio (some se o usuário mexer).
   final String? savedName;
 
-  Scope toScope() => Scope(entries, types: types);
-  bool get isEmpty => entries.isEmpty;
+  Scope toScope() => Scope(entries, types: types, moments: moments, filter: filter);
+  bool get isEmpty => entries.isEmpty && moments.isEmpty;
 
   ScopeDraft copyWith({
     List<ScopeEntry>? entries,
     Set<ScopeFileType>? types,
     String? savedName,
     bool keepName = false,
+    List<MomentScopeEntry>? moments,
+    LibraryFilter? filter,
+    bool clearFilter = false,
   }) => ScopeDraft(
     entries: entries ?? this.entries,
     types: types ?? this.types,
     savedName: savedName ?? (keepName ? this.savedName : null),
+    moments: moments ?? this.moments,
+    filter: clearFilter ? null : (filter ?? this.filter),
   );
 }
 
@@ -118,8 +135,30 @@ class CompareController extends Notifier<CompareState> {
 
   void loadSaved(CompareSide s, SavedScope saved) => _setSide(
     s,
-    ScopeDraft(entries: saved.scope.entries, types: saved.scope.types ?? const {}, savedName: saved.name),
+    ScopeDraft(
+      entries: saved.scope.entries,
+      types: saved.scope.types ?? const {},
+      savedName: saved.name,
+      moments: saved.scope.moments,
+      filter: saved.scope.filter,
+    ),
   );
+
+  void addMoment(CompareSide s, MomentScopeEntry m) {
+    final d = state.side(s);
+    if (d.moments.contains(m)) return;
+    _setSide(s, d.copyWith(moments: [...d.moments, m]));
+  }
+
+  void removeMoment(CompareSide s, MomentScopeEntry m) {
+    final d = state.side(s);
+    _setSide(s, d.copyWith(moments: [...d.moments]..remove(m)));
+  }
+
+  void setFilter(CompareSide s, LibraryFilter? f) {
+    final d = state.side(s);
+    _setSide(s, f == null || f.isEmpty ? d.copyWith(clearFilter: true) : d.copyWith(filter: f));
+  }
 
   void markSaved(CompareSide s, String name) => _setSide(s, state.side(s).copyWith(savedName: name));
 

@@ -19,7 +19,7 @@ enum FilterKind {
   /// Faixa de horário em minutos do dia (min/max; min > max atravessa a meia-noite).
   timeRange,
 
-  /// Período do dia ([DayPeriod.name]).
+  /// Período do dia ([DayPart.name]).
   periods,
 
   /// Dia da semana (1 = segunda … 7 = domingo).
@@ -75,13 +75,13 @@ enum FilterKind {
 }
 
 /// Períodos do dia pela hora local (spec §10).
-enum DayPeriod {
+enum DayPart {
   madrugada(0, 6, 'Madrugada'),
   manha(6, 12, 'Manhã'),
   tarde(12, 18, 'Tarde'),
   noite(18, 24, 'Noite');
 
-  const DayPeriod(this.fromHour, this.toHour, this.label);
+  const DayPart(this.fromHour, this.toHour, this.label);
   final int fromHour;
   final int toHour;
   final String label;
@@ -242,7 +242,7 @@ class LibraryFilter {
             ? '$mm.eff_minute BETWEEN ? AND ?'
             : '($mm.eff_minute >= ? OR $mm.eff_minute <= ?)'; // atravessa a meia-noite
       case FilterKind.periods:
-        final ps = [for (final v in f.values) ...DayPeriod.values.where((d) => d.name == v)];
+        final ps = [for (final v in f.values) ...DayPart.values.where((d) => d.name == v)];
         if (ps.isEmpty) return '0';
         return ps
             .map((d) => '($mm.eff_minute >= ${d.fromHour * 60} AND $mm.eff_minute < ${d.toHour * 60})')

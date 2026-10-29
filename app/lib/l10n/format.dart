@@ -50,3 +50,75 @@ String formatDuration(Duration d) {
   final h = minutes ~/ 60, m = minutes % 60;
   return m == 0 ? '$h h' : '$h h $m min';
 }
+
+const _weekdays = ['segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado', 'domingo'];
+const _months = [
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
+];
+
+/// "maio" (1 = janeiro).
+String monthName(int month) => _months[month - 1];
+
+/// "Maio de 2024".
+String formatMonthYear(int year, int month) {
+  final m = monthName(month);
+  return '${m[0].toUpperCase()}${m.substring(1)} de $year';
+}
+
+/// Hora "de relógio" (sem fuso) guardada num DateTime UTC: os campos valem como estão.
+/// "Quarta-feira, 1 de maio de 2024".
+String formatLongDay(DateTime wall) {
+  final w = _weekdays[wall.weekday - 1];
+  return '${w[0].toUpperCase()}${w.substring(1)}, ${wall.day} de ${monthName(wall.month)} de ${wall.year}';
+}
+
+/// "14:03:12" (+ ",450" com subsegundos se [subSeconds]).
+String formatClock(DateTime wall, {bool seconds = true, bool subSeconds = false}) {
+  final base = seconds
+      ? '${_two(wall.hour)}:${_two(wall.minute)}:${_two(wall.second)}'
+      : '${_two(wall.hour)}:${_two(wall.minute)}';
+  return subSeconds && wall.millisecond != 0 ? '$base,${wall.millisecond.toString().padLeft(3, '0')}' : base;
+}
+
+/// "01/05/2024 14:03:12".
+String formatWallDateTime(DateTime wall, {bool seconds = true}) =>
+    '${_two(wall.day)}/${_two(wall.month)}/${wall.year} ${formatClock(wall, seconds: seconds)}';
+
+/// "UTC−3", "UTC+2", "UTC+5:30".
+String formatOffset(int? minutes) {
+  if (minutes == null) return '';
+  final sign = minutes < 0 ? '−' : '+';
+  final m = minutes.abs();
+  return 'UTC$sign${m ~/ 60}${m % 60 == 0 ? '' : ':${_two(m % 60)}'}';
+}
+
+/// Duração de vídeo: "0:42", "12:05", "1:02:03".
+String formatVideoLength(int ms) {
+  final s = ms ~/ 1000;
+  final h = s ~/ 3600, m = (s % 3600) ~/ 60, sec = s % 60;
+  return h > 0 ? '$h:${_two(m)}:${_two(sec)}' : '$m:${_two(sec)}';
+}
+
+/// Deslocamento para a interface: "+1 h", "−3 min 20 s".
+String formatShift(Duration d) {
+  if (d == Duration.zero) return '0 s';
+  final sign = d.isNegative ? '−' : '+';
+  var rest = d.abs().inSeconds;
+  final days = rest ~/ 86400;
+  rest %= 86400;
+  final h = rest ~/ 3600;
+  rest %= 3600;
+  final m = rest ~/ 60, s = rest % 60;
+  return '$sign${[if (days > 0) '$days d', if (h > 0) '$h h', if (m > 0) '$m min', if (s > 0) '$s s'].join(' ')}';
+}

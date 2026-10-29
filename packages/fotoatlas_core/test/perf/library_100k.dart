@@ -112,7 +112,7 @@ void main() {
       ]),
       'faixa de horário': const LibraryFilter([FilterCondition(FilterKind.timeRange, min: 18 * 60, max: 23 * 60 + 59)]),
       'período do dia': LibraryFilter([
-        FilterCondition(FilterKind.periods, values: [DayPeriod.madrugada.name]),
+        FilterCondition(FilterKind.periods, values: [DayPart.madrugada.name]),
       ]),
       'dia da semana': const LibraryFilter([
         FilterCondition(FilterKind.weekdays, values: [6, 7]),

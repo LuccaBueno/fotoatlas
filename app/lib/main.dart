@@ -7,6 +7,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 import 'app/backend.dart';
 import 'app/close_confirm_dialog.dart';
 import 'app/demo_mode.dart';
+import 'app/library_backend.dart';
 import 'app/providers.dart';
 import 'app/shell.dart';
 import 'app/theme.dart';
@@ -36,7 +37,8 @@ class FotoAtlasApp extends StatefulWidget {
 
 class FotoAtlasAppState extends State<FotoAtlasApp> {
   late final Future<FotoAtlasCore> _core =
-      (widget.openCore ?? () => FotoAtlasCore.open(monitor: true, autoHash: true, backupOnOpen: true))();
+      (widget.openCore ??
+      () => FotoAtlasCore.open(monitor: true, autoHash: true, autoMetadata: true, backupOnOpen: true))();
   late final AppLifecycleListener _lifecycle;
   late final DemoMode _demo = widget.demoMode ?? DemoMode.fromEnvironment();
 
@@ -148,7 +150,10 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
         // O ProviderScope fica ACIMA do MaterialApp: diálogos e rotas (que o
         // Navigator põe fora da árvore da tela) também enxergam os providers.
         return ProviderScope(
-          overrides: [backendProvider.overrideWithValue(CoreBackend(core))],
+          overrides: [
+            backendProvider.overrideWithValue(CoreBackend(core)),
+            libraryBackendProvider.overrideWithValue(CoreLibraryBackend(core)),
+          ],
           child: _app(const AppShell(), navigatorKey: _navigatorKey),
         );
       },

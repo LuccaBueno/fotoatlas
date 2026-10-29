@@ -215,6 +215,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  fotoatlas_fixtures:
+    dependency: "direct dev"
+    description:
+      path: "../tools/fixtures"
+      relative: true
+    source: path
+    version: "0.1.0"
   glob:
     dependency: transitive
     description:

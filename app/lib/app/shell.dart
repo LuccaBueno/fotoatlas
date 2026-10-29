@@ -5,6 +5,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 import '../features/compare/compare_page.dart';
 import '../features/devices/devices_page.dart';
 import '../features/home/home_page.dart';
+import '../features/library/library_page.dart';
 import '../features/placeholder/coming_soon_page.dart';
 import '../features/settings/settings_page.dart';
 import 'providers.dart';
@@ -20,16 +21,7 @@ class _Destination {
 
 final _destinations = [
   _Destination('Início', Icons.home_outlined, Icons.home, () => const HomePage()),
-  _Destination(
-    'Biblioteca',
-    Icons.photo_library_outlined,
-    Icons.photo_library,
-    () => const ComingSoonPage(
-      title: 'Biblioteca',
-      description: 'Galeria com todas as suas fotos e vídeos, linha do tempo, filtros e seleção em massa.',
-      phase: 'Fase 4',
-    ),
-  ),
+  _Destination('Biblioteca', Icons.photo_library_outlined, Icons.photo_library, () => const LibraryPage()),
   _Destination('Dispositivos', Icons.storage_outlined, Icons.storage, () => const DevicesPage()),
   _Destination('Comparar', Icons.compare_arrows_outlined, Icons.compare_arrows, () => const ComparePage()),
   _Destination(

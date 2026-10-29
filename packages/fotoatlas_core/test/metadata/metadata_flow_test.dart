@@ -337,19 +337,19 @@ void main() {
       expect(await n([const FilterCondition(FilterKind.timeRange, min: 22 * 60, max: 4 * 60)]), 1);
       expect(
         await n([
-          FilterCondition(FilterKind.periods, values: [DayPeriod.tarde.name]),
+          FilterCondition(FilterKind.periods, values: [DayPart.tarde.name]),
         ]),
         5,
       );
       expect(
         await n([
-          FilterCondition(FilterKind.periods, values: [DayPeriod.noite.name]),
+          FilterCondition(FilterKind.periods, values: [DayPart.noite.name]),
         ]),
         1,
       );
       expect(
         await n([
-          FilterCondition(FilterKind.periods, values: [DayPeriod.madrugada.name, DayPeriod.manha.name]),
+          FilterCondition(FilterKind.periods, values: [DayPart.madrugada.name, DayPart.manha.name]),
         ]),
         2,
       );

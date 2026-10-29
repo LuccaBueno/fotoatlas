@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import 'backend.dart';
+import 'library_backend.dart';
 
 /// Backend do app. Sobrescrito em `main.dart` (core real) e nos testes (falso).
 final backendProvider = Provider<AppBackend>((ref) => throw UnimplementedError('backendProvider não configurado'));
@@ -57,3 +58,53 @@ class NavigationIndex extends Notifier<int> {
 
 /// Situação do helper (leitura de dispositivos), para avisar quando ele cai.
 final helperStatusProvider = StreamProvider<HelperStatus>((ref) => ref.watch(backendProvider).watchHelperStatus());
+
+/// Biblioteca, momentos e datas (Fase 4). Sobrescrito em `main.dart`.
+final libraryBackendProvider = Provider<LibraryBackend>(
+  (ref) => throw UnimplementedError('libraryBackendProvider não configurado'),
+);
+
+/// Avisos de mudança da Biblioteca, agrupados (no máximo um a cada 700 ms).
+final libraryChangesProvider = StreamProvider<int>((ref) {
+  final backend = ref.watch(libraryBackendProvider);
+  final controller = StreamController<int>();
+  var n = 0;
+  Timer? timer;
+  final sub = backend.changes().listen((_) {
+    timer ??= Timer(const Duration(milliseconds: 700), () {
+      timer = null;
+      controller.add(++n);
+    });
+  });
+  controller.add(n);
+  ref.onDispose(() {
+    timer?.cancel();
+    sub.cancel();
+    controller.close();
+  });
+  return controller.stream;
+});
+
+/// Situação da leitura de metadados (começa pelo valor atual).
+final metadataStatusProvider = StreamProvider<MetadataStatus>((ref) async* {
+  final backend = ref.watch(libraryBackendProvider);
+  yield backend.metadataStatus;
+  yield* backend.watchMetadataStatus();
+});
+
+/// Momentos (recarregam quando a Biblioteca muda).
+final momentsProvider = FutureProvider<List<MomentView>>((ref) {
+  ref.watch(libraryChangesProvider);
+  return ref.watch(libraryBackendProvider).moments();
+});
+
+/// Contagens para os chips de filtro.
+final libraryFacetsProvider = FutureProvider<LibraryFacets>((ref) {
+  ref.watch(libraryChangesProvider);
+  return ref.watch(libraryBackendProvider).facets();
+});
+
+/// Filtros salvos (recarregados com [ref.invalidate] depois de salvar/apagar).
+final savedFiltersProvider = FutureProvider<List<SavedFilter>>(
+  (ref) => ref.watch(libraryBackendProvider).savedFilters(),
+);

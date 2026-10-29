@@ -9,6 +9,7 @@ import '../../widgets/connection_badge.dart';
 import '../devices/add_device.dart';
 import '../devices/scan_dialog.dart';
 import 'compare_controller.dart';
+import 'scope_moments.dart';
 
 /// "HD Backup › Fotos/2020" (ou só o nome da fonte inteira).
 String entryLabel(ScopeEntry e, Map<String, SourceView> sources) {
@@ -31,6 +32,7 @@ class ScopeEditor extends ConsumerWidget {
     final controller = ref.read(compareControllerProvider.notifier);
     final sources = {for (final s in ref.watch(sourcesProvider).value ?? const <SourceView>[]) s.id: s};
     final saved = ref.watch(savedScopesProvider).value ?? const <SavedScope>[];
+    final moments = {for (final m in ref.watch(momentsProvider).value ?? const <MomentView>[]) m.id: m};
 
     return Card(
       key: ValueKey('scope-${side.name}'),
@@ -71,7 +73,7 @@ class ScopeEditor extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             if (draft.isEmpty)
-              Text('Nenhuma pasta ou dispositivo escolhido.', style: theme.textTheme.bodyMedium)
+              Text('Nenhuma pasta, dispositivo ou momento escolhido.', style: theme.textTheme.bodyMedium)
             else
               Wrap(
                 spacing: 8,
@@ -89,6 +91,14 @@ class ScopeEditor extends ConsumerWidget {
                       onDeleted: () => controller.removeEntry(side, e),
                       deleteButtonTooltipMessage: 'Tirar do escopo',
                     ),
+                  for (final m in draft.moments)
+                    InputChip(
+                      key: ValueKey('moment-chip-${m.momentId}'),
+                      avatar: const Icon(Icons.collections_outlined, size: 18),
+                      label: Text(momentEntryLabel(m, moments, sources)),
+                      onDeleted: () => controller.removeMoment(side, m),
+                      deleteButtonTooltipMessage: 'Tirar do escopo',
+                    ),
                 ],
               ),
             const SizedBox(height: 8),
@@ -100,6 +110,45 @@ class ScopeEditor extends ConsumerWidget {
               },
               icon: const Icon(Icons.add),
               label: const Text('Adicionar pasta ou dispositivo'),
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                TextButton.icon(
+                  key: ValueKey('add-moment-${side.name}'),
+                  onPressed: () async {
+                    final m = await showDialog<MomentScopeEntry>(
+                      context: context,
+                      builder: (_) => const MomentPickerDialog(),
+                    );
+                    if (m != null) controller.addMoment(side, m);
+                  },
+                  icon: const Icon(Icons.collections_outlined),
+                  label: const Text('Adicionar momento'),
+                ),
+                TextButton.icon(
+                  key: ValueKey('scope-filter-${side.name}'),
+                  onPressed: () async {
+                    final f = await showDialog<LibraryFilter>(
+                      context: context,
+                      builder: (_) => ScopeFilterDialog(initial: draft.filter),
+                    );
+                    if (f != null) controller.setFilter(side, f);
+                  },
+                  icon: const Icon(Icons.filter_alt_outlined),
+                  label: Text(
+                    draft.filter == null ? 'Filtrar por data ou câmera' : 'Filtro: ${scopeFilterLabel(draft.filter!)}',
+                  ),
+                ),
+                if (draft.filter != null)
+                  IconButton(
+                    tooltip: 'Tirar o filtro',
+                    onPressed: () => controller.setFilter(side, null),
+                    icon: const Icon(Icons.close, size: 18),
+                  ),
+              ],
             ),
             const SizedBox(height: 12),
             Text('Tipos (nenhum marcado = todos):', style: theme.textTheme.bodySmall),

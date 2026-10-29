@@ -4,6 +4,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
 import '../../l10n/format.dart';
+import 'dates_settings.dart';
 
 /// Configurações. Na Fase 2: backup do catálogo. Biblioteca principal,
 /// modelos de organização e verificação periódica chegam nas próximas fases.
@@ -70,6 +71,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          const DatesSettingsCard(),
           const SizedBox(height: 16),
           Card(
             child: ListTile(
