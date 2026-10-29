@@ -53,6 +53,12 @@ internal interface IDeviceBackend
     DeviceHashResult Hash(string deviceId, string objectId, long? expectedSize, Action<long> onProgress, CancellationToken ct);
 
     /// <summary>
+    /// Como <see cref="Hash"/>, gravando o conteúdo em <paramref name="destination"/> (o
+    /// <c>.part</c> aberto pelo host com as regras de escrita, §6). Só leitura no dispositivo.
+    /// </summary>
+    DeviceHashResult Pull(string deviceId, string objectId, long? expectedSize, Stream destination, Action<long> onProgress, CancellationToken ct);
+
+    /// <summary>
     /// Lê no máximo <paramref name="maxBytes"/> do começo do objeto (o EXIF fica no
     /// início das fotos) e escreve em <paramref name="destination"/>. Só leitura no
     /// dispositivo; quem abre o destino é o host, com as regras de escrita (§6).

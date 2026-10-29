@@ -353,6 +353,11 @@ PhoneDemo generatePhoneDemo(String outDir, {bool stableIds = false, Map<String, 
   write(p.join(hd, 'Backup do celular', '2024', '2024-05', 'video.mp4'), blobs['c3']!);
   write(p.join(hd, 'Backup do celular', '2023', 'ano novo.jpg'), blobs['c6']!);
   write(p.join(hd, 'Backup do celular', '2023', 'antiga.jpg'), blobs['c7']!);
+  // Fase 5: um arquivo com o mesmo nome de uma foto que falta, mas com outro
+  // conteúdo (uma cópia da foto da praia renomeada). Copiar o que falta para
+  // "Backup do celular" por ano e mês mostra o conflito: a foto nova ganha "_1"
+  // e este arquivo fica intacto. Não muda a comparação (o conteúdo já está nos dois).
+  write(p.join(hd, 'Backup do celular', '2024', '2024-05', 'IMG_20240502_120000.jpg'), blobs['c1']!);
   final camera = p.join(outDir, 'Câmera');
   for (final (name, shown, seed) in [
     ('IMG_0001.JPG', DateTime(2024, 5, 1, 11, 0, 20), 21),

@@ -34,7 +34,8 @@ internal sealed class FakeDeviceBackend(string directory) : IDeviceBackend
         int? DisconnectAfterListCalls,
         IReadOnlySet<string> ChangeDuringRead,
         IReadOnlySet<string> FolderErrors,
-        int ReadDelayMs);
+        int ReadDelayMs,
+        IReadOnlySet<string> DisconnectDuringPull);
 
     public IReadOnlyList<DeviceInfo> List() =>
         [.. LoadAll().Where(d => !Unplugged(d)).Select(d => d.Info with { Storages = StoragesOf(d) })];
@@ -104,6 +105,37 @@ internal sealed class FakeDeviceBackend(string directory) : IDeviceBackend
         {
             throw new HelperException("changed_during_read", "O arquivo mudou enquanto era lido. Escaneie de novo.");
         }
+        return new DeviceHashResult(Convert.ToHexStringLower(SHA256.HashData(bytes)), bytes.LongLength, file.Modified);
+    }
+
+    public DeviceHashResult Pull(string deviceId, string objectId, long? expectedSize, Stream destination, Action<long> onProgress, CancellationToken ct)
+    {
+        var device = Connected(deviceId);
+        if (device.Info.Status != "ok") throw new HelperException("device_locked", "Dispositivo bloqueado (simulado).", retryable: true);
+        var (index, path) = Parse(device, objectId);
+        var file = device.Storages[index].Files.FirstOrDefault(f => f.Path == path)
+            ?? throw new HelperException("not_found", "Arquivo não existe (simulado).");
+        var bytes = file.Content();
+        if (expectedSize is not null && bytes.LongLength != expectedSize)
+        {
+            throw new HelperException("changed_during_read", "O arquivo mudou depois do escaneamento. Escaneie de novo.");
+        }
+        // Primeira metade, pausa (se configurada), segunda metade: dá para desplugar no meio.
+        var half = bytes.Length / 2;
+        destination.Write(bytes, 0, half);
+        onProgress(half);
+        if (device.DisconnectDuringPull.Contains(path))
+        {
+            throw new HelperException("device_disconnected", "O dispositivo foi desconectado no meio da cópia (simulado).", retryable: true);
+        }
+        if (device.ReadDelayMs > 0)
+        {
+            Task.Delay(device.ReadDelayMs, ct).Wait(ct);
+            Connected(deviceId);
+        }
+        ct.ThrowIfCancellationRequested();
+        destination.Write(bytes, half, bytes.Length - half);
+        onProgress(bytes.LongLength);
         return new DeviceHashResult(Convert.ToHexStringLower(SHA256.HashData(bytes)), bytes.LongLength, file.Modified);
     }
 
@@ -264,6 +296,7 @@ internal sealed class FakeDeviceBackend(string directory) : IDeviceBackend
             faults?["disconnectAfterListCalls"]?.GetValue<int>(),
             Set("changeDuringRead"),
             Set("folderErrors"),
-            faults?["readDelayMs"]?.GetValue<int>() ?? 0);
+            faults?["readDelayMs"]?.GetValue<int>() ?? 0,
+            Set("disconnectDuringPull"));
     }
 }

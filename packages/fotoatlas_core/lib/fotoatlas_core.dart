@@ -44,3 +44,7 @@ export 'src/thumbs/thumbnail_service.dart' show ThumbnailService, exifThumbnail;
 export 'src/util/clock.dart' show fileTimeToDateTime;
 export 'src/util/instance_lock.dart' show CatalogInUseException;
 export 'src/util/paths.dart';
+export 'src/ops/copy_models.dart';
+export 'src/ops/copy_planner.dart' show FreeSpaceProbe, defaultReserveBytes, fat32MaxFileSize, isFat;
+export 'src/ops/copy_service.dart' show CopyService;
+export 'src/ops/names.dart' show FolderTemplate, TemplateVars, renderFolder, sanitizeName, undatedFolder, withSuffix;

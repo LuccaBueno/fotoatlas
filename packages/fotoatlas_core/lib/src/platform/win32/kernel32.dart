@@ -25,6 +25,11 @@ const int errorSharingViolation = 32;
 const int errorLockViolation = 33;
 const int errorAlreadyExists = 183;
 const int errorFileExists = 80;
+const int errorHandleDiskFull = 39;
+const int errorDiskFull = 112;
+const int errorFileTooLarge = 223;
+const int errorGenFailure = 31;
+const int errorDeviceNotConnected = 1167;
 
 // Atributos de arquivo.
 const int fileAttributeHidden = 0x2;
@@ -139,6 +144,13 @@ final getDriveType = _kernel32.lookupFunction<Uint32 Function(Pointer<Utf16>), i
 // --- Arquivos (somente safe_io/) -------------------------------------------
 
 const int genericRead = 0x80000000;
+
+/// Só para o `.part` novo do destino (safe_io/dest_writer.dart).
+const int genericWrite = 0x40000000;
+
+/// Cria só se não existir: nunca abre nem trunca um arquivo existente.
+const int createNew = 1;
+const int fileAttributeNormal = 0x80;
 const int fileShareRead = 0x1;
 const int fileShareWrite = 0x2;
 const int fileShareDelete = 0x4;
@@ -189,6 +201,35 @@ final moveFileEx = _kernel32
       Int32 Function(Pointer<Utf16>, Pointer<Utf16>, Uint32),
       int Function(Pointer<Utf16>, Pointer<Utf16>, int)
     >('MoveFileExW', isLeaf: true);
+
+final writeFile = _kernel32
+    .lookupFunction<
+      Int32 Function(IntPtr, Pointer<Uint8>, Uint32, Pointer<Uint32>, Pointer<Void>),
+      int Function(int, Pointer<Uint8>, int, Pointer<Uint32>, Pointer<Void>)
+    >('WriteFile', isLeaf: true);
+
+final flushFileBuffers = _kernel32.lookupFunction<Int32 Function(IntPtr), int Function(int)>(
+  'FlushFileBuffers',
+  isLeaf: true,
+);
+
+/// FILETIME de criação, acesso e modificação (ponteiros podem ser nulos).
+final setFileTime = _kernel32
+    .lookupFunction<
+      Int32 Function(IntPtr, Pointer<Uint64>, Pointer<Uint64>, Pointer<Uint64>),
+      int Function(int, Pointer<Uint64>, Pointer<Uint64>, Pointer<Uint64>)
+    >('SetFileTime', isLeaf: true);
+
+final createDirectory = _kernel32
+    .lookupFunction<Int32 Function(Pointer<Utf16>, Pointer<Void>), int Function(Pointer<Utf16>, Pointer<Void>)>(
+      'CreateDirectoryW',
+      isLeaf: true,
+    );
+
+final deleteFile = _kernel32.lookupFunction<Int32 Function(Pointer<Utf16>), int Function(Pointer<Utf16>)>(
+  'DeleteFileW',
+  isLeaf: true,
+);
 
 /// Lê uma string UTF-16 terminada em zero de um buffer de tamanho fixo.
 String readFixedUtf16(Pointer<Uint8> base, int offsetBytes, int maxChars) {

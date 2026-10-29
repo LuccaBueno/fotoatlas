@@ -149,6 +149,8 @@ internal sealed class ProtocolHost(
                 return await HashObjectAsync(id, parameters, ct);
             case "devices.readHead":
                 return await ReadHeadAsync(parameters, ct);
+            case "devices.pullToFile":
+                return await PullToFileAsync(id, parameters, ct);
             case "thumbnails.get":
                 return await ThumbnailAsync(parameters, ct);
             default:
@@ -238,6 +240,79 @@ internal sealed class ProtocolHost(
         await file.FlushAsync(ct);
         return new JsonObject { ["bytes"] = bytes };
     }
+
+    /// <summary>
+    /// Cópia segura do celular (Fase 5): grava o objeto num <c>.part</c> novo dentro de
+    /// <c>.fotoatlas-tmp</c> (§6), calcula o SHA-256 durante a leitura e faz
+    /// <c>FlushFileBuffers</c> antes de responder. Numa falha o <c>.part</c> parcial fica
+    /// como está: quem decide é o core (diário e recuperação).
+    /// </summary>
+    private async Task<JsonNode> PullToFileAsync(string id, JsonObject parameters, CancellationToken ct)
+    {
+        var deviceId = RequiredString(parameters, "deviceId");
+        var objectId = RequiredString(parameters, "objectId");
+        var destPath = RequiredString(parameters, "destPath");
+        long? expected = parameters["expectedSize"]?.GetValueKind() == JsonValueKind.Number ? parameters["expectedSize"]!.GetValue<long>() : null;
+        long? modified = parameters["modified"]?.GetValueKind() == JsonValueKind.String
+            && long.TryParse(parameters["modified"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : null;
+        if (!WritePolicy.IsAllowedPartPath(destPath))
+        {
+            throw new HelperException("write_refused", "Destino precisa ser um .part dentro de .fotoatlas-tmp.");
+        }
+        var device = Devices;
+        FileStream file;
+        try
+        {
+            file = new FileStream(destPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1 << 20);
+        }
+        catch (IOException) when (File.Exists(destPath))
+        {
+            throw new HelperException("already_exists", "O arquivo de destino já existe (nunca sobrescrevemos).");
+        }
+        catch (DirectoryNotFoundException)
+        {
+            throw new HelperException("io_error", "A pasta temporária do destino não existe (o disco saiu?).", retryable: true);
+        }
+        DeviceHashResult result;
+        long written;
+        await using (file)
+        {
+            try
+            {
+                result = await Task.Run(() => device.Pull(deviceId, objectId, expected, file, bytes => Emit(new JsonObject
+                {
+                    ["v"] = ProtocolVersion,
+                    ["id"] = id,
+                    ["event"] = "progress",
+                    ["data"] = new JsonObject { ["bytes"] = bytes },
+                }), ct), ct);
+                if (modified is { } fileTime) File.SetLastWriteTimeUtc(file.SafeFileHandle, DateTime.FromFileTimeUtc(fileTime));
+                file.Flush(flushToDisk: true);
+                written = file.Length;
+            }
+            catch (IOException e) when (IsDiskFull(e))
+            {
+                throw new HelperException("disk_full", "O disco de destino ficou sem espaço.");
+            }
+            catch (IOException e)
+            {
+                throw new HelperException("io_error", $"Erro ao gravar no destino: {e.Message}", retryable: true);
+            }
+        }
+        if (written != result.Size)
+        {
+            throw new HelperException("io_error", "O arquivo gravado não tem o tamanho lido do aparelho.", retryable: true);
+        }
+        return new JsonObject
+        {
+            ["sha256"] = result.Sha256Hex,
+            ["bytesWritten"] = written,
+            ["modified"] = result.Modified?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        };
+    }
+
+    /// <summary>ERROR_DISK_FULL (112) ou ERROR_HANDLE_DISK_FULL (39).</summary>
+    private static bool IsDiskFull(IOException e) => (e.HResult & 0xFFFF) is 112 or 39;
 
     private async Task<JsonNode> ThumbnailAsync(JsonObject parameters, CancellationToken ct)
     {

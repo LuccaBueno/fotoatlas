@@ -158,6 +158,58 @@ public sealed class FakeDeviceTests : IDisposable
         Assert.Equal("bad_request", Response("4")["error"]!["code"]!.GetValue<string>());
     }
 
+    [Fact]
+    public async Task PullToFileGravaOPartConfereENuncaSobrescreve()
+    {
+        Write("pixel.json", Pixel.Replace("\"faults\": {\"changeDuringRead\": [\"DCIM/Camera/IMG_0002.jpg\"]}",
+            "\"faults\": {\"disconnectDuringPull\": [\"DCIM/Camera/IMG_0002.jpg\"]}"));
+        var backend = new FakeDeviceBackend(_dir.FullName);
+        var storage = Children(backend, "fake:pixel", "")[0];
+        var dcim = Children(backend, "fake:pixel", storage.ObjectId).Single(e => e.Name == "DCIM");
+        var camera = Children(backend, "fake:pixel", dcim.ObjectId).Single();
+        var files = Children(backend, "fake:pixel", camera.ObjectId);
+        var img1 = files.Single(f => f.Name == "IMG_0001.jpg").ObjectId;
+        var img2 = files.Single(f => f.Name == "IMG_0002.jpg").ObjectId;
+
+        var tmp = Directory.CreateDirectory(Path.Combine(_dir.FullName, "destino", ".fotoatlas-tmp")).FullName;
+        var ok = Path.Combine(tmp, "a.part");
+        var cut = Path.Combine(tmp, "b.part");
+        var outside = Path.Combine(_dir.FullName, "destino", "IMG_0001.jpg");
+        File.WriteAllText(Path.Combine(tmp, "existe.part"), "não mexer");
+        string Req(string id, string objectId, string dest, int size = 7) => new JsonObject
+        {
+            ["v"] = 1, ["id"] = id, ["method"] = "devices.pullToFile",
+            ["params"] = new JsonObject
+            {
+                ["deviceId"] = "fake:pixel", ["objectId"] = objectId, ["destPath"] = dest,
+                ["expectedSize"] = size, ["modified"] = "133590528000000000",
+            },
+        }.ToJsonString();
+        var input = new StringReader(string.Join("\n",
+            Req("1", img1, ok),
+            Req("2", img1, outside),
+            Req("3", img1, Path.Combine(tmp, "existe.part")),
+            Req("4", img2, cut, 9)) + "\n");
+        var output = new StringWriter();
+        await new ProtocolHost(input, output, new NoVolumes(), null, backend).RunAsync();
+        var messages = output.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(l => (JsonObject)JsonNode.Parse(l)!).ToList();
+        JsonObject Response(string id) => messages.Single(m => m["id"]?.GetValue<string>() == id && m["event"] is null);
+
+        var result = Response("1")["result"]!;
+        Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes("foto um"))), result["sha256"]!.GetValue<string>());
+        Assert.Equal(7, result["bytesWritten"]!.GetValue<long>());
+        Assert.Equal("foto um", File.ReadAllText(ok));
+        Assert.Equal(DateTime.FromFileTimeUtc(133590528000000000), File.GetLastWriteTimeUtc(ok));
+        Assert.Equal("write_refused", Response("2")["error"]!["code"]!.GetValue<string>());
+        Assert.False(File.Exists(outside));
+        Assert.Equal("already_exists", Response("3")["error"]!["code"]!.GetValue<string>());
+        Assert.Equal("não mexer", File.ReadAllText(Path.Combine(tmp, "existe.part")));
+        // Desplugado no meio: erro próprio e o .part parcial fica para o core decidir.
+        Assert.Equal("device_disconnected", Response("4")["error"]!["code"]!.GetValue<string>());
+        Assert.True(File.Exists(cut));
+        Assert.True(new FileInfo(cut).Length < "foto dois".Length);
+    }
+
     private sealed class NoVolumes : FotoAtlas.Helper.Volumes.IVolumeSource
     {
         public IReadOnlyList<FotoAtlas.Helper.Volumes.VolumeInfo> List() => [];

@@ -137,6 +137,13 @@ internal sealed unsafe class WpdBackend : IDeviceBackend
     }
 
     public DeviceHashResult Hash(string deviceId, string objectId, long? expectedSize, Action<long> onProgress, CancellationToken ct) =>
+        ReadAll(deviceId, objectId, expectedSize, null, onProgress, ct);
+
+    public DeviceHashResult Pull(string deviceId, string objectId, long? expectedSize, Stream destination, Action<long> onProgress, CancellationToken ct) =>
+        ReadAll(deviceId, objectId, expectedSize, destination, onProgress, ct);
+
+    /// <summary>Lê o objeto inteiro calculando o SHA-256 e, se houver, copia para <paramref name="destination"/>.</summary>
+    private DeviceHashResult ReadAll(string deviceId, string objectId, long? expectedSize, Stream? destination, Action<long> onProgress, CancellationToken ct) =>
         WithDevice(deviceId, ct, slot =>
         {
             var before = SizeAndDate(slot, objectId);
@@ -166,6 +173,7 @@ internal sealed unsafe class WpdBackend : IDeviceBackend
                             if (hr < 0) Marshal.ThrowExceptionForHR(hr);
                             if (read == 0) break;
                             sha.AppendData(buffer, 0, (int)read);
+                            destination?.Write(buffer, 0, (int)read);
                             total += read;
                             if (total - lastReport >= 4 * 1024 * 1024)
                             {

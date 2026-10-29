@@ -162,3 +162,12 @@ bool directoryAccessible(String dirPath) {
     return false;
   }
 }
+
+/// Bytes livres para o usuário no volume que contém [path]
+/// (`GetDiskFreeSpaceExW`, respeita cotas). `null` se não der para saber.
+int? diskFreeBytes(String path) => using((arena) {
+  final free = arena<Uint64>();
+  final dir = path.endsWith(r'\') ? path : '$path\\';
+  if (getDiskFreeSpaceEx(dir.toNativeUtf16(allocator: arena), free, nullptr, nullptr) == 0) return null;
+  return free.value;
+});

@@ -92,7 +92,7 @@ void main() {
     await ok(run(home, demo, ['sources', 'add-phone', 'Pixel de Teste', '--name', 'Pixel']), contains('SOURCE '));
     await ok(run(home, demo, ['sources', 'add', demo.hdDir, '--name', 'HD']));
     await ok(run(home, demo, ['scan', 'start', 'Pixel']), contains('completed arquivos=6 '));
-    await ok(run(home, demo, ['scan', 'start', 'HD']), contains('completed arquivos=4 '));
+    await ok(run(home, demo, ['scan', 'start', 'HD']), contains('completed arquivos=5 '));
     await ok(run(home, demo, ['hash', 'run']));
     expect(scalar(home, "SELECT COUNT(*) FROM file_instances WHERE hash_status != 'done'"), 0);
 
@@ -131,6 +131,64 @@ void main() {
     expect(resumed.stdout as String, contains('completed arquivos=6 '), reason: '${resumed.stdout}${resumed.stderr}');
     expect(scalar(home, 'SELECT COUNT(*) FROM file_instances'), 6);
     expect(scalar(home, "SELECT COUNT(*) FROM scans WHERE status = 'completed' AND coverage = 'complete'"), 1);
+  }, skip: skip);
+
+  test('copiar do celular para o HD: desplugado no meio, nada pela metade, retoma e confere', () async {
+    final temp = await createTestTemp();
+    final home = p.join(temp.path, 'home');
+    final demo = generatePhoneDemo(
+      p.join(temp.path, 'demo'),
+      pixelFaults: {
+        'disconnectDuringPull': ['WhatsApp/Media/WhatsApp Images/IMG-20240504-WA0001.jpg'],
+      },
+    );
+    await ok(run(home, demo, ['sources', 'add-phone', 'Pixel de Teste', '--name', 'Pixel']));
+    await ok(run(home, demo, ['sources', 'add', demo.hdDir, '--name', 'HD']));
+    await ok(run(home, demo, ['scan', 'start', 'Pixel']));
+    await ok(run(home, demo, ['scan', 'start', 'HD']));
+    await ok(run(home, demo, ['hash', 'run']));
+    final hdBefore = {
+      for (final f in Directory(demo.hdDir).listSync(recursive: true).whereType<File>()) f.path: f.readAsBytesSync(),
+    };
+
+    final cut = await run(home, demo, [
+      'copy',
+      'start',
+      'Pixel',
+      'HD:Backup do celular',
+      '--template',
+      '{original}',
+      '--yes',
+    ]);
+    expect(cut.stdout as String, contains(' paused '), reason: '${cut.stdout}${cut.stderr}');
+    expect(cut.stdout as String, contains('desconectado'));
+    final tmp = Directory(p.join(demo.hdDir, '.fotoatlas-tmp'));
+    expect(tmp.listSync(), isEmpty, reason: 'o parcial foi descartado');
+    // Nada do que já estava no HD mudou.
+    for (final e in hdBefore.entries) {
+      expect(File(e.key).readAsBytesSync(), e.value);
+    }
+
+    // "Reconectar" sem a falha (outro processo = helper novo, IDs novos) e continuar.
+    final json = File(demo.pixelJson);
+    json.writeAsStringSync(json.readAsStringSync().replaceAll('disconnectDuringPull', 'semFalha'));
+    final op = RegExp(r'OPERATION (\S+)').firstMatch(cut.stdout as String)!.group(1)!;
+    await ok(run(home, demo, ['copy', 'resume', op]), contains('COPY $op completed publicados=3 '));
+    final copied = File(
+      p.join(
+        demo.hdDir,
+        'Backup do celular',
+        'Armazenamento interno compartilhado',
+        'WhatsApp',
+        'Media',
+        'WhatsApp Images',
+        'IMG-20240504-WA0001.jpg',
+      ),
+    );
+    expect(copied.readAsBytesSync(), File(p.join(demo.devicesDir, 'conteudo', 'c4.bin')).readAsBytesSync());
+    expect(scalar(home, "SELECT COUNT(*) FROM operation_items WHERE state = 'published'"), 3);
+    final compare = await run(home, demo, ['compare', 'Pixel', 'HD']);
+    expect(compare.stdout as String, contains('VERDICT complete'), reason: '${compare.stdout}');
   }, skip: skip);
 
   test('kill no meio do scan do celular → retomar sem duplicar', () async {

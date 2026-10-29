@@ -13,6 +13,8 @@ import 'metadata/dates_service.dart';
 import 'metadata/external_tools.dart';
 import 'metadata/metadata_service.dart';
 import 'metadata/moments_service.dart';
+import 'ops/copy_planner.dart';
+import 'ops/copy_service.dart';
 import 'scan/scan_service.dart';
 import 'sources/sources_service.dart';
 import 'sources/volumes.dart';
@@ -38,6 +40,7 @@ class FotoAtlasCore {
     required this.thumbnails,
     required this.volumes,
     required this.helper,
+    required this.copies,
     required this._lock,
   });
 
@@ -69,6 +72,9 @@ class FotoAtlasCore {
 
   /// Consultas da Biblioteca (filtros, linha do tempo, detalhes, seleção).
   final LibraryService library;
+
+  /// Cópia segura com diário e recuperação (Fase 5).
+  final CopyService copies;
 
   /// Miniaturas em cache.
   final ThumbnailService thumbnails;
@@ -116,6 +122,9 @@ class FotoAtlasCore {
     String? fakeDevicesDir,
     ExternalTools? tools,
     bool autoMetadata = false,
+    bool recover = true,
+    bool copyInIsolate = true,
+    FreeSpaceProbe? freeSpace,
   }) async {
     final resolvedPaths = paths ?? CorePaths.fromEnvironment();
     Directory(resolvedPaths.dataDir).createSync(recursive: true);
@@ -176,6 +185,10 @@ class FotoAtlasCore {
       // Regras de data novas: os momentos acompanham (em segundo plano).
       if (metadata.reresolvedOnInit) unawaited(moments.recompute().then((_) {}, onError: (Object _) {}));
       await sources.refreshConnectivity();
+      final copies = CopyService(catalog.db, sources, useIsolate: copyInIsolate, freeSpace: freeSpace);
+      // Recuperação idempotente das cópias interrompidas (spec §11.2), antes
+      // de qualquer outra tarefa: olha o disco e termina o que ficou no meio.
+      if (recover) await copies.recoverAll();
       if (monitor) sources.startMonitoring();
       final core = FotoAtlasCore._(
         paths: resolvedPaths,
@@ -199,6 +212,7 @@ class FotoAtlasCore {
         ),
         volumes: provider,
         helper: helper,
+        copies: copies,
         lock: lock,
       );
       if (backupOnOpen) {
@@ -238,10 +252,13 @@ class FotoAtlasCore {
     return moments.recompute();
   }
 
-  /// O que está em andamento agora (para perguntar antes de fechar). Na
-  /// Fase 5 entram as cópias.
+  /// O que está em andamento agora (para perguntar antes de fechar).
   Future<List<RunningTask>> runningTasks() async {
     final tasks = <RunningTask>[];
+    if (copies.isRunning) {
+      final c = copies.current;
+      tasks.add(RunningTask(RunningTaskKind.copy, done: c?.itemsDone ?? 0, total: c?.itemsTotal ?? 0));
+    }
     final scansNow = scans.runningProgress.values.toList();
     if (scansNow.isNotEmpty) {
       final names = {for (final s in await catalog.db.select(catalog.db.sources).get()) s.id: s.name};
@@ -286,6 +303,8 @@ class FotoAtlasCore {
     sources.stopMonitoring();
     final runningScans = scans.runningProgress.length;
     final steps = <ShutdownStep>[
+      if (copies.isRunning)
+        ShutdownStep('copy', 'Pausando a cópia (o arquivo do momento volta para a fila; nada se perde)'),
       if (runningScans > 0)
         ShutdownStep(
           'scan',
@@ -326,6 +345,7 @@ class FotoAtlasCore {
     _momentsTimer?.cancel();
     thumbnails.close();
     await Future.wait([
+      step('copy', () => copies.dispose(timeout: stepTimeout)),
       step('scan', () => scans.dispose(timeout: stepTimeout)),
       step('hash', () => hashes.dispose(timeout: stepTimeout)),
       // Também fecha o ExifTool; um recálculo de momentos em andamento termina numa transação.
@@ -359,7 +379,7 @@ class ShutdownStep {
   bool timedOut = false;
 }
 
-enum RunningTaskKind { scan, hash, metadata, backup }
+enum RunningTaskKind { copy, scan, hash, metadata, backup }
 
 /// Uma tarefa em andamento. [done]/[total]: arquivos encontrados (scan) ou
 /// conferidos (conferência); `total` 0 = desconhecido.

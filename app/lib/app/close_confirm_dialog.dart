@@ -59,6 +59,7 @@ class CloseConfirmDialog extends StatelessWidget {
   }
 
   static IconData _icon(RunningTaskKind kind) => switch (kind) {
+    RunningTaskKind.copy => Icons.copy_all,
     RunningTaskKind.scan => Icons.search,
     RunningTaskKind.hash => Icons.fact_check_outlined,
     RunningTaskKind.metadata => Icons.event_note_outlined,
@@ -69,6 +70,9 @@ class CloseConfirmDialog extends StatelessWidget {
 /// "Escaneando "Pixel" — 1.234 arquivos encontrados",
 /// "Conferindo o conteúdo — 120 de 6.596 arquivos (1%)", "Backup do catálogo".
 String runningTaskLabel(RunningTask t) => switch (t.kind) {
+  RunningTaskKind.copy when t.total > 0 =>
+    'Copiando com conferência — ${formatInt(t.done)} de ${plural(t.total, 'arquivo', 'arquivos')}',
+  RunningTaskKind.copy => 'Copiando com conferência',
   RunningTaskKind.scan =>
     'Escaneando "${t.sourceName ?? 'dispositivo'}" — '
         '${plural(t.done, 'arquivo encontrado', 'arquivos encontrados')} até agora',

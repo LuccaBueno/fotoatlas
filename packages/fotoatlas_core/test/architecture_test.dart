@@ -28,6 +28,15 @@ const _writeApis = [
   'RemoveDirectory',
   'SetFileAttributes',
   'SetFileTime',
+  'setFileTime',
+  'writeFile',
+  'deleteFile',
+  'createDirectory',
+  // Wrappers de safe_io/ (só a cópia segura e o backup do catálogo usam).
+  'moveNoReplace',
+  'deleteOwnPart',
+  'PartWriter',
+  'ensureDirectory',
 ];
 
 /// (arquivo relativo a lib/src, API) permitidos, com o motivo.
@@ -48,6 +57,35 @@ const _allowed = {
   // Publicação sem sobrescrever (MoveFileExW sem REPLACE_EXISTING).
   ('safe_io/move_no_replace.dart', 'MoveFileEx'),
   ('safe_io/move_no_replace.dart', 'moveFileEx'),
+  // Fase 5 — gravação no destino (ADR 0016): bindings, .part novo (CREATE_NEW),
+  // pastas novas e remoção só do próprio .part não publicado.
+  ('platform/win32/kernel32.dart', 'writeFile'),
+  ('platform/win32/kernel32.dart', 'setFileTime'),
+  ('platform/win32/kernel32.dart', 'SetFileTime'),
+  ('platform/win32/kernel32.dart', 'createDirectory'),
+  ('platform/win32/kernel32.dart', 'deleteFile'),
+  ('platform/win32/kernel32.dart', 'DeleteFile'),
+  ('safe_io/move_no_replace.dart', 'moveNoReplace'),
+  ('safe_io/dest_writer.dart', 'CreateFileW'),
+  ('safe_io/dest_writer.dart', 'createFile'),
+  ('safe_io/dest_writer.dart', 'writeFile'),
+  ('safe_io/dest_writer.dart', 'setFileTime'),
+  ('safe_io/dest_writer.dart', 'SetFileTime'),
+  ('safe_io/dest_writer.dart', 'createDirectory'),
+  ('safe_io/dest_writer.dart', 'deleteFile'),
+  ('safe_io/dest_writer.dart', 'DeleteFile'),
+  ('safe_io/dest_writer.dart', '.create('),
+  ('safe_io/dest_writer.dart', 'PartWriter'),
+  ('safe_io/dest_writer.dart', 'ensureDirectory'),
+  ('safe_io/dest_writer.dart', 'deleteOwnPart'),
+  // A cópia segura usa só os wrappers acima.
+  ('ops/copy_pump.dart', 'PartWriter'),
+  ('ops/copy_pump.dart', '.create('), // PartWriter.create
+  ('ops/copy_service.dart', 'moveNoReplace'),
+  ('ops/copy_service.dart', 'deleteOwnPart'),
+  ('ops/copy_service.dart', 'ensureDirectory'),
+  // Backup do catálogo: publicação sem sobrescrever na pasta do catálogo.
+  ('catalog/catalog_backup.dart', 'moveNoReplace'),
   // Backup do catálogo: pasta backups/ e rotação dos próprios backups (nunca arquivos de usuário).
   ('catalog/catalog_backup.dart', 'createSync'),
   ('catalog/catalog_backup.dart', 'deleteSync'),
@@ -98,6 +136,23 @@ void main() {
     final move = File(p.join('lib', 'src', 'safe_io', 'move_no_replace.dart')).readAsStringSync();
     expect(move, isNot(contains('ReplaceExisting')));
     expect(move, isNot(contains('0x1')));
+  });
+
+  test('o destino só recebe arquivos novos e só o próprio .part é apagado', () {
+    final src = File(p.join('lib', 'src', 'safe_io', 'dest_writer.dart')).readAsStringSync();
+    final calls = RegExp(r'createFile\(([\s\S]*?)\),\s*\);').allMatches(src).toList();
+    expect(calls, hasLength(1), reason: 'uma única abertura para escrita');
+    final args = calls.single.group(1)!;
+    expect(args, contains('createNew'));
+    for (final forbidden in ['createAlways', 'openAlways', 'truncateExisting', 'openExisting']) {
+      expect(args, isNot(contains(forbidden)));
+    }
+    // Toda escrita e toda remoção passam pela checagem de caminho .part em .fotoatlas-tmp.
+    final create = RegExp(r'static PartWriter create\([\s\S]*?\n  \}').firstMatch(src)!.group(0)!;
+    expect(create, contains('isOwnPartPath(path)'));
+    final delete = RegExp(r'bool deleteOwnPart\([\s\S]*?\n\}').firstMatch(src)!.group(0)!;
+    expect(delete.indexOf('isOwnPartPath(path)'), lessThan(delete.indexOf('deleteFile(')));
+    expect(src.split('deleteFile(').length - 1, 1, reason: 'DeleteFileW só em deleteOwnPart');
   });
 
   test('o core não depende de Flutter', () {

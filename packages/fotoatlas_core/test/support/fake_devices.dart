@@ -159,6 +159,42 @@ class FakeDeviceBackend implements DeviceBackend {
     return DeviceHash(Uint8List.fromList(sha256.convert(bytes).bytes), bytes.length, phone.modified[path]);
   }
 
+  /// Desplugar no meio da cópia: grava metade e o aparelho "sai".
+  final disconnectDuringPull = <String>{};
+  int pullCalls = 0;
+
+  @override
+  Future<DevicePull> pullToFile(
+    String deviceId,
+    String objectId,
+    String destPath, {
+    required int expectedSize,
+    int? modified,
+    Future<void>? cancel,
+    void Function(int bytes)? onProgress,
+  }) async {
+    final phone = _connected(deviceId);
+    final prefix = 's${phone.session}|';
+    if (!objectId.startsWith(prefix)) throw DeviceException('not_found', 'ID de outra sessão.');
+    final path = objectId.substring(prefix.length);
+    final bytes = phone.files[path];
+    if (bytes == null) throw DeviceException('not_found', 'Arquivo não existe.');
+    if (bytes.length != expectedSize) throw DeviceException('changed_during_read', 'O arquivo mudou.');
+    pullCalls++;
+    // Como o helper: arquivo novo, nunca sobrescreve.
+    final f = File(destPath);
+    if (f.existsSync()) throw DeviceException('already_exists', 'Já existe.');
+    if (disconnectDuringPull.remove(path)) {
+      f.writeAsBytesSync(bytes.sublist(0, bytes.length ~/ 2), flush: true);
+      phones.remove(phone);
+      throw DeviceException('device_disconnected', 'O dispositivo foi desconectado no meio da cópia.');
+    }
+    f.writeAsBytesSync(bytes, flush: true);
+    if (modified != null) f.setLastModifiedSync(fileTimeToDateTime(modified));
+    onProgress?.call(bytes.length);
+    return DevicePull(Uint8List.fromList(sha256.convert(bytes).bytes), bytes.length);
+  }
+
   int readHeadCalls = 0;
 
   @override

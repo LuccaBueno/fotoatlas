@@ -160,6 +160,29 @@ abstract interface class DeviceBackend {
   /// Copia no máximo [maxBytes] do começo do arquivo para [outPath] (arquivo
   /// novo dentro do cache): o bastante para ler o EXIF de uma foto.
   Future<int> readHead(String deviceId, String objectId, String outPath, {int maxBytes = 256 * 1024});
+
+  /// Cópia segura (Fase 5): o helper lê o arquivo do aparelho e grava em
+  /// [destPath] (um `.part` novo dentro de `.fotoatlas-tmp`), com o SHA-256
+  /// calculado durante a leitura e `FlushFileBuffers` antes de responder.
+  /// [modified] (FILETIME) vira a data de modificação do `.part`.
+  /// Desconexão no meio: [DeviceException] `device_disconnected`, e o `.part`
+  /// parcial fica para o core decidir.
+  Future<DevicePull> pullToFile(
+    String deviceId,
+    String objectId,
+    String destPath, {
+    required int expectedSize,
+    int? modified,
+    Future<void>? cancel,
+    void Function(int bytes)? onProgress,
+  });
+}
+
+/// Resultado de [DeviceBackend.pullToFile].
+class DevicePull {
+  const DevicePull(this.sha256, this.bytesWritten);
+  final Uint8List sha256;
+  final int bytesWritten;
 }
 
 /// Celulares pelo helper (WPD).
@@ -222,6 +245,36 @@ class HelperDeviceBackend implements DeviceBackend {
         );
         return (result['bytes'] as num).toInt();
       });
+
+  @override
+  Future<DevicePull> pullToFile(
+    String deviceId,
+    String objectId,
+    String destPath, {
+    required int expectedSize,
+    int? modified,
+    Future<void>? cancel,
+    void Function(int bytes)? onProgress,
+  }) => _guard(() async {
+    final result = await client.call(
+      'devices.pullToFile',
+      params: {
+        'deviceId': deviceId,
+        'objectId': objectId,
+        'destPath': destPath,
+        'expectedSize': expectedSize,
+        if (modified != null) 'modified': '$modified',
+      },
+      timeout: Duration(minutes: 2) + Duration(seconds: expectedSize ~/ (512 * 1024)),
+      cancel: cancel,
+      onEvent: onProgress == null
+          ? null
+          : (e) {
+              if (e.name == 'progress') onProgress((e.data['bytes'] as num).toInt());
+            },
+    );
+    return DevicePull(_hex(result['sha256'] as String), (result['bytesWritten'] as num).toInt());
+  });
 
   static Future<T> _guard<T>(Future<T> Function() body) async {
     try {

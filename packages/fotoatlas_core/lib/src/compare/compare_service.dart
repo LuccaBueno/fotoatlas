@@ -368,6 +368,20 @@ class CompareService {
     }
   }
 
+  /// Todos os conteúdos de A que faltam em B (o "Selecionar todos" do
+  /// "Copiar para B…").
+  Future<List<int>> missingContentIds(Scope a, Scope b) async {
+    final (withSql, vars) = _with(a, b);
+    final rows = await db
+        .customSelect(
+          '$withSql SELECT content_id FROM ac WHERE content_id NOT IN (SELECT content_id FROM bc)',
+          variables: vars,
+          readsFrom: {db.fileInstances, db.contents, db.sources},
+        )
+        .get();
+    return [for (final r in rows) r.read<int>('content_id')];
+  }
+
   /// Trechos para a fila de hash priorizar ("Conferir agora").
   static List<HashPriority> priorityFor(Iterable<Scope> scopes) => [
     for (final s in scopes)

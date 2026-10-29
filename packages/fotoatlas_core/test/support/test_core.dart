@@ -10,7 +10,8 @@ import 'temp.dart';
 
 /// Ambiente de teste: catálogo em temp + um "volume" simulado (pasta real).
 class TestEnv {
-  TestEnv._(this.temp, this.core, this.volumes, this.volumeDir, this._isolate, this._tools);
+  TestEnv._(this.temp, this.core, this.volumes, this.volumeDir, this._isolate, this._tools, this._freeSpace);
+  final FreeSpaceProbe? _freeSpace;
   final ExternalTools? _tools;
 
   final Directory temp;
@@ -26,6 +27,8 @@ class TestEnv {
     VolumeInfo Function(String root)? volume,
     DeviceBackend? devices,
     ExternalTools? tools,
+    FreeSpaceProbe? freeSpace,
+    bool recover = true,
   }) async {
     final temp = await createTestTemp();
     final volumeDir = Directory(p.join(temp.path, 'volume_e'))..createSync();
@@ -40,14 +43,17 @@ class TestEnv {
       hashInIsolate: isolate,
       devices: devices,
       tools: tools,
+      copyInIsolate: isolate,
+      freeSpace: freeSpace,
+      recover: recover,
     );
-    final env = TestEnv._(temp, core, provider, volumeDir, isolate, tools);
+    final env = TestEnv._(temp, core, provider, volumeDir, isolate, tools, freeSpace);
     addTearDown(env.close);
     return env;
   }
 
   /// Fecha e abre de novo o mesmo catálogo (como fechar e abrir o app).
-  Future<void> reopen({DeviceBackend? devices}) async {
+  Future<void> reopen({DeviceBackend? devices, bool recover = true}) async {
     await core.close();
     core = await FotoAtlasCore.open(
       paths: core.paths,
@@ -58,6 +64,9 @@ class TestEnv {
       hashInIsolate: _isolate,
       devices: devices,
       tools: _tools,
+      copyInIsolate: _isolate,
+      freeSpace: _freeSpace,
+      recover: recover,
     );
   }
 

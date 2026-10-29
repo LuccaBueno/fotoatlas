@@ -32,6 +32,14 @@ Comandos:
   scopes save NOME ESCOPO        Salva um escopo com nome
   scopes remove NOME             Remove um escopo salvo (só do catálogo)
   backup [now|list]              Backup do catálogo
+  copy plan A DESTINO[:pasta] [--template T] [--conflict suffix|ask]
+                                 Prévia de "copiar o que falta de A em DESTINO" (só lê)
+  copy start A DESTINO[:pasta] [...] --yes
+                                 Copia com conferência (Ctrl+C pausa); --template:
+                                 "{ano}/{ano}-{mes}" (padrão), "{original}", "" etc.
+  copy resume|retry|export OP    Continua, tenta de novo as falhas ou exporta o relatório (CSV)
+  copy status [OP]               Situação das cópias (com OP: arquivo por arquivo)
+  recover                        Roda a recuperação de cópias interrompidas e mostra o resultado
 
 FONTE pode ser o nome, o id ou o começo do id.
 ESCOPO/LADO: "FONTE[:pasta/sub]" separados por "+" (ex.: "HD:Fotos/2020+Celular"),
@@ -300,6 +308,84 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
       await core.compare.removeScope(saved.single.id);
       return 0;
 
+    case ['copy', ('plan' || 'start') && final mode, final sideA, final destSpec, ...final rest]:
+      final a = await _parseScope(core, sideA, _option(rest, '--type'));
+      final colon = destSpec.indexOf(':');
+      final dest = await _findSource(core, colon < 0 ? destSpec : destSpec.substring(0, colon));
+      final folder = colon < 0 ? '' : destSpec.substring(colon + 1);
+      final ids = await core.compare.missingContentIds(a, Scope([ScopeEntry(dest, folder)]));
+      final preview = await core.copies.preview(
+        CopyRequest(
+          contentIds: ids,
+          destSourceId: dest,
+          destFolder: folder,
+          template: _option(rest, '--template') ?? FolderTemplate.byMonth.pattern,
+          conflict: _option(rest, '--conflict') == 'ask' ? ConflictPolicy.ask : ConflictPolicy.suffix,
+          preferSourceIds: a.sourceIds.toList(),
+          origin: 'cli',
+        ),
+      );
+      stdout.writeln(
+        'PREVIEW itens=${preview.items.length} bytes=${preview.totalBytes} ja_no_destino=${preview.alreadyThere} '
+        'indisponiveis=${preview.unavailable.length} fat32=${preview.tooLargeForFat32.length} '
+        'renomeados=${preview.renamedForConflict} perguntar=${preview.askConflicts} '
+        'livre=${preview.freeBytes ?? '?'} pode_comecar=${preview.canStart}'
+        '${preview.blocker == null ? '' : ' — ${preview.blocker}'}',
+      );
+      for (final i in preview.items) {
+        stdout.writeln('  ${i.srcRelPath} -> ${i.dstRelPath}${i.renamedForConflict ? ' (nome já existia)' : ''}');
+      }
+      for (final u in [...preview.unavailable, ...preview.tooLargeForFat32]) {
+        stdout.writeln('  [fora] ${u.name}: ${u.reason}');
+      }
+      if (mode == 'plan') return 0;
+      if (!rest.contains('--yes')) {
+        stderr.writeln('Confirme com --yes para copiar.');
+        return 2;
+      }
+      if (!preview.canStart) return 1;
+      return _followCopy(core, await core.copies.start(preview));
+
+    case ['copy', 'resume', final op]:
+      final id = await _findOperation(core, op);
+      await core.copies.resume(id);
+      return _followCopy(core, id);
+
+    case ['copy', 'retry', final op]:
+      final id = await _findOperation(core, op);
+      stdout.writeln('RETRY ${await core.copies.retryFailed(id)}');
+      return _followCopy(core, id);
+
+    case ['copy', 'status', ...final rest]:
+      for (final o in await core.copies.list()) {
+        if (rest.isNotEmpty && !o.id.startsWith(rest.first)) continue;
+        stdout.writeln(
+          'OPERATION ${o.id} ${o.status} itens=${o.totalItems} publicados=${o.published} '
+          'ja_tinha=${o.skipped} falhas=${o.failed} atencao=${o.needsAttention} faltam=${o.remaining}'
+          '${o.pauseReason == null ? '' : ' — ${o.pauseReason}'}',
+        );
+        if (rest.isNotEmpty) {
+          for (final i in await core.copies.items(o.id)) {
+            stdout.writeln(
+              '  ${i.seq} ${i.state} ${i.srcRelPath} -> ${i.dstRelPath}'
+              '${i.errorMessage == null ? '' : ' — ${i.errorMessage}'}',
+            );
+          }
+        }
+      }
+      return 0;
+
+    case ['copy', 'export', final op]:
+      stdout.write(await core.copies.exportCsv(await _findOperation(core, op)));
+      return 0;
+
+    case ['recover']:
+      // A recuperação já roda ao abrir o core; aqui ela roda mais uma vez e
+      // mostra o resultado (deve ser "nada a fazer").
+      final report = await core.copies.recoverAll();
+      stdout.writeln('RECOVER $report');
+      return 0;
+
     case ['backup'] || ['backup', 'now']:
       final info = await core.backups.backupNow();
       stdout.writeln('BACKUP ${info.path} ${_bytes(info.sizeBytes)}');
@@ -398,6 +484,39 @@ Future<int> _follow(FotoAtlasCore core, int scanId) async {
     '${result.message == null ? '' : ' — ${result.message}'}',
   );
   return result.status == 'completed' || result.status == 'paused' ? 0 : 1;
+}
+
+/// Acompanha a cópia até terminar ou pausar; Ctrl+C pausa (continua depois).
+Future<int> _followCopy(FotoAtlasCore core, String id) async {
+  stdout.writeln('OPERATION $id');
+  final sigint = ProcessSignal.sigint.watch().listen((_) {
+    stdout.writeln('Pausando…');
+    core.copies.pause(id);
+  });
+  var lastPrint = DateTime.fromMillisecondsSinceEpoch(0);
+  final sub = core.copies.progress.where((p) => p.operationId == id).listen((p) {
+    final now = DateTime.now();
+    if (now.difference(lastPrint).inMilliseconds < 1000) return;
+    lastPrint = now;
+    stdout.writeln('PROGRESS itens=${p.itemsDone}/${p.itemsTotal} bytes=${p.bytesDone}/${p.bytesTotal}');
+  });
+  await core.copies.waitIdle();
+  await sub.cancel();
+  await sigint.cancel();
+  final o = (await core.copies.view(id))!;
+  stdout.writeln(
+    'COPY ${o.id} ${o.status} publicados=${o.published} ja_tinha=${o.skipped} falhas=${o.failed} '
+    'atencao=${o.needsAttention} faltam=${o.remaining}${o.pauseReason == null ? '' : ' — ${o.pauseReason}'}',
+  );
+  return o.status == OpStatus.completed || o.status == OpStatus.paused ? 0 : 1;
+}
+
+Future<String> _findOperation(FotoAtlasCore core, String query) async {
+  final matches = (await core.copies.list()).where((o) => o.id.startsWith(query)).toList();
+  if (matches.length == 1) return matches.single.id;
+  throw SourceException(
+    matches.isEmpty ? 'Operação "$query" não encontrada.' : 'Mais de uma operação começa com "$query".',
+  );
 }
 
 Future<String> _findSource(FotoAtlasCore core, String query) async {

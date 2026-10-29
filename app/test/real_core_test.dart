@@ -358,4 +358,15 @@ class _StuckPhone implements DeviceBackend {
   @override
   Future<int> readHead(String deviceId, String objectId, String outPath, {int maxBytes = 256 * 1024}) =>
       Completer<int>().future;
+
+  @override
+  Future<DevicePull> pullToFile(
+    String deviceId,
+    String objectId,
+    String destPath, {
+    required int expectedSize,
+    int? modified,
+    Future<void>? cancel,
+    void Function(int bytes)? onProgress,
+  }) => Completer<DevicePull>().future;
 }
