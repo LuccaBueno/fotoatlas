@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+### Adicionado — Fase 7: Integridade periódica
+- **Verificar integridade** (Dispositivos › Mais opções, no cartão de um disco, pasta ou celular; ou "Verificar…" com itens marcados na Biblioteca): o FotoAtlas lê cada arquivo de novo e compara com o conteúdo conferido antes. **Só lê**: nenhum arquivo é alterado, movido ou apagado. Antes de começar, diz quantos arquivos e quanto vai ler; dá para escolher "Tudo" ou "Só o que não é conferido há mais de N dias".
+- Resultado de cada arquivo: **inalterado**; **alterado** (o conteúdo e a data de modificação mudaram — alguém editou); **possivelmente corrompido** (o conteúdo mudou, mas a data não — sinal de dano no disco); "não está mais no lugar" e "não deu para ler agora", que nunca fazem o arquivo ser considerado apagado. Em discos FAT, a diferença de exatamente 1 hora do horário de verão não disfarça um dano.
+- **Possivelmente corrompidos** (Tarefas): cada arquivo com as **outras cópias conferidas** do conteúdo original (em que dispositivo e pasta, se está conectado, se é no mesmo disco, quando foi conferida) e **"Restaurar desta cópia…"**: abre a prévia da cópia segura (Fase 5) e só grava depois de você confirmar. A cópia boa é gravada **na mesma pasta, com outro nome** (`foto_1.jpg`); o arquivo danificado nunca é substituído nem apagado. Se a "cópia boa" também tiver se estragado, a cópia segura percebe e não grava. "A mudança é esperada…" aceita o conteúdo atual (só no catálogo).
+- Arquivo possivelmente corrompido deixa de contar como cópia de segurança (na situação de backup, na Comparar e como origem de cópias) até ser restaurado ou regravado.
+- **Verificação periódica** (Configurações): ligada por padrão, confere de novo o que não é conferido há mais de 90 dias (30, 90, 180 dias ou 1 ano). É **leve**: lê devagar, espera quando o FotoAtlas está escaneando, conferindo, copiando ou reorganizando, pode ser pausada e continua de onde parou. **Celulares nunca** são verificados sozinhos — só quando você pede.
+- Tarefas: verificações em andamento e histórico (pausar, continuar, cancelar, "Ver arquivos"). Início: aviso de arquivos possivelmente corrompidos e de discos que não são verificados há tempo, com "Verificar agora".
+- Fechar o app no meio de uma verificação é seguro: ela fica "interrompida" e continua de onde parou, sem repetir arquivos.
+- CLI: `verify start|resume|status|problems|restore|accept|schedule|tick`.
+- Demonstração: `run-app.ps1 -DemoPersistente` gera a pasta "Integridade" ("HD fotos" e "HD cópia"); `tools\scripts\demo-danificar.ps1` simula o dano no disco (ou, com `-Editar`, uma edição) só dentro da pasta da demonstração.
+- Catálogo v6 (só acrescenta tabelas e colunas; backup automático antes da migração). ADR 0018.
+
 ### Adicionado — Fase 6: Reorganização
 - **Reorganizar…** (Dispositivos, no cartão de um disco ou pasta): organiza as fotos e vídeos dentro do **mesmo disco**, movendo sem copiar (rápido, não ocupa espaço). Modelos: por ano e mês, por ano e dia, **por ano e momento** (`2024/2024-07-13 Aniversário da Ana`; momento sem nome usa a hora em que começou, `2024-07-13 14h03`), por tipo e ano, por ano e câmera, mesma estrutura ou tudo junto. Fotos sem hora confiável vão para "Sem data confirmada" (nome configurável); nomes que o Windows não aceita são ajustados.
 - **Prévia em árvore "antes → depois"**: de onde cada arquivo sai, para onde vai, pastas novas, pastas que ficam vazias, nomes repetidos (ganham `_1`, `_2`… ou esperam a sua decisão) e o que fica onde está (o que não é foto nem vídeo, ou ainda não teve a data lida). Arquivos de edição `.xmp`/`.aae` com o mesmo nome vão junto com a foto.

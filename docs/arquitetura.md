@@ -180,6 +180,21 @@ pending → publishing → published          (Desfazer: published → undone no
 - Pastas vazias nunca são apagadas automaticamente: "Remover pastas vazias" lista cada uma, confirma e usa `safe_io/empty_dir.dart` (confere de novo que não há nada, nem oculto; `RemoveDirectoryW` só em pasta vazia).
 - Prévia em árvore (`ops/reorg_planner.dart`): antes (de onde saem, "fica vazia") e depois (pasta nova, nomes ajustados). Modelos com `{hora}`, `{minuto}`, `{segundo}` e `{momento}` (`ops/names.dart`, `ops/template_data.dart`), também usados pela cópia.
 
+### 3.6.2. Verificação de integridade (Fase 7, ADR 0018)
+
+`lib/src/integrity/` **só lê** (teste de arquitetura: nenhuma API de gravação nem de cópia). Rodada = lista fixa de arquivos (`integrity_runs` + `integrity_run_items`); cada arquivo é relido pelo leitor da conferência em modo `observeOnly` (celular: helper) e o resultado entra numa transação (`integrity_checks` + `file_instances`):
+
+```
+mesmo conteúdo                 → unchanged        (integrity = ok; data nova vai para o catálogo)
+conteúdo e data diferentes     → changed_legit    (integrity = changed; vale o conteúdo novo)
+conteúdo diferente, mesma data → possibly_corrupt (content_id = NULL, hash_status = error: deixa de contar como cópia)
+não encontrado / ilegível      → missing / unreadable (nunca vira "ausente")
+```
+
+- Uma rodada por vez (a do usuário passa na frente da periódica); pausar/continuar/cancelar; `running` ao abrir → interrompida, continua sem repetir.
+- Periódica (`scheduleTick`, a cada 10 min no app): espera outras tarefas pesadas, continua a que estava esperando ou começa uma com o que passou do intervalo, só discos conectados; lê a ~24 MB/s e pausa sozinha se outra tarefa começar. Celular nunca.
+- Restaurar = `CopyRequest` da cópia segura (§3.6) para a pasta do arquivo danificado, com o nome dele (`fileNames`) → `_1`; prévia e confirmação no app.
+
 ### 3.7. Celular (Fase 3)
 
 Implementado (ADR 0012): `PhoneScanLister` lista pasta por pasta pelo helper (`devices.listChildren`), com o mesmo checkpoint em `scan_dirs` do scan de disco; a raiz da fonte mostra os armazenamentos como pastas (L7). `PhonePathResolver` guarda os IDs de objeto e refaz o caminho a partir da raiz quando um ID ficou velho (Android muda IDs entre sessões). Desconexão, bloqueio ou helper fora do ar → `interrupted`/`pending`, nunca `missing`. O scan e a conferência do celular rodam no isolate principal (o trabalho é do helper, outro processo). Identidade pelo serial, com o ID WPD como reserva; o celular é um disco físico próprio (`bus_type = 'mtp'`).

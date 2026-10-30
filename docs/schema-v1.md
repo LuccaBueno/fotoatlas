@@ -392,7 +392,7 @@ Uso das colunas existentes pela fila de hash (ADR 0010):
 | `hash_status` | `pending` → `done` / `changed_during_read` / `error`; `not_applicable` para somente na nuvem |
 | `content_id` | preenchido junto com `done`; zerado pelo scan quando tamanho ou data mudam |
 | `hashed_size`, `hashed_mtime`, `hashed_at` | o que foi observado no handle durante a leitura |
-| `last_verified_at` | ainda não usado (verificação periódica, Fase 7) |
+| `last_verified_at` | ainda não usado (verificação periódica, Fase 7 — ver §11) |
 
 ## 8. v3 (Fase 3, 2026-10-27) — mudanças aditivas
 
@@ -496,3 +496,41 @@ ALTER TABLE operation_items ADD COLUMN undo_of_item_id INTEGER REFERENCES operat
 ```
 
 Estados de um item da reorganização: `pending → publishing → published` (ou `failed`, `needs_attention`, `skipped_identical` = "deixado onde está" por decisão, `undone` = devolvido pelo Desfazer). `publishing` grava `dst_rel_path_final` e `expected_mtime` antes do `MoveFileExW`.
+
+## 11. v6 (Fase 7, 2026-10-30) — mudanças aditivas
+
+Migração `v5 → v6` numa transação, depois do backup `pre-migracao-v5-<data>.db`. Testada a partir dos *snapshots* v1 a v5 (`drift_schemas/drift_schema_v6.json`), com um teste de dados preservados (v5 → v6: verificações antigas continuam, rodadas vazias).
+
+```sql
+-- Verificação de integridade (ADR 0018). Os arquivos só são lidos.
+CREATE TABLE integrity_runs (
+  id             INTEGER PRIMARY KEY,
+  run_trigger    TEXT NOT NULL CHECK (run_trigger IN ('manual','scheduled')),
+  status         TEXT NOT NULL CHECK (status IN ('running','paused','completed','cancelled')),
+  paused_by_user INTEGER NOT NULL DEFAULT 0,   -- 0 = esperando (fonte, outra tarefa, app fechou)
+  scope_json     TEXT NOT NULL,                -- {"label":…,"entries":[…],"olderThanDays":90,"phone":false}
+  total_files    INTEGER NOT NULL,
+  total_bytes    INTEGER NOT NULL,
+  message        TEXT,
+  created_at     INTEGER NOT NULL,
+  started_at     INTEGER,
+  finished_at    INTEGER
+);
+CREATE TABLE integrity_run_items (             -- lista fixada ao começar
+  run_id      INTEGER NOT NULL REFERENCES integrity_runs(id),
+  instance_id INTEGER NOT NULL REFERENCES file_instances(id),
+  PRIMARY KEY (run_id, instance_id)
+) WITHOUT ROWID;
+ALTER TABLE integrity_checks ADD COLUMN run_id INTEGER REFERENCES integrity_runs(id);
+ALTER TABLE integrity_checks ADD COLUMN expected_content_id INTEGER REFERENCES contents(id);  -- o que o catálogo esperava
+ALTER TABLE integrity_checks ADD COLUMN reason TEXT;
+CREATE INDEX ix_ic_run ON integrity_checks(run_id, instance_id);
+```
+
+Uso das colunas existentes:
+
+| Coluna | Na Fase 7 |
+|---|---|
+| `file_instances.last_verified_at` | última verificação que releu o arquivo e conferiu (inalterado ou alterado) |
+| `file_instances.integrity` | `ok` (inalterado), `changed` (editado; passa a valer o conteúdo novo), `possibly_corrupt` (com `content_id = NULL` e `hash_status = 'error'`: deixa de contar como cópia); o escaneamento volta para `unknown` quando tamanho ou data mudam, exceto `possibly_corrupt` com a mesma data |
+| `integrity_checks.result` | `unchanged`, `changed_legit`, `possibly_corrupt`, `unreadable`, `missing` (nunca marca o arquivo como ausente) |

@@ -217,17 +217,31 @@ Cuidados pedidos pelo usuário (2026-10-30), registrados na spec §12 e no ADR 0
   - [x] CLI `reorg plan|start|resume|undo|resolve|folders|status`; `recover` inclui a reorganização
   - [x] Demonstração: `-DemoPersistente` gera a pasta "HD bagunçado"
 - [x] Critérios da spec (2026-10-30): interrupção recuperável (kill em 3 pontos × reorganização e Desfazer + na recuperação, 3× sem efeito colateral); Desfazer restaura exatamente a estrutura anterior (arquivos e pastas, depois de reabrir o core); modelo com momento gera a árvore esperada (momento nomeado com caracteres inválidos, sem nome, atravessando a meia-noite, hora a confirmar)
-- [ ] Teste do usuário (roteiro com o "HD bagunçado" da demonstração)
-- [ ] Tag `v0.6.0`
+- [ ] Teste do usuário (roteiro único das Fases 6 e 7, com o "HD bagunçado" e a pasta "Integridade" da demonstração) — **aguarda teste do usuário**
+- [ ] Tag `v0.6.0` — **aguarda teste do usuário** (o usuário pediu, em 2026-10-30, para não criar a tag antes de testar)
 
 Observações da Fase 6:
 - Evidências: core — `reorg_test` (9 testes: modelos, árvore do critério, mover + catálogo + reescanear + reabrir + Desfazer exato + remover pastas criadas, Desfazer com arquivo mudado/sumido/lugar ocupado e decisões, origem mudada antes de mover, "perguntar", pastas vazias com Thumbs.db oculto, celular/desconectado/sem escaneamento bloqueiam); `reorg_demo_test` (cenário da demonstração com e sem ExifTool real); `reorg_kill_test` (8 testes com a CLI morta); migração v1–v4 → v5; teste de arquitetura (sem `COPY_ALLOWED`, `RemoveDirectoryW` só depois de conferir, reorganização sem API de exclusão). App — assistente (árvore, nada antes de confirmar, bloqueio, copiar para outro disco), celular sem botão, disco principal, Desfazer com avisos, decisões, pastas vazias; reorganizar e desfazer pela interface com o core real.
 - Arquivos criados depois do último escaneamento não entram na reorganização (a prévia só usa o catálogo); escaneie antes.
 
-## Fase 7 — Integridade periódica
-- [ ] Verificação agendada, classificação (inalterado / alterado / possivelmente corrompido)
-- [ ] Apontar outras cópias conferidas e restaurar via cópia segura
-- [ ] Tag `v0.7.0`
+## Fase 7 — Integridade periódica (implementada em 2026-10-30; aguarda o teste do usuário)
+Cuidados pedidos pelo usuário (2026-10-30), registrados na spec §14 e no ADR 0018: a verificação só lê, compara e relata (nenhum arquivo é modificado); restaurar só pela cópia segura da Fase 5, com prévia e confirmação; a agendada é leve (devagar, pausável, cede a vez às outras tarefas) e nunca roda em celular sem o usuário pedir.
+- [x] Verificação por fonte, por pasta (CLI) ou pelos itens marcados na Biblioteca; classificação inalterado / alterado / possivelmente corrompido (+ "não está mais no lugar" e "não deu para ler", sem nunca marcar ausente) (2026-10-30)
+  - [x] Leitura pelo leitor da conferência em modo `observeOnly` (GENERIC_READ); celular pelo helper, só quando escolhido; FAT ±1 h (C7)
+  - [x] Rodadas com lista fixa, pausar/continuar/cancelar, "interrompida" ao reabrir, fonte desconectada espera; schema v6 aditivo
+  - [x] Possivelmente corrompido deixa de contar como cópia; "tentar de novo" e o escaneamento não o aceitam; "a mudança é esperada" só no catálogo
+- [x] Verificação periódica leve: ligada por padrão (90 dias), ~24 MB/s, pausa sozinha quando há outra tarefa, só discos conectados, nunca celular; Configurações › Verificação periódica (2026-10-30)
+- [x] Apontar outras cópias conferidas e restaurar via cópia segura (prévia + confirmação; gravada ao lado como `_1`, o danificado nunca é substituído) (2026-10-30)
+- [x] App: Tarefas (possivelmente corrompidos com as outras cópias e "Restaurar desta cópia…", verificações com progresso), Dispositivos › "Verificar integridade…", Biblioteca › "Verificar…", avisos no Início, ajuda; CLI `verify start|resume|status|problems|restore|accept|schedule|tick`; demonstração "Integridade" + `tools\scripts\demo-danificar.ps1` (2026-10-30)
+- [x] Critério da spec (2026-10-30): corrupção simulada (bytes trocados com a data preservada) detectada e outras cópias conferidas apontadas — core, CLI compilada e app com o core real
+- [ ] Teste do usuário (roteiro único das Fases 6 e 7) — **aguarda teste do usuário**
+- [ ] Tag `v0.7.0` — depois do teste do usuário (e da `v0.6.0`)
+
+Observações da Fase 7:
+- Evidências: core — `integrity_test` (18 testes: classificação e FAT, limite de vazão sem rajada, critério com o disco intacto byte a byte, não "lavar" o corrompido por retry/scan, restaurar com prévia e nome `_1`, restaurar de cópia também estragada recusada, aceitar como está, pausar logo depois de começar, fechar no meio e continuar sem repetir, fonte desconectada, periódica leve e só discos, periódica cede a vez, celular só a pedido, isolate); `verify_cli_test` (CLI compilada: critério + restauração, kill em `verify.after_file_commit` e continuação sem duplicar, agendamento); migração v1–v5 → v6; teste de arquitetura (integridade sem APIs de gravação nem de cópia). App — 9 testes de widget e o fluxo verificar → corrompido → restaurar com o core real.
+- Falso positivo conhecido: programa que regrava o arquivo preservando a data aparece como "possivelmente corrompido" (limite da regra da spec); "A mudança é esperada…" resolve sem tocar no arquivo.
+- A verificação leve de um disco grande leva horas e só anda com o app aberto (continua de onde parou).
+- Achado durante a fase: o relógio do Windows tem resolução de ~15 ms; com prazo de 0 dias, um arquivo conferido "agora" ficava de fora (comparação estrita). O prazo passou a ser "conferido há N dias ou mais" (`<=`), e o limite de vazão passou a valer bloco a bloco (tempo parado não vira rajada).
 
 ## Fase 8 — Distribuição
 - [ ] Instalador com ExifTool e FFmpeg, preservando o catálogo em atualizações
@@ -255,3 +269,4 @@ Observações da Fase 6:
 - 2026-10-29 — Fase 5 — Cópia segura: diário por item, protocolo completo (.part CREATE_NEW, flush, releitura, MoveFileExW sem substituir), recuperação idempotente pelo disco, assistente "Copiar para…" com prévia (Comparar e Biblioteca), tela Tarefas, celular como origem (`devices.pullToFile`), CLI copy/recover; kill em 11 pontos + na recuperação (3× sem efeito colateral), VHD FAT32 > 4 GB e disco cheio na CI. Achados da CI corrigidos (disco cheio sem ERROR_DISK_FULL; GetLastError zerado). Tag v0.5.0 aguarda o teste do usuário.
 - 2026-10-30 — Ajustes de usabilidade da Fase 5 (teste do usuário) — abas da Comparar com "contém/contido" e dicas com os nomes dos lados, dicas nos comandos, caminho completo e próximo passo no assistente, Detalhes da tarefa com copiados/renomeados/não copiados. Tag v0.5.0. Fase 6 **não iniciada**: aguarda o usuário.
 - 2026-10-30 — Retomada após o terminal fechar + Fase 6 — Conferido: tag v0.5.0 criada após CI verde; core da reorganização já pronto (commit). Fase 6 implementada: modelos com hora e momento, prévia em árvore, mover no mesmo disco com diário/recuperação, Desfazer pelo diário com aviso de arquivo mudado, remover pastas vazias só a pedido, disco principal, CLI reorg, demo "HD bagunçado", schema v5, ADR 0017. Tag v0.6.0 aguarda o teste do usuário.
+- 2026-10-30 — Fase 7 — Integridade periódica: verificação só leitura (leitor da conferência em modo observar), classificação inalterado/alterado/possivelmente corrompido (FAT ±1 h), rodadas pausáveis e retomáveis, periódica leve que cede a vez e nunca lê celular, outras cópias apontadas e restauração pela cópia segura (prévia, gravada ao lado com `_1`), schema v6, CLI verify, ADR 0018. Tag v0.6.0 **não criada** a pedido do usuário: Fases 6 e 7 aguardam o teste do usuário (roteiro único). Fase 8 **não iniciada**.

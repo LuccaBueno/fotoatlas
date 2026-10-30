@@ -366,6 +366,12 @@ O objetivo é deixar o HD organizado sem risco.
   - **alterado legitimamente** (mtime mudou);
   - **possivelmente corrompido** (conteúdo mudou e mtime não).
 - Nunca substituir nem apagar. Mostrar outras cópias conferidas daquele conteúdo e oferecer a restauração a partir delas, via cópia segura.
+- **Cuidados pedidos pelo usuário (2026-10-30, ADR 0018):**
+  - a verificação **só lê, compara e relata**: nenhum arquivo é modificado (o resultado vai só para o catálogo); arquivo não encontrado ou ilegível nunca vira "ausente" (regras 9 e 10);
+  - restaurar a partir de outra cópia conferida **só pela cópia segura** (seção 11), com prévia e confirmação; a cópia boa é gravada na pasta do arquivo danificado com outro nome (`foto_1.jpg`) — o danificado nunca é substituído nem apagado;
+  - a verificação **agendada é leve**: lê devagar, pausa sozinha quando outra tarefa (escaneamento, conferência, cópia, reorganização) está em andamento, pode ser pausada a qualquer momento e continua de onde parou; **celular nunca** entra na agendada — só quando o usuário pede, no cartão do celular.
+- Arquivo possivelmente corrompido deixa de contar como cópia (cobertura, comparação, origem de cópia) até ser restaurado, regravado (data nova) ou aceito pelo usuário ("a mudança é esperada", só catálogo).
+- Disco FAT: data exatamente ±1 h (horário de verão) com conteúdo diferente conta como "possivelmente corrompido", não como edição (análise C7).
 
 ---
 
