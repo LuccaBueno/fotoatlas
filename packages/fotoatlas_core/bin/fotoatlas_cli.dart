@@ -51,6 +51,17 @@ Comandos:
   reorg folders OP [--remove P]… [--yes]
                                  Lista as pastas que ficaram vazias; --remove P --yes remove só P
   reorg status [OP]              Situação das reorganizações (com OP: arquivo por arquivo)
+  verify start FONTE[:pasta] [--older-than-days N]
+                                 Verifica a integridade (só lê; Ctrl+C pausa)
+  verify resume RODADA           Continua uma verificação
+  verify status [RODADA]         Situação das verificações (com RODADA: arquivo por arquivo)
+  verify problems                Arquivos possivelmente corrompidos e as outras cópias conferidas
+  verify restore ITEM --from ITEM2 [--yes]
+                                 Restaura pela cópia segura (prévia; nada é substituído)
+  verify accept ITEM --yes       Aceita o conteúdo atual (só catálogo)
+  verify schedule [on|off] [--every DIAS]
+                                 Verificação periódica (leve; nunca celulares)
+  verify tick                    Um passo da verificação periódica
   recover                        Roda a recuperação de cópias e reorganizações interrompidas
 
 FONTE pode ser o nome, o id ou o começo do id.
@@ -496,6 +507,108 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
       }
       return 0;
 
+    case ['verify', 'start', final spec, ...final rest]:
+      final colon = spec.indexOf(':');
+      final source = await _findSource(core, colon < 0 ? spec : spec.substring(0, colon));
+      final days = _option(rest, '--older-than-days');
+      final request = VerifyRequest(
+        entries: [VerifyEntry(source, folder: colon < 0 ? '' : spec.substring(colon + 1))],
+        olderThanDays: days == null ? null : int.parse(days),
+      );
+      final estimate = await core.integrity.estimate(request);
+      stdout.writeln(
+        'ESTIMATE arquivos=${estimate.files} bytes=${estimate.bytes} celular=${estimate.phoneFiles} '
+        'desconectados=${estimate.skippedDisconnected} sem_conferir=${estimate.notYetConferred}',
+      );
+      final run = await core.integrity.start(request);
+      if (run == null) {
+        stdout.writeln('Nada para verificar agora.');
+        return 0;
+      }
+      return _followVerify(core, run);
+
+    case ['verify', 'resume', final run]:
+      await core.integrity.resume(int.parse(run));
+      return _followVerify(core, int.parse(run));
+
+    case ['verify', 'tick']:
+      // Um passo da verificação periódica (leve; nunca celulares).
+      final run = await core.integrity.scheduleTick();
+      if (run == null) {
+        stdout.writeln('TICK nada a fazer');
+        return 0;
+      }
+      return _followVerify(core, run);
+
+    case ['verify', 'schedule', ...final rest]:
+      var s = await core.integrity.schedule();
+      final every = _option(rest, '--every');
+      if (rest.contains('on') || rest.contains('off') || every != null) {
+        s = IntegritySchedule(
+          enabled: rest.contains('on') || (!rest.contains('off') && s.enabled),
+          everyDays: every == null ? s.everyDays : int.parse(every),
+        );
+        await core.integrity.setSchedule(s);
+      }
+      stdout.writeln('SCHEDULE ligada=${s.enabled} a_cada_dias=${s.everyDays}');
+      return 0;
+
+    case ['verify', 'status', ...final rest]:
+      for (final r in await core.integrity.runs()) {
+        if (rest.isNotEmpty && '${r.id}' != rest.first) continue;
+        stdout.writeln(_runLine(r));
+        if (rest.isNotEmpty) {
+          for (final c in await core.integrity.checks(r.id)) {
+            stdout.writeln(
+              '  ${c.instanceId} ${c.result} ${c.sourceName}:${c.relPath}${c.reason == null ? '' : ' — ${c.reason}'}',
+            );
+          }
+        }
+      }
+      return 0;
+
+    case ['verify', 'problems']:
+      final problems = await core.integrity.problems();
+      if (problems.isEmpty) stdout.writeln('Nenhum arquivo possivelmente corrompido.');
+      for (final p in problems) {
+        stdout.writeln('PROBLEM ${p.instanceId} ${p.sourceName}:${p.relPath} copias=${p.otherCopies.length}');
+        for (final c in p.otherCopies) {
+          stdout.writeln(
+            '  COPY ${c.instanceId} ${c.sourceName}:${c.relPath} conectada=${c.connected} '
+            'mesmo_disco=${c.samePhysicalDisk}',
+          );
+        }
+      }
+      return 0;
+
+    case ['verify', 'restore', final item, ...final rest]:
+      final from = _option(rest, '--from');
+      if (from == null) throw SourceException('Diga de qual cópia restaurar: --from ITEM (veja "verify problems").');
+      final request = await core.integrity.restoreRequest(int.parse(item), fromInstanceId: int.parse(from));
+      final preview = await core.copies.preview(request);
+      stdout.writeln(
+        'PREVIEW itens=${preview.items.length} ja_no_destino=${preview.alreadyThere} '
+        'indisponiveis=${preview.unavailable.length} pode_comecar=${preview.canStart}'
+        '${preview.blocker == null ? '' : ' — ${preview.blocker}'}',
+      );
+      for (final i in preview.items) {
+        stdout.writeln('  ${i.srcRelPath} -> ${i.dstRelPath}');
+      }
+      if (!rest.contains('--yes')) {
+        stderr.writeln('Confirme com --yes para restaurar (cópia conferida; nada é substituído).');
+        return 2;
+      }
+      if (!preview.canStart) return 1;
+      return _followCopy(core, await core.copies.start(preview));
+
+    case ['verify', 'accept', final item, ...final rest]:
+      if (!rest.contains('--yes')) {
+        stderr.writeln('Confirme com --yes: o conteúdo atual do arquivo passa a valer.');
+        return 2;
+      }
+      stdout.writeln('ACCEPTED ${await core.integrity.acceptAsIs(int.parse(item))}');
+      return 0;
+
     case ['backup'] || ['backup', 'now']:
       final info = await core.backups.backupNow();
       stdout.writeln('BACKUP ${info.path} ${_bytes(info.sizeBytes)}');
@@ -688,3 +801,23 @@ List<String> _options(List<String> args, String name) => [
   for (var i = 0; i + 1 < args.length; i++)
     if (args[i] == name) args[i + 1],
 ];
+
+String _runLine(IntegrityRunView r) =>
+    'RUN ${r.id} ${r.scheduled ? 'periodica' : 'manual'} ${r.status} arquivos=${r.filesChecked}/${r.filesTotal} '
+    'inalterados=${r.count(CheckResult.unchanged)} alterados=${r.count(CheckResult.changedLegit)} '
+    'corrompidos=${r.count(CheckResult.possiblyCorrupt)} nao_lidos=${r.count(CheckResult.unreadable)} '
+    'nao_encontrados=${r.count(CheckResult.missing)}${r.message == null ? '' : ' — ${r.message}'}';
+
+/// Acompanha a verificação até terminar ou pausar; Ctrl+C pausa.
+Future<int> _followVerify(FotoAtlasCore core, int runId) async {
+  stdout.writeln('VERIFY_RUN $runId');
+  final sigint = ProcessSignal.sigint.watch().listen((_) {
+    stdout.writeln('Pausando…');
+    core.integrity.pause(runId);
+  });
+  await core.integrity.waitIdle();
+  await sigint.cancel();
+  final r = (await core.integrity.runs()).firstWhere((r) => r.id == runId);
+  stdout.writeln(_runLine(r));
+  return r.status == RunStatus.completed || r.status == RunStatus.paused ? 0 : 1;
+}

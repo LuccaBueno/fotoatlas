@@ -188,6 +188,24 @@ void main() {
     }
   });
 
+  test('a verificação de integridade só lê: nenhuma API de gravação nem de cópia', () {
+    final dir = Directory(p.join('lib', 'src', 'integrity'));
+    final files = dir.listSync().whereType<File>().where((f) => f.path.endsWith('.dart')).toList();
+    expect(files, isNotEmpty);
+    const copyApis = ['copyToPart', 'PumpRequest', 'CopyService', 'safe_io/dest_writer', 'safe_io/move_no_replace'];
+    for (final f in files) {
+      final src = f.readAsStringSync();
+      for (final api in [..._writeApis, ...copyApis, 'safe_io/empty_dir']) {
+        expect(src, isNot(contains(api)), reason: '${p.basename(f.path)} usa $api');
+      }
+    }
+    // Os arquivos são lidos só pelo leitor da conferência (GENERIC_READ),
+    // sem exigir tamanho e data do catálogo (para observar a mudança).
+    final engine = File(p.join(dir.path, 'integrity_engine.dart')).readAsStringSync();
+    expect(engine, contains("import '../hash/hash_engine.dart'"));
+    expect(engine, contains('observeOnly: true'));
+  });
+
   test('o core não depende de Flutter', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     expect(pubspec, isNot(contains('flutter')));

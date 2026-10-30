@@ -106,7 +106,8 @@ class CopyPlanner {
         destFolder,
         renderFolder(request.template, vars, toConfirm: request.toConfirmFolder),
       ].where((s) => s.isNotEmpty).join('/');
-      final safeName = sanitizeName(src.name);
+      final wanted = request.fileNames[contentId] ?? src.name;
+      final safeName = sanitizeName(wanted);
       var candidate = folder.isEmpty ? safeName : '$folder/$safeName';
       var renamed = false;
       var ask = false;
@@ -135,7 +136,7 @@ class CopyPlanner {
           sha256: src.sha256,
           mtime: src.mtime,
           dstRelPath: candidate,
-          originalName: safeName == src.name ? null : src.name,
+          originalName: safeName == wanted ? null : wanted,
           renamedForConflict: renamed,
           askConflict: ask,
           lowConfidenceDate: vars.dated && src.confidence == 'low',

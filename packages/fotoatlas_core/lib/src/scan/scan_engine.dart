@@ -121,14 +121,25 @@ class ScanEngine {
     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, CASE WHEN ?10 THEN 'not_applicable' ELSE 'pending' END,
       CASE WHEN ?10 THEN 'cloud_only' ELSE 'present' END, ?11, ?11, ?12)
     ON CONFLICT (source_id, rel_path) DO UPDATE SET
+      -- Possivelmente corrompido (Fase 7) com a mesma data: o scan não "aceita"
+      -- o conteúdo novo; só uma data nova (o arquivo foi gravado de novo) zera.
       hash_status = CASE
+        WHEN file_instances.integrity = 'possibly_corrupt' AND file_instances.mtime IS excluded.mtime
+          THEN file_instances.hash_status
         WHEN file_instances.size_bytes IS NOT excluded.size_bytes OR file_instances.mtime IS NOT excluded.mtime
           THEN excluded.hash_status
         WHEN file_instances.hash_status = 'not_applicable' AND excluded.availability = 'present' THEN 'pending'
         ELSE file_instances.hash_status END,
       content_id = CASE
+        WHEN file_instances.integrity = 'possibly_corrupt' AND file_instances.mtime IS excluded.mtime
+          THEN file_instances.content_id
         WHEN file_instances.size_bytes IS NOT excluded.size_bytes OR file_instances.mtime IS NOT excluded.mtime
           THEN NULL ELSE file_instances.content_id END,
+      integrity = CASE
+        WHEN file_instances.integrity = 'possibly_corrupt' AND file_instances.mtime IS excluded.mtime
+          THEN file_instances.integrity
+        WHEN file_instances.size_bytes IS NOT excluded.size_bytes OR file_instances.mtime IS NOT excluded.mtime
+          THEN 'unknown' ELSE file_instances.integrity END,
       dir_rel_path = excluded.dir_rel_path,
       name = excluded.name,
       ext = excluded.ext,

@@ -60,3 +60,5 @@ export 'src/ops/names.dart'
         withSuffix;
 export 'src/ops/reorg_models.dart';
 export 'src/ops/reorg_service.dart' show ReorgService;
+export 'src/integrity/integrity_models.dart';
+export 'src/integrity/integrity_service.dart' show IntegrityService, lightBytesPerSecond;

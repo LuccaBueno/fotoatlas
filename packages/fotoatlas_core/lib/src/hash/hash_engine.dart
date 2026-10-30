@@ -39,8 +39,11 @@ class HashCloudOnly extends HashOutcome {
 
 /// Não deu para ler. Nunca vira "ausente" (regra 10).
 class HashFailed extends HashOutcome {
-  const HashFailed(this.reason);
+  const HashFailed(this.reason, {this.notFound = false});
   final String reason;
+
+  /// O arquivo não existe mais no caminho (pode ter sido movido).
+  final bool notFound;
 }
 
 /// Parada pedida no meio do arquivo: ele continua pendente.
@@ -54,6 +57,10 @@ typedef AfterFirstChunk = void Function(String path);
 
 /// Calcula o SHA-256 de um arquivo de origem em streaming, só leitura, e
 /// detecta mudanças comparando tamanho e data antes e depois (spec §7).
+///
+/// [observeOnly] (verificação de integridade, Fase 7): não exige que tamanho
+/// e data sejam os do catálogo; o [HashDone] traz o que foi observado.
+/// [pace] é esperado depois de cada bloco (verificação leve: limita a vazão).
 Future<HashOutcome> hashSourceFile(
   String path, {
   required int expectedSize,
@@ -61,12 +68,14 @@ Future<HashOutcome> hashSourceFile(
   int chunkSize = 1 << 20,
   bool Function()? shouldStop,
   AfterFirstChunk? afterFirstChunk,
+  bool observeOnly = false,
+  Future<void> Function(int bytes)? pace,
 }) async {
   final SourceFileInfo pre;
   try {
     pre = attributesOf(path);
   } on Win32Exception catch (e) {
-    return HashFailed(_readError(e));
+    return _failed(e);
   }
   if (pre.isCloudPlaceholder) return const HashCloudOnly();
 
@@ -74,13 +83,13 @@ Future<HashOutcome> hashSourceFile(
   try {
     file = SourceFile.open(path);
   } on Win32Exception catch (e) {
-    return HashFailed(_readError(e));
+    return _failed(e);
   }
   final buffer = calloc<Uint8>(chunkSize);
   try {
     final before = file.info();
     if (before.isCloudPlaceholder) return const HashCloudOnly();
-    if (before.size != expectedSize || before.mtime != expectedMtime) {
+    if (!observeOnly && (before.size != expectedSize || before.mtime != expectedMtime)) {
       return const HashChanged('O arquivo mudou depois do escaneamento. Escaneie de novo.');
     }
     final digest = _DigestSink();
@@ -94,8 +103,11 @@ Future<HashOutcome> hashSourceFile(
       total += n;
       chunks++;
       if (chunks == 1) afterFirstChunk?.call(path);
-      // Cede ao event loop de vez em quando (pausa no meio de vídeos grandes).
-      if (chunks % 16 == 0) {
+      if (pace != null) {
+        await pace(n);
+        if (shouldStop?.call() ?? false) return const HashInterrupted();
+      } else if (chunks % 16 == 0) {
+        // Cede ao event loop de vez em quando (pausa no meio de vídeos grandes).
         await Future<void>.delayed(Duration.zero);
         if (shouldStop?.call() ?? false) return const HashInterrupted();
       }
@@ -107,12 +119,15 @@ Future<HashOutcome> hashSourceFile(
     }
     return HashDone(Uint8List.fromList(digest.value!.bytes), before.size, before.mtime);
   } on Win32Exception catch (e) {
-    return HashFailed(_readError(e));
+    return _failed(e);
   } finally {
     calloc.free(buffer);
     file.close();
   }
 }
+
+HashFailed _failed(Win32Exception e) =>
+    HashFailed(_readError(e), notFound: e.code == errorFileNotFound || e.code == errorPathNotFound);
 
 String _readError(Win32Exception e) => switch (e.code) {
   errorFileNotFound || errorPathNotFound => 'Arquivo não encontrado (pode ter sido movido). Escaneie de novo.',

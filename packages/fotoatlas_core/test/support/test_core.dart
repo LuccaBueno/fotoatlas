@@ -44,6 +44,7 @@ class TestEnv {
       devices: devices,
       tools: tools,
       copyInIsolate: isolate,
+      verifyInIsolate: isolate,
       freeSpace: freeSpace,
       recover: recover,
     );
@@ -65,6 +66,7 @@ class TestEnv {
       devices: devices,
       tools: _tools,
       copyInIsolate: _isolate,
+      verifyInIsolate: _isolate,
       freeSpace: _freeSpace,
       recover: recover,
     );

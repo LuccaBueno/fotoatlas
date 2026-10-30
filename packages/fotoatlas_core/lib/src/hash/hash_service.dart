@@ -216,9 +216,12 @@ class HashService {
   }
 
   /// Volta para a fila os arquivos com erro ou que mudaram durante a leitura.
+  /// Os possivelmente corrompidos (Fase 7) ficam de fora: conferir de novo
+  /// faria o conteúdo danificado passar por "conferido".
   Future<int> retryFailed({String? sourceId}) => db.customUpdate(
     "UPDATE file_instances SET hash_status = 'pending', hash_error = NULL "
-    "WHERE hash_status IN ('error', 'changed_during_read') AND availability = 'present'"
+    "WHERE hash_status IN ('error', 'changed_during_read') AND availability = 'present' "
+    "AND integrity != 'possibly_corrupt'"
     "${sourceId == null ? '' : ' AND source_id = ?'}",
     variables: [if (sourceId != null) Variable.withString(sourceId)],
     updates: {db.fileInstances},

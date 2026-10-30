@@ -10726,6 +10726,722 @@ class ContentTagsCompanion extends UpdateCompanion<ContentTagRow> {
   }
 }
 
+class IntegrityRuns extends Table with TableInfo<IntegrityRuns, IntegrityRunRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  IntegrityRuns(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _runTriggerMeta = const VerificationMeta('runTrigger');
+  late final GeneratedColumn<String> runTrigger = GeneratedColumn<String>(
+    'run_trigger',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (run_trigger IN (\'manual\', \'scheduled\'))',
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (status IN (\'running\', \'paused\', \'completed\', \'cancelled\'))',
+  );
+  static const VerificationMeta _pausedByUserMeta = const VerificationMeta('pausedByUser');
+  late final GeneratedColumn<int> pausedByUser = GeneratedColumn<int>(
+    'paused_by_user',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _scopeJsonMeta = const VerificationMeta('scopeJson');
+  late final GeneratedColumn<String> scopeJson = GeneratedColumn<String>(
+    'scope_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _totalFilesMeta = const VerificationMeta('totalFiles');
+  late final GeneratedColumn<int> totalFiles = GeneratedColumn<int>(
+    'total_files',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _totalBytesMeta = const VerificationMeta('totalBytes');
+  late final GeneratedColumn<int> totalBytes = GeneratedColumn<int>(
+    'total_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _messageMeta = const VerificationMeta('message');
+  late final GeneratedColumn<String> message = GeneratedColumn<String>(
+    'message',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta('startedAt');
+  late final GeneratedColumn<int> startedAt = GeneratedColumn<int>(
+    'started_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _finishedAtMeta = const VerificationMeta('finishedAt');
+  late final GeneratedColumn<int> finishedAt = GeneratedColumn<int>(
+    'finished_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    runTrigger,
+    status,
+    pausedByUser,
+    scopeJson,
+    totalFiles,
+    totalBytes,
+    message,
+    createdAt,
+    startedAt,
+    finishedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'integrity_runs';
+  @override
+  VerificationContext validateIntegrity(Insertable<IntegrityRunRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('run_trigger')) {
+      context.handle(_runTriggerMeta, runTrigger.isAcceptableOrUnknown(data['run_trigger']!, _runTriggerMeta));
+    } else if (isInserting) {
+      context.missing(_runTriggerMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta, status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('paused_by_user')) {
+      context.handle(_pausedByUserMeta, pausedByUser.isAcceptableOrUnknown(data['paused_by_user']!, _pausedByUserMeta));
+    }
+    if (data.containsKey('scope_json')) {
+      context.handle(_scopeJsonMeta, scopeJson.isAcceptableOrUnknown(data['scope_json']!, _scopeJsonMeta));
+    } else if (isInserting) {
+      context.missing(_scopeJsonMeta);
+    }
+    if (data.containsKey('total_files')) {
+      context.handle(_totalFilesMeta, totalFiles.isAcceptableOrUnknown(data['total_files']!, _totalFilesMeta));
+    } else if (isInserting) {
+      context.missing(_totalFilesMeta);
+    }
+    if (data.containsKey('total_bytes')) {
+      context.handle(_totalBytesMeta, totalBytes.isAcceptableOrUnknown(data['total_bytes']!, _totalBytesMeta));
+    } else if (isInserting) {
+      context.missing(_totalBytesMeta);
+    }
+    if (data.containsKey('message')) {
+      context.handle(_messageMeta, message.isAcceptableOrUnknown(data['message']!, _messageMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(_startedAtMeta, startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta));
+    }
+    if (data.containsKey('finished_at')) {
+      context.handle(_finishedAtMeta, finishedAt.isAcceptableOrUnknown(data['finished_at']!, _finishedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  IntegrityRunRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IntegrityRunRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      runTrigger: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}run_trigger'])!,
+      status: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      pausedByUser: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}paused_by_user'])!,
+      scopeJson: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}scope_json'])!,
+      totalFiles: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}total_files'])!,
+      totalBytes: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}total_bytes'])!,
+      message: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}message']),
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      startedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}started_at']),
+      finishedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}finished_at']),
+    );
+  }
+
+  @override
+  IntegrityRuns createAlias(String alias) {
+    return IntegrityRuns(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class IntegrityRunRow extends DataClass implements Insertable<IntegrityRunRow> {
+  final int id;
+  final String runTrigger;
+  final String status;
+  final int pausedByUser;
+  final String scopeJson;
+  final int totalFiles;
+  final int totalBytes;
+  final String? message;
+  final int createdAt;
+  final int? startedAt;
+  final int? finishedAt;
+  const IntegrityRunRow({
+    required this.id,
+    required this.runTrigger,
+    required this.status,
+    required this.pausedByUser,
+    required this.scopeJson,
+    required this.totalFiles,
+    required this.totalBytes,
+    this.message,
+    required this.createdAt,
+    this.startedAt,
+    this.finishedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['run_trigger'] = Variable<String>(runTrigger);
+    map['status'] = Variable<String>(status);
+    map['paused_by_user'] = Variable<int>(pausedByUser);
+    map['scope_json'] = Variable<String>(scopeJson);
+    map['total_files'] = Variable<int>(totalFiles);
+    map['total_bytes'] = Variable<int>(totalBytes);
+    if (!nullToAbsent || message != null) {
+      map['message'] = Variable<String>(message);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || startedAt != null) {
+      map['started_at'] = Variable<int>(startedAt);
+    }
+    if (!nullToAbsent || finishedAt != null) {
+      map['finished_at'] = Variable<int>(finishedAt);
+    }
+    return map;
+  }
+
+  IntegrityRunsCompanion toCompanion(bool nullToAbsent) {
+    return IntegrityRunsCompanion(
+      id: Value(id),
+      runTrigger: Value(runTrigger),
+      status: Value(status),
+      pausedByUser: Value(pausedByUser),
+      scopeJson: Value(scopeJson),
+      totalFiles: Value(totalFiles),
+      totalBytes: Value(totalBytes),
+      message: message == null && nullToAbsent ? const Value.absent() : Value(message),
+      createdAt: Value(createdAt),
+      startedAt: startedAt == null && nullToAbsent ? const Value.absent() : Value(startedAt),
+      finishedAt: finishedAt == null && nullToAbsent ? const Value.absent() : Value(finishedAt),
+    );
+  }
+
+  factory IntegrityRunRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IntegrityRunRow(
+      id: serializer.fromJson<int>(json['id']),
+      runTrigger: serializer.fromJson<String>(json['run_trigger']),
+      status: serializer.fromJson<String>(json['status']),
+      pausedByUser: serializer.fromJson<int>(json['paused_by_user']),
+      scopeJson: serializer.fromJson<String>(json['scope_json']),
+      totalFiles: serializer.fromJson<int>(json['total_files']),
+      totalBytes: serializer.fromJson<int>(json['total_bytes']),
+      message: serializer.fromJson<String?>(json['message']),
+      createdAt: serializer.fromJson<int>(json['created_at']),
+      startedAt: serializer.fromJson<int?>(json['started_at']),
+      finishedAt: serializer.fromJson<int?>(json['finished_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'run_trigger': serializer.toJson<String>(runTrigger),
+      'status': serializer.toJson<String>(status),
+      'paused_by_user': serializer.toJson<int>(pausedByUser),
+      'scope_json': serializer.toJson<String>(scopeJson),
+      'total_files': serializer.toJson<int>(totalFiles),
+      'total_bytes': serializer.toJson<int>(totalBytes),
+      'message': serializer.toJson<String?>(message),
+      'created_at': serializer.toJson<int>(createdAt),
+      'started_at': serializer.toJson<int?>(startedAt),
+      'finished_at': serializer.toJson<int?>(finishedAt),
+    };
+  }
+
+  IntegrityRunRow copyWith({
+    int? id,
+    String? runTrigger,
+    String? status,
+    int? pausedByUser,
+    String? scopeJson,
+    int? totalFiles,
+    int? totalBytes,
+    Value<String?> message = const Value.absent(),
+    int? createdAt,
+    Value<int?> startedAt = const Value.absent(),
+    Value<int?> finishedAt = const Value.absent(),
+  }) => IntegrityRunRow(
+    id: id ?? this.id,
+    runTrigger: runTrigger ?? this.runTrigger,
+    status: status ?? this.status,
+    pausedByUser: pausedByUser ?? this.pausedByUser,
+    scopeJson: scopeJson ?? this.scopeJson,
+    totalFiles: totalFiles ?? this.totalFiles,
+    totalBytes: totalBytes ?? this.totalBytes,
+    message: message.present ? message.value : this.message,
+    createdAt: createdAt ?? this.createdAt,
+    startedAt: startedAt.present ? startedAt.value : this.startedAt,
+    finishedAt: finishedAt.present ? finishedAt.value : this.finishedAt,
+  );
+  IntegrityRunRow copyWithCompanion(IntegrityRunsCompanion data) {
+    return IntegrityRunRow(
+      id: data.id.present ? data.id.value : this.id,
+      runTrigger: data.runTrigger.present ? data.runTrigger.value : this.runTrigger,
+      status: data.status.present ? data.status.value : this.status,
+      pausedByUser: data.pausedByUser.present ? data.pausedByUser.value : this.pausedByUser,
+      scopeJson: data.scopeJson.present ? data.scopeJson.value : this.scopeJson,
+      totalFiles: data.totalFiles.present ? data.totalFiles.value : this.totalFiles,
+      totalBytes: data.totalBytes.present ? data.totalBytes.value : this.totalBytes,
+      message: data.message.present ? data.message.value : this.message,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      finishedAt: data.finishedAt.present ? data.finishedAt.value : this.finishedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IntegrityRunRow(')
+          ..write('id: $id, ')
+          ..write('runTrigger: $runTrigger, ')
+          ..write('status: $status, ')
+          ..write('pausedByUser: $pausedByUser, ')
+          ..write('scopeJson: $scopeJson, ')
+          ..write('totalFiles: $totalFiles, ')
+          ..write('totalBytes: $totalBytes, ')
+          ..write('message: $message, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('finishedAt: $finishedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    runTrigger,
+    status,
+    pausedByUser,
+    scopeJson,
+    totalFiles,
+    totalBytes,
+    message,
+    createdAt,
+    startedAt,
+    finishedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IntegrityRunRow &&
+          other.id == this.id &&
+          other.runTrigger == this.runTrigger &&
+          other.status == this.status &&
+          other.pausedByUser == this.pausedByUser &&
+          other.scopeJson == this.scopeJson &&
+          other.totalFiles == this.totalFiles &&
+          other.totalBytes == this.totalBytes &&
+          other.message == this.message &&
+          other.createdAt == this.createdAt &&
+          other.startedAt == this.startedAt &&
+          other.finishedAt == this.finishedAt);
+}
+
+class IntegrityRunsCompanion extends UpdateCompanion<IntegrityRunRow> {
+  final Value<int> id;
+  final Value<String> runTrigger;
+  final Value<String> status;
+  final Value<int> pausedByUser;
+  final Value<String> scopeJson;
+  final Value<int> totalFiles;
+  final Value<int> totalBytes;
+  final Value<String?> message;
+  final Value<int> createdAt;
+  final Value<int?> startedAt;
+  final Value<int?> finishedAt;
+  const IntegrityRunsCompanion({
+    this.id = const Value.absent(),
+    this.runTrigger = const Value.absent(),
+    this.status = const Value.absent(),
+    this.pausedByUser = const Value.absent(),
+    this.scopeJson = const Value.absent(),
+    this.totalFiles = const Value.absent(),
+    this.totalBytes = const Value.absent(),
+    this.message = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.finishedAt = const Value.absent(),
+  });
+  IntegrityRunsCompanion.insert({
+    this.id = const Value.absent(),
+    required String runTrigger,
+    required String status,
+    this.pausedByUser = const Value.absent(),
+    required String scopeJson,
+    required int totalFiles,
+    required int totalBytes,
+    this.message = const Value.absent(),
+    required int createdAt,
+    this.startedAt = const Value.absent(),
+    this.finishedAt = const Value.absent(),
+  }) : runTrigger = Value(runTrigger),
+       status = Value(status),
+       scopeJson = Value(scopeJson),
+       totalFiles = Value(totalFiles),
+       totalBytes = Value(totalBytes),
+       createdAt = Value(createdAt);
+  static Insertable<IntegrityRunRow> custom({
+    Expression<int>? id,
+    Expression<String>? runTrigger,
+    Expression<String>? status,
+    Expression<int>? pausedByUser,
+    Expression<String>? scopeJson,
+    Expression<int>? totalFiles,
+    Expression<int>? totalBytes,
+    Expression<String>? message,
+    Expression<int>? createdAt,
+    Expression<int>? startedAt,
+    Expression<int>? finishedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (runTrigger != null) 'run_trigger': runTrigger,
+      if (status != null) 'status': status,
+      if (pausedByUser != null) 'paused_by_user': pausedByUser,
+      if (scopeJson != null) 'scope_json': scopeJson,
+      if (totalFiles != null) 'total_files': totalFiles,
+      if (totalBytes != null) 'total_bytes': totalBytes,
+      if (message != null) 'message': message,
+      if (createdAt != null) 'created_at': createdAt,
+      if (startedAt != null) 'started_at': startedAt,
+      if (finishedAt != null) 'finished_at': finishedAt,
+    });
+  }
+
+  IntegrityRunsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? runTrigger,
+    Value<String>? status,
+    Value<int>? pausedByUser,
+    Value<String>? scopeJson,
+    Value<int>? totalFiles,
+    Value<int>? totalBytes,
+    Value<String?>? message,
+    Value<int>? createdAt,
+    Value<int?>? startedAt,
+    Value<int?>? finishedAt,
+  }) {
+    return IntegrityRunsCompanion(
+      id: id ?? this.id,
+      runTrigger: runTrigger ?? this.runTrigger,
+      status: status ?? this.status,
+      pausedByUser: pausedByUser ?? this.pausedByUser,
+      scopeJson: scopeJson ?? this.scopeJson,
+      totalFiles: totalFiles ?? this.totalFiles,
+      totalBytes: totalBytes ?? this.totalBytes,
+      message: message ?? this.message,
+      createdAt: createdAt ?? this.createdAt,
+      startedAt: startedAt ?? this.startedAt,
+      finishedAt: finishedAt ?? this.finishedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (runTrigger.present) {
+      map['run_trigger'] = Variable<String>(runTrigger.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (pausedByUser.present) {
+      map['paused_by_user'] = Variable<int>(pausedByUser.value);
+    }
+    if (scopeJson.present) {
+      map['scope_json'] = Variable<String>(scopeJson.value);
+    }
+    if (totalFiles.present) {
+      map['total_files'] = Variable<int>(totalFiles.value);
+    }
+    if (totalBytes.present) {
+      map['total_bytes'] = Variable<int>(totalBytes.value);
+    }
+    if (message.present) {
+      map['message'] = Variable<String>(message.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<int>(startedAt.value);
+    }
+    if (finishedAt.present) {
+      map['finished_at'] = Variable<int>(finishedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IntegrityRunsCompanion(')
+          ..write('id: $id, ')
+          ..write('runTrigger: $runTrigger, ')
+          ..write('status: $status, ')
+          ..write('pausedByUser: $pausedByUser, ')
+          ..write('scopeJson: $scopeJson, ')
+          ..write('totalFiles: $totalFiles, ')
+          ..write('totalBytes: $totalBytes, ')
+          ..write('message: $message, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('finishedAt: $finishedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class IntegrityRunItems extends Table with TableInfo<IntegrityRunItems, IntegrityRunItemRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  IntegrityRunItems(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _runIdMeta = const VerificationMeta('runId');
+  late final GeneratedColumn<int> runId = GeneratedColumn<int>(
+    'run_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES integrity_runs(id)',
+  );
+  static const VerificationMeta _instanceIdMeta = const VerificationMeta('instanceId');
+  late final GeneratedColumn<int> instanceId = GeneratedColumn<int>(
+    'instance_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES file_instances(id)',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [runId, instanceId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'integrity_run_items';
+  @override
+  VerificationContext validateIntegrity(Insertable<IntegrityRunItemRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('run_id')) {
+      context.handle(_runIdMeta, runId.isAcceptableOrUnknown(data['run_id']!, _runIdMeta));
+    } else if (isInserting) {
+      context.missing(_runIdMeta);
+    }
+    if (data.containsKey('instance_id')) {
+      context.handle(_instanceIdMeta, instanceId.isAcceptableOrUnknown(data['instance_id']!, _instanceIdMeta));
+    } else if (isInserting) {
+      context.missing(_instanceIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {runId, instanceId};
+  @override
+  IntegrityRunItemRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IntegrityRunItemRow(
+      runId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}run_id'])!,
+      instanceId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}instance_id'])!,
+    );
+  }
+
+  @override
+  IntegrityRunItems createAlias(String alias) {
+    return IntegrityRunItems(attachedDatabase, alias);
+  }
+
+  @override
+  bool get withoutRowId => true;
+  @override
+  List<String> get customConstraints => const ['PRIMARY KEY(run_id, instance_id)'];
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class IntegrityRunItemRow extends DataClass implements Insertable<IntegrityRunItemRow> {
+  final int runId;
+  final int instanceId;
+  const IntegrityRunItemRow({required this.runId, required this.instanceId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['run_id'] = Variable<int>(runId);
+    map['instance_id'] = Variable<int>(instanceId);
+    return map;
+  }
+
+  IntegrityRunItemsCompanion toCompanion(bool nullToAbsent) {
+    return IntegrityRunItemsCompanion(runId: Value(runId), instanceId: Value(instanceId));
+  }
+
+  factory IntegrityRunItemRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IntegrityRunItemRow(
+      runId: serializer.fromJson<int>(json['run_id']),
+      instanceId: serializer.fromJson<int>(json['instance_id']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'run_id': serializer.toJson<int>(runId),
+      'instance_id': serializer.toJson<int>(instanceId),
+    };
+  }
+
+  IntegrityRunItemRow copyWith({int? runId, int? instanceId}) =>
+      IntegrityRunItemRow(runId: runId ?? this.runId, instanceId: instanceId ?? this.instanceId);
+  IntegrityRunItemRow copyWithCompanion(IntegrityRunItemsCompanion data) {
+    return IntegrityRunItemRow(
+      runId: data.runId.present ? data.runId.value : this.runId,
+      instanceId: data.instanceId.present ? data.instanceId.value : this.instanceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IntegrityRunItemRow(')
+          ..write('runId: $runId, ')
+          ..write('instanceId: $instanceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(runId, instanceId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IntegrityRunItemRow && other.runId == this.runId && other.instanceId == this.instanceId);
+}
+
+class IntegrityRunItemsCompanion extends UpdateCompanion<IntegrityRunItemRow> {
+  final Value<int> runId;
+  final Value<int> instanceId;
+  const IntegrityRunItemsCompanion({this.runId = const Value.absent(), this.instanceId = const Value.absent()});
+  IntegrityRunItemsCompanion.insert({required int runId, required int instanceId})
+    : runId = Value(runId),
+      instanceId = Value(instanceId);
+  static Insertable<IntegrityRunItemRow> custom({Expression<int>? runId, Expression<int>? instanceId}) {
+    return RawValuesInsertable({if (runId != null) 'run_id': runId, if (instanceId != null) 'instance_id': instanceId});
+  }
+
+  IntegrityRunItemsCompanion copyWith({Value<int>? runId, Value<int>? instanceId}) {
+    return IntegrityRunItemsCompanion(runId: runId ?? this.runId, instanceId: instanceId ?? this.instanceId);
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (runId.present) {
+      map['run_id'] = Variable<int>(runId.value);
+    }
+    if (instanceId.present) {
+      map['instance_id'] = Variable<int>(instanceId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IntegrityRunItemsCompanion(')
+          ..write('runId: $runId, ')
+          ..write('instanceId: $instanceId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class IntegrityChecks extends Table with TableInfo<IntegrityChecks, IntegrityCheckRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -10803,6 +11519,33 @@ class IntegrityChecks extends Table with TableInfo<IntegrityChecks, IntegrityChe
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _runIdMeta = const VerificationMeta('runId');
+  late final GeneratedColumn<int> runId = GeneratedColumn<int>(
+    'run_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'REFERENCES integrity_runs(id)',
+  );
+  static const VerificationMeta _expectedContentIdMeta = const VerificationMeta('expectedContentId');
+  late final GeneratedColumn<int> expectedContentId = GeneratedColumn<int>(
+    'expected_content_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'REFERENCES contents(id)',
+  );
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+    'reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -10813,6 +11556,9 @@ class IntegrityChecks extends Table with TableInfo<IntegrityChecks, IntegrityChe
     observedSha256,
     observedSize,
     observedMtime,
+    runId,
+    expectedContentId,
+    reason,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -10859,6 +11605,18 @@ class IntegrityChecks extends Table with TableInfo<IntegrityChecks, IntegrityChe
         observedMtime.isAcceptableOrUnknown(data['observed_mtime']!, _observedMtimeMeta),
       );
     }
+    if (data.containsKey('run_id')) {
+      context.handle(_runIdMeta, runId.isAcceptableOrUnknown(data['run_id']!, _runIdMeta));
+    }
+    if (data.containsKey('expected_content_id')) {
+      context.handle(
+        _expectedContentIdMeta,
+        expectedContentId.isAcceptableOrUnknown(data['expected_content_id']!, _expectedContentIdMeta),
+      );
+    }
+    if (data.containsKey('reason')) {
+      context.handle(_reasonMeta, reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta));
+    }
     return context;
   }
 
@@ -10876,6 +11634,12 @@ class IntegrityChecks extends Table with TableInfo<IntegrityChecks, IntegrityChe
       observedSha256: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}observed_sha256']),
       observedSize: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}observed_size']),
       observedMtime: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}observed_mtime']),
+      runId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}run_id']),
+      expectedContentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}expected_content_id'],
+      ),
+      reason: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}reason']),
     );
   }
 
@@ -10897,6 +11661,11 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
   final Uint8List? observedSha256;
   final int? observedSize;
   final int? observedMtime;
+
+  /// v6: rodada, conteúdo que o catálogo esperava e motivo legível.
+  final int? runId;
+  final int? expectedContentId;
+  final String? reason;
   const IntegrityCheckRow({
     required this.id,
     required this.instanceId,
@@ -10906,6 +11675,9 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
     this.observedSha256,
     this.observedSize,
     this.observedMtime,
+    this.runId,
+    this.expectedContentId,
+    this.reason,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -10926,6 +11698,15 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
     if (!nullToAbsent || observedMtime != null) {
       map['observed_mtime'] = Variable<int>(observedMtime);
     }
+    if (!nullToAbsent || runId != null) {
+      map['run_id'] = Variable<int>(runId);
+    }
+    if (!nullToAbsent || expectedContentId != null) {
+      map['expected_content_id'] = Variable<int>(expectedContentId);
+    }
+    if (!nullToAbsent || reason != null) {
+      map['reason'] = Variable<String>(reason);
+    }
     return map;
   }
 
@@ -10939,6 +11720,9 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
       observedSha256: observedSha256 == null && nullToAbsent ? const Value.absent() : Value(observedSha256),
       observedSize: observedSize == null && nullToAbsent ? const Value.absent() : Value(observedSize),
       observedMtime: observedMtime == null && nullToAbsent ? const Value.absent() : Value(observedMtime),
+      runId: runId == null && nullToAbsent ? const Value.absent() : Value(runId),
+      expectedContentId: expectedContentId == null && nullToAbsent ? const Value.absent() : Value(expectedContentId),
+      reason: reason == null && nullToAbsent ? const Value.absent() : Value(reason),
     );
   }
 
@@ -10953,6 +11737,9 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
       observedSha256: serializer.fromJson<Uint8List?>(json['observed_sha256']),
       observedSize: serializer.fromJson<int?>(json['observed_size']),
       observedMtime: serializer.fromJson<int?>(json['observed_mtime']),
+      runId: serializer.fromJson<int?>(json['run_id']),
+      expectedContentId: serializer.fromJson<int?>(json['expected_content_id']),
+      reason: serializer.fromJson<String?>(json['reason']),
     );
   }
   @override
@@ -10967,6 +11754,9 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
       'observed_sha256': serializer.toJson<Uint8List?>(observedSha256),
       'observed_size': serializer.toJson<int?>(observedSize),
       'observed_mtime': serializer.toJson<int?>(observedMtime),
+      'run_id': serializer.toJson<int?>(runId),
+      'expected_content_id': serializer.toJson<int?>(expectedContentId),
+      'reason': serializer.toJson<String?>(reason),
     };
   }
 
@@ -10979,6 +11769,9 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
     Value<Uint8List?> observedSha256 = const Value.absent(),
     Value<int?> observedSize = const Value.absent(),
     Value<int?> observedMtime = const Value.absent(),
+    Value<int?> runId = const Value.absent(),
+    Value<int?> expectedContentId = const Value.absent(),
+    Value<String?> reason = const Value.absent(),
   }) => IntegrityCheckRow(
     id: id ?? this.id,
     instanceId: instanceId ?? this.instanceId,
@@ -10988,6 +11781,9 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
     observedSha256: observedSha256.present ? observedSha256.value : this.observedSha256,
     observedSize: observedSize.present ? observedSize.value : this.observedSize,
     observedMtime: observedMtime.present ? observedMtime.value : this.observedMtime,
+    runId: runId.present ? runId.value : this.runId,
+    expectedContentId: expectedContentId.present ? expectedContentId.value : this.expectedContentId,
+    reason: reason.present ? reason.value : this.reason,
   );
   IntegrityCheckRow copyWithCompanion(IntegrityChecksCompanion data) {
     return IntegrityCheckRow(
@@ -10999,6 +11795,9 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
       observedSha256: data.observedSha256.present ? data.observedSha256.value : this.observedSha256,
       observedSize: data.observedSize.present ? data.observedSize.value : this.observedSize,
       observedMtime: data.observedMtime.present ? data.observedMtime.value : this.observedMtime,
+      runId: data.runId.present ? data.runId.value : this.runId,
+      expectedContentId: data.expectedContentId.present ? data.expectedContentId.value : this.expectedContentId,
+      reason: data.reason.present ? data.reason.value : this.reason,
     );
   }
 
@@ -11012,7 +11811,10 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
           ..write('result: $result, ')
           ..write('observedSha256: $observedSha256, ')
           ..write('observedSize: $observedSize, ')
-          ..write('observedMtime: $observedMtime')
+          ..write('observedMtime: $observedMtime, ')
+          ..write('runId: $runId, ')
+          ..write('expectedContentId: $expectedContentId, ')
+          ..write('reason: $reason')
           ..write(')'))
         .toString();
   }
@@ -11027,6 +11829,9 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
     $driftBlobEquality.hash(observedSha256),
     observedSize,
     observedMtime,
+    runId,
+    expectedContentId,
+    reason,
   );
   @override
   bool operator ==(Object other) =>
@@ -11039,7 +11844,10 @@ class IntegrityCheckRow extends DataClass implements Insertable<IntegrityCheckRo
           other.result == this.result &&
           $driftBlobEquality.equals(other.observedSha256, this.observedSha256) &&
           other.observedSize == this.observedSize &&
-          other.observedMtime == this.observedMtime);
+          other.observedMtime == this.observedMtime &&
+          other.runId == this.runId &&
+          other.expectedContentId == this.expectedContentId &&
+          other.reason == this.reason);
 }
 
 class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
@@ -11051,6 +11859,9 @@ class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
   final Value<Uint8List?> observedSha256;
   final Value<int?> observedSize;
   final Value<int?> observedMtime;
+  final Value<int?> runId;
+  final Value<int?> expectedContentId;
+  final Value<String?> reason;
   const IntegrityChecksCompanion({
     this.id = const Value.absent(),
     this.instanceId = const Value.absent(),
@@ -11060,6 +11871,9 @@ class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
     this.observedSha256 = const Value.absent(),
     this.observedSize = const Value.absent(),
     this.observedMtime = const Value.absent(),
+    this.runId = const Value.absent(),
+    this.expectedContentId = const Value.absent(),
+    this.reason = const Value.absent(),
   });
   IntegrityChecksCompanion.insert({
     this.id = const Value.absent(),
@@ -11070,6 +11884,9 @@ class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
     this.observedSha256 = const Value.absent(),
     this.observedSize = const Value.absent(),
     this.observedMtime = const Value.absent(),
+    this.runId = const Value.absent(),
+    this.expectedContentId = const Value.absent(),
+    this.reason = const Value.absent(),
   }) : instanceId = Value(instanceId),
        checkedAt = Value(checkedAt),
        result = Value(result);
@@ -11082,6 +11899,9 @@ class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
     Expression<Uint8List>? observedSha256,
     Expression<int>? observedSize,
     Expression<int>? observedMtime,
+    Expression<int>? runId,
+    Expression<int>? expectedContentId,
+    Expression<String>? reason,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -11092,6 +11912,9 @@ class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
       if (observedSha256 != null) 'observed_sha256': observedSha256,
       if (observedSize != null) 'observed_size': observedSize,
       if (observedMtime != null) 'observed_mtime': observedMtime,
+      if (runId != null) 'run_id': runId,
+      if (expectedContentId != null) 'expected_content_id': expectedContentId,
+      if (reason != null) 'reason': reason,
     });
   }
 
@@ -11104,6 +11927,9 @@ class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
     Value<Uint8List?>? observedSha256,
     Value<int?>? observedSize,
     Value<int?>? observedMtime,
+    Value<int?>? runId,
+    Value<int?>? expectedContentId,
+    Value<String?>? reason,
   }) {
     return IntegrityChecksCompanion(
       id: id ?? this.id,
@@ -11114,6 +11940,9 @@ class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
       observedSha256: observedSha256 ?? this.observedSha256,
       observedSize: observedSize ?? this.observedSize,
       observedMtime: observedMtime ?? this.observedMtime,
+      runId: runId ?? this.runId,
+      expectedContentId: expectedContentId ?? this.expectedContentId,
+      reason: reason ?? this.reason,
     );
   }
 
@@ -11144,6 +11973,15 @@ class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
     if (observedMtime.present) {
       map['observed_mtime'] = Variable<int>(observedMtime.value);
     }
+    if (runId.present) {
+      map['run_id'] = Variable<int>(runId.value);
+    }
+    if (expectedContentId.present) {
+      map['expected_content_id'] = Variable<int>(expectedContentId.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
     return map;
   }
 
@@ -11157,7 +11995,10 @@ class IntegrityChecksCompanion extends UpdateCompanion<IntegrityCheckRow> {
           ..write('result: $result, ')
           ..write('observedSha256: $observedSha256, ')
           ..write('observedSize: $observedSize, ')
-          ..write('observedMtime: $observedMtime')
+          ..write('observedMtime: $observedMtime, ')
+          ..write('runId: $runId, ')
+          ..write('expectedContentId: $expectedContentId, ')
+          ..write('reason: $reason')
           ..write(')'))
         .toString();
   }
@@ -11838,11 +12679,14 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
   late final SelectionSetItems selectionSetItems = SelectionSetItems(this);
   late final Tags tags = Tags(this);
   late final ContentTags contentTags = ContentTags(this);
+  late final IntegrityRuns integrityRuns = IntegrityRuns(this);
+  late final IntegrityRunItems integrityRunItems = IntegrityRunItems(this);
   late final IntegrityChecks integrityChecks = IntegrityChecks(this);
   late final Index ixIcInstance = Index(
     'ix_ic_instance',
     'CREATE INDEX ix_ic_instance ON integrity_checks (instance_id, checked_at DESC)',
   );
+  late final Index ixIcRun = Index('ix_ic_run', 'CREATE INDEX ix_ic_run ON integrity_checks (run_id, instance_id)');
   late final SavedScopes savedScopes = SavedScopes(this);
   late final Index ixMomentsStart = Index(
     'ix_moments_start',
@@ -11893,8 +12737,11 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     selectionSetItems,
     tags,
     contentTags,
+    integrityRuns,
+    integrityRunItems,
     integrityChecks,
     ixIcInstance,
+    ixIcRun,
     savedScopes,
     ixMomentsStart,
     momentEdits,
@@ -14137,6 +14984,23 @@ final class $ContentsReferences extends BaseReferences<_$CatalogDatabase, Conten
     final cache = $_typedResult.readTableOrNull(_contentTagsRefsTable($_db));
     return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<IntegrityChecks, List<IntegrityCheckRow>> _integrityChecksRefsTable(
+    _$CatalogDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.integrityChecks,
+    aliasName: 'contents__id__integrity_checks__expected_content_id',
+  );
+
+  $IntegrityChecksProcessedTableManager get integrityChecksRefs {
+    final manager = $IntegrityChecksTableManager(
+      $_db,
+      $_db.integrityChecks,
+    ).filter((f) => f.expectedContentId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_integrityChecksRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $ContentsFilterComposer extends Composer<_$CatalogDatabase, Contents> {
@@ -14225,6 +15089,24 @@ class $ContentsFilterComposer extends Composer<_$CatalogDatabase, Contents> {
           $ContentTagsFilterComposer(
             $db: $db,
             $table: $db.contentTags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> integrityChecksRefs(Expression<bool> Function($IntegrityChecksFilterComposer f) f) {
+    final $IntegrityChecksFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.integrityChecks,
+      getReferencedColumn: (t) => t.expectedContentId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityChecksFilterComposer(
+            $db: $db,
+            $table: $db.integrityChecks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
@@ -14346,6 +15228,24 @@ class $ContentsAnnotationComposer extends Composer<_$CatalogDatabase, Contents> 
     );
     return f(composer);
   }
+
+  Expression<T> integrityChecksRefs<T extends Object>(Expression<T> Function($IntegrityChecksAnnotationComposer a) f) {
+    final $IntegrityChecksAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.integrityChecks,
+      getReferencedColumn: (t) => t.expectedContentId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityChecksAnnotationComposer(
+            $db: $db,
+            $table: $db.integrityChecks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $ContentsTableManager
@@ -14366,6 +15266,7 @@ class $ContentsTableManager
             bool mediaMetadataRefs,
             bool dateCorrectionsRefs,
             bool contentTagsRefs,
+            bool integrityChecksRefs,
           })
         > {
   $ContentsTableManager(_$CatalogDatabase db, Contents table)
@@ -14412,6 +15313,7 @@ class $ContentsTableManager
                 mediaMetadataRefs = false,
                 dateCorrectionsRefs = false,
                 contentTagsRefs = false,
+                integrityChecksRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -14420,6 +15322,7 @@ class $ContentsTableManager
                     if (mediaMetadataRefs) db.mediaMetadata,
                     if (dateCorrectionsRefs) db.dateCorrections,
                     if (contentTagsRefs) db.contentTags,
+                    if (integrityChecksRefs) db.integrityChecks,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -14460,6 +15363,15 @@ class $ContentsTableManager
                           referencedColumn: 'content_id',
                           typedResults: items,
                         ),
+                      if (integrityChecksRefs)
+                        await $_getPrefetchedDataByColumns<ContentRow, Contents, IntegrityCheckRow, IntegrityChecks>(
+                          currentTable: table,
+                          referencedTable: $ContentsReferences._integrityChecksRefsTable(db),
+                          managerFromTypedResult: (p0) => $ContentsReferences(db, table, p0).integrityChecksRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'expected_content_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -14485,6 +15397,7 @@ typedef $ContentsProcessedTableManager =
         bool mediaMetadataRefs,
         bool dateCorrectionsRefs,
         bool contentTagsRefs,
+        bool integrityChecksRefs,
       })
     >;
 typedef $FileInstancesCreateCompanionBuilder = FileInstancesCompanion Function({
@@ -14619,6 +15532,23 @@ final class $FileInstancesReferences extends BaseReferences<_$CatalogDatabase, F
     ).filter((f) => f.instanceId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_selectionSetItemsRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<IntegrityRunItems, List<IntegrityRunItemRow>> _integrityRunItemsRefsTable(
+    _$CatalogDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.integrityRunItems,
+    aliasName: 'file_instances__id__integrity_run_items__instance_id',
+  );
+
+  $IntegrityRunItemsProcessedTableManager get integrityRunItemsRefs {
+    final manager = $IntegrityRunItemsTableManager(
+      $_db,
+      $_db.integrityRunItems,
+    ).filter((f) => f.instanceId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_integrityRunItemsRefsTable($_db));
     return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
@@ -14798,6 +15728,24 @@ class $FileInstancesFilterComposer extends Composer<_$CatalogDatabase, FileInsta
           $SelectionSetItemsFilterComposer(
             $db: $db,
             $table: $db.selectionSetItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> integrityRunItemsRefs(Expression<bool> Function($IntegrityRunItemsFilterComposer f) f) {
+    final $IntegrityRunItemsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.integrityRunItems,
+      getReferencedColumn: (t) => t.instanceId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityRunItemsFilterComposer(
+            $db: $db,
+            $table: $db.integrityRunItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
@@ -15122,6 +16070,26 @@ class $FileInstancesAnnotationComposer extends Composer<_$CatalogDatabase, FileI
     return f(composer);
   }
 
+  Expression<T> integrityRunItemsRefs<T extends Object>(
+    Expression<T> Function($IntegrityRunItemsAnnotationComposer a) f,
+  ) {
+    final $IntegrityRunItemsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.integrityRunItems,
+      getReferencedColumn: (t) => t.instanceId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityRunItemsAnnotationComposer(
+            $db: $db,
+            $table: $db.integrityRunItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> integrityChecksRefs<T extends Object>(Expression<T> Function($IntegrityChecksAnnotationComposer a) f) {
     final $IntegrityChecksAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -15161,6 +16129,7 @@ class $FileInstancesTableManager
             bool lastSeenScanId,
             bool operationItemsRefs,
             bool selectionSetItemsRefs,
+            bool integrityRunItemsRefs,
             bool integrityChecksRefs,
           })
         > {
@@ -15283,6 +16252,7 @@ class $FileInstancesTableManager
                 lastSeenScanId = false,
                 operationItemsRefs = false,
                 selectionSetItemsRefs = false,
+                integrityRunItemsRefs = false,
                 integrityChecksRefs = false,
               }) {
                 return PrefetchHooks(
@@ -15290,6 +16260,7 @@ class $FileInstancesTableManager
                   explicitlyWatchedTables: [
                     if (operationItemsRefs) db.operationItems,
                     if (selectionSetItemsRefs) db.selectionSetItems,
+                    if (integrityRunItemsRefs) db.integrityRunItems,
                     if (integrityChecksRefs) db.integrityChecks,
                   ],
                   addJoins:
@@ -15373,6 +16344,20 @@ class $FileInstancesTableManager
                           referencedColumn: 'instance_id',
                           typedResults: items,
                         ),
+                      if (integrityRunItemsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          FileInstanceRow,
+                          FileInstances,
+                          IntegrityRunItemRow,
+                          IntegrityRunItems
+                        >(
+                          currentTable: table,
+                          referencedTable: $FileInstancesReferences._integrityRunItemsRefsTable(db),
+                          managerFromTypedResult: (p0) => $FileInstancesReferences(db, table, p0).integrityRunItemsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'instance_id',
+                          typedResults: items,
+                        ),
                       if (integrityChecksRefs)
                         await $_getPrefetchedDataByColumns<
                           FileInstanceRow,
@@ -15414,6 +16399,7 @@ typedef $FileInstancesProcessedTableManager =
         bool lastSeenScanId,
         bool operationItemsRefs,
         bool selectionSetItemsRefs,
+        bool integrityRunItemsRefs,
         bool integrityChecksRefs,
       })
     >;
@@ -20129,6 +21115,663 @@ typedef $ContentTagsProcessedTableManager =
       ContentTagRow,
       PrefetchHooks Function({bool contentId, bool tagId})
     >;
+typedef $IntegrityRunsCreateCompanionBuilder = IntegrityRunsCompanion Function({
+  Value<int> id,
+  required String runTrigger,
+  required String status,
+  Value<int> pausedByUser,
+  required String scopeJson,
+  required int totalFiles,
+  required int totalBytes,
+  Value<String?> message,
+  required int createdAt,
+  Value<int?> startedAt,
+  Value<int?> finishedAt,
+});
+typedef $IntegrityRunsUpdateCompanionBuilder = IntegrityRunsCompanion Function({
+  Value<int> id,
+  Value<String> runTrigger,
+  Value<String> status,
+  Value<int> pausedByUser,
+  Value<String> scopeJson,
+  Value<int> totalFiles,
+  Value<int> totalBytes,
+  Value<String?> message,
+  Value<int> createdAt,
+  Value<int?> startedAt,
+  Value<int?> finishedAt,
+});
+
+final class $IntegrityRunsReferences extends BaseReferences<_$CatalogDatabase, IntegrityRuns, IntegrityRunRow> {
+  $IntegrityRunsReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<IntegrityRunItems, List<IntegrityRunItemRow>> _integrityRunItemsRefsTable(
+    _$CatalogDatabase db,
+  ) =>
+      MultiTypedResultKey.fromTable(db.integrityRunItems, aliasName: 'integrity_runs__id__integrity_run_items__run_id');
+
+  $IntegrityRunItemsProcessedTableManager get integrityRunItemsRefs {
+    final manager = $IntegrityRunItemsTableManager(
+      $_db,
+      $_db.integrityRunItems,
+    ).filter((f) => f.runId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_integrityRunItemsRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<IntegrityChecks, List<IntegrityCheckRow>> _integrityChecksRefsTable(
+    _$CatalogDatabase db,
+  ) => MultiTypedResultKey.fromTable(db.integrityChecks, aliasName: 'integrity_runs__id__integrity_checks__run_id');
+
+  $IntegrityChecksProcessedTableManager get integrityChecksRefs {
+    final manager = $IntegrityChecksTableManager(
+      $_db,
+      $_db.integrityChecks,
+    ).filter((f) => f.runId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_integrityChecksRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $IntegrityRunsFilterComposer extends Composer<_$CatalogDatabase, IntegrityRuns> {
+  $IntegrityRunsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get runTrigger =>
+      $composableBuilder(column: $table.runTrigger, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get pausedByUser =>
+      $composableBuilder(column: $table.pausedByUser, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get scopeJson =>
+      $composableBuilder(column: $table.scopeJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalFiles =>
+      $composableBuilder(column: $table.totalFiles, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalBytes =>
+      $composableBuilder(column: $table.totalBytes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get finishedAt =>
+      $composableBuilder(column: $table.finishedAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> integrityRunItemsRefs(Expression<bool> Function($IntegrityRunItemsFilterComposer f) f) {
+    final $IntegrityRunItemsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.integrityRunItems,
+      getReferencedColumn: (t) => t.runId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityRunItemsFilterComposer(
+            $db: $db,
+            $table: $db.integrityRunItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> integrityChecksRefs(Expression<bool> Function($IntegrityChecksFilterComposer f) f) {
+    final $IntegrityChecksFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.integrityChecks,
+      getReferencedColumn: (t) => t.runId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityChecksFilterComposer(
+            $db: $db,
+            $table: $db.integrityChecks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $IntegrityRunsOrderingComposer extends Composer<_$CatalogDatabase, IntegrityRuns> {
+  $IntegrityRunsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get runTrigger =>
+      $composableBuilder(column: $table.runTrigger, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get pausedByUser =>
+      $composableBuilder(column: $table.pausedByUser, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get scopeJson =>
+      $composableBuilder(column: $table.scopeJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalFiles =>
+      $composableBuilder(column: $table.totalFiles, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalBytes =>
+      $composableBuilder(column: $table.totalBytes, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get finishedAt =>
+      $composableBuilder(column: $table.finishedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $IntegrityRunsAnnotationComposer extends Composer<_$CatalogDatabase, IntegrityRuns> {
+  $IntegrityRunsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get runTrigger => $composableBuilder(column: $table.runTrigger, builder: (column) => column);
+
+  GeneratedColumn<String> get status => $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get pausedByUser => $composableBuilder(column: $table.pausedByUser, builder: (column) => column);
+
+  GeneratedColumn<String> get scopeJson => $composableBuilder(column: $table.scopeJson, builder: (column) => column);
+
+  GeneratedColumn<int> get totalFiles => $composableBuilder(column: $table.totalFiles, builder: (column) => column);
+
+  GeneratedColumn<int> get totalBytes => $composableBuilder(column: $table.totalBytes, builder: (column) => column);
+
+  GeneratedColumn<String> get message => $composableBuilder(column: $table.message, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get startedAt => $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get finishedAt => $composableBuilder(column: $table.finishedAt, builder: (column) => column);
+
+  Expression<T> integrityRunItemsRefs<T extends Object>(
+    Expression<T> Function($IntegrityRunItemsAnnotationComposer a) f,
+  ) {
+    final $IntegrityRunItemsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.integrityRunItems,
+      getReferencedColumn: (t) => t.runId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityRunItemsAnnotationComposer(
+            $db: $db,
+            $table: $db.integrityRunItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> integrityChecksRefs<T extends Object>(Expression<T> Function($IntegrityChecksAnnotationComposer a) f) {
+    final $IntegrityChecksAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.integrityChecks,
+      getReferencedColumn: (t) => t.runId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityChecksAnnotationComposer(
+            $db: $db,
+            $table: $db.integrityChecks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $IntegrityRunsTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          IntegrityRuns,
+          IntegrityRunRow,
+          $IntegrityRunsFilterComposer,
+          $IntegrityRunsOrderingComposer,
+          $IntegrityRunsAnnotationComposer,
+          $IntegrityRunsCreateCompanionBuilder,
+          $IntegrityRunsUpdateCompanionBuilder,
+          (IntegrityRunRow, $IntegrityRunsReferences),
+          IntegrityRunRow,
+          PrefetchHooks Function({bool integrityRunItemsRefs, bool integrityChecksRefs})
+        > {
+  $IntegrityRunsTableManager(_$CatalogDatabase db, IntegrityRuns table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $IntegrityRunsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $IntegrityRunsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $IntegrityRunsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> runTrigger = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> pausedByUser = const Value.absent(),
+                Value<String> scopeJson = const Value.absent(),
+                Value<int> totalFiles = const Value.absent(),
+                Value<int> totalBytes = const Value.absent(),
+                Value<String?> message = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int?> startedAt = const Value.absent(),
+                Value<int?> finishedAt = const Value.absent(),
+              }) => IntegrityRunsCompanion(
+                id: id,
+                runTrigger: runTrigger,
+                status: status,
+                pausedByUser: pausedByUser,
+                scopeJson: scopeJson,
+                totalFiles: totalFiles,
+                totalBytes: totalBytes,
+                message: message,
+                createdAt: createdAt,
+                startedAt: startedAt,
+                finishedAt: finishedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String runTrigger,
+                required String status,
+                Value<int> pausedByUser = const Value.absent(),
+                required String scopeJson,
+                required int totalFiles,
+                required int totalBytes,
+                Value<String?> message = const Value.absent(),
+                required int createdAt,
+                Value<int?> startedAt = const Value.absent(),
+                Value<int?> finishedAt = const Value.absent(),
+              }) => IntegrityRunsCompanion.insert(
+                id: id,
+                runTrigger: runTrigger,
+                status: status,
+                pausedByUser: pausedByUser,
+                scopeJson: scopeJson,
+                totalFiles: totalFiles,
+                totalBytes: totalBytes,
+                message: message,
+                createdAt: createdAt,
+                startedAt: startedAt,
+                finishedAt: finishedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable<IntegrityRuns, IntegrityRunRow>(table), $IntegrityRunsReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: ({integrityRunItemsRefs = false, integrityChecksRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (integrityRunItemsRefs) db.integrityRunItems,
+                if (integrityChecksRefs) db.integrityChecks,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (integrityRunItemsRefs)
+                    await $_getPrefetchedDataByColumns<
+                      IntegrityRunRow,
+                      IntegrityRuns,
+                      IntegrityRunItemRow,
+                      IntegrityRunItems
+                    >(
+                      currentTable: table,
+                      referencedTable: $IntegrityRunsReferences._integrityRunItemsRefsTable(db),
+                      managerFromTypedResult: (p0) => $IntegrityRunsReferences(db, table, p0).integrityRunItemsRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'run_id',
+                      typedResults: items,
+                    ),
+                  if (integrityChecksRefs)
+                    await $_getPrefetchedDataByColumns<
+                      IntegrityRunRow,
+                      IntegrityRuns,
+                      IntegrityCheckRow,
+                      IntegrityChecks
+                    >(
+                      currentTable: table,
+                      referencedTable: $IntegrityRunsReferences._integrityChecksRefsTable(db),
+                      managerFromTypedResult: (p0) => $IntegrityRunsReferences(db, table, p0).integrityChecksRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'run_id',
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $IntegrityRunsProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      IntegrityRuns,
+      IntegrityRunRow,
+      $IntegrityRunsFilterComposer,
+      $IntegrityRunsOrderingComposer,
+      $IntegrityRunsAnnotationComposer,
+      $IntegrityRunsCreateCompanionBuilder,
+      $IntegrityRunsUpdateCompanionBuilder,
+      (IntegrityRunRow, $IntegrityRunsReferences),
+      IntegrityRunRow,
+      PrefetchHooks Function({bool integrityRunItemsRefs, bool integrityChecksRefs})
+    >;
+typedef $IntegrityRunItemsCreateCompanionBuilder = IntegrityRunItemsCompanion Function({
+  required int runId,
+  required int instanceId,
+});
+typedef $IntegrityRunItemsUpdateCompanionBuilder = IntegrityRunItemsCompanion Function({
+  Value<int> runId,
+  Value<int> instanceId,
+});
+
+final class $IntegrityRunItemsReferences
+    extends BaseReferences<_$CatalogDatabase, IntegrityRunItems, IntegrityRunItemRow> {
+  $IntegrityRunItemsReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static IntegrityRuns _runIdTable(_$CatalogDatabase db) =>
+      db.integrityRuns.createAlias('integrity_run_items__run_id__integrity_runs__id');
+
+  $IntegrityRunsProcessedTableManager get runId {
+    final $_column = $_itemColumn<int>('run_id')!;
+
+    final manager = $IntegrityRunsTableManager($_db, $_db.integrityRuns).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_runIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static FileInstances _instanceIdTable(_$CatalogDatabase db) =>
+      db.fileInstances.createAlias('integrity_run_items__instance_id__file_instances__id');
+
+  $FileInstancesProcessedTableManager get instanceId {
+    final $_column = $_itemColumn<int>('instance_id')!;
+
+    final manager = $FileInstancesTableManager($_db, $_db.fileInstances).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_instanceIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $IntegrityRunItemsFilterComposer extends Composer<_$CatalogDatabase, IntegrityRunItems> {
+  $IntegrityRunItemsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $IntegrityRunsFilterComposer get runId {
+    final $IntegrityRunsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.integrityRuns,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityRunsFilterComposer(
+            $db: $db,
+            $table: $db.integrityRuns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $FileInstancesFilterComposer get instanceId {
+    final $FileInstancesFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.fileInstances,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesFilterComposer(
+            $db: $db,
+            $table: $db.fileInstances,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $IntegrityRunItemsOrderingComposer extends Composer<_$CatalogDatabase, IntegrityRunItems> {
+  $IntegrityRunItemsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $IntegrityRunsOrderingComposer get runId {
+    final $IntegrityRunsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.integrityRuns,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityRunsOrderingComposer(
+            $db: $db,
+            $table: $db.integrityRuns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $FileInstancesOrderingComposer get instanceId {
+    final $FileInstancesOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.fileInstances,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesOrderingComposer(
+            $db: $db,
+            $table: $db.fileInstances,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $IntegrityRunItemsAnnotationComposer extends Composer<_$CatalogDatabase, IntegrityRunItems> {
+  $IntegrityRunItemsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $IntegrityRunsAnnotationComposer get runId {
+    final $IntegrityRunsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.integrityRuns,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityRunsAnnotationComposer(
+            $db: $db,
+            $table: $db.integrityRuns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $FileInstancesAnnotationComposer get instanceId {
+    final $FileInstancesAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.fileInstances,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesAnnotationComposer(
+            $db: $db,
+            $table: $db.fileInstances,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $IntegrityRunItemsTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          IntegrityRunItems,
+          IntegrityRunItemRow,
+          $IntegrityRunItemsFilterComposer,
+          $IntegrityRunItemsOrderingComposer,
+          $IntegrityRunItemsAnnotationComposer,
+          $IntegrityRunItemsCreateCompanionBuilder,
+          $IntegrityRunItemsUpdateCompanionBuilder,
+          (IntegrityRunItemRow, $IntegrityRunItemsReferences),
+          IntegrityRunItemRow,
+          PrefetchHooks Function({bool runId, bool instanceId})
+        > {
+  $IntegrityRunItemsTableManager(_$CatalogDatabase db, IntegrityRunItems table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $IntegrityRunItemsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $IntegrityRunItemsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $IntegrityRunItemsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> runId = const Value.absent(),
+            Value<int> instanceId = const Value.absent(),
+          }) => IntegrityRunItemsCompanion(runId: runId, instanceId: instanceId),
+          createCompanionCallback: ({required int runId, required int instanceId}) =>
+              IntegrityRunItemsCompanion.insert(runId: runId, instanceId: instanceId),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<IntegrityRunItems, IntegrityRunItemRow>(table),
+                  $IntegrityRunItemsReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({runId = false, instanceId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (runId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.runId,
+                        referencedTable: $IntegrityRunItemsReferences._runIdTable(db),
+                        referencedColumn: $IntegrityRunItemsReferences._runIdTable(db).id,
+                      ) as T;
+                    }
+                    if (instanceId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.instanceId,
+                        referencedTable: $IntegrityRunItemsReferences._instanceIdTable(db),
+                        referencedColumn: $IntegrityRunItemsReferences._instanceIdTable(db).id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $IntegrityRunItemsProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      IntegrityRunItems,
+      IntegrityRunItemRow,
+      $IntegrityRunItemsFilterComposer,
+      $IntegrityRunItemsOrderingComposer,
+      $IntegrityRunItemsAnnotationComposer,
+      $IntegrityRunItemsCreateCompanionBuilder,
+      $IntegrityRunItemsUpdateCompanionBuilder,
+      (IntegrityRunItemRow, $IntegrityRunItemsReferences),
+      IntegrityRunItemRow,
+      PrefetchHooks Function({bool runId, bool instanceId})
+    >;
 typedef $IntegrityChecksCreateCompanionBuilder = IntegrityChecksCompanion Function({
   Value<int> id,
   required int instanceId,
@@ -20138,6 +21781,9 @@ typedef $IntegrityChecksCreateCompanionBuilder = IntegrityChecksCompanion Functi
   Value<Uint8List?> observedSha256,
   Value<int?> observedSize,
   Value<int?> observedMtime,
+  Value<int?> runId,
+  Value<int?> expectedContentId,
+  Value<String?> reason,
 });
 typedef $IntegrityChecksUpdateCompanionBuilder = IntegrityChecksCompanion Function({
   Value<int> id,
@@ -20148,6 +21794,9 @@ typedef $IntegrityChecksUpdateCompanionBuilder = IntegrityChecksCompanion Functi
   Value<Uint8List?> observedSha256,
   Value<int?> observedSize,
   Value<int?> observedMtime,
+  Value<int?> runId,
+  Value<int?> expectedContentId,
+  Value<String?> reason,
 });
 
 final class $IntegrityChecksReferences extends BaseReferences<_$CatalogDatabase, IntegrityChecks, IntegrityCheckRow> {
@@ -20173,6 +21822,30 @@ final class $IntegrityChecksReferences extends BaseReferences<_$CatalogDatabase,
     if ($_column == null) return null;
     final manager = $OperationsTableManager($_db, $_db.operations).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_operationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static IntegrityRuns _runIdTable(_$CatalogDatabase db) =>
+      db.integrityRuns.createAlias('integrity_checks__run_id__integrity_runs__id');
+
+  $IntegrityRunsProcessedTableManager? get runId {
+    final $_column = $_itemColumn<int>('run_id');
+    if ($_column == null) return null;
+    final manager = $IntegrityRunsTableManager($_db, $_db.integrityRuns).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_runIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static Contents _expectedContentIdTable(_$CatalogDatabase db) =>
+      db.contents.createAlias('integrity_checks__expected_content_id__contents__id');
+
+  $ContentsProcessedTableManager? get expectedContentId {
+    final $_column = $_itemColumn<int>('expected_content_id');
+    if ($_column == null) return null;
+    final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_expectedContentIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
@@ -20202,6 +21875,9 @@ class $IntegrityChecksFilterComposer extends Composer<_$CatalogDatabase, Integri
 
   ColumnFilters<int> get observedMtime =>
       $composableBuilder(column: $table.observedMtime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => ColumnFilters(column));
 
   $FileInstancesFilterComposer get instanceId {
     final $FileInstancesFilterComposer composer = $composerBuilder(
@@ -20238,6 +21914,42 @@ class $IntegrityChecksFilterComposer extends Composer<_$CatalogDatabase, Integri
     );
     return composer;
   }
+
+  $IntegrityRunsFilterComposer get runId {
+    final $IntegrityRunsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.integrityRuns,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityRunsFilterComposer(
+            $db: $db,
+            $table: $db.integrityRuns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ContentsFilterComposer get expectedContentId {
+    final $ContentsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.expectedContentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsFilterComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $IntegrityChecksOrderingComposer extends Composer<_$CatalogDatabase, IntegrityChecks> {
@@ -20264,6 +21976,9 @@ class $IntegrityChecksOrderingComposer extends Composer<_$CatalogDatabase, Integ
 
   ColumnOrderings<int> get observedMtime =>
       $composableBuilder(column: $table.observedMtime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => ColumnOrderings(column));
 
   $FileInstancesOrderingComposer get instanceId {
     final $FileInstancesOrderingComposer composer = $composerBuilder(
@@ -20300,6 +22015,42 @@ class $IntegrityChecksOrderingComposer extends Composer<_$CatalogDatabase, Integ
     );
     return composer;
   }
+
+  $IntegrityRunsOrderingComposer get runId {
+    final $IntegrityRunsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.integrityRuns,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityRunsOrderingComposer(
+            $db: $db,
+            $table: $db.integrityRuns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ContentsOrderingComposer get expectedContentId {
+    final $ContentsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.expectedContentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsOrderingComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $IntegrityChecksAnnotationComposer extends Composer<_$CatalogDatabase, IntegrityChecks> {
@@ -20323,6 +22074,8 @@ class $IntegrityChecksAnnotationComposer extends Composer<_$CatalogDatabase, Int
 
   GeneratedColumn<int> get observedMtime =>
       $composableBuilder(column: $table.observedMtime, builder: (column) => column);
+
+  GeneratedColumn<String> get reason => $composableBuilder(column: $table.reason, builder: (column) => column);
 
   $FileInstancesAnnotationComposer get instanceId {
     final $FileInstancesAnnotationComposer composer = $composerBuilder(
@@ -20359,6 +22112,42 @@ class $IntegrityChecksAnnotationComposer extends Composer<_$CatalogDatabase, Int
     );
     return composer;
   }
+
+  $IntegrityRunsAnnotationComposer get runId {
+    final $IntegrityRunsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.runId,
+      referencedTable: $db.integrityRuns,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $IntegrityRunsAnnotationComposer(
+            $db: $db,
+            $table: $db.integrityRuns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ContentsAnnotationComposer get expectedContentId {
+    final $ContentsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.expectedContentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsAnnotationComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $IntegrityChecksTableManager
@@ -20374,7 +22163,7 @@ class $IntegrityChecksTableManager
           $IntegrityChecksUpdateCompanionBuilder,
           (IntegrityCheckRow, $IntegrityChecksReferences),
           IntegrityCheckRow,
-          PrefetchHooks Function({bool instanceId, bool operationId})
+          PrefetchHooks Function({bool instanceId, bool operationId, bool runId, bool expectedContentId})
         > {
   $IntegrityChecksTableManager(_$CatalogDatabase db, IntegrityChecks table)
     : super(
@@ -20394,6 +22183,9 @@ class $IntegrityChecksTableManager
                 Value<Uint8List?> observedSha256 = const Value.absent(),
                 Value<int?> observedSize = const Value.absent(),
                 Value<int?> observedMtime = const Value.absent(),
+                Value<int?> runId = const Value.absent(),
+                Value<int?> expectedContentId = const Value.absent(),
+                Value<String?> reason = const Value.absent(),
               }) => IntegrityChecksCompanion(
                 id: id,
                 instanceId: instanceId,
@@ -20403,6 +22195,9 @@ class $IntegrityChecksTableManager
                 observedSha256: observedSha256,
                 observedSize: observedSize,
                 observedMtime: observedMtime,
+                runId: runId,
+                expectedContentId: expectedContentId,
+                reason: reason,
               ),
           createCompanionCallback:
               ({
@@ -20414,6 +22209,9 @@ class $IntegrityChecksTableManager
                 Value<Uint8List?> observedSha256 = const Value.absent(),
                 Value<int?> observedSize = const Value.absent(),
                 Value<int?> observedMtime = const Value.absent(),
+                Value<int?> runId = const Value.absent(),
+                Value<int?> expectedContentId = const Value.absent(),
+                Value<String?> reason = const Value.absent(),
               }) => IntegrityChecksCompanion.insert(
                 id: id,
                 instanceId: instanceId,
@@ -20423,6 +22221,9 @@ class $IntegrityChecksTableManager
                 observedSha256: observedSha256,
                 observedSize: observedSize,
                 observedMtime: observedMtime,
+                runId: runId,
+                expectedContentId: expectedContentId,
+                reason: reason,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -20430,7 +22231,7 @@ class $IntegrityChecksTableManager
                     (e.readTable<IntegrityChecks, IntegrityCheckRow>(table), $IntegrityChecksReferences(db, table, e)),
               )
               .toList(),
-          prefetchHooksCallback: ({instanceId = false, operationId = false}) {
+          prefetchHooksCallback: ({instanceId = false, operationId = false, runId = false, expectedContentId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -20466,6 +22267,22 @@ class $IntegrityChecksTableManager
                         referencedColumn: $IntegrityChecksReferences._operationIdTable(db).id,
                       ) as T;
                     }
+                    if (runId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.runId,
+                        referencedTable: $IntegrityChecksReferences._runIdTable(db),
+                        referencedColumn: $IntegrityChecksReferences._runIdTable(db).id,
+                      ) as T;
+                    }
+                    if (expectedContentId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.expectedContentId,
+                        referencedTable: $IntegrityChecksReferences._expectedContentIdTable(db),
+                        referencedColumn: $IntegrityChecksReferences._expectedContentIdTable(db).id,
+                      ) as T;
+                    }
 
                     return state;
                   },
@@ -20490,7 +22307,7 @@ typedef $IntegrityChecksProcessedTableManager =
       $IntegrityChecksUpdateCompanionBuilder,
       (IntegrityCheckRow, $IntegrityChecksReferences),
       IntegrityCheckRow,
-      PrefetchHooks Function({bool instanceId, bool operationId})
+      PrefetchHooks Function({bool instanceId, bool operationId, bool runId, bool expectedContentId})
     >;
 typedef $SavedScopesCreateCompanionBuilder = SavedScopesCompanion Function({
   Value<int> id,
@@ -20824,6 +22641,8 @@ class $CatalogDatabaseManager {
   $SelectionSetItemsTableManager get selectionSetItems => $SelectionSetItemsTableManager(_db, _db.selectionSetItems);
   $TagsTableManager get tags => $TagsTableManager(_db, _db.tags);
   $ContentTagsTableManager get contentTags => $ContentTagsTableManager(_db, _db.contentTags);
+  $IntegrityRunsTableManager get integrityRuns => $IntegrityRunsTableManager(_db, _db.integrityRuns);
+  $IntegrityRunItemsTableManager get integrityRunItems => $IntegrityRunItemsTableManager(_db, _db.integrityRunItems);
   $IntegrityChecksTableManager get integrityChecks => $IntegrityChecksTableManager(_db, _db.integrityChecks);
   $SavedScopesTableManager get savedScopes => $SavedScopesTableManager(_db, _db.savedScopes);
   $MomentEditsTableManager get momentEdits => $MomentEditsTableManager(_db, _db.momentEdits);

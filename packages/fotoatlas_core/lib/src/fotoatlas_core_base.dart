@@ -8,6 +8,7 @@ import 'coverage/coverage_service.dart';
 import 'devices/devices.dart';
 import 'hash/hash_service.dart';
 import 'helper/helper_client.dart';
+import 'integrity/integrity_service.dart';
 import 'library/library_service.dart';
 import 'metadata/dates_service.dart';
 import 'metadata/external_tools.dart';
@@ -43,6 +44,7 @@ class FotoAtlasCore {
     required this.helper,
     required this.copies,
     required this.reorg,
+    required this.integrity,
     required this._lock,
   });
 
@@ -81,6 +83,9 @@ class FotoAtlasCore {
   /// Reorganização no mesmo disco, com diário e Desfazer (Fase 6).
   final ReorgService reorg;
 
+  /// Verificação periódica de integridade (Fase 7): só lê os arquivos.
+  final IntegrityService integrity;
+
   /// Miniaturas em cache.
   final ThumbnailService thumbnails;
   final VolumeProvider volumes;
@@ -111,6 +116,7 @@ class FotoAtlasCore {
   /// - [tools]: ExifTool/ffprobe/ffmpeg (padrão: [ExternalTools.locate]).
   /// - [autoMetadata]: lê os metadados sozinho depois da conferência e quando
   ///   uma fonte conecta (o app liga).
+  /// - [scheduleIntegrity]: liga a verificação periódica leve (o app liga).
   static Future<FotoAtlasCore> open({
     CorePaths? paths,
     VolumeProvider? volumes,
@@ -130,6 +136,8 @@ class FotoAtlasCore {
     bool recover = true,
     bool copyInIsolate = true,
     FreeSpaceProbe? freeSpace,
+    bool verifyInIsolate = true,
+    bool scheduleIntegrity = false,
   }) async {
     final resolvedPaths = paths ?? CorePaths.fromEnvironment();
     Directory(resolvedPaths.dataDir).createSync(recursive: true);
@@ -194,6 +202,19 @@ class FotoAtlasCore {
       // Recuperação idempotente das cópias interrompidas (spec §11.2), antes
       // de qualquer outra tarefa: olha o disco e termina o que ficou no meio.
       final reorg = ReorgService(catalog.db, sources);
+      final integrity = IntegrityService(
+        catalog,
+        sources,
+        useIsolate: verifyInIsolate,
+        // A periódica espera qualquer outra tarefa pesada terminar.
+        busy: () =>
+            scans.runningProgress.isNotEmpty ||
+            hashes.isRunning ||
+            metadata.isRunning ||
+            copies.isRunning ||
+            reorg.isRunning,
+      );
+      await integrity.recover();
       if (recover) {
         await copies.recoverAll();
         await reorg.recoverAll();
@@ -223,6 +244,7 @@ class FotoAtlasCore {
         helper: helper,
         copies: copies,
         reorg: reorg,
+        integrity: integrity,
         lock: lock,
       );
       if (backupOnOpen) {
@@ -240,6 +262,7 @@ class FotoAtlasCore {
       });
       if (autoHash) hashes.enableAuto();
       if (autoMetadata) metadata.enableAuto();
+      if (scheduleIntegrity) integrity.enableSchedule();
       return core;
     } catch (_) {
       await helper?.close();
@@ -270,6 +293,10 @@ class FotoAtlasCore {
       tasks.add(RunningTask(RunningTaskKind.copy, done: c?.itemsDone ?? 0, total: c?.itemsTotal ?? 0));
     }
     if (reorg.isRunning) tasks.add(const RunningTask(RunningTaskKind.reorganize));
+    if (integrity.isRunning) {
+      final v = integrity.current;
+      tasks.add(RunningTask(RunningTaskKind.verify, done: v?.filesDone ?? 0, total: v?.filesTotal ?? 0));
+    }
     final scansNow = scans.runningProgress.values.toList();
     if (scansNow.isNotEmpty) {
       final names = {for (final s in await catalog.db.select(catalog.db.sources).get()) s.id: s.name};
@@ -324,6 +351,7 @@ class FotoAtlasCore {
               ? 'Pausando o escaneamento (o ponto de parada fica salvo)'
               : 'Pausando $runningScans escaneamentos (o ponto de parada fica salvo)',
         ),
+      if (integrity.isRunning) ShutdownStep('verify', 'Pausando a verificação de integridade (continua de onde parou)'),
       if (hashes.isRunning) ShutdownStep('hash', 'Pausando a conferência de conteúdo (o que falta continua na fila)'),
       if (metadata.isRunning)
         ShutdownStep('metadata', 'Pausando a leitura das datas e informações das fotos (o que falta continua na fila)'),
@@ -361,6 +389,7 @@ class FotoAtlasCore {
       step('reorg', () => reorg.dispose(timeout: stepTimeout)),
       step('scan', () => scans.dispose(timeout: stepTimeout)),
       step('hash', () => hashes.dispose(timeout: stepTimeout)),
+      step('verify', () => integrity.dispose(timeout: stepTimeout)),
       // Também fecha o ExifTool; um recálculo de momentos em andamento termina numa transação.
       step('metadata', () async {
         final ok = await metadata.dispose(timeout: stepTimeout);
@@ -392,7 +421,7 @@ class ShutdownStep {
   bool timedOut = false;
 }
 
-enum RunningTaskKind { copy, reorganize, scan, hash, metadata, backup }
+enum RunningTaskKind { copy, reorganize, scan, hash, metadata, backup, verify }
 
 /// Uma tarefa em andamento. [done]/[total]: arquivos encontrados (scan) ou
 /// conferidos (conferência); `total` 0 = desconhecido.

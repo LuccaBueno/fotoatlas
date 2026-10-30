@@ -54,6 +54,7 @@ class CopyRequest {
     this.preferSourceIds = const [],
     this.origin,
     this.toConfirmFolder = undatedFolder,
+    this.fileNames = const {},
   });
 
   /// Conteúdos escolhidos (Comparar ou Biblioteca).
@@ -75,6 +76,10 @@ class CopyRequest {
 
   /// Pasta dos itens sem data (ou fora de momentos, no modelo por momento).
   final String toConfirmFolder;
+
+  /// Nome do arquivo no destino por conteúdo, no lugar do nome da origem
+  /// (restaurar: o nome do arquivo danificado, com sufixo se ocupado).
+  final Map<int, String> fileNames;
 }
 
 /// Um arquivo da prévia.
