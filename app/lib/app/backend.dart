@@ -84,6 +84,30 @@ abstract interface class AppBackend {
   /// Arquivos desconhecidos na pasta temporária do destino (`null` = desconectado).
   Future<List<TempLeftover>?> tempLeftovers(String destSourceId);
 
+  // Reorganização no mesmo disco (Fase 6).
+  /// Prévia: só lê (regra 6).
+  Future<ReorgPreview> previewReorg(ReorgRequest request);
+  Future<String> startReorg(ReorgPreview preview);
+  Stream<CopyProgress> get reorgProgress;
+  Future<void> pauseReorg(String operationId);
+  Future<void> resumeReorg(String operationId);
+  Future<void> cancelReorg(String operationId);
+  Future<int> retryFailedReorg(String operationId);
+
+  /// O que o Desfazer faria agora (antes de confirmar).
+  Future<UndoPreview> undoPreview(String reorgId);
+  Future<String> undoReorg(String reorgId);
+  Future<void> resolveReorg(int itemId, ReorgDecision decision);
+  Future<List<EmptyFolder>> emptyFolders(String operationId);
+  Future<int> removeEmptyFolders(String operationId, List<String> relPaths);
+
+  /// Conteúdos de uma pasta do dispositivo ("Copiar para outro disco…").
+  Future<List<int>> contentIdsIn(String sourceId, String folder);
+
+  /// Disco principal (destino sugerido nas cópias); `null` = nenhum.
+  Future<String?> primarySourceId();
+  Future<void> setPrimarySource(String? sourceId);
+
   // Backup do catálogo.
   List<CatalogBackupInfo> catalogBackups();
 
@@ -237,6 +261,54 @@ class CoreBackend implements AppBackend {
 
   @override
   Future<List<TempLeftover>?> tempLeftovers(String destSourceId) => core.copies.tempLeftovers(destSourceId);
+
+  @override
+  Future<ReorgPreview> previewReorg(ReorgRequest request) => core.reorg.preview(request);
+
+  @override
+  Future<String> startReorg(ReorgPreview preview) => core.reorg.start(preview);
+
+  @override
+  Stream<CopyProgress> get reorgProgress => core.reorg.progress;
+
+  @override
+  Future<void> pauseReorg(String operationId) => core.reorg.pause(operationId);
+
+  @override
+  Future<void> resumeReorg(String operationId) => core.reorg.resume(operationId);
+
+  @override
+  Future<void> cancelReorg(String operationId) => core.reorg.cancel(operationId);
+
+  @override
+  Future<int> retryFailedReorg(String operationId) => core.reorg.retryFailed(operationId);
+
+  @override
+  Future<UndoPreview> undoPreview(String reorgId) => core.reorg.undoPreview(reorgId);
+
+  @override
+  Future<String> undoReorg(String reorgId) => core.reorg.undo(reorgId);
+
+  @override
+  Future<void> resolveReorg(int itemId, ReorgDecision decision) => core.reorg.resolve(itemId, decision);
+
+  @override
+  Future<List<EmptyFolder>> emptyFolders(String operationId) => core.reorg.emptyFolders(operationId);
+
+  @override
+  Future<int> removeEmptyFolders(String operationId, List<String> relPaths) =>
+      core.reorg.removeEmptyFolders(operationId, relPaths);
+
+  @override
+  Future<List<int>> contentIdsIn(String sourceId, String folder) => core.reorg.planner.contentIdsIn(sourceId, folder);
+
+  static const _primaryKey = 'library.primarySourceId';
+
+  @override
+  Future<String?> primarySourceId() async => await SettingsStore(core.catalog.db).get(_primaryKey) as String?;
+
+  @override
+  Future<void> setPrimarySource(String? sourceId) => SettingsStore(core.catalog.db).set(_primaryKey, sourceId);
 
   @override
   List<CatalogBackupInfo> catalogBackups() => core.backups.list();

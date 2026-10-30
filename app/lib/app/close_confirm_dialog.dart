@@ -60,6 +60,7 @@ class CloseConfirmDialog extends StatelessWidget {
 
   static IconData _icon(RunningTaskKind kind) => switch (kind) {
     RunningTaskKind.copy => Icons.copy_all,
+    RunningTaskKind.reorganize => Icons.drive_file_move_outline,
     RunningTaskKind.scan => Icons.search,
     RunningTaskKind.hash => Icons.fact_check_outlined,
     RunningTaskKind.metadata => Icons.event_note_outlined,
@@ -73,6 +74,7 @@ String runningTaskLabel(RunningTask t) => switch (t.kind) {
   RunningTaskKind.copy when t.total > 0 =>
     'Copiando com conferência — ${formatInt(t.done)} de ${plural(t.total, 'arquivo', 'arquivos')}',
   RunningTaskKind.copy => 'Copiando com conferência',
+  RunningTaskKind.reorganize => 'Reorganizando pastas (cada arquivo movido fica registrado)',
   RunningTaskKind.scan =>
     'Escaneando "${t.sourceName ?? 'dispositivo'}" — '
         '${plural(t.done, 'arquivo encontrado', 'arquivos encontrados')} até agora',

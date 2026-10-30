@@ -254,6 +254,79 @@ class FakeBackend implements AppBackend {
   @override
   Future<List<TempLeftover>?> tempLeftovers(String destSourceId) async => leftovers;
 
+  // Reorganização.
+  ReorgPreview Function(ReorgRequest request)? onReorgPreview;
+  ReorgRequest? lastReorgRequest;
+  UndoPreview? undoCheck;
+  List<EmptyFolder> emptyFolderList = const [];
+  String? primary;
+  List<int> contentsInFolder = const [];
+  final reorgProgressController = StreamController<CopyProgress>.broadcast();
+
+  @override
+  Future<ReorgPreview> previewReorg(ReorgRequest request) async {
+    lastReorgRequest = request;
+    calls.add('preview-reorg:${request.sourceId}:${request.folder}:${request.template}');
+    return onReorgPreview!(request);
+  }
+
+  @override
+  Future<String> startReorg(ReorgPreview preview) async {
+    calls.add('start-reorg:${preview.moves.length}');
+    return 'reorg1';
+  }
+
+  @override
+  Stream<CopyProgress> get reorgProgress => reorgProgressController.stream;
+
+  @override
+  Future<void> pauseReorg(String operationId) async => calls.add('pause-reorg:$operationId');
+
+  @override
+  Future<void> resumeReorg(String operationId) async => calls.add('resume-reorg:$operationId');
+
+  @override
+  Future<void> cancelReorg(String operationId) async => calls.add('cancel-reorg:$operationId');
+
+  @override
+  Future<int> retryFailedReorg(String operationId) async {
+    calls.add('retry-reorg:$operationId');
+    return 1;
+  }
+
+  @override
+  Future<UndoPreview> undoPreview(String reorgId) async => undoCheck!;
+
+  @override
+  Future<String> undoReorg(String reorgId) async {
+    calls.add('undo:$reorgId');
+    return 'undo1';
+  }
+
+  @override
+  Future<void> resolveReorg(int itemId, ReorgDecision decision) async => calls.add('resolve:$itemId:${decision.name}');
+
+  @override
+  Future<List<EmptyFolder>> emptyFolders(String operationId) async => emptyFolderList;
+
+  @override
+  Future<int> removeEmptyFolders(String operationId, List<String> relPaths) async {
+    calls.add('remove-folders:$operationId:${relPaths.join('|')}');
+    return relPaths.length;
+  }
+
+  @override
+  Future<List<int>> contentIdsIn(String sourceId, String folder) async => contentsInFolder;
+
+  @override
+  Future<String?> primarySourceId() async => primary;
+
+  @override
+  Future<void> setPrimarySource(String? sourceId) async {
+    calls.add('primary:$sourceId');
+    primary = sourceId;
+  }
+
   bool guideDone = true;
 
   @override

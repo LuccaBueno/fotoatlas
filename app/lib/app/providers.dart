@@ -118,3 +118,9 @@ final copyProgressProvider = StreamProvider<CopyProgress?>((ref) async* {
   yield backend.currentCopy;
   yield* backend.copyProgress;
 });
+
+/// Progresso da reorganização em andamento (ou do Desfazer).
+final reorgProgressProvider = StreamProvider<CopyProgress?>((ref) => ref.watch(backendProvider).reorgProgress);
+
+/// Disco principal (destino sugerido nas cópias); recarregado com [ref.invalidate].
+final primarySourceProvider = FutureProvider<String?>((ref) => ref.watch(backendProvider).primarySourceId());
