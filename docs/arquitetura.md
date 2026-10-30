@@ -165,6 +165,21 @@ A recuperação na inicialização é idempotente e decide **olhando o disco**, 
 
 Implementado na Fase 5 (ADR 0016): `safe_io/dest_writer.dart` (`.part` com `CREATE_NEW`, flush, data de modificação da origem; só apaga o próprio `.part` não publicado), `ops/` (prévia, bombeamento em isolate, executor, recuperação, relatório). A pasta `.fotoatlas-tmp` fica na raiz da fonte de destino. Pausar ou fechar descarta o arquivo do momento e o devolve para `pending`; falta de espaço e origem ou celular desconectados pausam a operação com o motivo; conflito de nome com a política "perguntar" deixa o `.part` conferido esperando a decisão em Tarefas.
 
+### 3.6.1. Reorganização e Desfazer (Fase 6, ADR 0017)
+
+Mesmo diário da cópia (`operations.kind = 'reorganize_move'` e `'undo'`), protocolo curto por arquivo:
+
+```
+pending → publishing → published          (Desfazer: published → undone no item original)
+   └──────────┴──► failed | needs_attention | skipped_identical ("deixado onde está")
+```
+
+- Antes de mover, confere tamanho e data no disco contra o catálogo; `publishing` grava o nome final e a data conferida (`expected_mtime`) antes de `MoveFileExW(MOVEFILE_WRITE_THROUGH)` — sem `REPLACE_EXISTING` e sem `COPY_ALLOWED` (outro disco = o Windows recusa). `published` atualiza a `file_instance` (mesmo id) na mesma transação.
+- Recuperação pelo disco: só a origem é o arquivo esperado → `pending`; só o destino → registra; senão `needs_attention`.
+- Desfazer = operação nova (`undo_of`), item a item em ordem inversa (`undo_of_item_id`); arquivo que mudou desde a reorganização (`expected_mtime`/tamanho) ou lugar antigo ocupado esperam a decisão.
+- Pastas vazias nunca são apagadas automaticamente: "Remover pastas vazias" lista cada uma, confirma e usa `safe_io/empty_dir.dart` (confere de novo que não há nada, nem oculto; `RemoveDirectoryW` só em pasta vazia).
+- Prévia em árvore (`ops/reorg_planner.dart`): antes (de onde saem, "fica vazia") e depois (pasta nova, nomes ajustados). Modelos com `{hora}`, `{minuto}`, `{segundo}` e `{momento}` (`ops/names.dart`, `ops/template_data.dart`), também usados pela cópia.
+
 ### 3.7. Celular (Fase 3)
 
 Implementado (ADR 0012): `PhoneScanLister` lista pasta por pasta pelo helper (`devices.listChildren`), com o mesmo checkpoint em `scan_dirs` do scan de disco; a raiz da fonte mostra os armazenamentos como pastas (L7). `PhonePathResolver` guarda os IDs de objeto e refaz o caminho a partir da raiz quando um ID ficou velho (Android muda IDs entre sessões). Desconexão, bloqueio ou helper fora do ar → `interrupted`/`pending`, nunca `missing`. O scan e a conferência do celular rodam no isolate principal (o trabalho é do helper, outro processo). Identidade pelo serial, com o ID WPD como reserva; o celular é um disco físico próprio (`bus_type = 'mtp'`).
@@ -238,6 +253,8 @@ Detalhes em [`protocolo-helper.md`](protocolo-helper.md). Resumo:
 | Nunca sobrescrever | Publicação só por `MoveFileExW` sem `REPLACE_EXISTING`; temporários com `CREATE_NEW`; `VACUUM INTO` falha se o arquivo existe. |
 | Nada é excluído | `safe_io` não tem função de exclusão de arquivos de usuário; nem o `.part` com falha é apagado (o usuário vê e decide). |
 | Catálogo ≠ armazenamento | "Esquecer fonte" e "reconstruir catálogo" só mexem no banco. |
+| Mover só no mesmo disco | Reorganização usa `moveNoReplace` (`MoveFileExW` só com `WRITE_THROUGH`: sem `COPY_ALLOWED` o Windows recusa outro volume; sem `REPLACE_EXISTING` nunca sobrescreve) — conferido no teste de arquitetura; celular é bloqueado na prévia. |
+| Pastas não somem sozinhas | `RemoveDirectoryW` só em `safe_io/empty_dir.dart`, depois de conferir que a pasta não tem nada (nem oculto) e não é junção; só a pedido, pasta por pasta ("Remover pastas vazias"). O serviço de reorganização não tem API de exclusão (teste de arquitetura). |
 | Testes nunca tocam pastas pessoais | `FOTOATLAS_HOME` obrigatório nos testes; um helper de teste falha se o caminho não estiver em `Directory.systemTemp`. |
 
 ## 7. Caso de uso nº 1, ponta a ponta

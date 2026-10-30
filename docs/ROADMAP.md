@@ -204,12 +204,25 @@ Observações da Fase 5:
 - O demo do celular ganhou um arquivo no HD com o mesmo nome de uma foto que falta (outra foto, renomeada), para mostrar o sufixo `_1`; a comparação Pixel × HD continua "faltam 3 · nos dois 3 · só em B 1".
 - `{momento}` nos modelos e a prévia em árvore "antes → depois" ficam para a Fase 6 (reorganização).
 
-## Fase 6 — Reorganização
-- [ ] Modelos de estrutura e prévia em árvore antes → depois
-- [ ] Modelo com momento: `{ano}/{ano}-{mes}-{dia} {momento}/` (momento sem nome → início do momento; hora a confirmar → pasta própria; sanitização de nomes), variáveis de hora usando as correções do catálogo (spec §12)
-- [ ] Movimentação no mesmo volume via diário + Desfazer
-- [ ] Critérios da spec
+## Fase 6 — Reorganização (implementada em 2026-10-30; aguarda o teste do usuário)
+Cuidados pedidos pelo usuário (2026-10-30), registrados na spec §12 e no ADR 0017: pastas vazias nunca são apagadas automaticamente (só "Remover pastas vazias", pasta a pasta, com confirmação, só as realmente vazias); reorganizar só move no mesmo disco (outro disco = cópia conferida; celular nunca); Desfazer funciona depois de reabrir e não devolve sem perguntar arquivo que mudou. Decisões sem resposta do usuário, seguindo o plano aprovado: acompanhantes `.xmp`/`.aae`/`.thm` vão junto (opção no assistente, ligada por padrão) e "biblioteca principal" = configuração "disco principal" (destino sugerido nas cópias).
+- [x] Modelos de estrutura e prévia em árvore antes → depois (2026-10-30)
+  - [x] Assistente "Reorganizar…" no cartão do disco: pasta, modelo, pasta de "hora a confirmar", nomes repetidos, acompanhantes; prévia com frases e árvore "Antes (de onde saem)" → "Depois (para onde vão)", pastas novas, "fica vazia (não é apagada)", nomes ajustados destacados; "Copiar para outro disco…" abre a cópia conferida
+- [x] Modelo com momento: `{ano}/{ano}-{mes}-{dia} {momento}/` (momento sem nome → início do momento; hora a confirmar → pasta própria; sanitização de nomes), variáveis de hora usando as correções do catálogo (spec §12) (2026-10-30)
+  - [x] `{hora}`, `{minuto}`, `{segundo}`, `{momento}`; data do início do momento (momento que atravessa a meia-noite fica numa pasta); os mesmos modelos na cópia
+- [x] Movimentação no mesmo volume via diário + Desfazer (2026-10-30)
+  - [x] `MoveFileExW` sem substituir e sem copiar; catálogo atualizado na mesma transação; recuperação pelo disco; schema v5 aditivo (`expected_mtime`, `undo_of_item_id`)
+  - [x] Desfazer pelo diário (após reabrir), prévia com mudados/sumidos/ocupados, decisões em Tarefas ("Devolver mesmo assim", "Mover com outro nome", "Deixar onde está")
+  - [x] "Remover pastas vazias…" em Tarefas (lista cada pasta; ocultos impedem; confere de novo antes de remover); disco principal em Dispositivos
+  - [x] CLI `reorg plan|start|resume|undo|resolve|folders|status`; `recover` inclui a reorganização
+  - [x] Demonstração: `-DemoPersistente` gera a pasta "HD bagunçado"
+- [x] Critérios da spec (2026-10-30): interrupção recuperável (kill em 3 pontos × reorganização e Desfazer + na recuperação, 3× sem efeito colateral); Desfazer restaura exatamente a estrutura anterior (arquivos e pastas, depois de reabrir o core); modelo com momento gera a árvore esperada (momento nomeado com caracteres inválidos, sem nome, atravessando a meia-noite, hora a confirmar)
+- [ ] Teste do usuário (roteiro com o "HD bagunçado" da demonstração)
 - [ ] Tag `v0.6.0`
+
+Observações da Fase 6:
+- Evidências: core — `reorg_test` (9 testes: modelos, árvore do critério, mover + catálogo + reescanear + reabrir + Desfazer exato + remover pastas criadas, Desfazer com arquivo mudado/sumido/lugar ocupado e decisões, origem mudada antes de mover, "perguntar", pastas vazias com Thumbs.db oculto, celular/desconectado/sem escaneamento bloqueiam); `reorg_demo_test` (cenário da demonstração com e sem ExifTool real); `reorg_kill_test` (8 testes com a CLI morta); migração v1–v4 → v5; teste de arquitetura (sem `COPY_ALLOWED`, `RemoveDirectoryW` só depois de conferir, reorganização sem API de exclusão). App — assistente (árvore, nada antes de confirmar, bloqueio, copiar para outro disco), celular sem botão, disco principal, Desfazer com avisos, decisões, pastas vazias; reorganizar e desfazer pela interface com o core real.
+- Arquivos criados depois do último escaneamento não entram na reorganização (a prévia só usa o catálogo); escaneie antes.
 
 ## Fase 7 — Integridade periódica
 - [ ] Verificação agendada, classificação (inalterado / alterado / possivelmente corrompido)
@@ -241,3 +254,4 @@ Observações da Fase 5:
 - 2026-10-29 — Ajustes de usabilidade da Fase 4 (teste do usuário) — nomes das situações de backup, "Horário do dia"/"Hora confiável?", momentos com nome descritivo e menu pelo clique direito, dicas, botão "?" por tela, guia de primeiros passos, correção de relógio pela hora certa de uma foto, relógio zerado (1º/jan 00:00:00) como hora incerta. Tag v0.4.0. Fase 5 **não iniciada**: aguarda o usuário.
 - 2026-10-29 — Fase 5 — Cópia segura: diário por item, protocolo completo (.part CREATE_NEW, flush, releitura, MoveFileExW sem substituir), recuperação idempotente pelo disco, assistente "Copiar para…" com prévia (Comparar e Biblioteca), tela Tarefas, celular como origem (`devices.pullToFile`), CLI copy/recover; kill em 11 pontos + na recuperação (3× sem efeito colateral), VHD FAT32 > 4 GB e disco cheio na CI. Achados da CI corrigidos (disco cheio sem ERROR_DISK_FULL; GetLastError zerado). Tag v0.5.0 aguarda o teste do usuário.
 - 2026-10-30 — Ajustes de usabilidade da Fase 5 (teste do usuário) — abas da Comparar com "contém/contido" e dicas com os nomes dos lados, dicas nos comandos, caminho completo e próximo passo no assistente, Detalhes da tarefa com copiados/renomeados/não copiados. Tag v0.5.0. Fase 6 **não iniciada**: aguarda o usuário.
+- 2026-10-30 — Retomada após o terminal fechar + Fase 6 — Conferido: tag v0.5.0 criada após CI verde; core da reorganização já pronto (commit). Fase 6 implementada: modelos com hora e momento, prévia em árvore, mover no mesmo disco com diário/recuperação, Desfazer pelo diário com aviso de arquivo mudado, remover pastas vazias só a pedido, disco principal, CLI reorg, demo "HD bagunçado", schema v5, ADR 0017. Tag v0.6.0 aguarda o teste do usuário.

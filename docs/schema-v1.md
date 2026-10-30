@@ -483,3 +483,16 @@ Regras:
 - **Filtros salvos** usam a tabela `saved_filters` da v1 (`definition_json` = `LibraryFilter.toJson()`, `v: 1`).
 - **Escopo da Comparar** (`saved_scopes.definition_json`): `v: 2` quando tem momentos (`"moments":[{"moment":id,"source":?}]`) ou filtro (`"filter":{…}`); escopos só com pastas continuam `v: 1`.
 - **Miniaturas:** não há tabela `thumbnail_cache` (prevista na §6): o arquivo `thumbs\<2 primeiros do sha>\<sha256>_256.jpg` existe ou não; o cache é descartável.
+
+## 10. v5 (Fase 6, 2026-10-30) — mudanças aditivas
+
+Migração `v4 → v5` numa transação, depois do backup `pre-migracao-v4-<data>.db`. Testada a partir dos *snapshots* v1 a v4 (`drift_schemas/drift_schema_v5.json`), com um teste de dados preservados (v4 → v5: a cópia antiga continua no histórico).
+
+```sql
+-- Reorganização e Desfazer (ADR 0017). Os kinds 'reorganize_move' e 'undo', operations.undo_of e o
+-- estado 'undone' já existiam desde a v1.
+ALTER TABLE operation_items ADD COLUMN expected_mtime INTEGER;   -- FILETIME conferido no momento do mover
+ALTER TABLE operation_items ADD COLUMN undo_of_item_id INTEGER REFERENCES operation_items(id);  -- Desfazer → item original
+```
+
+Estados de um item da reorganização: `pending → publishing → published` (ou `failed`, `needs_attention`, `skipped_identical` = "deixado onde está" por decisão, `undone` = devolvido pelo Desfazer). `publishing` grava `dst_rel_path_final` e `expected_mtime` antes do `MoveFileExW`.

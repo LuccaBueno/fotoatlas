@@ -50,6 +50,7 @@ powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -CelularSimul
 # Demonstração MANTIDA entre aberturas (sempre %TEMP%\fotoatlas_demo_persistente),
 # para testar a retomada: fechar no meio do scan/conferência e abrir de novo.
 # Com -CelularSimulado, o Pixel simulado lê devagar (3 s por arquivo).
+# Também gera, uma vez, "%TEMP%\fotoatlas_demo_persistente\HD bagunçado" (Fase 6: Reorganizar).
 powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -DemoPersistente -CelularSimulado
 
 # Catálogo real em %APPDATA%\FotoAtlas

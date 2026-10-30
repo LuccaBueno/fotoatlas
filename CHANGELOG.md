@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+### Adicionado — Fase 6: Reorganização
+- **Reorganizar…** (Dispositivos, no cartão de um disco ou pasta): organiza as fotos e vídeos dentro do **mesmo disco**, movendo sem copiar (rápido, não ocupa espaço). Modelos: por ano e mês, por ano e dia, **por ano e momento** (`2024/2024-07-13 Aniversário da Ana`; momento sem nome usa a hora em que começou, `2024-07-13 14h03`), por tipo e ano, por ano e câmera, mesma estrutura ou tudo junto. Fotos sem hora confiável vão para "Sem data confirmada" (nome configurável); nomes que o Windows não aceita são ajustados.
+- **Prévia em árvore "antes → depois"**: de onde cada arquivo sai, para onde vai, pastas novas, pastas que ficam vazias, nomes repetidos (ganham `_1`, `_2`… ou esperam a sua decisão) e o que fica onde está (o que não é foto nem vídeo, ou ainda não teve a data lida). Arquivos de edição `.xmp`/`.aae` com o mesmo nome vão junto com a foto.
+- **Desfazer** (Tarefas): devolve cada arquivo ao lugar exato de antes, mesmo depois de fechar e abrir o app. Antes de confirmar, avisa quais arquivos mudaram desde a reorganização — esses só voltam se você confirmar —, quais sumiram e quais lugares antigos já têm outro arquivo (nada é sobrescrito).
+- **Remover pastas vazias…** (Tarefas): as pastas que ficaram vazias nunca são apagadas sozinhas. Esta ação lista cada uma, você escolhe e confirma; só sai pasta sem nada dentro (nem arquivo oculto, como `Thumbs.db`), conferida de novo na hora.
+- Para organizar em **outro disco**, o assistente oferece a cópia conferida ("Copiar para outro disco…"): a origem fica como está. **Celular nunca é reorganizado.**
+- **Disco principal** (Dispositivos › Mais opções): destino sugerido nas cópias.
+- Os modelos novos (`{hora}`, `{minuto}`, `{segundo}`, `{momento}`) também valem na cópia.
+- Diário e recuperação: cada arquivo movido fica registrado antes de mover; se o app fechar no meio, ao abrir ele confere o disco e continua de onde parou. Testes de falha matam o processo em cada etapa (reorganização, Desfazer e a própria recuperação).
+- CLI: `reorg plan|start|resume|undo|resolve|folders|status`; `recover` também cobre a reorganização.
+- Demonstração: `run-app.ps1 -DemoPersistente` gera a pasta "HD bagunçado" para testar.
+- Catálogo v5 (só acrescenta duas colunas no diário; backup automático antes da migração). ADR 0017.
+
 ## [0.5.0] — 2026-10-30 — Fase 5: Cópia segura
 
 ### Ajustes de usabilidade (depois do teste da Fase 5)

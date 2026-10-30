@@ -36,3 +36,4 @@ Modelo:
 | [0014](0014-fusos-horarios-timezone.md) | Fusos horários com o pacote `timezone` (base IANA embutida) | aceita |
 | [0015](0015-metadados-momentos-miniaturas.md) | Metadados, data efetiva, momentos e miniaturas | aceita |
 | [0016](0016-copia-segura.md) | Cópia segura: diário por item, recuperação pelo disco e o que pode ser apagado | aceita |
+| [0017](0017-reorganizacao-e-desfazer.md) | Reorganização no mesmo disco, Desfazer e pastas vazias | aceita |

@@ -338,7 +338,9 @@ O objetivo é deixar o HD organizado sem risco.
 - A prévia mostra quantos itens dependem de hora de baixa confiança antes de confirmar.
 - **Prévia em árvore** de "antes → depois", com conflitos destacados.
 - **Dentro do mesmo volume:** mover por renomeação (operação de metadados, sem copiar dados), registrada no diário, sem substituição e com **Desfazer**.
-- **Entre volumes:** sempre copiar e conferir (seção 11). A origem permanece intacta.
+- **Entre volumes:** sempre copiar e conferir (seção 11). A origem permanece intacta. Celular nunca é reorganizado (só leitura).
+- **Desfazer** vem do diário e funciona depois de fechar e abrir o app. Antes de confirmar, avisa quais arquivos mudaram desde a reorganização (tamanho ou data diferente); esses só voltam se o usuário confirmar, um a um. Lugar antigo ocupado nunca é sobrescrito.
+- **Pastas que ficam vazias** (depois de mover ou de desfazer) **nunca são apagadas automaticamente**. Há uma ação separada, "Remover pastas vazias", que lista cada pasta, pede confirmação e só remove pastas realmente vazias (sem nenhum arquivo, nem oculto ou de sistema), conferidas de novo na hora (ADR 0017).
 - **Remover originais após a cópia conferida:** fora do MVP. Quando existir, será uma operação separada, com confirmação explícita e exigência de pelo menos uma outra cópia conferida.
 - **Sincronização destrutiva** (apagar no destino o que sumiu da origem): **nunca**.
 

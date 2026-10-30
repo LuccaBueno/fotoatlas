@@ -1047,7 +1047,13 @@ class CopyService {
 
     String hex(Uint8List? b) => b == null ? '' : b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
     final out = StringBuffer('﻿')
-      ..writeln('# FotoAtlas — relatório da cópia ${op.id}')
+      ..writeln(
+        '# FotoAtlas — relatório da ${switch (op.kind) {
+          'reorganize_move' => 'reorganização',
+          'undo' => 'reorganização desfeita',
+          _ => 'cópia',
+        }} ${op.id}',
+      )
       ..writeln(
         '# Destino: ${q(names[op.destSourceId])}${op.destRootRel == null || op.destRootRel!.isEmpty ? '' : ' › ${op.destRootRel}'}',
       )
