@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'names.dart';
+
 /// Estados de um item no diário (`docs/arquitetura.md` §3.6).
 abstract final class ItemState {
   static const pending = 'pending';
@@ -289,7 +291,18 @@ class OperationItemView {
   final int size;
   final String? errorCode;
   final String? errorMessage;
+
+  /// Nome na origem quando foi ajustado para o Windows aceitar.
   final String? originalName;
+
+  /// Nome do arquivo na origem.
+  String get srcName => srcRelPath.split('/').last;
+
+  /// Nome com que foi (ou vai ser) salvo no destino.
+  String get dstName => dstRelPath.split('/').last;
+
+  /// Salvo com outro nome (`_1`, `_2`…) porque o nome já existia no destino.
+  bool get renamedForConflict => state == ItemState.published && dstName != sanitizeName(srcName);
 }
 
 /// Arquivo na pasta temporária do destino que não pertence a nenhuma cópia em

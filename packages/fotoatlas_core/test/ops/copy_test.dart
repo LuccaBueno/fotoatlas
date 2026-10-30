@@ -233,8 +233,11 @@ void main() {
     final planned = preview.items.singleWhere((i) => i.srcRelPath.endsWith('IMG_0002.jpg'));
     expect(planned.dstRelPath, 'fotos/IMG_0002_1.jpg');
     expect(preview.renamedForConflict, 1);
-    await s.run(preview);
+    final first = await s.run(preview);
     expect(sha(other.readAsBytesSync()), sha(bytes(99, 123)), reason: 'o arquivo que já existia ficou intacto');
+    // Os detalhes da tarefa sabem quem foi salvo com outro nome.
+    final renamed = (await s.copies.items(first.id)).where((i) => i.renamedForConflict).toList();
+    expect(renamed.map((i) => (i.srcName, i.dstName)), [('IMG_0002.jpg', 'IMG_0002_1.jpg')]);
     expect(sha(File(p.join(s.dstDir.path, 'fotos', 'IMG_0002_1.jpg')).readAsBytesSync()), sha(bytes(2, 5000)));
 
     // Política "perguntar": o item espera a decisão, já conferido.
