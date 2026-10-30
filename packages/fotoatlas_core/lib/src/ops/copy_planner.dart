@@ -6,6 +6,7 @@ import '../safe_io/source_reader.dart';
 import '../sources/sources_service.dart';
 import 'copy_models.dart';
 import 'names.dart';
+import 'template_data.dart';
 
 /// Espaço livre do volume de [root] (injetável nos testes de falta de espaço).
 typedef FreeSpaceProbe = int? Function(String root);
@@ -47,7 +48,8 @@ class CopyPlanner {
     final destFolder = _cleanFolder(request.destFolder);
     final fat = isFat(dest.filesystem);
 
-    final rows = await _instances(request.contentIds);
+    final moments = templateUsesMoment(request.template) ? await loadMomentHeads(db) : const <int, MomentHead>{};
+    final rows = await _instances(request.contentIds, moments);
     final there = await _contentsIn(request.destSourceId, request.contentIds);
     final byContent = <int, List<_Row>>{};
     for (final r in rows) {
@@ -99,16 +101,11 @@ class CopyPlanner {
         );
         continue;
       }
-      final vars = TemplateVars(
-        year: src.year,
-        month: src.month,
-        day: src.day,
-        originalDir: src.dirRelPath,
-        mediaType: src.mediaType,
-        camera: src.camera,
-        sourceName: src.sourceName,
-      );
-      final folder = [destFolder, renderFolder(request.template, vars)].where((s) => s.isNotEmpty).join('/');
+      final vars = src.vars;
+      final folder = [
+        destFolder,
+        renderFolder(request.template, vars, toConfirm: request.toConfirmFolder),
+      ].where((s) => s.isNotEmpty).join('/');
       final safeName = sanitizeName(src.name);
       var candidate = folder.isEmpty ? safeName : '$folder/$safeName';
       var renamed = false;
@@ -142,7 +139,9 @@ class CopyPlanner {
           renamedForConflict: renamed,
           askConflict: ask,
           lowConfidenceDate: vars.dated && src.confidence == 'low',
-          undated: !vars.dated && request.template.contains('{ano}'),
+          undated: templateUsesMoment(request.template)
+              ? !vars.inMoment
+              : !vars.dated && templateUsesDate(request.template),
         ),
       );
     }
@@ -245,14 +244,14 @@ class CopyPlanner {
     return out;
   }
 
-  Future<List<_Row>> _instances(List<int> contentIds) async {
+  Future<List<_Row>> _instances(List<int> contentIds, Map<int, MomentHead> moments) async {
     final out = <_Row>[];
     for (final chunk in _chunks(contentIds.toSet().toList())) {
       final rows = await db
           .customSelect(
             'SELECT fi.id, fi.source_id, fi.rel_path, fi.dir_rel_path, fi.name, fi.size_bytes, fi.mtime, '
             'fi.content_id, fi.availability, c.sha256, c.media_type, s.kind, s.name AS source_name, '
-            'mm.eff_year, mm.eff_month, mm.eff_day, mm.eff_confidence, mm.make, mm.model '
+            '$templateColumnsSql '
             'FROM file_instances fi JOIN contents c ON c.id = fi.content_id '
             'JOIN sources s ON s.id = fi.source_id '
             'LEFT JOIN media_metadata mm ON mm.content_id = fi.content_id '
@@ -263,8 +262,6 @@ class CopyPlanner {
           )
           .get();
       for (final r in rows) {
-        final day = r.readNullable<String>('eff_day');
-        final make = r.readNullable<String>('make'), model = r.readNullable<String>('model');
         out.add(
           _Row(
             instanceId: r.read<int>('id'),
@@ -280,11 +277,14 @@ class CopyPlanner {
             mediaType: r.read<String>('media_type'),
             sourceKind: r.read<String>('kind'),
             sourceName: r.read<String>('source_name'),
-            year: r.readNullable<int>('eff_year'),
-            month: r.readNullable<int>('eff_month'),
-            day: day == null || day.length < 10 ? null : int.tryParse(day.substring(8, 10)),
             confidence: r.readNullable<String>('eff_confidence'),
-            camera: model ?? make,
+            vars: templateVarsFrom(
+              r,
+              originalDir: r.read<String>('dir_rel_path'),
+              mediaType: r.read<String>('media_type'),
+              sourceName: r.read<String>('source_name'),
+              moments: moments,
+            ),
           ),
         );
       }
@@ -314,11 +314,8 @@ class _Row {
     required this.mediaType,
     required this.sourceKind,
     required this.sourceName,
-    this.year,
-    this.month,
-    this.day,
     this.confidence,
-    this.camera,
+    required this.vars,
   });
   final int instanceId;
   final String sourceId;
@@ -333,9 +330,6 @@ class _Row {
   final String mediaType;
   final String sourceKind;
   final String sourceName;
-  final int? year;
-  final int? month;
-  final int? day;
   final String? confidence;
-  final String? camera;
+  final TemplateVars vars;
 }

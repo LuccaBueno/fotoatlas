@@ -15,6 +15,7 @@ import 'metadata/metadata_service.dart';
 import 'metadata/moments_service.dart';
 import 'ops/copy_planner.dart';
 import 'ops/copy_service.dart';
+import 'ops/reorg_service.dart';
 import 'scan/scan_service.dart';
 import 'sources/sources_service.dart';
 import 'sources/volumes.dart';
@@ -41,6 +42,7 @@ class FotoAtlasCore {
     required this.volumes,
     required this.helper,
     required this.copies,
+    required this.reorg,
     required this._lock,
   });
 
@@ -75,6 +77,9 @@ class FotoAtlasCore {
 
   /// Cópia segura com diário e recuperação (Fase 5).
   final CopyService copies;
+
+  /// Reorganização no mesmo disco, com diário e Desfazer (Fase 6).
+  final ReorgService reorg;
 
   /// Miniaturas em cache.
   final ThumbnailService thumbnails;
@@ -188,7 +193,11 @@ class FotoAtlasCore {
       final copies = CopyService(catalog.db, sources, useIsolate: copyInIsolate, freeSpace: freeSpace);
       // Recuperação idempotente das cópias interrompidas (spec §11.2), antes
       // de qualquer outra tarefa: olha o disco e termina o que ficou no meio.
-      if (recover) await copies.recoverAll();
+      final reorg = ReorgService(catalog.db, sources);
+      if (recover) {
+        await copies.recoverAll();
+        await reorg.recoverAll();
+      }
       if (monitor) sources.startMonitoring();
       final core = FotoAtlasCore._(
         paths: resolvedPaths,
@@ -213,6 +222,7 @@ class FotoAtlasCore {
         volumes: provider,
         helper: helper,
         copies: copies,
+        reorg: reorg,
         lock: lock,
       );
       if (backupOnOpen) {
@@ -259,6 +269,7 @@ class FotoAtlasCore {
       final c = copies.current;
       tasks.add(RunningTask(RunningTaskKind.copy, done: c?.itemsDone ?? 0, total: c?.itemsTotal ?? 0));
     }
+    if (reorg.isRunning) tasks.add(const RunningTask(RunningTaskKind.reorganize));
     final scansNow = scans.runningProgress.values.toList();
     if (scansNow.isNotEmpty) {
       final names = {for (final s in await catalog.db.select(catalog.db.sources).get()) s.id: s.name};
@@ -305,6 +316,7 @@ class FotoAtlasCore {
     final steps = <ShutdownStep>[
       if (copies.isRunning)
         ShutdownStep('copy', 'Pausando a cópia (o arquivo do momento volta para a fila; nada se perde)'),
+      if (reorg.isRunning) ShutdownStep('reorg', 'Pausando a reorganização (cada arquivo já movido fica registrado)'),
       if (runningScans > 0)
         ShutdownStep(
           'scan',
@@ -346,6 +358,7 @@ class FotoAtlasCore {
     thumbnails.close();
     await Future.wait([
       step('copy', () => copies.dispose(timeout: stepTimeout)),
+      step('reorg', () => reorg.dispose(timeout: stepTimeout)),
       step('scan', () => scans.dispose(timeout: stepTimeout)),
       step('hash', () => hashes.dispose(timeout: stepTimeout)),
       // Também fecha o ExifTool; um recálculo de momentos em andamento termina numa transação.
@@ -379,7 +392,7 @@ class ShutdownStep {
   bool timedOut = false;
 }
 
-enum RunningTaskKind { copy, scan, hash, metadata, backup }
+enum RunningTaskKind { copy, reorganize, scan, hash, metadata, backup }
 
 /// Uma tarefa em andamento. [done]/[total]: arquivos encontrados (scan) ou
 /// conferidos (conferência); `total` 0 = desconhecido.

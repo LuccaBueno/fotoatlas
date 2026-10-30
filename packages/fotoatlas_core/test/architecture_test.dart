@@ -37,6 +37,9 @@ const _writeApis = [
   'deleteOwnPart',
   'PartWriter',
   'ensureDirectory',
+  // Fase 6: remover pasta vazia (só pasta sem nada dentro, a pedido).
+  'removeDirectory',
+  'removeEmptyFolder',
 ];
 
 /// (arquivo relativo a lib/src, API) permitidos, com o motivo.
@@ -84,6 +87,16 @@ const _allowed = {
   ('ops/copy_service.dart', 'moveNoReplace'),
   ('ops/copy_service.dart', 'deleteOwnPart'),
   ('ops/copy_service.dart', 'ensureDirectory'),
+  // Fase 6 — reorganização no mesmo disco (ADR 0017): renomear sem substituir
+  // nem copiar, pastas novas e remoção de pasta vazia conferida.
+  ('ops/reorg_service.dart', 'moveNoReplace'),
+  ('ops/reorg_service.dart', 'ensureDirectory'),
+  ('ops/reorg_service.dart', 'removeEmptyFolder'),
+  ('platform/win32/kernel32.dart', 'removeDirectory'),
+  ('platform/win32/kernel32.dart', 'RemoveDirectory'),
+  ('safe_io/empty_dir.dart', 'removeDirectory'),
+  ('safe_io/empty_dir.dart', 'RemoveDirectory'),
+  ('safe_io/empty_dir.dart', 'removeEmptyFolder'),
   // Backup do catálogo: publicação sem sobrescrever na pasta do catálogo.
   ('catalog/catalog_backup.dart', 'moveNoReplace'),
   // Backup do catálogo: pasta backups/ e rotação dos próprios backups (nunca arquivos de usuário).
@@ -153,6 +166,26 @@ void main() {
     final delete = RegExp(r'bool deleteOwnPart\([\s\S]*?\n\}').firstMatch(src)!.group(0)!;
     expect(delete.indexOf('isOwnPartPath(path)'), lessThan(delete.indexOf('deleteFile(')));
     expect(src.split('deleteFile(').length - 1, 1, reason: 'DeleteFileW só em deleteOwnPart');
+  });
+
+  test('pasta só é removida vazia, conferida antes, e a reorganização nunca copia entre discos', () {
+    final src = File(p.join('lib', 'src', 'safe_io', 'empty_dir.dart')).readAsStringSync();
+    expect(src.split('removeDirectory(').length - 1, 1, reason: 'RemoveDirectoryW só em removeEmptyFolder');
+    final remove = RegExp(r'bool removeEmptyFolder\([\s\S]*?\n\}').firstMatch(src)!.group(0)!;
+    expect(remove.indexOf('listDirectory(dirPath).isNotEmpty'), lessThan(remove.indexOf('removeDirectory(')));
+    expect(remove, contains('fileAttributeReparsePoint'));
+    // MoveFileExW só com WRITE_THROUGH: sem COPY_ALLOWED (0x2) o Windows recusa
+    // mover para outro disco, e sem REPLACE_EXISTING (0x1) nunca sobrescreve.
+    final move = File(p.join('lib', 'src', 'safe_io', 'move_no_replace.dart')).readAsStringSync();
+    expect(RegExp(r'moveFileEx\(([\s\S]*?)\);').firstMatch(move)!.group(1), contains('movefileWriteThrough'));
+    expect(move, isNot(contains('CopyAllowed')));
+    final k = File(p.join('lib', 'src', 'platform', 'win32', 'kernel32.dart')).readAsStringSync();
+    expect(RegExp(r'const int movefileWriteThrough = (0x\w+);').firstMatch(k)!.group(1), '0x8');
+    // O serviço de reorganização não apaga arquivo nenhum.
+    final reorg = File(p.join('lib', 'src', 'ops', 'reorg_service.dart')).readAsStringSync();
+    for (final api in ['deleteOwnPart', 'deleteFile', 'DeleteFile', 'deleteSync', '.delete(']) {
+      expect(reorg, isNot(contains(api)));
+    }
   });
 
   test('o core não depende de Flutter', () {

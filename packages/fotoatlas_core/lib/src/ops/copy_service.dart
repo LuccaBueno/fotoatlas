@@ -985,6 +985,7 @@ class CopyService {
           doneBytes: (bytes[o.id]?[ItemState.published] ?? 0) + (bytes[o.id]?[ItemState.skippedIdentical] ?? 0),
           pauseReason: _summary(o)['pausedReason'] as String?,
           origin: _params(o)['origin'] as String?,
+          undoOf: o.undoOf,
         ),
     ];
   }

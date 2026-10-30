@@ -28,6 +28,8 @@ const int errorFileExists = 80;
 const int errorHandleDiskFull = 39;
 const int errorDiskFull = 112;
 const int errorFileTooLarge = 223;
+const int errorNotSameDevice = 17;
+const int errorDirNotEmpty = 145;
 const int errorGenFailure = 31;
 const int errorDeviceNotConnected = 1167;
 
@@ -225,6 +227,12 @@ final createDirectory = _kernel32
       'CreateDirectoryW',
       isLeaf: true,
     );
+
+/// Só remove pasta **vazia** (o próprio Windows recusa se houver qualquer coisa).
+final removeDirectory = _kernel32.lookupFunction<Int32 Function(Pointer<Utf16>), int Function(Pointer<Utf16>)>(
+  'RemoveDirectoryW',
+  isLeaf: true,
+);
 
 final deleteFile = _kernel32.lookupFunction<Int32 Function(Pointer<Utf16>), int Function(Pointer<Utf16>)>(
   'DeleteFileW',

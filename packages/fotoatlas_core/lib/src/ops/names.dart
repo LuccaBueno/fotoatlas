@@ -55,10 +55,15 @@ class TemplateVars {
     this.year,
     this.month,
     this.day,
+    this.hour,
+    this.minute,
+    this.second,
     required this.originalDir,
     required this.mediaType,
     this.camera,
     this.sourceName,
+    this.momentStart,
+    this.momentName,
   });
 
   /// Data da captura efetiva (com correções do catálogo); `null` = sem data.
@@ -68,16 +73,29 @@ class TemplateVars {
   /// Dia do mês.
   final int? day;
 
+  /// Hora local da captura (com as correções do catálogo).
+  final int? hour;
+  final int? minute;
+  final int? second;
+
   /// Pasta do arquivo na origem, relativa à raiz (`DCIM/Camera`).
   final String originalDir;
   final String mediaType;
   final String? camera;
   final String? sourceName;
 
+  /// Início do momento do item (hora local); `null` = fora de momentos
+  /// ("Hora a confirmar").
+  final DateTime? momentStart;
+
+  /// Nome dado pelo usuário ao momento (`null` = sem nome).
+  final String? momentName;
+
   bool get dated => year != null && month != null;
+  bool get inMoment => momentStart != null;
 }
 
-/// Modelo de organização oferecido no assistente.
+/// Modelo de organização oferecido nos assistentes.
 class FolderTemplate {
   const FolderTemplate(this.pattern, this.label);
   final String pattern;
@@ -85,32 +103,65 @@ class FolderTemplate {
 
   static const byMonth = FolderTemplate('{ano}/{ano}-{mes}', 'Por ano e mês (2024/2024-07)');
   static const byDay = FolderTemplate('{ano}/{ano}-{mes}-{dia}', 'Por ano e dia (2024/2024-07-13)');
+  static const byMoment = FolderTemplate(
+    '{ano}/{ano}-{mes}-{dia} {momento}',
+    'Por ano e momento (2024/2024-07-13 Aniversário da Ana)',
+  );
   static const byTypeYear = FolderTemplate('{tipo}/{ano}', 'Por tipo e ano (Fotos/2024)');
+  static const byDeviceYear = FolderTemplate('{ano}/{dispositivo}', 'Por ano e câmera (2024/Pixel 7)');
   static const original = FolderTemplate('{original}', 'Mesma estrutura de pastas da origem');
   static const flat = FolderTemplate('', 'Tudo na mesma pasta');
 
-  static const all = [byMonth, byDay, byTypeYear, original, flat];
+  static const all = [byMonth, byDay, byMoment, byTypeYear, byDeviceYear, original, flat];
 
   static FolderTemplate? byPattern(String pattern) => all.where((t) => t.pattern == pattern).firstOrNull;
 }
 
-/// Pasta (fora do modelo) dos itens sem data da captura (spec §12).
+/// Pasta (fora do modelo) dos itens sem data da captura ou fora de momentos
+/// (spec §12). Configurável nos assistentes.
 const String undatedFolder = 'Sem data confirmada';
 
-const _dateVars = ['{ano}', '{mes}', '{dia}'];
+/// Campos que dependem da data e hora da captura.
+const _dateVars = ['{ano}', '{mes}', '{dia}', '{hora}', '{minuto}', '{segundo}'];
+
+bool _usesDate(String s) => _dateVars.any(s.contains) || s.contains('{momento}');
+
+/// O modelo usa algum campo de data, hora ou momento.
+bool templateUsesDate(String pattern) => _usesDate(pattern);
+
+/// O modelo agrupa por momento (`{momento}`).
+bool templateUsesMoment(String pattern) => pattern.contains('{momento}');
 
 /// Pasta relativa (com `/`) gerada por [pattern] para um item, já
-/// sanitizada. Itens sem data vão para [undatedFolder] quando o modelo usa
-/// data.
-String renderFolder(String pattern, TemplateVars v) {
+/// sanitizada.
+///
+/// - Sem data, ou fora de momentos quando o modelo usa `{momento}`, o item vai
+///   para [toConfirm] (mantendo o que vem antes do primeiro campo de data, ex.:
+///   `{tipo}`).
+/// - Com `{momento}`, os campos de data e hora vêm do **início do momento**:
+///   um momento que atravessa a meia-noite fica numa pasta só.
+/// - Momento sem nome: `{momento}` vira o horário de início (`14h03`), o que dá
+///   `2024-07-13 14h03` no modelo por momento.
+String renderFolder(String pattern, TemplateVars v, {String toConfirm = undatedFolder}) {
   if (pattern.trim().isEmpty) return '';
-  if (!v.dated && _dateVars.any(pattern.contains)) {
-    // Mantém o que não depende de data antes do primeiro campo de data (ex.: {tipo}).
-    final head = pattern.split('/').takeWhile((s) => !_dateVars.any(s.contains)).join('/');
-    final prefix = head.isEmpty ? '' : renderFolder(head, v);
-    return prefix.isEmpty ? undatedFolder : '$prefix/$undatedFolder';
+  final byMoment = templateUsesMoment(pattern);
+  final missing = byMoment ? !v.inMoment : !v.dated && _usesDate(pattern);
+  if (missing) {
+    final head = pattern.split('/').takeWhile((s) => !_usesDate(s)).join('/');
+    final prefix = head.isEmpty ? '' : renderFolder(head, v, toConfirm: toConfirm);
+    final folder = _cleanPath(toConfirm);
+    final tail = folder.isEmpty ? undatedFolder : folder;
+    return prefix.isEmpty ? tail : '$prefix/$tail';
   }
+  final m = v.momentStart;
+  final (year, month, day, hour, minute, second) = byMoment && m != null
+      ? (m.year, m.month, m.day, m.hour, m.minute, m.second)
+      : (v.year, v.month, v.day, v.hour, v.minute, v.second);
   String two(int? n) => (n ?? 0).toString().padLeft(2, '0');
+  final momentText = switch (v.momentName?.trim()) {
+    final name? when name.isNotEmpty => name,
+    _ => m == null ? '' : '${two(m.hour)}h${two(m.minute)}',
+  };
   final segments = <String>[];
   for (final raw in pattern.split('/')) {
     if (raw.trim().isEmpty) continue;
@@ -122,18 +173,32 @@ String renderFolder(String pattern, TemplateVars v) {
       continue;
     }
     final text = raw
-        .replaceAll('{ano}', '${v.year ?? ''}')
-        .replaceAll('{mes}', two(v.month))
-        .replaceAll('{dia}', two(v.day))
+        .replaceAll('{ano}', '${year ?? ''}')
+        .replaceAll('{mes}', two(month))
+        .replaceAll('{dia}', two(day))
+        .replaceAll('{hora}', two(hour))
+        .replaceAll('{minuto}', two(minute))
+        .replaceAll('{segundo}', two(second))
+        // O nome do momento pode ter "/" ou "\": não vira subpasta.
+        .replaceAll('{momento}', momentText.replaceAll(RegExp(r'[\/]'), '_'))
         .replaceAll('{tipo}', _typeFolder(v.mediaType))
         .replaceAll('{dispositivo}', v.camera ?? 'Dispositivo desconhecido')
         .replaceAll('{origem}', v.sourceName ?? 'Origem')
         .replaceAll('{original}', v.originalDir.replaceAll('/', ' '));
     if (text.trim().isEmpty) continue;
-    segments.add(sanitizeName(text));
+    segments.add(sanitizeName(text.replaceAll(RegExp(r'\s+'), ' ').trim()));
   }
   return segments.join('/');
 }
+
+/// Pasta digitada pela pessoa (`Backup\Fotos`) → `Backup/Fotos`, sanitizada.
+String _cleanPath(String folder) => [
+  for (final s in folder.replaceAll(r'\', '/').split('/'))
+    if (s.trim().isNotEmpty && s != '.' && s != '..') sanitizeName(s.trim()),
+].join('/');
+
+/// Versão pública de [_cleanPath] (assistentes e planejadores).
+String cleanFolder(String folder) => _cleanPath(folder);
 
 String _typeFolder(String mediaType) => switch (mediaType) {
   'photo' || 'raw' => 'Fotos',

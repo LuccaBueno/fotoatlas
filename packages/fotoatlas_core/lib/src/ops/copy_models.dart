@@ -53,6 +53,7 @@ class CopyRequest {
     this.conflict = ConflictPolicy.suffix,
     this.preferSourceIds = const [],
     this.origin,
+    this.toConfirmFolder = undatedFolder,
   });
 
   /// Conteúdos escolhidos (Comparar ou Biblioteca).
@@ -71,6 +72,9 @@ class CopyRequest {
 
   /// De onde veio o pedido (`compare`, `library`, `cli`), para o histórico.
   final String? origin;
+
+  /// Pasta dos itens sem data (ou fora de momentos, no modelo por momento).
+  final String toConfirmFolder;
 }
 
 /// Um arquivo da prévia.
@@ -234,6 +238,7 @@ class OperationView {
     this.finishedAt,
     this.pauseReason,
     this.origin,
+    this.undoOf,
   });
 
   final String id;
@@ -262,7 +267,13 @@ class OperationView {
   int get skipped => count(ItemState.skippedIdentical);
   int get failed => count(ItemState.failed);
   int get needsAttention => count(ItemState.needsAttention);
-  int get remaining => totalItems - published - skipped - failed - needsAttention;
+
+  /// Reorganização: itens já devolvidos pelo Desfazer.
+  int get undone => count('undone');
+  int get remaining => totalItems - published - skipped - failed - needsAttention - undone;
+
+  /// Desfazer: a reorganização que esta operação desfaz.
+  final String? undoOf;
   bool get isOpen => OpStatus.open.contains(status);
 }
 

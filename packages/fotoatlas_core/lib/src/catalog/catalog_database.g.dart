@@ -8505,6 +8505,24 @@ class OperationItems extends Table with TableInfo<OperationItems, OperationItemR
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
+  static const VerificationMeta _expectedMtimeMeta = const VerificationMeta('expectedMtime');
+  late final GeneratedColumn<int> expectedMtime = GeneratedColumn<int>(
+    'expected_mtime',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _undoOfItemIdMeta = const VerificationMeta('undoOfItemId');
+  late final GeneratedColumn<int> undoOfItemId = GeneratedColumn<int>(
+    'undo_of_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'REFERENCES operation_items(id)',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -8528,6 +8546,8 @@ class OperationItems extends Table with TableInfo<OperationItems, OperationItemR
     lastErrorCode,
     lastErrorMessage,
     updatedAt,
+    expectedMtime,
+    undoOfItemId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -8637,6 +8657,18 @@ class OperationItems extends Table with TableInfo<OperationItems, OperationItemR
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('expected_mtime')) {
+      context.handle(
+        _expectedMtimeMeta,
+        expectedMtime.isAcceptableOrUnknown(data['expected_mtime']!, _expectedMtimeMeta),
+      );
+    }
+    if (data.containsKey('undo_of_item_id')) {
+      context.handle(
+        _undoOfItemIdMeta,
+        undoOfItemId.isAcceptableOrUnknown(data['undo_of_item_id']!, _undoOfItemIdMeta),
+      );
+    }
     return context;
   }
 
@@ -8680,6 +8712,8 @@ class OperationItems extends Table with TableInfo<OperationItems, OperationItemR
         data['${effectivePrefix}last_error_message'],
       ),
       updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+      expectedMtime: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}expected_mtime']),
+      undoOfItemId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}undo_of_item_id']),
     );
   }
 
@@ -8716,6 +8750,13 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
   final String? lastErrorCode;
   final String? lastErrorMessage;
   final int updatedAt;
+
+  /// v5 (Fase 6): data de modificação (FILETIME) do arquivo no momento do mover;
+  /// o Desfazer compara com ela para saber se o arquivo mudou desde então.
+  final int? expectedMtime;
+
+  /// v5: no Desfazer, o item da reorganização que este item devolve.
+  final int? undoOfItemId;
   const OperationItemRow({
     required this.id,
     required this.operationId,
@@ -8738,6 +8779,8 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
     this.lastErrorCode,
     this.lastErrorMessage,
     required this.updatedAt,
+    this.expectedMtime,
+    this.undoOfItemId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -8781,6 +8824,12 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
       map['last_error_message'] = Variable<String>(lastErrorMessage);
     }
     map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || expectedMtime != null) {
+      map['expected_mtime'] = Variable<int>(expectedMtime);
+    }
+    if (!nullToAbsent || undoOfItemId != null) {
+      map['undo_of_item_id'] = Variable<int>(undoOfItemId);
+    }
     return map;
   }
 
@@ -8807,6 +8856,8 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
       lastErrorCode: lastErrorCode == null && nullToAbsent ? const Value.absent() : Value(lastErrorCode),
       lastErrorMessage: lastErrorMessage == null && nullToAbsent ? const Value.absent() : Value(lastErrorMessage),
       updatedAt: Value(updatedAt),
+      expectedMtime: expectedMtime == null && nullToAbsent ? const Value.absent() : Value(expectedMtime),
+      undoOfItemId: undoOfItemId == null && nullToAbsent ? const Value.absent() : Value(undoOfItemId),
     );
   }
 
@@ -8834,6 +8885,8 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
       lastErrorCode: serializer.fromJson<String?>(json['last_error_code']),
       lastErrorMessage: serializer.fromJson<String?>(json['last_error_message']),
       updatedAt: serializer.fromJson<int>(json['updated_at']),
+      expectedMtime: serializer.fromJson<int?>(json['expected_mtime']),
+      undoOfItemId: serializer.fromJson<int?>(json['undo_of_item_id']),
     );
   }
   @override
@@ -8861,6 +8914,8 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
       'last_error_code': serializer.toJson<String?>(lastErrorCode),
       'last_error_message': serializer.toJson<String?>(lastErrorMessage),
       'updated_at': serializer.toJson<int>(updatedAt),
+      'expected_mtime': serializer.toJson<int?>(expectedMtime),
+      'undo_of_item_id': serializer.toJson<int?>(undoOfItemId),
     };
   }
 
@@ -8886,6 +8941,8 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
     Value<String?> lastErrorCode = const Value.absent(),
     Value<String?> lastErrorMessage = const Value.absent(),
     int? updatedAt,
+    Value<int?> expectedMtime = const Value.absent(),
+    Value<int?> undoOfItemId = const Value.absent(),
   }) => OperationItemRow(
     id: id ?? this.id,
     operationId: operationId ?? this.operationId,
@@ -8908,6 +8965,8 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
     lastErrorCode: lastErrorCode.present ? lastErrorCode.value : this.lastErrorCode,
     lastErrorMessage: lastErrorMessage.present ? lastErrorMessage.value : this.lastErrorMessage,
     updatedAt: updatedAt ?? this.updatedAt,
+    expectedMtime: expectedMtime.present ? expectedMtime.value : this.expectedMtime,
+    undoOfItemId: undoOfItemId.present ? undoOfItemId.value : this.undoOfItemId,
   );
   OperationItemRow copyWithCompanion(OperationItemsCompanion data) {
     return OperationItemRow(
@@ -8932,6 +8991,8 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
       lastErrorCode: data.lastErrorCode.present ? data.lastErrorCode.value : this.lastErrorCode,
       lastErrorMessage: data.lastErrorMessage.present ? data.lastErrorMessage.value : this.lastErrorMessage,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      expectedMtime: data.expectedMtime.present ? data.expectedMtime.value : this.expectedMtime,
+      undoOfItemId: data.undoOfItemId.present ? data.undoOfItemId.value : this.undoOfItemId,
     );
   }
 
@@ -8958,7 +9019,9 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
           ..write('attempts: $attempts, ')
           ..write('lastErrorCode: $lastErrorCode, ')
           ..write('lastErrorMessage: $lastErrorMessage, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('expectedMtime: $expectedMtime, ')
+          ..write('undoOfItemId: $undoOfItemId')
           ..write(')'))
         .toString();
   }
@@ -8986,6 +9049,8 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
     lastErrorCode,
     lastErrorMessage,
     updatedAt,
+    expectedMtime,
+    undoOfItemId,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -9011,7 +9076,9 @@ class OperationItemRow extends DataClass implements Insertable<OperationItemRow>
           other.attempts == this.attempts &&
           other.lastErrorCode == this.lastErrorCode &&
           other.lastErrorMessage == this.lastErrorMessage &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.expectedMtime == this.expectedMtime &&
+          other.undoOfItemId == this.undoOfItemId);
 }
 
 class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
@@ -9036,6 +9103,8 @@ class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
   final Value<String?> lastErrorCode;
   final Value<String?> lastErrorMessage;
   final Value<int> updatedAt;
+  final Value<int?> expectedMtime;
+  final Value<int?> undoOfItemId;
   const OperationItemsCompanion({
     this.id = const Value.absent(),
     this.operationId = const Value.absent(),
@@ -9058,6 +9127,8 @@ class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
     this.lastErrorCode = const Value.absent(),
     this.lastErrorMessage = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.expectedMtime = const Value.absent(),
+    this.undoOfItemId = const Value.absent(),
   });
   OperationItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -9081,6 +9152,8 @@ class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
     this.lastErrorCode = const Value.absent(),
     this.lastErrorMessage = const Value.absent(),
     required int updatedAt,
+    this.expectedMtime = const Value.absent(),
+    this.undoOfItemId = const Value.absent(),
   }) : operationId = Value(operationId),
        seq = Value(seq),
        srcSourceId = Value(srcSourceId),
@@ -9112,6 +9185,8 @@ class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
     Expression<String>? lastErrorCode,
     Expression<String>? lastErrorMessage,
     Expression<int>? updatedAt,
+    Expression<int>? expectedMtime,
+    Expression<int>? undoOfItemId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -9135,6 +9210,8 @@ class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
       if (lastErrorCode != null) 'last_error_code': lastErrorCode,
       if (lastErrorMessage != null) 'last_error_message': lastErrorMessage,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (expectedMtime != null) 'expected_mtime': expectedMtime,
+      if (undoOfItemId != null) 'undo_of_item_id': undoOfItemId,
     });
   }
 
@@ -9160,6 +9237,8 @@ class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
     Value<String?>? lastErrorCode,
     Value<String?>? lastErrorMessage,
     Value<int>? updatedAt,
+    Value<int?>? expectedMtime,
+    Value<int?>? undoOfItemId,
   }) {
     return OperationItemsCompanion(
       id: id ?? this.id,
@@ -9183,6 +9262,8 @@ class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
       lastErrorCode: lastErrorCode ?? this.lastErrorCode,
       lastErrorMessage: lastErrorMessage ?? this.lastErrorMessage,
       updatedAt: updatedAt ?? this.updatedAt,
+      expectedMtime: expectedMtime ?? this.expectedMtime,
+      undoOfItemId: undoOfItemId ?? this.undoOfItemId,
     );
   }
 
@@ -9252,6 +9333,12 @@ class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (expectedMtime.present) {
+      map['expected_mtime'] = Variable<int>(expectedMtime.value);
+    }
+    if (undoOfItemId.present) {
+      map['undo_of_item_id'] = Variable<int>(undoOfItemId.value);
+    }
     return map;
   }
 
@@ -9278,7 +9365,9 @@ class OperationItemsCompanion extends UpdateCompanion<OperationItemRow> {
           ..write('attempts: $attempts, ')
           ..write('lastErrorCode: $lastErrorCode, ')
           ..write('lastErrorMessage: $lastErrorMessage, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('expectedMtime: $expectedMtime, ')
+          ..write('undoOfItemId: $undoOfItemId')
           ..write(')'))
         .toString();
   }
@@ -17805,6 +17894,8 @@ typedef $OperationItemsCreateCompanionBuilder = OperationItemsCompanion Function
   Value<String?> lastErrorCode,
   Value<String?> lastErrorMessage,
   required int updatedAt,
+  Value<int?> expectedMtime,
+  Value<int?> undoOfItemId,
 });
 typedef $OperationItemsUpdateCompanionBuilder = OperationItemsCompanion Function({
   Value<int> id,
@@ -17828,6 +17919,8 @@ typedef $OperationItemsUpdateCompanionBuilder = OperationItemsCompanion Function
   Value<String?> lastErrorCode,
   Value<String?> lastErrorMessage,
   Value<int> updatedAt,
+  Value<int?> expectedMtime,
+  Value<int?> undoOfItemId,
 });
 
 final class $OperationItemsReferences extends BaseReferences<_$CatalogDatabase, OperationItems, OperationItemRow> {
@@ -17877,6 +17970,18 @@ final class $OperationItemsReferences extends BaseReferences<_$CatalogDatabase, 
 
     final manager = $SourcesTableManager($_db, $_db.sources).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_dstSourceIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static OperationItems _undoOfItemIdTable(_$CatalogDatabase db) =>
+      db.operationItems.createAlias('operation_items__undo_of_item_id__operation_items__id');
+
+  $OperationItemsProcessedTableManager? get undoOfItemId {
+    final $_column = $_itemColumn<int>('undo_of_item_id');
+    if ($_column == null) return null;
+    final manager = $OperationItemsTableManager($_db, $_db.operationItems).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_undoOfItemIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
@@ -17953,6 +18058,9 @@ class $OperationItemsFilterComposer extends Composer<_$CatalogDatabase, Operatio
   ColumnFilters<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get expectedMtime =>
+      $composableBuilder(column: $table.expectedMtime, builder: (column) => ColumnFilters(column));
+
   $OperationsFilterComposer get operationId {
     final $OperationsFilterComposer composer = $composerBuilder(
       composer: this,
@@ -18017,6 +18125,24 @@ class $OperationItemsFilterComposer extends Composer<_$CatalogDatabase, Operatio
           $SourcesFilterComposer(
             $db: $db,
             $table: $db.sources,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $OperationItemsFilterComposer get undoOfItemId {
+    final $OperationItemsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.undoOfItemId,
+      referencedTable: $db.operationItems,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationItemsFilterComposer(
+            $db: $db,
+            $table: $db.operationItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
@@ -18101,6 +18227,9 @@ class $OperationItemsOrderingComposer extends Composer<_$CatalogDatabase, Operat
   ColumnOrderings<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get expectedMtime =>
+      $composableBuilder(column: $table.expectedMtime, builder: (column) => ColumnOrderings(column));
+
   $OperationsOrderingComposer get operationId {
     final $OperationsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -18172,6 +18301,24 @@ class $OperationItemsOrderingComposer extends Composer<_$CatalogDatabase, Operat
     );
     return composer;
   }
+
+  $OperationItemsOrderingComposer get undoOfItemId {
+    final $OperationItemsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.undoOfItemId,
+      referencedTable: $db.operationItems,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationItemsOrderingComposer(
+            $db: $db,
+            $table: $db.operationItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $OperationItemsAnnotationComposer extends Composer<_$CatalogDatabase, OperationItems> {
@@ -18221,6 +18368,9 @@ class $OperationItemsAnnotationComposer extends Composer<_$CatalogDatabase, Oper
       $composableBuilder(column: $table.lastErrorMessage, builder: (column) => column);
 
   GeneratedColumn<int> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get expectedMtime =>
+      $composableBuilder(column: $table.expectedMtime, builder: (column) => column);
 
   $OperationsAnnotationComposer get operationId {
     final $OperationsAnnotationComposer composer = $composerBuilder(
@@ -18294,6 +18444,24 @@ class $OperationItemsAnnotationComposer extends Composer<_$CatalogDatabase, Oper
     return composer;
   }
 
+  $OperationItemsAnnotationComposer get undoOfItemId {
+    final $OperationItemsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.undoOfItemId,
+      referencedTable: $db.operationItems,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $OperationItemsAnnotationComposer(
+            $db: $db,
+            $table: $db.operationItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   Expression<T> operationEventsRefs<T extends Object>(Expression<T> Function($OperationEventsAnnotationComposer a) f) {
     final $OperationEventsAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -18331,6 +18499,7 @@ class $OperationItemsTableManager
             bool srcSourceId,
             bool srcInstanceId,
             bool dstSourceId,
+            bool undoOfItemId,
             bool operationEventsRefs,
           })
         > {
@@ -18365,6 +18534,8 @@ class $OperationItemsTableManager
                 Value<String?> lastErrorCode = const Value.absent(),
                 Value<String?> lastErrorMessage = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
+                Value<int?> expectedMtime = const Value.absent(),
+                Value<int?> undoOfItemId = const Value.absent(),
               }) => OperationItemsCompanion(
                 id: id,
                 operationId: operationId,
@@ -18387,6 +18558,8 @@ class $OperationItemsTableManager
                 lastErrorCode: lastErrorCode,
                 lastErrorMessage: lastErrorMessage,
                 updatedAt: updatedAt,
+                expectedMtime: expectedMtime,
+                undoOfItemId: undoOfItemId,
               ),
           createCompanionCallback:
               ({
@@ -18411,6 +18584,8 @@ class $OperationItemsTableManager
                 Value<String?> lastErrorCode = const Value.absent(),
                 Value<String?> lastErrorMessage = const Value.absent(),
                 required int updatedAt,
+                Value<int?> expectedMtime = const Value.absent(),
+                Value<int?> undoOfItemId = const Value.absent(),
               }) => OperationItemsCompanion.insert(
                 id: id,
                 operationId: operationId,
@@ -18433,6 +18608,8 @@ class $OperationItemsTableManager
                 lastErrorCode: lastErrorCode,
                 lastErrorMessage: lastErrorMessage,
                 updatedAt: updatedAt,
+                expectedMtime: expectedMtime,
+                undoOfItemId: undoOfItemId,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -18445,6 +18622,7 @@ class $OperationItemsTableManager
                 srcSourceId = false,
                 srcInstanceId = false,
                 dstSourceId = false,
+                undoOfItemId = false,
                 operationEventsRefs = false,
               }) {
                 return PrefetchHooks(
@@ -18498,6 +18676,14 @@ class $OperationItemsTableManager
                             referencedColumn: $OperationItemsReferences._dstSourceIdTable(db).id,
                           ) as T;
                         }
+                        if (undoOfItemId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.undoOfItemId,
+                            referencedTable: $OperationItemsReferences._undoOfItemIdTable(db),
+                            referencedColumn: $OperationItemsReferences._undoOfItemIdTable(db).id,
+                          ) as T;
+                        }
 
                         return state;
                       },
@@ -18542,6 +18728,7 @@ typedef $OperationItemsProcessedTableManager =
         bool srcSourceId,
         bool srcInstanceId,
         bool dstSourceId,
+        bool undoOfItemId,
         bool operationEventsRefs,
       })
     >;

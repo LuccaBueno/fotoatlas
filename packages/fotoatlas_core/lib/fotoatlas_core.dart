@@ -47,4 +47,16 @@ export 'src/util/paths.dart';
 export 'src/ops/copy_models.dart';
 export 'src/ops/copy_planner.dart' show FreeSpaceProbe, defaultReserveBytes, fat32MaxFileSize, isFat;
 export 'src/ops/copy_service.dart' show CopyService;
-export 'src/ops/names.dart' show FolderTemplate, TemplateVars, renderFolder, sanitizeName, undatedFolder, withSuffix;
+export 'src/ops/names.dart'
+    show
+        FolderTemplate,
+        TemplateVars,
+        cleanFolder,
+        renderFolder,
+        sanitizeName,
+        templateUsesDate,
+        templateUsesMoment,
+        undatedFolder,
+        withSuffix;
+export 'src/ops/reorg_models.dart';
+export 'src/ops/reorg_service.dart' show ReorgService;

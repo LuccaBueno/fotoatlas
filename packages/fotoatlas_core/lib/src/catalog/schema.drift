@@ -238,6 +238,11 @@ CREATE TABLE operation_items (
   last_error_code      TEXT,
   last_error_message   TEXT,
   updated_at           INTEGER NOT NULL,
+  -- v5 (Fase 6): data de modificação (FILETIME) do arquivo no momento do mover;
+  -- o Desfazer compara com ela para saber se o arquivo mudou desde então.
+  expected_mtime       INTEGER,
+  -- v5: no Desfazer, o item da reorganização que este item devolve.
+  undo_of_item_id      INTEGER REFERENCES operation_items(id),
   UNIQUE (operation_id, seq)
 ) AS OperationItemRow;
 CREATE INDEX ix_oi_open ON operation_items(operation_id, state)

@@ -13,16 +13,16 @@ import '../support/temp.dart';
 void main() {
   final verifier = SchemaVerifier(GeneratedHelper());
 
-  test('v1, v2 e v3 → v4: schema final igual ao de um catálogo novo', () async {
-    for (final from in [1, 2, 3]) {
+  test('v1 a v4 → v5: schema final igual ao de um catálogo novo', () async {
+    for (final from in [1, 2, 3, 4]) {
       final schema = await verifier.schemaAt(from);
       final db = CatalogDatabase(schema.newConnection());
-      await verifier.migrateAndValidate(db, 4);
+      await verifier.migrateAndValidate(db, 5);
       await db.close();
     }
   });
 
-  test('v1 → v4 pelo Catalog.open: backup antes, dados preservados, colunas novas', () async {
+  test('v1 → v5 pelo Catalog.open: backup antes, dados preservados, colunas novas', () async {
     final home = await createTestTemp();
     final path = p.join(home.path, 'catalog.db');
     final schema = await verifier.schemaAt(1);
@@ -42,7 +42,7 @@ void main() {
     final catalog = await Catalog.open(path);
     addTearDown(catalog.close);
     final db = catalog.db;
-    expect((await db.customSelect('PRAGMA user_version').getSingle()).data.values.single, 4);
+    expect((await db.customSelect('PRAGMA user_version').getSingle()).data.values.single, 5);
     final row = await db.customSelect('SELECT name, hash_error, device_object_id FROM file_instances').getSingle();
     expect(row.read<String>('name'), 'a.jpg');
     expect(row.readNullable<String>('hash_error'), isNull);
@@ -54,7 +54,7 @@ void main() {
     expect(backups.where((n) => n.startsWith('pre-migracao-v1-')), hasLength(1));
   });
 
-  test('v3 → v4: metadados antigos ficam, colunas novas vazias, momentos e correções vazios', () async {
+  test('v3 → v5: metadados antigos ficam, colunas novas vazias, momentos e correções vazios', () async {
     final home = await createTestTemp();
     final path = p.join(home.path, 'catalog.db');
     final schema = await verifier.schemaAt(3);
@@ -84,5 +84,38 @@ void main() {
     expect(await db.select(db.moments).get(), isEmpty);
     expect(await db.select(db.clockCorrections).get(), isEmpty);
     expect(await db.select(db.momentEdits).get(), isEmpty);
+  });
+
+  test('v4 → v5: cópias antigas ficam no histórico, colunas novas vazias', () async {
+    final home = await createTestTemp();
+    final path = p.join(home.path, 'catalog.db');
+    final schema = await verifier.schemaAt(4);
+    schema.rawDatabase
+      ..execute(
+        "INSERT INTO sources (id, name, kind, root_rel_path, connected, created_at, updated_at) "
+        "VALUES ('s1', 'HD', 'external_hd', '', 0, 1, 1)",
+      )
+      ..execute(
+        "INSERT INTO operations (id, kind, status, dest_source_id, created_at) VALUES ('op', 'copy', 'completed', 's1', 1)",
+      )
+      ..execute(
+        'INSERT INTO operation_items (operation_id, seq, src_source_id, src_rel_path, expected_size, dst_source_id, '
+        "dst_rel_path_planned, state, updated_at) VALUES ('op', 1, 's1', 'a.jpg', 10, 's1', 'b/a.jpg', 'published', 1)",
+      )
+      ..execute('PRAGMA user_version = 4')
+      ..execute('VACUUM INTO ?', [path]);
+    schema.rawDatabase.close();
+
+    final catalog = await Catalog.open(path);
+    addTearDown(catalog.close);
+    final row = await catalog.db
+        .customSelect('SELECT state, dst_rel_path_planned, expected_mtime, undo_of_item_id FROM operation_items')
+        .getSingle();
+    expect(row.read<String>('state'), 'published');
+    expect(row.read<String>('dst_rel_path_planned'), 'b/a.jpg');
+    expect(row.readNullable<int>('expected_mtime'), isNull);
+    expect(row.readNullable<int>('undo_of_item_id'), isNull);
+    final backups = Directory(p.join(home.path, 'backups')).listSync().map((f) => p.basename(f.path));
+    expect(backups.where((n) => n.startsWith('pre-migracao-v4-')), hasLength(1));
   });
 }

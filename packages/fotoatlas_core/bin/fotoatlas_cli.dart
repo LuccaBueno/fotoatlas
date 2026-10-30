@@ -39,7 +39,19 @@ Comandos:
                                  "{ano}/{ano}-{mes}" (padrão), "{original}", "" etc.
   copy resume|retry|export OP    Continua, tenta de novo as falhas ou exporta o relatório (CSV)
   copy status [OP]               Situação das cópias (com OP: arquivo por arquivo)
-  recover                        Roda a recuperação de cópias interrompidas e mostra o resultado
+  reorg plan FONTE[:pasta] [--dest P] [--template T] [--conflict suffix|ask] [--to-confirm P]
+                                 Prévia da reorganização no mesmo disco (só lê); modelo padrão
+                                 "{ano}/{ano}-{mes}-{dia} {momento}"
+  reorg start FONTE[:pasta] [...] --yes
+                                 Reorganiza (move por renomeação, com diário; Ctrl+C pausa)
+  reorg resume OP                Continua uma reorganização (ou um Desfazer)
+  reorg undo OP --yes            Desfaz uma reorganização (mostra antes o que vai acontecer)
+  reorg resolve ITEM back|rename|leave|retry
+                                 Decide um arquivo que espera você (Desfazer ou nome ocupado)
+  reorg folders OP [--remove P]… [--yes]
+                                 Lista as pastas que ficaram vazias; --remove P --yes remove só P
+  reorg status [OP]              Situação das reorganizações (com OP: arquivo por arquivo)
+  recover                        Roda a recuperação de cópias e reorganizações interrompidas
 
 FONTE pode ser o nome, o id ou o começo do id.
 ESCOPO/LADO: "FONTE[:pasta/sub]" separados por "+" (ex.: "HD:Fotos/2020+Celular"),
@@ -384,6 +396,104 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
       // mostra o resultado (deve ser "nada a fazer").
       final report = await core.copies.recoverAll();
       stdout.writeln('RECOVER $report');
+      stdout.writeln('RECOVER_REORG ${await core.reorg.recoverAll()}');
+      return 0;
+
+    case ['reorg', ('plan' || 'start') && final mode, final spec, ...final rest]:
+      final colon = spec.indexOf(':');
+      final source = await _findSource(core, colon < 0 ? spec : spec.substring(0, colon));
+      final preview = await core.reorg.preview(
+        ReorgRequest(
+          sourceId: source,
+          folder: colon < 0 ? '' : spec.substring(colon + 1),
+          destFolder: _option(rest, '--dest'),
+          template: _option(rest, '--template') ?? FolderTemplate.byMoment.pattern,
+          conflict: _option(rest, '--conflict') == 'ask' ? ConflictPolicy.ask : ConflictPolicy.suffix,
+          toConfirmFolder: _option(rest, '--to-confirm') ?? undatedFolder,
+        ),
+      );
+      stdout.writeln(
+        'PREVIEW mover=${preview.moves.length} no_lugar=${preview.alreadyInPlace} outros=${preview.otherFiles} '
+        'sem_data_lida=${preview.notReady} renomeados=${preview.renamedForConflict} perguntar=${preview.askConflicts} '
+        'a_confirmar=${preview.toConfirm} acompanhantes=${preview.sidecars} pode_comecar=${preview.canStart}'
+        '${preview.blocker == null ? '' : ' — ${preview.blocker}'}',
+      );
+      for (final m in preview.moves) {
+        stdout.writeln('  ${m.srcRelPath} -> ${m.dstRelPath}${m.renamedForConflict ? ' (nome já existia)' : ''}');
+      }
+      if (mode == 'plan') return 0;
+      if (!rest.contains('--yes')) {
+        stderr.writeln('Confirme com --yes para reorganizar.');
+        return 2;
+      }
+      if (!preview.canStart) return 1;
+      return _followReorg(core, await core.reorg.start(preview));
+
+    case ['reorg', 'resume', final op]:
+      final id = await _findOperation(core, op);
+      await core.reorg.resume(id);
+      return _followReorg(core, id);
+
+    case ['reorg', 'undo', final op, ...final rest]:
+      final id = await _findOperation(core, op);
+      final check = await core.reorg.undoPreview(id);
+      stdout.writeln(
+        'UNDO_PREVIEW voltam=${check.ready} mudaram=${check.changed.length} sumiram=${check.missing.length} '
+        'ocupados=${check.occupied.length}${check.blocker == null ? '' : ' — ${check.blocker}'}',
+      );
+      if (!rest.contains('--yes')) {
+        stderr.writeln('Confirme com --yes para desfazer.');
+        return 2;
+      }
+      if (!check.canStart) return 1;
+      return _followReorg(core, await core.reorg.undo(id));
+
+    case ['reorg', 'resolve', final item, final decision]:
+      final d = switch (decision) {
+        'back' => ReorgDecision.moveAnyway,
+        'rename' => ReorgDecision.rename,
+        'retry' => ReorgDecision.retry,
+        _ => ReorgDecision.leave,
+      };
+      final row = await core.reorg.journal.item(int.parse(item));
+      if (row == null) throw SourceException('Item $item não encontrado.');
+      await core.reorg.resolve(row.id, d);
+      return _followReorg(core, row.operationId);
+
+    case ['reorg', 'folders', final op, ...final rest]:
+      final id = await _findOperation(core, op);
+      for (final f in await core.reorg.emptyFolders(id)) {
+        stdout.writeln('FOLDER ${f.empty ? 'vazia' : 'so_ocultos'} ${f.relPath}');
+      }
+      final chosen = <String>[];
+      for (var i = 0; i < rest.length - 1; i++) {
+        if (rest[i] == '--remove') chosen.add(rest[i + 1]);
+      }
+      if (chosen.isEmpty) return 0;
+      if (!rest.contains('--yes')) {
+        stderr.writeln('Confirme com --yes para remover as pastas vazias.');
+        return 2;
+      }
+      stdout.writeln('REMOVED ${await core.reorg.removeEmptyFolders(id, chosen)}');
+      return 0;
+
+    case ['reorg', 'status', ...final rest]:
+      for (final o in await core.copies.list()) {
+        if (o.kind == 'copy' || (rest.isNotEmpty && !o.id.startsWith(rest.first))) continue;
+        stdout.writeln(
+          'OPERATION ${o.id} ${o.kind} ${o.status} itens=${o.totalItems} movidos=${o.published} '
+          'devolvidos=${o.undone} deixados=${o.skipped} falhas=${o.failed} atencao=${o.needsAttention} '
+          'faltam=${o.remaining}${o.pauseReason == null ? '' : ' — ${o.pauseReason}'}',
+        );
+        if (rest.isNotEmpty) {
+          for (final i in await core.copies.items(o.id)) {
+            stdout.writeln(
+              '  ${i.id} ${i.state} ${i.srcRelPath} -> ${i.dstRelPath}'
+              '${i.errorCode == null ? '' : ' [${i.errorCode}]'}${i.errorMessage == null ? '' : ' — ${i.errorMessage}'}',
+            );
+          }
+        }
+      }
       return 0;
 
     case ['backup'] || ['backup', 'now']:
@@ -506,6 +616,22 @@ Future<int> _followCopy(FotoAtlasCore core, String id) async {
   final o = (await core.copies.view(id))!;
   stdout.writeln(
     'COPY ${o.id} ${o.status} publicados=${o.published} ja_tinha=${o.skipped} falhas=${o.failed} '
+    'atencao=${o.needsAttention} faltam=${o.remaining}${o.pauseReason == null ? '' : ' — ${o.pauseReason}'}',
+  );
+  return o.status == OpStatus.completed || o.status == OpStatus.paused ? 0 : 1;
+}
+
+Future<int> _followReorg(FotoAtlasCore core, String id) async {
+  stdout.writeln('OPERATION $id');
+  final sigint = ProcessSignal.sigint.watch().listen((_) {
+    stdout.writeln('Pausando…');
+    core.reorg.pause(id);
+  });
+  await core.reorg.waitIdle();
+  await sigint.cancel();
+  final o = (await core.copies.view(id))!;
+  stdout.writeln(
+    'REORG ${o.id} ${o.kind} ${o.status} movidos=${o.published} deixados=${o.skipped} falhas=${o.failed} '
     'atencao=${o.needsAttention} faltam=${o.remaining}${o.pauseReason == null ? '' : ' — ${o.pauseReason}'}',
   );
   return o.status == OpStatus.completed || o.status == OpStatus.paused ? 0 : 1;
