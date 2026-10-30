@@ -55,17 +55,28 @@ class ComparePage extends ConsumerWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              FilledButton.icon(
-                key: const ValueKey('compare-run'),
-                onPressed: state.canCompare ? controller.run : null,
-                icon: const Icon(Icons.compare_arrows),
-                label: const Text('Comparar'),
+              Tooltip(
+                message: state.canCompare || state.running
+                    ? 'Responde se B contém todo o conteúdo de A. Só lê o catálogo: nada é alterado.'
+                    : 'Escolha pelo menos uma pasta, dispositivo ou momento em A e em B.',
+                child: FilledButton.icon(
+                  key: const ValueKey('compare-run'),
+                  onPressed: state.canCompare ? controller.run : null,
+                  icon: const Icon(Icons.compare_arrows),
+                  label: const Text('Comparar'),
+                ),
               ),
               const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: state.a.isEmpty && state.b.isEmpty ? null : controller.swap,
-                icon: const Icon(Icons.swap_horiz),
-                label: const Text('Trocar A e B'),
+              Tooltip(
+                message:
+                    'Inverte os lados: o que está em A vai para B e vice-versa. '
+                    'Útil para ver o que B tem que A não tem.',
+                child: OutlinedButton.icon(
+                  key: const ValueKey('compare-swap'),
+                  onPressed: state.a.isEmpty && state.b.isEmpty ? null : controller.swap,
+                  icon: const Icon(Icons.swap_horiz),
+                  label: const Text('Trocar A e B'),
+                ),
               ),
               const SizedBox(width: 16),
               if (state.running) const SizedBox(width: 24, height: 24, child: CircularProgressIndicator()),

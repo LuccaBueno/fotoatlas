@@ -191,6 +191,80 @@ void main() {
     expect(backend.calls, contains('cancel-copy:pau'));
   });
 
+  testWidgets('assistente: caminho completo do destino e próximo passo quando tudo já está lá', (tester) async {
+    final backend = await compareWithResult(tester);
+    backend.onPreview = (r) => preview(r, items: 0, alreadyThere: 2);
+    await tester.tap(find.text('Selecionar todos os resultados'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('copy-to-b')));
+    await tester.pumpAndSettle();
+
+    // O caminho aparece inteiro (quebrando linha), com dica ao passar o mouse.
+    expect(find.text(r'Caminho: E:\'), findsOneWidget);
+    expect(
+      find.ancestor(of: find.byKey(const ValueKey('copy-dest-path')), matching: find.byType(Tooltip)),
+      findsOneWidget,
+    );
+
+    expect(find.text('Nada para copiar.'), findsOneWidget);
+    expect(find.textContaining('Tudo o que você escolheu já está em "Disco 2"'), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.byKey(const ValueKey('copy-confirm'))).onPressed, isNull);
+    await tester.tap(find.byKey(const ValueKey('copy-add-device')));
+    await tester.pumpAndSettle();
+    expect(find.text('Adicionar dispositivo'), findsWidgets, reason: 'abre a janela de adicionar dispositivo');
+    expect(backend.calls.where((c) => c.startsWith('start-copy')), isEmpty);
+  });
+
+  testWidgets('Tarefas › Detalhes: copiados, renomeados (com o porquê) e não copiados (com o motivo)', (tester) async {
+    OperationItemView item(int id, String state, String src, String dst, {String? code, String? msg}) =>
+        OperationItemView(
+          id: id,
+          seq: id,
+          state: state,
+          srcSourceId: 's1',
+          srcRelPath: src,
+          dstRelPath: dst,
+          size: 10,
+          errorCode: code,
+          errorMessage: msg,
+        );
+    final backend = FakeBackend()
+      ..operations = [
+        op('ok', OpStatus.completedWithErrors, counts: const {'published': 2, 'skipped_identical': 2, 'failed': 1}),
+      ]
+      ..opItems = {
+        'ok': [
+          item(1, ItemState.published, 'DCIM/IMG_20240502_120000.jpg', 'Fotos/2024/IMG_20240502_120000_1.jpg'),
+          item(2, ItemState.published, 'DCIM/IMG_0001.jpg', 'Fotos/2024/IMG_0001.jpg'),
+          item(3, ItemState.skippedIdentical, 'DCIM/IMG_0003.jpg', 'Fotos/2024/IMG_0003.jpg'),
+          item(4, ItemState.skippedIdentical, 'DCIM/IMG_0004.jpg', 'Fotos/2024/IMG_0004.jpg', code: 'skipped_by_user'),
+          item(5, ItemState.failed, 'DCIM/VID_0001.mp4', 'Fotos/2024/VID_0001.mp4', msg: 'A origem não existe mais.'),
+        ],
+      };
+    await tester.pumpWidget(harness(backend));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tarefas').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('op-details-ok')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 arquivo salvo com outro nome'), findsOneWidget);
+    expect(
+      find.text(
+        'IMG_20240502_120000.jpg → salvo como IMG_20240502_120000_1.jpg (em Fotos › 2024) porque o nome já existia '
+        'na pasta (o arquivo que já estava lá não foi mexido).',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Não copiados (3)'), findsOneWidget);
+    expect(find.textContaining('IMG_0003.jpg: o destino já tinha este arquivo, idêntico'), findsOneWidget);
+    expect(find.textContaining('IMG_0004.jpg: você escolheu não copiar'), findsOneWidget);
+    expect(find.text('DCIM › VID_0001.mp4: A origem não existe mais.'), findsOneWidget);
+    expect(find.text('2 copiados e conferidos'), findsOneWidget);
+    expect(find.text('IMG_0001.jpg → Fotos › 2024 › IMG_0001.jpg'), findsOneWidget);
+    expect(find.byKey(const ValueKey('op-copied-1')), findsOneWidget);
+  });
+
   testWidgets('Tarefas vazia explica como começar', (tester) async {
     await tester.pumpWidget(harness(FakeBackend()));
     await tester.pumpAndSettle();

@@ -17,6 +17,14 @@ String entryLabel(ScopeEntry e, Map<String, SourceView> sources) {
   return displayPath(name, e.relPath);
 }
 
+/// Dica de cada tipo no filtro do escopo.
+String scopeTypeTip(ScopeFileType type, String side) => switch (type) {
+  ScopeFileType.photo => 'Fotos comuns (JPG, HEIC, PNG…) em $side.',
+  ScopeFileType.raw => 'Fotos RAW de câmeras (CR2, NEF, ARW, DNG…) em $side.',
+  ScopeFileType.video => 'Vídeos (MP4, MOV…) em $side.',
+  ScopeFileType.other => 'Outros arquivos que não são foto nem vídeo em $side.',
+};
+
 /// Um lado (A ou B): entradas, filtro por tipo e escopos salvos.
 class ScopeEditor extends ConsumerWidget {
   const ScopeEditor({super.key, required this.side, required this.title, required this.subtitle});
@@ -33,6 +41,7 @@ class ScopeEditor extends ConsumerWidget {
     final sources = {for (final s in ref.watch(sourcesProvider).value ?? const <SourceView>[]) s.id: s};
     final saved = ref.watch(savedScopesProvider).value ?? const <SavedScope>[];
     final moments = {for (final m in ref.watch(momentsProvider).value ?? const <MomentView>[]) m.id: m};
+    final letter = side == CompareSide.a ? 'A' : 'B';
 
     return Card(
       key: ValueKey('scope-${side.name}'),
@@ -102,44 +111,64 @@ class ScopeEditor extends ConsumerWidget {
                 ],
               ),
             const SizedBox(height: 8),
-            OutlinedButton.icon(
-              key: ValueKey('add-${side.name}'),
-              onPressed: () async {
-                final entry = await showDialog<ScopeEntry>(context: context, builder: (_) => const ScopePickerDialog());
-                if (entry != null) controller.addEntry(side, entry);
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Adicionar pasta ou dispositivo'),
+            Tooltip(
+              message:
+                  'Põe em $letter um dispositivo inteiro ou uma pasta dele. Dá para juntar vários. '
+                  'Funciona mesmo com o dispositivo desconectado (usa o último escaneamento).',
+              child: OutlinedButton.icon(
+                key: ValueKey('add-${side.name}'),
+                onPressed: () async {
+                  final entry = await showDialog<ScopeEntry>(
+                    context: context,
+                    builder: (_) => const ScopePickerDialog(),
+                  );
+                  if (entry != null) controller.addEntry(side, entry);
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Adicionar pasta ou dispositivo'),
+              ),
             ),
             const SizedBox(height: 4),
             Wrap(
               spacing: 8,
               runSpacing: 4,
               children: [
-                TextButton.icon(
-                  key: ValueKey('add-moment-${side.name}'),
-                  onPressed: () async {
-                    final m = await showDialog<MomentScopeEntry>(
-                      context: context,
-                      builder: (_) => const MomentPickerDialog(),
-                    );
-                    if (m != null) controller.addMoment(side, m);
-                  },
-                  icon: const Icon(Icons.collections_outlined),
-                  label: const Text('Adicionar momento'),
+                Tooltip(
+                  message:
+                      'Põe em $letter as fotos e vídeos de um momento da Biblioteca (ex.: uma viagem), '
+                      'em todos os dispositivos ou só em um.',
+                  child: TextButton.icon(
+                    key: ValueKey('add-moment-${side.name}'),
+                    onPressed: () async {
+                      final m = await showDialog<MomentScopeEntry>(
+                        context: context,
+                        builder: (_) => const MomentPickerDialog(),
+                      );
+                      if (m != null) controller.addMoment(side, m);
+                    },
+                    icon: const Icon(Icons.collections_outlined),
+                    label: const Text('Adicionar momento'),
+                  ),
                 ),
-                TextButton.icon(
-                  key: ValueKey('scope-filter-${side.name}'),
-                  onPressed: () async {
-                    final f = await showDialog<LibraryFilter>(
-                      context: context,
-                      builder: (_) => ScopeFilterDialog(initial: draft.filter),
-                    );
-                    if (f != null) controller.setFilter(side, f);
-                  },
-                  icon: const Icon(Icons.filter_alt_outlined),
-                  label: Text(
-                    draft.filter == null ? 'Filtrar por data ou câmera' : 'Filtro: ${scopeFilterLabel(draft.filter!)}',
+                Tooltip(
+                  message:
+                      'Considera em $letter só os arquivos tirados num período (pela data da foto) '
+                      'ou por certas câmeras/celulares.',
+                  child: TextButton.icon(
+                    key: ValueKey('scope-filter-${side.name}'),
+                    onPressed: () async {
+                      final f = await showDialog<LibraryFilter>(
+                        context: context,
+                        builder: (_) => ScopeFilterDialog(initial: draft.filter),
+                      );
+                      if (f != null) controller.setFilter(side, f);
+                    },
+                    icon: const Icon(Icons.filter_alt_outlined),
+                    label: Text(
+                      draft.filter == null
+                          ? 'Filtrar por data ou câmera'
+                          : 'Filtro: ${scopeFilterLabel(draft.filter!)}',
+                    ),
                   ),
                 ),
                 if (draft.filter != null)
@@ -151,13 +180,17 @@ class ScopeEditor extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Text('Tipos (nenhum marcado = todos):', style: theme.textTheme.bodySmall),
+            Tooltip(
+              message: 'Marque para comparar só alguns tipos de arquivo em $letter. Sem nenhum marcado, entram todos.',
+              child: Text('Tipos (nenhum marcado = todos):', style: theme.textTheme.bodySmall),
+            ),
             const SizedBox(height: 4),
             Wrap(
               spacing: 8,
               children: [
                 for (final t in ScopeFileType.values)
                   FilterChip(
+                    tooltip: scopeTypeTip(t, letter),
                     label: Text(scopeTypeLabel(t)),
                     selected: draft.types.contains(t),
                     onSelected: (_) => controller.toggleType(side, t),

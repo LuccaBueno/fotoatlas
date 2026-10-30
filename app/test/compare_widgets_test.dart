@@ -105,9 +105,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.calls, contains('compare:s1:pasta1+s1:pasta2|s2:pasta3|'));
     expect(find.text('Faltam 2 arquivos (2,3 KB) de A em B.'), findsOneWidget);
-    expect(find.text('Faltam em B (2)'), findsOneWidget);
-    expect(find.text('Só em B (1)'), findsOneWidget);
-    expect(find.text('Nos dois (2)'), findsOneWidget);
+    expect(find.text('Em A, não contido em B — faltam (2)'), findsOneWidget);
+    expect(find.text('Em B, não contido em A (1)'), findsOneWidget);
+    expect(find.text('Contido em A e em B (2)'), findsOneWidget);
+    // As dicas das abas citam os nomes reais dos lados.
+    String tip(String list) => tester
+        .widget<Tooltip>(find.descendant(of: find.byKey(ValueKey('tab-$list')), matching: find.byType(Tooltip)))
+        .message!;
+    expect(
+      tip('missing'),
+      'Arquivos de "Disco 1 › pasta1 + Disco 1 › pasta2" que "Disco 2 › pasta3" ainda não contém. '
+      'São estes que dá para copiar para B.',
+    );
+    expect(tip('onlyInB'), startsWith('Arquivos de "Disco 2 › pasta3" que não estão em "Disco 1 › pasta1 + '));
+    expect(tip('inBoth'), contains('e também em "Disco 2 › pasta3"'));
+    // "Copiar para B…" desabilitado explica o porquê.
+    expect(
+      tester.widget<Tooltip>(find.byKey(const ValueKey('copy-to-b-tip'))).message,
+      'Marque arquivos ou clique em "Selecionar todos os resultados".',
+    );
+    expect(tester.widget<FilledButton>(find.byKey(const ValueKey('copy-to-b'))).onPressed, isNull);
+    // Os outros comandos têm dica.
+    for (final key in ['add-a', 'add-moment-a', 'scope-filter-b', 'compare-swap']) {
+      expect(
+        find.ancestor(of: find.byKey(ValueKey(key)), matching: find.byType(Tooltip)),
+        findsWidgets,
+        reason: key,
+      );
+    }
     expect(find.text('Disco 1 › pasta1 › IMG_0002.jpg'), findsOneWidget);
 
     // Seleção: um item, depois todos os resultados.
@@ -117,6 +142,7 @@ void main() {
     await tester.tap(find.text('Selecionar todos os resultados'));
     await tester.pump();
     expect(find.text('2 itens · 2,3 KB'), findsOneWidget);
+    expect(tester.widget<Tooltip>(find.byKey(const ValueKey('copy-to-b-tip'))).message, startsWith('Abre a prévia'));
   });
 
   testWidgets('resultado incompleto nunca diz 100% e oferece "Conferir agora"', (tester) async {

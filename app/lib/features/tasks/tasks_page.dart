@@ -309,35 +309,62 @@ class _Details extends ConsumerWidget {
     final backend = ref.read(backendProvider);
     // Recarrega quando a lista de operações muda.
     ref.watch(operationsProvider);
+    final colors = StatusColors.of(context);
     return FutureBuilder(
       future: Future.wait([
-        backend.operationItems(op.id, states: {ItemState.needsAttention, ItemState.failed}),
+        backend.operationItems(op.id, limit: _detailsLimit),
         if (op.destSourceId != null) backend.tempLeftovers(op.destSourceId!),
       ]),
       builder: (context, snap) {
         if (!snap.hasData) return const Padding(padding: EdgeInsets.all(8), child: LinearProgressIndicator());
-        final problems = snap.data![0] as List<OperationItemView>;
+        final items = snap.data![0] as List<OperationItemView>;
         final leftovers = snap.data!.length > 1 ? snap.data![1] as List<TempLeftover>? : null;
+        final problems = items.where((i) => i.state == ItemState.needsAttention).toList();
+        final notCopied = items
+            .where((i) => i.state == ItemState.failed || i.state == ItemState.skippedIdentical)
+            .toList();
+        final published = items.where((i) => i.state == ItemState.published).toList();
+        final renamed = published.where((i) => i.renamedForConflict || i.originalName != null).toList();
+        Widget heading(String text, Key key) => Padding(
+          key: key,
+          padding: const EdgeInsets.only(top: 12, bottom: 4),
+          child: Text(text, style: theme.textTheme.titleSmall),
+        );
+        Widget row(OperationItemView i, IconData icon, String text, {Color? color, String? prefix}) => Padding(
+          key: ValueKey('${prefix ?? 'op-file'}-${i.id}'),
+          padding: const EdgeInsets.only(left: 8, top: 2, bottom: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(text, style: theme.textTheme.bodySmall?.copyWith(color: color)),
+              ),
+            ],
+          ),
+        );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Divider(),
-            if (problems.isEmpty)
+            if (problems.isEmpty && notCopied.isEmpty)
               Text(
                 done == op.totalItems
                     ? 'Todos os arquivos foram copiados e conferidos (ou já estavam no destino).'
                     : 'Nenhum problema até agora.',
               ),
+            if (problems.isNotEmpty) heading('Esperando a sua decisão', const ValueKey('op-problems-heading')),
             for (final i in problems)
               ListTile(
                 key: ValueKey('op-item-${i.id}'),
                 dense: true,
                 contentPadding: EdgeInsets.zero,
-                leading: Icon(i.state == ItemState.failed ? Icons.error_outline : Icons.help_outline),
+                leading: const Icon(Icons.help_outline),
                 title: Text(folderLabel(i.srcRelPath)),
                 subtitle: Text(
                   '${itemStateLabel(i.state)}${i.errorMessage == null ? '' : ': ${i.errorMessage}'}'
-                  '${i.state == ItemState.needsAttention ? '\nDestino: ${folderLabel(i.dstRelPath)}' : ''}',
+                  '\nDestino: ${folderLabel(i.dstRelPath)}',
                 ),
                 trailing: i.errorCode == 'name_conflict'
                     ? Wrap(
@@ -356,6 +383,53 @@ class _Details extends ConsumerWidget {
                         ],
                       )
                     : null,
+              ),
+            if (renamed.isNotEmpty) ...[
+              heading(
+                '${plural(renamed.length, 'arquivo salvo', 'arquivos salvos')} com outro nome',
+                const ValueKey('op-renamed-heading'),
+              ),
+              for (final i in renamed)
+                row(i, Icons.drive_file_rename_outline, _renamedText(i), color: colors.attention, prefix: 'op-renamed'),
+            ],
+            if (notCopied.isNotEmpty) ...[
+              heading('Não copiados (${formatInt(notCopied.length)})', const ValueKey('op-not-copied-heading')),
+              for (final i in notCopied)
+                i.state == ItemState.failed
+                    ? row(i, Icons.error_outline, _failedText(i), color: colors.single, prefix: 'op-item')
+                    : row(i, Icons.remove_circle_outline, _skippedText(i), prefix: 'op-skipped'),
+            ],
+            if (published.isNotEmpty) ...[
+              heading(
+                plural(published.length, 'copiado e conferido', 'copiados e conferidos'),
+                const ValueKey('op-copied-heading'),
+              ),
+              for (final i in published.take(_copiedShown))
+                row(
+                  i,
+                  Icons.check,
+                  '${i.srcName} → ${folderLabel(i.dstRelPath)}',
+                  color: i.renamedForConflict ? colors.attention : null,
+                  prefix: 'op-copied',
+                ),
+              if (published.length > _copiedShown)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, top: 2),
+                  child: Text(
+                    'e mais ${plural(published.length - _copiedShown, 'arquivo', 'arquivos')}. '
+                    'A lista completa está no relatório (Exportar relatório…).',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+            ],
+            if (items.length >= _detailsLimit)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Mostrando os primeiros ${formatInt(_detailsLimit)} arquivos da cópia. '
+                  'Use "Exportar relatório…" para ver todos.',
+                  style: theme.textTheme.bodySmall,
+                ),
               ),
             if (leftovers != null && leftovers.isNotEmpty) ...[
               const SizedBox(height: 8),
@@ -380,4 +454,28 @@ class _Details extends ConsumerWidget {
       },
     );
   }
+
+  /// Quantos itens os detalhes carregam (o relatório tem todos).
+  static const _detailsLimit = 2000;
+
+  /// Quantos "copiados" aparecem antes do "e mais N".
+  static const _copiedShown = 200;
+
+  /// "IMG.jpg → salvo como IMG_1.jpg (em 2024 › 05) porque o nome já existia na pasta."
+  static String _renamedText(OperationItemView i) {
+    final why = [
+      if (i.originalName != null) 'o Windows não aceita alguns caracteres do nome original',
+      if (i.renamedForConflict) 'o nome já existia na pasta (o arquivo que já estava lá não foi mexido)',
+    ].join(' e ');
+    final slash = i.dstRelPath.lastIndexOf('/');
+    final dir = slash < 0 ? '' : ' (em ${folderLabel(i.dstRelPath.substring(0, slash))})';
+    return '${i.srcName} → salvo como ${i.dstName}$dir porque $why.';
+  }
+
+  static String _skippedText(OperationItemView i) => i.errorCode == 'skipped_by_user'
+      ? '${i.srcName}: você escolheu não copiar (já existia outro arquivo com esse nome no destino).'
+      : '${i.srcName}: o destino já tinha este arquivo, idêntico (${folderLabel(i.dstRelPath)}).';
+
+  static String _failedText(OperationItemView i) =>
+      '${folderLabel(i.srcRelPath)}: ${i.errorMessage ?? 'não deu certo (sem detalhe)'}';
 }

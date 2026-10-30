@@ -76,7 +76,7 @@ abstract interface class AppBackend {
   Future<void> cancelCopy(String operationId);
   Future<int> retryFailedCopies(String operationId);
   Future<void> resolveConflict(int itemId, {required bool rename});
-  Future<List<OperationItemView>> operationItems(String operationId, {Set<String>? states});
+  Future<List<OperationItemView>> operationItems(String operationId, {Set<String>? states, int limit = 500});
 
   /// Relatório em CSV.
   Future<String> exportOperation(String operationId);
@@ -229,8 +229,8 @@ class CoreBackend implements AppBackend {
       core.copies.resolveConflict(itemId, rename: rename);
 
   @override
-  Future<List<OperationItemView>> operationItems(String operationId, {Set<String>? states}) =>
-      core.copies.items(operationId, states: states);
+  Future<List<OperationItemView>> operationItems(String operationId, {Set<String>? states, int limit = 500}) =>
+      core.copies.items(operationId, states: states, limit: limit);
 
   @override
   Future<String> exportOperation(String operationId) => core.copies.exportCsv(operationId);

@@ -8,6 +8,7 @@ import '../../app/providers.dart';
 import '../../app/theme.dart';
 import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
+import '../devices/add_device.dart' show addDevice;
 
 /// Assistente "Copiar para…" (spec §3.3): destino → organização → prévia →
 /// confirmar. Nada é gravado antes do botão de confirmar (regra 6).
@@ -134,6 +135,17 @@ class _CopyWizardState extends ConsumerState<CopyWizard> {
     }
   }
 
+  /// "Adicionar dispositivo" a partir do assistente: um disco novo vira o destino.
+  Future<void> _addDestination() async {
+    final id = await addDevice(context, ref);
+    if (id == null || !mounted) return;
+    ref.invalidate(sourcesProvider);
+    final added = (await ref.read(sourcesProvider.future)).where((s) => s.id == id).firstOrNull;
+    if (!mounted || added == null || added.isPhone || !added.isConnected) return;
+    setState(() => _dest = id);
+    _refresh();
+  }
+
   Future<void> _start() async {
     final preview = _preview;
     if (preview == null || !preview.canStart) return;
@@ -166,6 +178,7 @@ class _CopyWizardState extends ConsumerState<CopyWizard> {
     }
     final ids = _ids;
     final preview = _preview;
+    final destPath = targets.where((s) => s.id == _dest).firstOrNull?.displayPath;
     return AlertDialog(
       key: const ValueKey('copy-wizard'),
       title: Text(
@@ -190,11 +203,17 @@ class _CopyWizardState extends ConsumerState<CopyWizard> {
                 initialValue: targets.any((s) => s.id == _dest) ? _dest : null,
                 decoration: const InputDecoration(labelText: 'Para onde', border: OutlineInputBorder()),
                 hint: Text(targets.isEmpty ? 'Conecte o disco de destino' : 'Escolha o disco de destino'),
+                itemHeight: null,
+                // Fechado mostra só o nome; o caminho completo vem logo abaixo.
+                selectedItemBuilder: (_) => [for (final s in targets) Text(s.name, overflow: TextOverflow.ellipsis)],
                 items: [
                   for (final s in targets)
                     DropdownMenuItem(
                       value: s.id,
-                      child: Text('${s.name}${s.displayPath == null ? '' : ' (${s.displayPath})'}'),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Text('${s.name}${s.displayPath == null ? '' : '\n${s.displayPath}'}'),
+                      ),
                     ),
                 ],
                 onChanged: (v) {
@@ -202,6 +221,19 @@ class _CopyWizardState extends ConsumerState<CopyWizard> {
                   _refresh();
                 },
               ),
+              if (destPath != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 12),
+                  child: Tooltip(
+                    message: destPath,
+                    child: Text(
+                      'Caminho: $destPath',
+                      key: const ValueKey('copy-dest-path'),
+                      softWrap: true,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                ),
               if (targets.isEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -271,7 +303,11 @@ class _CopyWizardState extends ConsumerState<CopyWizard> {
               else if (preview != null)
                 Opacity(
                   opacity: _loading ? 0.5 : 1,
-                  child: CopyPreviewView(preview: preview),
+                  child: CopyPreviewView(
+                    preview: preview,
+                    otherTargets: targets.where((s) => s.id != _dest).length,
+                    onAddDevice: _addDestination,
+                  ),
                 ),
             ],
           ),
@@ -296,8 +332,12 @@ class _CopyWizardState extends ConsumerState<CopyWizard> {
 
 /// O que vai acontecer, em frases simples.
 class CopyPreviewView extends StatelessWidget {
-  const CopyPreviewView({super.key, required this.preview});
+  const CopyPreviewView({super.key, required this.preview, this.otherTargets = 0, this.onAddDevice});
   final CopyPreview preview;
+
+  /// Outros discos conectados que podem ser destino (para sugerir o próximo passo).
+  final int otherTargets;
+  final VoidCallback? onAddDevice;
 
   @override
   Widget build(BuildContext context) {
@@ -342,6 +382,27 @@ class CopyPreviewView extends StatelessWidget {
             '(mesmo conteúdo, talvez com outro nome): não serão copiados de novo.',
             color: colors.verified,
           ),
+        if (p.items.isEmpty && p.alreadyThere > 0 && p.unavailable.isEmpty && p.tooLargeForFat32.isEmpty) ...[
+          line(
+            Icons.lightbulb_outline,
+            'Tudo o que você escolheu já está em "${p.destName}". Para ter mais uma cópia, escolha outro destino'
+            '${otherTargets > 0 ? ' em "Para onde", lá em cima,' : ''} ou adicione outro disco.',
+            key: const ValueKey('copy-next-step'),
+          ),
+          if (onAddDevice != null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 26, top: 4),
+                child: OutlinedButton.icon(
+                  key: const ValueKey('copy-add-device'),
+                  onPressed: onAddDevice,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Adicionar dispositivo…'),
+                ),
+              ),
+            ),
+        ],
         if (free != null)
           p.enoughSpace
               ? line(

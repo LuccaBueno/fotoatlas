@@ -243,7 +243,7 @@ class FakeBackend implements AppBackend {
       calls.add('conflict:$itemId:${rename ? 'rename' : 'skip'}');
 
   @override
-  Future<List<OperationItemView>> operationItems(String operationId, {Set<String>? states}) async => [
+  Future<List<OperationItemView>> operationItems(String operationId, {Set<String>? states, int limit = 500}) async => [
     for (final i in opItems[operationId] ?? const <OperationItemView>[])
       if (states == null || states.contains(i.state)) i,
   ];

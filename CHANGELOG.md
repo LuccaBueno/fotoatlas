@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [0.5.0] — 2026-10-30 — Fase 5: Cópia segura
+
+### Ajustes de usabilidade (depois do teste da Fase 5)
+- **Comparar**: abas com "contém/contido" — **"Em A, não contido em B — faltam"**, **"Em B, não contido em A"** e **"Contido em A e em B"** — e dica em cada aba citando os nomes reais dos lados (ex.: "Arquivos de "Pixel de Teste" que "HD" ainda não contém").
+- "Copiar para B…" desabilitado explica o porquê: "Marque arquivos ou clique em "Selecionar todos os resultados"". Dicas também em "Selecionar todos os resultados", "Adicionar pasta ou dispositivo", "Adicionar momento", "Filtrar por data ou câmera", nos tipos, em "Comparar", "Trocar A e B" e "Conferir agora".
+- **Assistente de cópia**: o caminho completo do destino aparece abaixo de "Para onde" (quebrando linha, com dica); na lista, nome e caminho em duas linhas. Quando tudo já está no destino, sugere o próximo passo: escolher outro destino ou **"Adicionar dispositivo…"** direto do assistente (um disco novo vira o destino).
+- **Tarefas › Detalhes**: lista os arquivos copiados e conferidos (origem → onde ficou), destaca os **salvos com outro nome** com o porquê ("IMG_20240502_120000.jpg → salvo como IMG_20240502_120000_1.jpg porque o nome já existia na pasta") e os **não copiados com o motivo** (já estava lá idêntico, você escolheu não copiar, erro). A lista completa continua no relatório exportado.
+
 ### Adicionado — Fase 5: Cópia segura
 - **Copiar o que falta**, com conferência: "Copiar para B…" na Comparar (todos os resultados ou os marcados) e "Copiar para…" com itens marcados na Biblioteca abrem um assistente com **prévia** antes de gravar qualquer coisa: quantos arquivos e quanto espaço, o que o destino já tem (mesmo conteúdo, outro nome), espaço livre e quanto sobra, nomes que já existem, arquivos acima de 4 GB num disco FAT32, nomes ajustados para o Windows, itens sem data ou com hora incerta e as pastas que vão ser criadas. Organização por ano e mês (padrão), por dia, por tipo e ano, mantendo a estrutura da origem ou tudo numa pasta.
 - **Cada arquivo é conferido**: gravado numa pasta temporária do destino, enviado ao disco, relido e comparado pelo conteúdo com a origem; só então aparece no destino. Nada é sobrescrito (nome ocupado vira `_1`, `_2`… ou espera a sua decisão) e a origem nunca muda. A data de modificação da origem é mantida.

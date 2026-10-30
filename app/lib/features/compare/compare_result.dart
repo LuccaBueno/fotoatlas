@@ -10,6 +10,8 @@ import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
 import '../tasks/copy_wizard.dart';
 import 'compare_controller.dart';
+import 'scope_editor.dart' show entryLabel;
+import 'scope_moments.dart' show momentEntryLabel;
 
 /// Frase principal do resultado (spec §9): nunca "100%" com pendências.
 String verdictHeadline(CompareSummary r) => switch (r.verdict) {
@@ -129,7 +131,9 @@ class CompareResultView extends ConsumerWidget {
                 Text(sideSummary(r, 'B'), key: const ValueKey('summary-B'), style: theme.textTheme.bodySmall),
                 Text(
                   'As abas contam conteúdos: arquivos repetidos entram uma vez só '
-                  '(Faltam em B + Nos dois = conteúdos de A; Só em B + Nos dois = conteúdos de B).',
+                  '("Em A, não contido em B" + "Contido em A e em B" = conteúdos de A; '
+                  '"Em B, não contido em A" + "Contido em A e em B" = conteúdos de B). '
+                  'Passe o mouse sobre cada aba para ver o que ela mostra.',
                   style: theme.textTheme.bodySmall,
                 ),
                 for (final t in issues)
@@ -160,10 +164,15 @@ class CompareResultView extends ConsumerWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      FilledButton.icon(
-                        onPressed: hashing ? null : () => ref.read(compareControllerProvider.notifier).verifyNow(),
-                        icon: const Icon(Icons.fact_check_outlined),
-                        label: const Text('Conferir agora'),
+                      Tooltip(
+                        message:
+                            'Lê os arquivos ainda não conferidos para saber o conteúdo de cada um. '
+                            'Só leitura: nada é alterado.',
+                        child: FilledButton.icon(
+                          onPressed: hashing ? null : () => ref.read(compareControllerProvider.notifier).verifyNow(),
+                          icon: const Icon(Icons.fact_check_outlined),
+                          label: const Text('Conferir agora'),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       if (hashing) const Expanded(child: HashProgressBar()),
@@ -181,43 +190,92 @@ class CompareResultView extends ConsumerWidget {
   }
 }
 
-class _ResultTabs extends StatelessWidget {
+/// Nome de um lado para as dicas: "Pixel de Teste", "HD › Backup e mais 2".
+String scopeName(Scope? s, Map<String, SourceView> sources, Map<int, MomentView> moments, String side) {
+  final labels = [
+    for (final e in s?.entries ?? const <ScopeEntry>[]) entryLabel(e, sources),
+    for (final m in s?.moments ?? const <MomentScopeEntry>[]) momentEntryLabel(m, moments, sources),
+  ];
+  if (labels.isEmpty) return side;
+  if (labels.length <= 2) return labels.join(' + ');
+  return '${labels.first} e mais ${labels.length - 1}';
+}
+
+/// Abas do resultado: rótulo e dica com os nomes reais dos lados.
+List<(String, String, CompareList)> resultTabs(CompareSummary r, String aName, String bName) {
+  int unverified(String side) =>
+      r.issues.whereType<UnverifiedFiles>().where((u) => u.side == side).fold(0, (s, u) => s + u.total);
+  final unverifiedA = unverified('A'), unverifiedB = unverified('B');
+  return [
+    (
+      'Em A, não contido em B — faltam (${formatInt(r.missing.contents)})',
+      'Arquivos de "$aName" que "$bName" ainda não contém. São estes que dá para copiar para B.',
+      CompareList.missing,
+    ),
+    (
+      'Em B, não contido em A (${formatInt(r.onlyInB.contents)})',
+      'Arquivos de "$bName" que não estão em "$aName". Não falta nada por causa deles: é só para você saber.',
+      CompareList.onlyInB,
+    ),
+    (
+      'Contido em A e em B (${formatInt(r.inBoth.contents)})',
+      'Arquivos que estão em "$aName" e também em "$bName" (mesmo conteúdo, ainda que com outro nome ou pasta).',
+      CompareList.inBoth,
+    ),
+    if (unverifiedA > 0)
+      (
+        'Não conferidos em A (${formatInt(unverifiedA)})',
+        'Arquivos de "$aName" cujo conteúdo ainda não foi conferido: só entram na conta depois de conferidos.',
+        CompareList.unverifiedA,
+      ),
+    if (unverifiedB > 0)
+      (
+        'Não conferidos em B (${formatInt(unverifiedB)})',
+        'Arquivos de "$bName" cujo conteúdo ainda não foi conferido: só entram na conta depois de conferidos.',
+        CompareList.unverifiedB,
+      ),
+  ];
+}
+
+class _ResultTabs extends ConsumerWidget {
   const _ResultTabs({required this.result});
   final CompareSummary result;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final r = result;
-    final unverifiedA = r.issues
-        .whereType<UnverifiedFiles>()
-        .where((u) => u.side == 'A')
-        .fold(0, (s, u) => s + u.total);
-    final unverifiedB = r.issues
-        .whereType<UnverifiedFiles>()
-        .where((u) => u.side == 'B')
-        .fold(0, (s, u) => s + u.total);
-    final tabs = [
-      ('Faltam em B (${formatInt(r.missing.contents)})', CompareList.missing),
-      ('Só em B (${formatInt(r.onlyInB.contents)})', CompareList.onlyInB),
-      ('Nos dois (${formatInt(r.inBoth.contents)})', CompareList.inBoth),
-      if (unverifiedA > 0) ('Não conferidos em A (${formatInt(unverifiedA)})', CompareList.unverifiedA),
-      if (unverifiedB > 0) ('Não conferidos em B (${formatInt(unverifiedB)})', CompareList.unverifiedB),
-    ];
+    final state = ref.watch(compareControllerProvider);
+    final sources = {for (final s in ref.watch(sourcesProvider).value ?? const <SourceView>[]) s.id: s};
+    final moments = {for (final m in ref.watch(momentsProvider).value ?? const <MomentView>[]) m.id: m};
+    final tabs = resultTabs(
+      r,
+      scopeName(state.resultA, sources, moments, 'A'),
+      scopeName(state.resultB, sources, moments, 'B'),
+    );
     return DefaultTabController(
       length: tabs.length,
       child: Card(
         child: Column(
           children: [
-            TabBar(isScrollable: true, tabs: [for (final t in tabs) Tab(text: t.$1)]),
+            TabBar(
+              isScrollable: true,
+              tabs: [
+                for (final t in tabs)
+                  Tab(
+                    key: ValueKey('tab-${t.$3.name}'),
+                    child: Tooltip(message: t.$2, child: Text(t.$1)),
+                  ),
+              ],
+            ),
             SizedBox(
               height: 460,
               child: TabBarView(
                 children: [
                   for (final t in tabs)
                     _ItemList(
-                      key: ValueKey('${t.$2.name}-${r.computedAt.microsecondsSinceEpoch}'),
-                      list: t.$2,
-                      totals: switch (t.$2) {
+                      key: ValueKey('${t.$3.name}-${r.computedAt.microsecondsSinceEpoch}'),
+                      list: t.$3,
+                      totals: switch (t.$3) {
                         CompareList.missing => r.missing,
                         CompareList.onlyInB => r.onlyInB,
                         CompareList.inBoth => r.inBoth,
@@ -234,7 +292,7 @@ class _ResultTabs extends StatelessWidget {
   }
 }
 
-/// Lista paginada; na aba "Faltam em B" os itens são selecionáveis.
+/// Lista paginada; na aba "Em A, não contido em B" os itens são selecionáveis.
 class _ItemList extends ConsumerStatefulWidget {
   const _ItemList({super.key, required this.list, required this.totals});
   final CompareList list;
@@ -347,18 +405,27 @@ class _ItemListState extends ConsumerState<_ItemList> {
                       key: const ValueKey('selection-bar'),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () => setState(() {
-                      _all = !_all;
-                      _selected.clear();
-                    }),
-                    child: Text(_all ? 'Limpar seleção' : 'Selecionar todos os resultados'),
+                  Tooltip(
+                    message: _all
+                        ? 'Desmarca tudo.'
+                        : 'Marca os ${plural(totals?.contents ?? 0, 'arquivo', 'arquivos')} desta aba, inclusive os '
+                              'que ainda não apareceram na lista.',
+                    child: TextButton(
+                      key: const ValueKey('select-all'),
+                      onPressed: () => setState(() {
+                        _all = !_all;
+                        _selected.clear();
+                      }),
+                      child: Text(_all ? 'Limpar seleção' : 'Selecionar todos os resultados'),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Tooltip(
-                    message:
-                        'Abre a prévia: quanto vai copiar, espaço livre, nomes repetidos e pastas. '
-                        'Nada é gravado antes de você confirmar.',
+                    key: const ValueKey('copy-to-b-tip'),
+                    message: selectedCount == 0
+                        ? 'Marque arquivos ou clique em "Selecionar todos os resultados".'
+                        : 'Abre a prévia: quanto vai copiar, espaço livre, nomes repetidos e pastas. '
+                              'Nada é gravado antes de você confirmar.',
                     child: FilledButton.icon(
                       key: const ValueKey('copy-to-b'),
                       onPressed: selectedCount == 0 ? null : _copyToB,

@@ -201,7 +201,7 @@ Nenhum `await` de operação longa no isolate da UI. As listas grandes usam `Lis
 
 - **Início**: painel "O que já tem backup e o que ainda não tem" com as 5 situações (cor + ícone + texto, quantidade e tamanho), progresso da conferência (pausar/continuar) e atalho para Comparar; por dispositivo, quantos arquivos só existem ali.
 - **Dispositivos**: no cartão, situação de backup das fotos e vídeos da fonte, arquivos repetidos (espaço) e progresso da conferência daquela fonte.
-- **Comparar**: dois editores de escopo (A e B) com entradas (dispositivo inteiro ou pasta, escolhidas pelo catálogo — funciona desconectado), filtro por tipo e escopos salvos; resultado com a pergunta "B contém todo o conteúdo de A?", motivos de "incompleto", "Conferir agora" e abas Faltam em B / Só em B / Nos dois / Não conferidos, com seleção ("N itens · X GB", "Selecionar todos os resultados"). "Copiar para B…" fica desabilitado até a Fase 5.
+- **Comparar**: dois editores de escopo (A e B) com entradas (dispositivo inteiro ou pasta, escolhidas pelo catálogo — funciona desconectado), filtro por tipo e escopos salvos; resultado com a pergunta "B contém todo o conteúdo de A?", motivos de "incompleto", "Conferir agora" e abas "Em A, não contido em B — faltam" / "Em B, não contido em A" / "Contido em A e em B" / Não conferidos (dica com os nomes reais dos lados), com seleção ("N itens · X GB", "Selecionar todos os resultados"). "Copiar para B…" abre o assistente de cópia (Fase 5); desabilitado, a dica diz o que marcar.
 - **Configurações**: backup do catálogo (último, quantidade, "Fazer backup agora").
 - O `ProviderScope` fica acima do `MaterialApp` para que diálogos enxerguem os providers.
 
