@@ -78,4 +78,16 @@ void main() {
     final attrib = Process.runSync('attrib', [p.join(out, 'Velhas', 'Thumbs.db')]).stdout as String;
     expect(attrib.substring(0, 12), allOf(contains('S'), contains('H')), reason: 'oculto e de sistema');
   });
+
+  test('integridade: HD fotos e HD cópia com o mesmo conteúdo e datas fixas', () {
+    final out = p.join(temp.path, 'integridade');
+    generateIntegrityDemo(out);
+    for (var i = 1; i <= 6; i++) {
+      final a = File(p.join(out, 'HD fotos', '2024', 'IMG_000$i.jpg'));
+      final b = File(p.join(out, 'HD cópia', 'Backup 2024', 'foto_$i.jpg'));
+      expect(a.readAsBytesSync(), b.readAsBytesSync());
+      expect(a.lastModifiedSync(), DateTime(2024, 9, i, 10 + i, 15));
+    }
+    expect(() => generateIntegrityDemo(out), throwsStateError);
+  });
 }

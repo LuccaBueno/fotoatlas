@@ -444,3 +444,29 @@ void generateReorgDemo(String outDir) {
   final attrib = Process.runSync('attrib', ['+h', '+s', thumbs.path]);
   if (attrib.exitCode != 0) throw StateError('Não deu para marcar Thumbs.db como oculto: ${attrib.stderr}');
 }
+
+/// Demonstração da verificação de integridade (Fase 7): "HD fotos" com 6
+/// fotos e "HD cópia" com as mesmas 6, com outros nomes (backup). As datas
+/// são fixas para que `tools/scripts/demo-danificar.ps1` possa estragar uma
+/// foto mantendo a data, como um dano no disco.
+void generateIntegrityDemo(String outDir) {
+  assertAllowedOutput(outDir);
+  final dir = Directory(outDir);
+  if (dir.existsSync() && dir.listSync().isNotEmpty) {
+    throw StateError('A pasta de saída precisa estar vazia: $outDir');
+  }
+  for (var i = 1; i <= 6; i++) {
+    final at = DateTime(2024, 9, i, 10 + i, 15);
+    final bytes = jpegWithExif(
+      ExifSpec(dateTimeOriginal: at, make: 'Google', model: 'Pixel 7', uniqueId: 'integridade-$i', color: i),
+    );
+    final name = 'IMG_000$i.jpg';
+    for (final rel in ['HD fotos/2024/$name', 'HD cópia/Backup 2024/foto_$i.jpg']) {
+      final f = File(p.join(outDir, rel));
+      f.parent.createSync(recursive: true);
+      f
+        ..writeAsBytesSync(bytes)
+        ..setLastModifiedSync(at);
+    }
+  }
+}
