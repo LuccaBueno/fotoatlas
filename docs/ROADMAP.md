@@ -217,7 +217,7 @@ Cuidados pedidos pelo usuário (2026-10-30), registrados na spec §12 e no ADR 0
   - [x] CLI `reorg plan|start|resume|undo|resolve|folders|status`; `recover` inclui a reorganização
   - [x] Demonstração: `-DemoPersistente` gera a pasta "HD bagunçado"
 - [x] Critérios da spec (2026-10-30): interrupção recuperável (kill em 3 pontos × reorganização e Desfazer + na recuperação, 3× sem efeito colateral); Desfazer restaura exatamente a estrutura anterior (arquivos e pastas, depois de reabrir o core); modelo com momento gera a árvore esperada (momento nomeado com caracteres inválidos, sem nome, atravessando a meia-noite, hora a confirmar)
-- [ ] Teste do usuário (roteiro único das Fases 6 e 7, com o "HD bagunçado" e a pasta "Integridade" da demonstração) — **aguarda teste do usuário**
+- [ ] Teste do usuário (roteiro único das Fases 6 e 7 em `docs/roteiro-teste-fases-6-7.md`, com o "HD bagunçado" e a pasta "Integridade" da demonstração) — **aguarda teste do usuário**
 - [ ] Tag `v0.6.0` — **aguarda teste do usuário** (o usuário pediu, em 2026-10-30, para não criar a tag antes de testar)
 
 Observações da Fase 6:
