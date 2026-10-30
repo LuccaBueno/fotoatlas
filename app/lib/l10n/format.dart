@@ -122,3 +122,13 @@ String formatShift(Duration d) {
   final m = rest ~/ 60, s = rest % 60;
   return '$sign${[if (days > 0) '$days d', if (h > 0) '$h h', if (m > 0) '$m min', if (s > 0) '$s s'].join(' ')}';
 }
+
+/// Há quanto tempo: "hoje", "ontem", "há 5 dias", "há 3 meses", "há 2 anos".
+String formatAgo(DateTime value, {DateTime? now}) {
+  final days = (now ?? DateTime.now()).difference(value).inDays;
+  if (days <= 0) return 'hoje';
+  if (days == 1) return 'ontem';
+  if (days < 60) return 'há $days dias';
+  if (days < 730) return 'há ${days ~/ 30} meses';
+  return 'há ${days ~/ 365} anos';
+}

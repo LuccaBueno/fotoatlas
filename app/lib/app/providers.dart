@@ -124,3 +124,30 @@ final reorgProgressProvider = StreamProvider<CopyProgress?>((ref) => ref.watch(b
 
 /// Disco principal (destino sugerido nas cópias); recarregado com [ref.invalidate].
 final primarySourceProvider = FutureProvider<String?>((ref) => ref.watch(backendProvider).primarySourceId());
+
+/// Rodadas de verificação de integridade (tela Tarefas), reativas.
+final verifyRunsProvider = StreamProvider<List<IntegrityRunView>>(
+  (ref) => ref.watch(backendProvider).watchVerifyRuns(),
+);
+
+/// Progresso da verificação em andamento (começa pelo valor atual).
+final verifyProgressProvider = StreamProvider<IntegrityProgress?>((ref) async* {
+  final backend = ref.watch(backendProvider);
+  yield backend.currentVerify;
+  yield* backend.verifyProgress;
+});
+
+/// Arquivos possivelmente corrompidos, com as outras cópias conferidas.
+final integrityProblemsProvider = StreamProvider<List<IntegrityProblem>>(
+  (ref) => ref.watch(backendProvider).watchIntegrityProblems(),
+);
+
+/// Situação da verificação por fonte (Início e Dispositivos).
+final integrityOverviewProvider = StreamProvider<List<SourceIntegrity>>(
+  (ref) => ref.watch(backendProvider).watchIntegrityOverview(),
+);
+
+/// Verificação periódica; recarregada com [ref.invalidate] depois de mudar.
+final integrityScheduleProvider = FutureProvider<IntegritySchedule>(
+  (ref) => ref.watch(backendProvider).integritySchedule(),
+);

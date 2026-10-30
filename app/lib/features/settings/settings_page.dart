@@ -4,10 +4,11 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
 import '../../l10n/format.dart';
+import '../integrity/integrity_ui.dart';
 import 'dates_settings.dart';
 
-/// Configurações. Na Fase 2: backup do catálogo. Biblioteca principal,
-/// modelos de organização e verificação periódica chegam nas próximas fases.
+/// Configurações: backup do catálogo, datas e verificação periódica (o disco
+/// principal fica no cartão do disco, em Dispositivos).
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
@@ -74,13 +75,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           const SizedBox(height: 16),
           const DatesSettingsCard(),
           const SizedBox(height: 16),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.schedule),
-              title: const Text('Em breve'),
-              subtitle: const Text('Biblioteca principal, modelos de organização e verificação periódica.'),
-            ),
-          ),
+          const IntegritySettingsCard(),
         ],
       ),
     );

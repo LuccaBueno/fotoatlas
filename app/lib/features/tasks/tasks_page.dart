@@ -9,6 +9,7 @@ import '../../app/providers.dart';
 import '../../app/theme.dart';
 import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
+import '../integrity/integrity_ui.dart';
 import '../reorg/reorg_card.dart';
 
 /// Situação de uma operação, em palavras simples.
@@ -42,6 +43,7 @@ class TasksPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final ops = ref.watch(operationsProvider);
+    final noRuns = ref.watch(verifyRunsProvider).value?.isEmpty ?? true;
     return Scaffold(
       body: ops.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -61,7 +63,8 @@ class TasksPage extends ConsumerWidget {
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
-              if (list.isEmpty)
+              const IntegritySection(),
+              if (list.isEmpty && noRuns)
                 const Card(
                   child: Padding(
                     padding: EdgeInsets.all(24),

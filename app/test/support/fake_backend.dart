@@ -337,6 +337,102 @@ class FakeBackend implements AppBackend {
     calls.add('guide-done');
     guideDone = true;
   }
+
+  // Verificação de integridade.
+  VerifyEstimate estimate = const VerifyEstimate(files: 3, bytes: 3000);
+  VerifyRequest? lastVerifyRequest;
+  final verifyRunsController = StreamController<List<IntegrityRunView>>.broadcast();
+  List<IntegrityRunView> verifyRuns = const [];
+  final verifyProgressController = StreamController<IntegrityProgress>.broadcast();
+  final problemsController = StreamController<List<IntegrityProblem>>.broadcast();
+  List<IntegrityProblem> problems = const [];
+  List<SourceIntegrity> overview = const [];
+  List<IntegrityCheckView> checksList = const [];
+  IntegritySchedule schedule = const IntegritySchedule();
+  CopyRequest Function(int instanceId, int fromInstanceId)? onRestoreRequest;
+
+  void emitRuns(List<IntegrityRunView> runs) {
+    verifyRuns = runs;
+    verifyRunsController.add(runs);
+  }
+
+  void emitProblems(List<IntegrityProblem> list) {
+    problems = list;
+    problemsController.add(list);
+  }
+
+  @override
+  Future<VerifyEstimate> estimateVerify(VerifyRequest request) async {
+    lastVerifyRequest = request;
+    calls.add('estimate-verify:${request.olderThanDays ?? 'tudo'}');
+    return estimate;
+  }
+
+  @override
+  Future<int?> startVerify(VerifyRequest request) async {
+    lastVerifyRequest = request;
+    calls.add(
+      'start-verify:${request.entries.map((e) => e.sourceId).join('+')}:${request.contentIds.length}:'
+      '${request.olderThanDays ?? 'tudo'}',
+    );
+    return 1;
+  }
+
+  @override
+  Future<void> pauseVerify(int runId) async => calls.add('pause-verify:$runId');
+
+  @override
+  Future<void> resumeVerify(int runId) async => calls.add('resume-verify:$runId');
+
+  @override
+  Future<void> cancelVerify(int runId) async => calls.add('cancel-verify:$runId');
+
+  @override
+  Stream<List<IntegrityRunView>> watchVerifyRuns() async* {
+    yield verifyRuns;
+    yield* verifyRunsController.stream;
+  }
+
+  @override
+  Stream<IntegrityProgress> get verifyProgress => verifyProgressController.stream;
+
+  @override
+  IntegrityProgress? get currentVerify => null;
+
+  @override
+  Future<List<IntegrityCheckView>> verifyChecks(int runId, {Set<String>? results}) async => checksList;
+
+  @override
+  Stream<List<IntegrityProblem>> watchIntegrityProblems() async* {
+    yield problems;
+    yield* problemsController.stream;
+  }
+
+  @override
+  Stream<List<SourceIntegrity>> watchIntegrityOverview() async* {
+    yield overview;
+  }
+
+  @override
+  Future<CopyRequest> restoreRequest(int instanceId, {required int fromInstanceId}) async {
+    calls.add('restore-request:$instanceId:$fromInstanceId');
+    return onRestoreRequest!(instanceId, fromInstanceId);
+  }
+
+  @override
+  Future<bool> acceptAsIs(int instanceId) async {
+    calls.add('accept:$instanceId');
+    return true;
+  }
+
+  @override
+  Future<IntegritySchedule> integritySchedule() async => schedule;
+
+  @override
+  Future<void> setIntegritySchedule(IntegritySchedule s) async {
+    calls.add('schedule:${s.enabled}:${s.everyDays}');
+    schedule = s;
+  }
 }
 
 ScanRow completedScan({int id = 1, String sourceId = 's1', String coverage = 'complete', int errors = 0}) => ScanRow(

@@ -25,6 +25,7 @@ const helpTopics = [
     'Ver quantas fotos e vídeos estão sem backup (só em 1 lugar).',
     'Acompanhar a conferência do conteúdo e o escaneamento.',
     'Ir direto para os dispositivos ou para a comparação.',
+    'Ver avisos de arquivos possivelmente corrompidos e de discos que não são verificados há tempo.',
   ], backupLegend: true),
   HelpTopic(
     'Biblioteca',
@@ -56,6 +57,7 @@ const helpTopics = [
       'Ver o que cada dispositivo tem e quanto disso tem backup.',
       'Reorganizar as pastas de um disco por data ou momento, no próprio disco (celular nunca é reorganizado).',
       'Escolher o disco principal (destino sugerido nas cópias), em "Mais opções".',
+      'Verificar a integridade, em "Mais opções": ler tudo de novo e descobrir arquivos estragados (só lê).',
     ],
     backupLegend: true,
     extraLegend: [
@@ -74,19 +76,32 @@ const helpTopics = [
   ),
   HelpTopic(
     'Tarefas',
-    'Cópias e reorganizações em andamento e o histórico de tudo o que o FotoAtlas gravou ou moveu.',
+    'Cópias, reorganizações e verificações em andamento e o histórico de tudo o que o FotoAtlas gravou ou moveu.',
     [
       'Acompanhar, pausar, continuar ou cancelar uma cópia (o que já foi copiado fica).',
       'Decidir o que fazer quando um nome já existe no destino.',
       'Tentar de novo os arquivos que não foram copiados e exportar o relatório.',
       'Desfazer uma reorganização (mesmo depois de fechar o app); arquivo que mudou só volta se você confirmar.',
       'Ver e remover, uma a uma, as pastas que ficaram vazias (nunca automaticamente).',
+      'Acompanhar as verificações de integridade (pausar, continuar) e ver os arquivos verificados.',
+      'Restaurar um arquivo possivelmente corrompido a partir de outra cópia conferida (com prévia; o danificado '
+          'nunca é substituído).',
+    ],
+    extraLegend: [
+      (Icons.verified_outlined, 'Inalterado', 'Lido de novo: o conteúdo continua igual ao conferido antes.'),
+      (Icons.edit_outlined, 'Alterado', 'O conteúdo e a data mudaram: alguém editou o arquivo.'),
+      (
+        Icons.report_outlined,
+        'Possivelmente corrompido',
+        'O conteúdo mudou, mas a data não: sinal de dano no disco. Restaure de outra cópia.',
+      ),
     ],
   ),
   HelpTopic('Configurações', 'Ajustes do FotoAtlas. Nada aqui mexe nos seus arquivos.', [
     'Fazer backup do catálogo (o que o FotoAtlas sabe sobre seus arquivos).',
     'Escolher o intervalo dos momentos, o fuso e de onde tirar a data.',
     'Desfazer correções de relógio.',
+    'Ligar ou desligar a verificação periódica e escolher de quanto em quanto tempo (celulares nunca entram).',
   ]),
 ];
 

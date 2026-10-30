@@ -108,6 +108,30 @@ abstract interface class AppBackend {
   Future<String?> primarySourceId();
   Future<void> setPrimarySource(String? sourceId);
 
+  // Verificação de integridade (Fase 7): só lê os arquivos.
+  /// Quanto vai ler, antes de começar.
+  Future<VerifyEstimate> estimateVerify(VerifyRequest request);
+
+  /// Começa (ou põe na fila). `null` = nada a verificar agora.
+  Future<int?> startVerify(VerifyRequest request);
+  Future<void> pauseVerify(int runId);
+  Future<void> resumeVerify(int runId);
+  Future<void> cancelVerify(int runId);
+  Stream<List<IntegrityRunView>> watchVerifyRuns();
+  Stream<IntegrityProgress> get verifyProgress;
+  IntegrityProgress? get currentVerify;
+  Future<List<IntegrityCheckView>> verifyChecks(int runId, {Set<String>? results});
+
+  /// Arquivos possivelmente corrompidos, com as outras cópias conferidas.
+  Stream<List<IntegrityProblem>> watchIntegrityProblems();
+  Stream<List<SourceIntegrity>> watchIntegrityOverview();
+
+  /// Pedido de cópia segura que restaura a partir de outra cópia (prévia antes).
+  Future<CopyRequest> restoreRequest(int instanceId, {required int fromInstanceId});
+  Future<bool> acceptAsIs(int instanceId);
+  Future<IntegritySchedule> integritySchedule();
+  Future<void> setIntegritySchedule(IntegritySchedule schedule);
+
   // Backup do catálogo.
   List<CatalogBackupInfo> catalogBackups();
 
@@ -309,6 +333,53 @@ class CoreBackend implements AppBackend {
 
   @override
   Future<void> setPrimarySource(String? sourceId) => SettingsStore(core.catalog.db).set(_primaryKey, sourceId);
+
+  @override
+  Future<VerifyEstimate> estimateVerify(VerifyRequest request) => core.integrity.estimate(request);
+
+  @override
+  Future<int?> startVerify(VerifyRequest request) => core.integrity.start(request);
+
+  @override
+  Future<void> pauseVerify(int runId) => core.integrity.pause(runId);
+
+  @override
+  Future<void> resumeVerify(int runId) => core.integrity.resume(runId);
+
+  @override
+  Future<void> cancelVerify(int runId) => core.integrity.cancel(runId);
+
+  @override
+  Stream<List<IntegrityRunView>> watchVerifyRuns() => core.integrity.watchRuns();
+
+  @override
+  Stream<IntegrityProgress> get verifyProgress => core.integrity.progress;
+
+  @override
+  IntegrityProgress? get currentVerify => core.integrity.current;
+
+  @override
+  Future<List<IntegrityCheckView>> verifyChecks(int runId, {Set<String>? results}) =>
+      core.integrity.checks(runId, results: results);
+
+  @override
+  Stream<List<IntegrityProblem>> watchIntegrityProblems() => core.integrity.watchProblems();
+
+  @override
+  Stream<List<SourceIntegrity>> watchIntegrityOverview() => core.integrity.watchOverview();
+
+  @override
+  Future<CopyRequest> restoreRequest(int instanceId, {required int fromInstanceId}) =>
+      core.integrity.restoreRequest(instanceId, fromInstanceId: fromInstanceId);
+
+  @override
+  Future<bool> acceptAsIs(int instanceId) => core.integrity.acceptAsIs(instanceId);
+
+  @override
+  Future<IntegritySchedule> integritySchedule() => core.integrity.schedule();
+
+  @override
+  Future<void> setIntegritySchedule(IntegritySchedule schedule) => core.integrity.setSchedule(schedule);
 
   @override
   List<CatalogBackupInfo> catalogBackups() => core.backups.list();

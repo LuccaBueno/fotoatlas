@@ -41,7 +41,13 @@ class FotoAtlasApp extends StatefulWidget {
 class FotoAtlasAppState extends State<FotoAtlasApp> {
   late final Future<FotoAtlasCore> _core =
       (widget.openCore ??
-      () => FotoAtlasCore.open(monitor: true, autoHash: true, autoMetadata: true, backupOnOpen: true))();
+      () => FotoAtlasCore.open(
+        monitor: true,
+        autoHash: true,
+        autoMetadata: true,
+        backupOnOpen: true,
+        scheduleIntegrity: true,
+      ))();
   late final AppLifecycleListener _lifecycle;
   late final DemoMode _demo = widget.demoMode ?? DemoMode.fromEnvironment();
 

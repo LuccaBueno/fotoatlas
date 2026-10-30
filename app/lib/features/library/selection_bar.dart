@@ -6,6 +6,7 @@ import '../../app/providers.dart';
 import '../../app/shell.dart' show tasksDestination;
 import '../../l10n/format.dart';
 import '../../widgets/backup_state.dart';
+import '../integrity/integrity_ui.dart';
 import '../tasks/copy_wizard.dart';
 import 'date_dialogs.dart';
 import 'library_controller.dart';
@@ -121,6 +122,21 @@ class SelectionBar extends ConsumerWidget {
               child: OutlinedButton(
                 onPressed: () => showManualDateDialog(context, ref, sel.toList()),
                 child: const Text('Corrigir a hora…'),
+              ),
+            ),
+            Tooltip(
+              message:
+                  'Lê de novo as cópias dos itens marcados nos discos conectados e confere se continuam iguais. Só lê; '
+                  'celulares ficam de fora.',
+              child: OutlinedButton(
+                key: const ValueKey('library-verify'),
+                onPressed: () => verifyFlow(
+                  context,
+                  ref,
+                  title: plural(sel.length, 'item marcado', 'itens marcados'),
+                  contentIds: sel.toList(),
+                ),
+                child: const Text('Verificar…'),
               ),
             ),
             Tooltip(

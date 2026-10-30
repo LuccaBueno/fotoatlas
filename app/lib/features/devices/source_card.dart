@@ -7,6 +7,7 @@ import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
 import '../../widgets/connection_badge.dart';
+import '../integrity/integrity_ui.dart';
 import '../reorg/reorg_wizard.dart';
 import 'scan_dialog.dart';
 
@@ -229,6 +230,13 @@ class _Actions extends ConsumerWidget {
             'forget' => _forget(context, ref),
             'primary' => _setPrimary(ref, source.id),
             'not-primary' => _setPrimary(ref, null),
+            'verify' => verifyFlow(
+              context,
+              ref,
+              title: source.name,
+              entries: [VerifyEntry(source.id)],
+              phone: source.isPhone,
+            ),
             _ => null,
           },
           itemBuilder: (_) => [
@@ -240,6 +248,15 @@ class _Actions extends ConsumerWidget {
                       value: 'primary',
                       child: Text('Tornar disco principal (destino sugerido nas cópias)'),
                     ),
+            PopupMenuItem(
+              value: 'verify',
+              enabled: source.isReady && source.lastScan != null,
+              child: Text(
+                source.isPhone
+                    ? 'Verificar integridade… (lê o celular de novo, devagar)'
+                    : 'Verificar integridade… (só lê; descobre arquivos estragados)',
+              ),
+            ),
             const PopupMenuItem(value: 'forget', child: Text('Esquecer este dispositivo')),
           ],
         ),

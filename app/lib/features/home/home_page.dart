@@ -9,6 +9,7 @@ import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
 import '../../widgets/connection_badge.dart';
+import '../integrity/integrity_ui.dart';
 
 /// Início: as respostas às perguntas "o que eu tenho e onde está?" e "o que já
 /// tem backup e o que ainda não tem?", alertas e atalhos.
@@ -32,6 +33,7 @@ class HomePage extends ConsumerWidget {
                   _Overview(sources: list),
                   const SizedBox(height: 16),
                   ..._alerts(context, list, progress),
+                  _IntegrityAlerts(sources: list),
                   const SizedBox(height: 16),
                   const _CoveragePanel(),
                   const SizedBox(height: 16),
@@ -305,6 +307,72 @@ class _Welcome extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Alertas da verificação de integridade: arquivos possivelmente corrompidos e
+/// discos que não são verificados há tempo (spec §3.2).
+class _IntegrityAlerts extends ConsumerWidget {
+  const _IntegrityAlerts({required this.sources});
+  final List<SourceView> sources;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = StatusColors.of(context);
+    final problems = ref.watch(integrityProblemsProvider).value ?? const <IntegrityProblem>[];
+    final overview = ref.watch(integrityOverviewProvider).value ?? const <SourceIntegrity>[];
+    final byId = {for (final s in sources) s.id: s};
+    final days = ref.watch(integrityScheduleProvider).value?.everyDays ?? 90;
+    final stale = [
+      for (final o in overview)
+        if (o.kind != 'phone' && o.files > 0 && o.staleFiles > 0 && byId[o.sourceId] != null) o,
+    ];
+    if (problems.isEmpty && stale.isEmpty) return const SizedBox.shrink();
+    Widget row(IconData icon, Color color, String text, Widget? action, Key key) => Padding(
+      key: key,
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text)),
+          ?action,
+        ],
+      ),
+    );
+    return Column(
+      children: [
+        if (problems.isNotEmpty)
+          row(
+            Icons.report_outlined,
+            colors.single,
+            '${plural(problems.length, 'arquivo possivelmente corrompido', 'arquivos possivelmente corrompidos')}: '
+            'o conteúdo mudou sem a data mudar. ${problems.any((p) => p.restorable.isNotEmpty) ? 'Há cópia conferida para restaurar.' : ''}',
+            FilledButton.tonal(
+              onPressed: () => ref.read(navigationIndexProvider.notifier).select(tasksDestination),
+              child: const Text('Ver e restaurar'),
+            ),
+            const ValueKey('alert-corrupt'),
+          ),
+        for (final o in stale)
+          row(
+            Icons.event_repeat,
+            colors.attention,
+            '"${o.sourceName}" '
+            '${o.lastVerifiedAt == null ? 'nunca foi verificado' : 'não é verificado'}'
+            '${o.oldestConfirmedAt == null ? '' : ' (conferido pela última vez ${formatAgo(o.oldestConfirmedAt!)})'}: '
+            '${plural(o.staleFiles, 'arquivo', 'arquivos')} sem conferir há mais de $days dias.',
+            byId[o.sourceId]!.isConnected
+                ? TextButton(
+                    key: ValueKey('alert-verify-${o.sourceId}'),
+                    onPressed: () => verifyFlow(context, ref, title: o.sourceName, entries: [VerifyEntry(o.sourceId)]),
+                    child: const Text('Verificar agora'),
+                  )
+                : null,
+            ValueKey('alert-stale-${o.sourceId}'),
+          ),
+      ],
     );
   }
 }

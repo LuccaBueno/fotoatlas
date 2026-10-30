@@ -392,6 +392,102 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
   });
 
+  testWidgets('app com o core real: verifica, acha o arquivo corrompido e restaura da outra cópia', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1400, 1000)
+      ..devicePixelRatio = 1;
+    final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
+    FotoAtlasCore? opened;
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+      await tester.runAsync(() async {
+        await opened?.close();
+        await deleteTestDir(temp);
+      });
+    });
+    late FotoAtlasCore core;
+    late Directory fotos;
+    late String fotosId;
+    final when = DateTime.utc(2024, 3, 1, 12);
+    List<int> photo(int seed) => List.generate(3000, (i) => (i * 7 + seed) & 0xff);
+    await tester.runAsync(() async {
+      final volumeDir = Directory(p.join(temp.path, 'vol'))..createSync();
+      fotos = Directory(p.join(volumeDir.path, 'Fotos'))..createSync();
+      final backup = Directory(p.join(volumeDir.path, 'Backup'))..createSync();
+      for (var i = 0; i < 3; i++) {
+        File(p.join(fotos.path, 'foto$i.jpg'))
+          ..writeAsBytesSync(photo(i))
+          ..setLastModifiedSync(when);
+        File(p.join(backup.path, 'copia$i.jpg'))
+          ..writeAsBytesSync(photo(i))
+          ..setLastModifiedSync(when);
+      }
+      final fake = _OneVolume(volumeDir.path);
+      core = opened = await FotoAtlasCore.open(
+        paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
+        volumes: fake,
+        pathResolver: fake,
+        useHelper: false,
+        tools: ExternalTools.none,
+      );
+      fotosId = (await core.sources.addPath(fotos.path, name: 'Fotos')).sourceId;
+      final backupId = (await core.sources.addPath(backup.path, name: 'Backup')).sourceId;
+      await core.scans.wait(await core.scans.start(fotosId));
+      await core.scans.wait(await core.scans.start(backupId));
+      await core.hashes.start();
+      await core.hashes.waitIdle();
+      // Dano no disco: bytes trocados, data preservada.
+      final f = File(p.join(fotos.path, 'foto1.jpg'));
+      final damaged = photo(1)..[100] ^= 0xff;
+      f
+        ..writeAsBytesSync(damaged)
+        ..setLastModifiedSync(when);
+    });
+    final damaged = File(p.join(fotos.path, 'foto1.jpg')).readAsBytesSync();
+    Future<void> waitFor(Finder f) async {
+      for (var i = 0; i < 100 && f.evaluate().isEmpty; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+        await tester.pump();
+      }
+      expect(f, findsWidgets);
+    }
+
+    await tester.pumpWidget(FotoAtlasApp(firstRunGuide: false, openCore: () async => core));
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
+    await tester.pump();
+    await tester.tap(find.text('Dispositivos').first);
+    await waitFor(find.byKey(ValueKey('more-$fotosId')));
+    await tester.tap(find.byKey(ValueKey('more-$fotosId')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Verificar integridade…'));
+    await waitFor(find.text('Vai ler 3 arquivos (8,8 KB).'));
+    await tester.tap(find.byKey(const ValueKey('verify-start')));
+    await waitFor(find.text('Verificação começou. Acompanhe em Tarefas.'));
+
+    await tester.tap(find.text('Tarefas').first);
+    await waitFor(find.text('Possivelmente corrompidos (1)'));
+    await waitFor(find.textContaining('2 inalterados · 1 possivelmente corrompido'));
+    expect(find.text('Backup › copia1.jpg'), findsOneWidget);
+    expect(File(p.join(fotos.path, 'foto1.jpg')).readAsBytesSync(), damaged, reason: 'verificar só lê');
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Restaurar desta cópia…'));
+    await waitFor(find.text('Vai gravar: Fotos › foto1_1.jpg'));
+    expect(File(p.join(fotos.path, 'foto1_1.jpg')).existsSync(), isFalse, reason: 'prévia não grava');
+    await tester.tap(find.byKey(const ValueKey('restore-confirm')));
+    await tester.pump();
+    final restored = File(p.join(fotos.path, 'foto1_1.jpg'));
+    for (var i = 0; i < 100 && !restored.existsSync(); i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+      await tester.pump();
+    }
+    expect(restored.readAsBytesSync(), photo(1));
+    expect(File(p.join(fotos.path, 'foto1.jpg')).readAsBytesSync(), damaged, reason: 'o danificado fica intacto');
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 5));
+  });
+
   for (final demo in [DemoMode.off, DemoMode.discarded]) {
     testWidgets('fechar sem nada em andamento ($demo): fecha direto, sem perguntar', (tester) async {
       final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
