@@ -74,6 +74,14 @@ class _CopyWizardState extends ConsumerState<CopyWizard> {
   void initState() {
     super.initState();
     _dest = widget.destSourceId;
+    if (_dest == null) {
+      // Sem sugestão (ex.: Biblioteca): o disco principal, se houver.
+      ref.read(backendProvider).primarySourceId().then((id) {
+        if (!mounted || id == null || _dest != null) return;
+        setState(() => _dest = id);
+        _refresh();
+      }, onError: (Object _) {});
+    }
     widget.contents().then(
       (ids) {
         if (!mounted) return;
@@ -460,8 +468,11 @@ class CopyPreviewView extends StatelessWidget {
         if (p.undated > 0)
           line(
             Icons.event_busy,
-            '${plural(p.undated, 'item sem', 'itens sem')} data da captura ${p.undated == 1 ? 'vai' : 'vão'} para a pasta '
-            '"$undatedFolder".',
+            templateUsesMoment(p.request.template)
+                ? '${plural(p.undated, 'item fora', 'itens fora')} de momentos (hora a confirmar) '
+                      '${p.undated == 1 ? 'vai' : 'vão'} para a pasta "${p.request.toConfirmFolder}".'
+                : '${plural(p.undated, 'item sem', 'itens sem')} data da captura ${p.undated == 1 ? 'vai' : 'vão'} '
+                      'para a pasta "${p.request.toConfirmFolder}".',
           ),
         if (p.lowConfidence > 0)
           line(

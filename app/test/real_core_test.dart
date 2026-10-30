@@ -303,6 +303,95 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
   });
 
+  testWidgets('app com o core real: reorganiza por momento, mostra em Tarefas e desfaz', (tester) async {
+    tester.view
+      ..physicalSize = const Size(1400, 1000)
+      ..devicePixelRatio = 1;
+    final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
+    FotoAtlasCore? opened;
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+      await tester.runAsync(() async {
+        await opened?.close();
+        await deleteTestDir(temp);
+      });
+    });
+    late FotoAtlasCore core;
+    late Directory hd;
+    late String sourceId;
+    await tester.runAsync(() async {
+      final volumeDir = Directory(p.join(temp.path, 'vol'))..createSync();
+      hd = Directory(p.join(volumeDir.path, 'HD'))..createSync();
+      void put(String rel, int seed) =>
+          (File(p.join(hd.path, rel))..parent.createSync(recursive: true)).writeAsBytesSync(List.filled(300, seed));
+      put(r'Bagunca\IMG_20240713_140300.jpg', 1);
+      put(r'Bagunca\sub\IMG_20240713_151000.jpg', 2);
+      put(r'Bagunca\IMG_20240820_093000.jpg', 3);
+      final fake = _OneVolume(volumeDir.path);
+      core = opened = await FotoAtlasCore.open(
+        paths: CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local')),
+        volumes: fake,
+        pathResolver: fake,
+        useHelper: false,
+        tools: ExternalTools.none,
+      );
+      sourceId = (await core.sources.addPath(hd.path, name: 'HD')).sourceId;
+      await core.scans.wait(await core.scans.start(sourceId));
+      await core.hashes.start();
+      await core.hashes.waitIdle();
+      await core.metadata.start();
+      await core.settleDates();
+    });
+    Future<void> waitFor(Finder f) async {
+      for (var i = 0; i < 100 && f.evaluate().isEmpty; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+        await tester.pump();
+      }
+      expect(f, findsWidgets);
+    }
+
+    await tester.pumpWidget(FotoAtlasApp(firstRunGuide: false, openCore: () async => core));
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
+    await tester.pump();
+    await tester.tap(find.text('Dispositivos').first);
+    await waitFor(find.byKey(ValueKey('reorg-$sourceId')));
+    await tester.tap(find.byKey(ValueKey('reorg-$sourceId')));
+    await waitFor(find.textContaining('Vai mover 3 arquivos'));
+    expect(File(p.join(hd.path, 'Bagunca', 'IMG_20240713_140300.jpg')).existsSync(), isTrue, reason: 'prévia não move');
+    await tester.tap(find.byKey(const ValueKey('reorg-confirm')));
+    await tester.pump();
+    final moved = File(p.join(hd.path, '2024', '2024-07-13 14h03', 'IMG_20240713_151000.jpg'));
+    for (var i = 0; i < 100 && !moved.existsSync(); i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+      await tester.pump();
+    }
+    expect(moved.existsSync(), isTrue);
+    expect(File(p.join(hd.path, '2024', '2024-08-20 09h30', 'IMG_20240820_093000.jpg')).existsSync(), isTrue);
+    expect(Directory(p.join(hd.path, 'Bagunca', 'sub')).existsSync(), isTrue, reason: 'pasta vazia não é apagada');
+
+    await tester.tap(find.text('Tarefas').first);
+    await waitFor(find.textContaining('Concluída — tudo movido'));
+    final undoButton = find.byWidgetPredicate(
+      (w) => w.key is ValueKey<String> && (w.key! as ValueKey<String>).value.startsWith('op-undo-'),
+    );
+    await tester.tap(undoButton);
+    await waitFor(find.text('3 arquivos voltam para o lugar exato de antes.'));
+    await tester.tap(find.byKey(const ValueKey('undo-confirm')));
+    await tester.pump();
+    final back = File(p.join(hd.path, 'Bagunca', 'sub', 'IMG_20240713_151000.jpg'));
+    for (var i = 0; i < 100 && !back.existsSync(); i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+      await tester.pump();
+    }
+    expect(back.readAsBytesSync(), List.filled(300, 2));
+    await waitFor(find.textContaining('Concluído — tudo devolvido'));
+    expect(Directory(p.join(hd.path, '2024', '2024-07-13 14h03')).existsSync(), isTrue, reason: 'só sai a pedido');
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 5));
+  });
+
   for (final demo in [DemoMode.off, DemoMode.discarded]) {
     testWidgets('fechar sem nada em andamento ($demo): fecha direto, sem perguntar', (tester) async {
       final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;

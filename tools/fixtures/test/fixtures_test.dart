@@ -63,4 +63,19 @@ void main() {
     expect(ascii.decode(mp4.sublist(4, 8)), 'ftyp');
     expect(mp4, isNot(mp4WithCreationTime(DateTime.utc(2024, 5, 1), salt: 1)));
   });
+
+  test('HD bagunçado (reorganização): fotos, acompanhante, nota e Thumbs.db oculto', () {
+    final out = p.join(temp.path, 'hd');
+    final r = Process.runSync(Platform.resolvedExecutable, ['run', 'bin/gen_reorg_demo.dart', '--out', out]);
+    expect(r.exitCode, 0, reason: '${r.stdout}${r.stderr}');
+    final files = {
+      for (final f in Directory(out).listSync(recursive: true).whereType<File>())
+        p.relative(f.path, from: out).replaceAll(r'\', '/'),
+    };
+    expect(files, hasLength(13));
+    expect(files, contains('Downloads antigos/IMG_20240713_140300.xmp'));
+    expect(files, contains('2024/2024-08-20 09h30/IMG_20240820_093000.jpg'));
+    final attrib = Process.runSync('attrib', [p.join(out, 'Velhas', 'Thumbs.db')]).stdout as String;
+    expect(attrib.substring(0, 12), allOf(contains('S'), contains('H')), reason: 'oculto e de sistema');
+  });
 }

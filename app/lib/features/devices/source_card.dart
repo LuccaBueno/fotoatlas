@@ -7,6 +7,7 @@ import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
 import '../../widgets/connection_badge.dart';
+import '../reorg/reorg_wizard.dart';
 import 'scan_dialog.dart';
 
 /// Cartão de uma fonte. Desconectada aparece esmaecida, mas com os dados do
@@ -60,6 +61,16 @@ class SourceCard extends ConsumerWidget {
                                     deviceStatusLabel(s.deviceStatus!),
                                 ].join(' · '),
                                 style: theme.textTheme.bodySmall,
+                              ),
+                            if (ref.watch(primarySourceProvider).value == s.id)
+                              Tooltip(
+                                message: 'Destino sugerido nas cópias. Troque em "Mais opções".',
+                                child: Chip(
+                                  key: ValueKey('primary-${s.id}'),
+                                  visualDensity: VisualDensity.compact,
+                                  avatar: const Icon(Icons.star, size: 16),
+                                  label: const Text('Disco principal'),
+                                ),
                               ),
                           ],
                         ),
@@ -193,20 +204,52 @@ class _Actions extends ConsumerWidget {
             icon: Icon(resumable ? Icons.play_arrow : Icons.search),
             label: Text(resumable ? 'Retomar' : 'Escanear'),
           ),
+        if (!source.isPhone) ...[
+          const SizedBox(width: 8),
+          Tooltip(
+            message: source.isConnected
+                ? 'Organiza as pastas deste disco por data ou momento, movendo sem copiar. Mostra a prévia antes; '
+                      'nada é apagado e dá para desfazer.'
+                : 'Conecte o disco para reorganizar.',
+            child: OutlinedButton.icon(
+              key: ValueKey('reorg-${source.id}'),
+              onPressed: running != null || !source.isConnected || source.lastScan == null
+                  ? null
+                  : () => reorganizeFlow(context, ref, source),
+              icon: const Icon(Icons.drive_file_move_outline),
+              label: const Text('Reorganizar…'),
+            ),
+          ),
+        ],
         PopupMenuButton<String>(
+          key: ValueKey('more-${source.id}'),
           tooltip: 'Mais opções',
           onSelected: (value) => switch (value) {
             'rename' => _rename(context, ref),
             'forget' => _forget(context, ref),
+            'primary' => _setPrimary(ref, source.id),
+            'not-primary' => _setPrimary(ref, null),
             _ => null,
           },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'rename', child: Text('Renomear')),
-            PopupMenuItem(value: 'forget', child: Text('Esquecer este dispositivo')),
+          itemBuilder: (_) => [
+            const PopupMenuItem(value: 'rename', child: Text('Renomear')),
+            if (!source.isPhone)
+              ref.read(primarySourceProvider).value == source.id
+                  ? const PopupMenuItem(value: 'not-primary', child: Text('Deixar de ser o disco principal'))
+                  : const PopupMenuItem(
+                      value: 'primary',
+                      child: Text('Tornar disco principal (destino sugerido nas cópias)'),
+                    ),
+            const PopupMenuItem(value: 'forget', child: Text('Esquecer este dispositivo')),
           ],
         ),
       ],
     );
+  }
+
+  Future<void> _setPrimary(WidgetRef ref, String? sourceId) async {
+    await ref.read(backendProvider).setPrimarySource(sourceId);
+    ref.invalidate(primarySourceProvider);
   }
 
   Future<void> _rename(BuildContext context, WidgetRef ref) async {

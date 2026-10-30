@@ -382,3 +382,65 @@ PhoneDemo generatePhoneDemo(String outDir, {bool stableIds = false, Map<String, 
   }
   return PhoneDemo(devices, hd, camera);
 }
+
+/// "HD bagunçado" sintético para testar a reorganização (Fase 6): fotos
+/// espalhadas em pastas sem critério, com a data no EXIF **e** no nome (dá o
+/// mesmo resultado com ou sem ExifTool).
+///
+/// Com o modelo "Por ano e momento" no dispositivo inteiro, o esperado é:
+///
+///     2024/2024-07-13 14h03/   3 fotos + 1 .xmp (vira o nome do momento, se você o nomear)
+///     2024/2024-08-20 09h30/   a foto que já estava lá + IMG_20240820_093000_1.jpg (nome repetido)
+///                              + 1 vídeo + 1 foto de "Velhas"
+///     2024/2024-12-31 23h30/   2 fotos (o momento atravessa a meia-noite)
+///     Sem data confirmada/     foto_escaneada.jpg (sem data confiável)
+///
+/// Ficam onde estão: "lista de compras.txt" (não é foto) e Thumbs.db (oculto e
+/// de sistema, faz "Velhas" não ficar vazia).
+void generateReorgDemo(String outDir) {
+  assertAllowedOutput(outDir);
+  final dir = Directory(outDir);
+  if (dir.existsSync() && dir.listSync().isNotEmpty) {
+    throw StateError('A pasta de saída precisa estar vazia: $outDir');
+  }
+  var n = 0;
+  File write(String rel, List<int> bytes, {DateTime? mtime}) {
+    final f = File(p.join(outDir, rel));
+    f.parent.createSync(recursive: true);
+    f.writeAsBytesSync(bytes);
+    if (mtime != null) f.setLastModifiedSync(mtime);
+    return f;
+  }
+
+  void photo(String rel, DateTime at) => write(
+    rel,
+    jpegWithExif(ExifSpec(dateTimeOriginal: at, make: 'Google', model: 'Pixel 7', uniqueId: 'reorg-${n++}', color: n)),
+    mtime: at,
+  );
+
+  photo('Downloads antigos/IMG_20240713_140300.jpg', DateTime(2024, 7, 13, 14, 3));
+  write(
+    'Downloads antigos/IMG_20240713_140300.xmp',
+    utf8.encode('<x:xmpmeta xmlns:x="adobe:ns:meta/"><!-- edição de demonstração --></x:xmpmeta>\n'),
+  );
+  photo('Downloads antigos/sub/IMG_20240713_151000.jpg', DateTime(2024, 7, 13, 15, 10));
+  photo('Pendrive da tia/IMG_20240713_162000.jpg', DateTime(2024, 7, 13, 16, 20));
+  photo('Pendrive da tia/IMG_20240820_093000.jpg', DateTime(2024, 8, 20, 9, 30));
+  // 09:45 em São Paulo (12:45 UTC).
+  write('Pendrive da tia/VID_20240820_094500.mp4', mp4WithCreationTime(DateTime.utc(2024, 8, 20, 12, 45), salt: 7));
+  photo('Pendrive da tia/IMG_20241231_233000.jpg', DateTime(2024, 12, 31, 23, 30));
+  photo('Pendrive da tia/IMG_20250101_001500.jpg', DateTime(2025, 1, 1, 0, 15));
+  photo('Velhas/IMG_20240820_100000.jpg', DateTime(2024, 8, 20, 10));
+  final thumbs = write('Velhas/Thumbs.db', List.filled(64, 0));
+  // Outra foto, com o mesmo nome e a mesma hora, já no lugar: a do pendrive ganha _1.
+  photo('2024/2024-08-20 09h30/IMG_20240820_093000.jpg', DateTime(2024, 8, 20, 9, 30));
+  write(
+    'Sem nome/foto_escaneada.jpg',
+    jpegWithExif(const ExifSpec(make: 'Scanner', model: 'Demo', uniqueId: 'reorg-scan', color: 3)),
+    mtime: DateTime(2019, 3, 3, 3, 3),
+  );
+  write('Sem nome/lista de compras.txt', utf8.encode('pão, café, leite\n'));
+  // Thumbs.db de verdade é oculto e de sistema.
+  final attrib = Process.runSync('attrib', ['+h', '+s', thumbs.path]);
+  if (attrib.exitCode != 0) throw StateError('Não deu para marcar Thumbs.db como oculto: ${attrib.stderr}');
+}

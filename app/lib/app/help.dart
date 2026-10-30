@@ -48,11 +48,14 @@ const helpTopics = [
   ),
   HelpTopic(
     'Dispositivos',
-    'Os celulares, HDs, pendrives e pastas que o FotoAtlas conhece. Ele só lê: nada é apagado ou movido.',
+    'Os celulares, HDs, pendrives e pastas que o FotoAtlas conhece. Ele só lê; só move arquivos quando você pede '
+        '"Reorganizar" (com prévia, e dá para desfazer). Nada é apagado.',
     [
       'Adicionar um dispositivo (celular, unidade ou pasta).',
       'Escanear tudo ou só algumas pastas, pausar e retomar depois.',
       'Ver o que cada dispositivo tem e quanto disso tem backup.',
+      'Reorganizar as pastas de um disco por data ou momento, no próprio disco (celular nunca é reorganizado).',
+      'Escolher o disco principal (destino sugerido nas cópias), em "Mais opções".',
     ],
     backupLegend: true,
     extraLegend: [
@@ -69,11 +72,17 @@ const helpTopics = [
       'Salvar um escopo com nome para usar de novo.',
     ],
   ),
-  HelpTopic('Tarefas', 'Cópias em andamento e o histórico de tudo o que o FotoAtlas gravou.', [
-    'Acompanhar, pausar, continuar ou cancelar uma cópia (o que já foi copiado fica).',
-    'Decidir o que fazer quando um nome já existe no destino.',
-    'Tentar de novo os arquivos que não foram copiados e exportar o relatório.',
-  ]),
+  HelpTopic(
+    'Tarefas',
+    'Cópias e reorganizações em andamento e o histórico de tudo o que o FotoAtlas gravou ou moveu.',
+    [
+      'Acompanhar, pausar, continuar ou cancelar uma cópia (o que já foi copiado fica).',
+      'Decidir o que fazer quando um nome já existe no destino.',
+      'Tentar de novo os arquivos que não foram copiados e exportar o relatório.',
+      'Desfazer uma reorganização (mesmo depois de fechar o app); arquivo que mudou só volta se você confirmar.',
+      'Ver e remover, uma a uma, as pastas que ficaram vazias (nunca automaticamente).',
+    ],
+  ),
   HelpTopic('Configurações', 'Ajustes do FotoAtlas. Nada aqui mexe nos seus arquivos.', [
     'Fazer backup do catálogo (o que o FotoAtlas sabe sobre seus arquivos).',
     'Escolher o intervalo dos momentos, o fuso e de onde tirar a data.',

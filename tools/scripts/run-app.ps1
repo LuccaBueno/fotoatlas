@@ -13,6 +13,8 @@
 #     (os celulares simulados e o "HD" são gerados uma vez, na mesma pasta; o Pixel
 #     lê devagar, 3 s por arquivo, para dar tempo de fechar no meio da conferência).
 #     Para começar do zero: tools\scripts\clean-temp.ps1 (com o app fechado).
+#     Também gera, uma vez, a pasta "HD bagunçado" (fotos sintéticas espalhadas)
+#     para testar "Reorganizar…" (Fase 6).
 # As pastas temporárias (%TEMP%\fotoatlas_*) de -Demo/-CelularSimulado são
 # apagadas quando o app fecha.
 param([switch]$Demo, [switch]$CelularSimulado, [switch]$ManterDemo, [switch]$DemoPersistente)
@@ -60,6 +62,20 @@ try {
         $env:FOTOATLAS_DEMO = 'persistente'
         Write-Host "Demonstração mantida entre aberturas: $pasta"
         Write-Host 'Para começar do zero, feche o app e rode tools\scripts\clean-temp.ps1.'
+        # Fase 6: HD bagunçado sintético para testar "Reorganizar…" (gerado uma vez).
+        $baguncado = Join-Path $pasta 'HD bagunçado'
+        if (-not (Test-Path -LiteralPath $baguncado)) {
+            $gerando = Join-Path $pasta 'hd_baguncado_gerando'
+            if (Test-Path -LiteralPath $gerando) { Remove-Item -LiteralPath $gerando -Recurse -Force }
+            Push-Location (Join-Path $root 'tools\fixtures')
+            try {
+                dart pub get | Out-Null
+                dart run bin/gen_reorg_demo.dart --out $gerando | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw 'falha ao gerar o HD bagunçado' }
+            } finally { Pop-Location }
+            Rename-Item -LiteralPath $gerando -NewName 'HD bagunçado'
+        }
+        Write-Host "HD bagunçado para reorganizar (cadastre como pasta): $baguncado"
         if ($CelularSimulado) {
             $celular = Join-Path $pasta 'celular'
             if (-not (Test-Path -LiteralPath $celular)) {

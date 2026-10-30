@@ -9,6 +9,7 @@ import '../../app/providers.dart';
 import '../../app/theme.dart';
 import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
+import '../reorg/reorg_card.dart';
 
 /// Situação de uma operação, em palavras simples.
 String operationStatusLabel(String status) => switch (status) {
@@ -54,8 +55,9 @@ class TasksPage extends ConsumerWidget {
               Text('Tarefas', style: theme.textTheme.headlineSmall),
               const SizedBox(height: 4),
               Text(
-                'Cópias em andamento e o histórico de tudo o que o FotoAtlas gravou. Toda cópia é conferida pelo '
-                'conteúdo antes de aparecer no destino; nada é sobrescrito nem apagado.',
+                'Cópias e reorganizações em andamento e o histórico de tudo o que o FotoAtlas gravou ou moveu. Toda '
+                'cópia é conferida pelo conteúdo antes de aparecer no destino; nada é sobrescrito nem apagado, e uma '
+                'reorganização pode ser desfeita.',
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
@@ -64,8 +66,9 @@ class TasksPage extends ConsumerWidget {
                   child: Padding(
                     padding: EdgeInsets.all(24),
                     child: Text(
-                      'Nenhuma cópia ainda. Para copiar o que falta, use "Copiar para B…" em Comparar ou '
-                      '"Copiar para…" com itens marcados na Biblioteca.',
+                      'Nenhuma tarefa ainda. Para copiar o que falta, use "Copiar para B…" em Comparar ou '
+                      '"Copiar para…" com itens marcados na Biblioteca. Para organizar as pastas de um disco, use '
+                      '"Reorganizar…" no cartão dele em Dispositivos.',
                       key: ValueKey('tasks-empty'),
                     ),
                   ),
@@ -73,13 +76,13 @@ class TasksPage extends ConsumerWidget {
               if (open.isNotEmpty) ...[
                 Text('Em andamento ou esperando você', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
-                for (final o in open) OperationCard(key: ValueKey('op-${o.id}'), op: o),
+                for (final o in open) _card(o, list),
                 const SizedBox(height: 16),
               ],
               if (done.isNotEmpty) ...[
                 Text('Histórico', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
-                for (final o in done) OperationCard(key: ValueKey('op-${o.id}'), op: o),
+                for (final o in done) _card(o, list),
               ],
             ],
           );
@@ -88,6 +91,10 @@ class TasksPage extends ConsumerWidget {
     );
   }
 }
+
+Widget _card(OperationView o, List<OperationView> all) => o.kind == 'copy'
+    ? OperationCard(key: ValueKey('op-${o.id}'), op: o)
+    : ReorgOperationCard(key: ValueKey('op-${o.id}'), op: o, all: all);
 
 class OperationCard extends ConsumerStatefulWidget {
   const OperationCard({super.key, required this.op});
@@ -273,28 +280,36 @@ class _OperationCardState extends ConsumerState<OperationCard> {
     if (ok == true) await ref.read(backendProvider).cancelCopy(o.id);
   }
 
-  Future<void> _export(BuildContext context, OperationView o) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final csv = await ref.read(backendProvider).exportOperation(o.id);
-    final stamp = o.createdAt.toLocal().toIso8601String().substring(0, 16).replaceAll(RegExp('[-:T]'), '');
-    final location = await getSaveLocation(
-      suggestedName: 'fotoatlas-copia-$stamp.csv',
-      acceptedTypeGroups: const [
-        XTypeGroup(label: 'Planilha (CSV)', extensions: ['csv']),
-      ],
+  Future<void> _export(BuildContext context, OperationView o) => exportOperationReport(context, ref, o);
+}
+
+/// Salva o relatório (CSV) de uma operação num arquivo novo escolhido pela pessoa.
+Future<void> exportOperationReport(BuildContext context, WidgetRef ref, OperationView o) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final csv = await ref.read(backendProvider).exportOperation(o.id);
+  final stamp = o.createdAt.toLocal().toIso8601String().substring(0, 16).replaceAll(RegExp('[-:T]'), '');
+  final kind = switch (o.kind) {
+    'reorganize_move' => 'reorganizacao',
+    'undo' => 'desfazer',
+    _ => 'copia',
+  };
+  final location = await getSaveLocation(
+    suggestedName: 'fotoatlas-$kind-$stamp.csv',
+    acceptedTypeGroups: const [
+      XTypeGroup(label: 'Planilha (CSV)', extensions: ['csv']),
+    ],
+  );
+  if (location == null) return;
+  try {
+    // Nunca sobrescreve (regra 5): o arquivo precisa ser novo.
+    final file = File(location.path);
+    await file.create(exclusive: true);
+    await file.writeAsString(csv, flush: true);
+    messenger.showSnackBar(SnackBar(content: Text('Relatório salvo em ${location.path}')));
+  } on FileSystemException {
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Já existe um arquivo com esse nome. Escolha outro nome (nada foi sobrescrito).')),
     );
-    if (location == null) return;
-    try {
-      // Nunca sobrescreve (regra 5): o arquivo precisa ser novo.
-      final file = File(location.path);
-      await file.create(exclusive: true);
-      await file.writeAsString(csv, flush: true);
-      messenger.showSnackBar(SnackBar(content: Text('Relatório salvo em ${location.path}')));
-    } on FileSystemException {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Já existe um arquivo com esse nome. Escolha outro nome (nada foi sobrescrito).')),
-      );
-    }
   }
 }
 
