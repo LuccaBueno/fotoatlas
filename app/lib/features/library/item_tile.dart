@@ -133,7 +133,19 @@ class ItemTile extends ConsumerWidget {
                               : 'Vídeo de ${formatVideoLength(item.durationMs!)}',
                         ),
                       ),
-                    if (item != null && item.uncertain)
+                    if (item != null && item.provisional)
+                      const Positioned(
+                        left: 4,
+                        bottom: 4,
+                        child: _Pill(
+                          icon: Icons.hourglass_top,
+                          text: 'conferindo…',
+                          tooltip:
+                              'Conferindo: o conteúdo ainda está sendo lido. A data veio do nome ou do arquivo e pode '
+                              'mudar; a situação de backup e os detalhes aparecem quando a conferência chegar aqui.',
+                        ),
+                      )
+                    else if (item != null && item.uncertain)
                       const Positioned(
                         left: 4,
                         bottom: 4,
@@ -145,7 +157,7 @@ class ItemTile extends ConsumerWidget {
                               'arquivo, que muda quando ele é copiado). Abra os detalhes para confirmar ou corrigir.',
                         ),
                       ),
-                    if (item != null)
+                    if (item != null && !item.provisional)
                       Positioned(
                         right: 4,
                         top: 4,

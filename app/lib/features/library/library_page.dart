@@ -183,7 +183,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
           child: Text(
             state.filter.isEmpty
                 ? 'Nenhuma foto ou vídeo ainda. Adicione e escaneie um dispositivo em "Dispositivos": '
-                      'as fotos aparecem aqui depois que o conteúdo é conferido.'
+                      'as fotos aparecem aqui logo depois do escaneamento.'
                 : 'Nada encontrado com estes filtros.',
             key: const ValueKey('library-empty'),
             textAlign: TextAlign.center,
@@ -284,7 +284,7 @@ class _Header extends ConsumerWidget {
         // Separar a partir do item em foco, se ele é deste momento.
         final focused = state.focused;
         final focusedIndex = focused == null ? -1 : state.index.ids.indexOf(focused);
-        final split = focusedIndex >= 0 && state.index.moment[focusedIndex] == m.id ? focused : null;
+        final split = focusedIndex >= 0 && focused! >= 0 && state.index.moment[focusedIndex] == m.id ? focused : null;
         void openMenu(BuildContext context, {Offset? at}) {
           final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
           final Rect rect;
@@ -365,6 +365,7 @@ class _StatusLine extends ConsumerWidget {
     final facets = ref.watch(libraryFacetsProvider).value;
     final backend = ref.read(libraryBackendProvider);
     final c = ref.read(libraryControllerProvider.notifier);
+    final provisional = ref.watch(libraryControllerProvider.select((s) => s.index.provisionalCount));
     final lines = <Widget>[
       if (meta != null && meta.running)
         Row(
@@ -394,10 +395,19 @@ class _StatusLine extends ConsumerWidget {
           key: const ValueKey('exiftool-missing'),
           style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
         ),
-      if (facets != null && facets.pendingContent > 0)
+      if (provisional > 0)
+        Text(
+          '${plural(provisional, 'arquivo ainda está', 'arquivos ainda estão')} sendo conferidos: '
+          '${provisional == 1 ? 'aparece' : 'aparecem'} com o selo "conferindo…" e a data do nome ou do arquivo, e '
+          '${provisional == 1 ? 'se atualiza' : 'se atualizam'} sozinho${provisional == 1 ? '' : 's'} conforme a '
+          'conferência avança.',
+          key: const ValueKey('provisional-line'),
+          style: theme.textTheme.bodySmall,
+        )
+      else if (facets != null && facets.pendingContent > 0)
         Text(
           '${plural(facets.pendingContent, 'arquivo ainda está', 'arquivos ainda estão')} sendo conferidos e '
-          '${facets.pendingContent == 1 ? 'aparece' : 'aparecem'} aqui quando a conferência terminar.',
+          '${facets.pendingContent == 1 ? 'aparece' : 'aparecem'} com este filtro quando a conferência terminar.',
           style: theme.textTheme.bodySmall,
         ),
       if (facets != null && facets.toConfirm > 0)

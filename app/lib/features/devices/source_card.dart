@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
+import '../../app/shell.dart' show tasksDestination;
 import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
@@ -376,8 +377,31 @@ class _CoverageLine extends ConsumerWidget {
         spacing: 16,
         runSpacing: 4,
         children: [
-          for (final state in BackupState.values)
-            if (c.counts.filesIn(state) > 0) BackupStateBadge(state, count: c.counts.filesIn(state)),
+          for (final state in backupStatesInOrder)
+            if (c.counts.filesIn(state) > 0)
+              if (state == BackupState.corrupt)
+                Row(
+                  key: ValueKey('corrupt-$sourceId'),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    BackupStateBadge(state, count: c.counts.filesIn(state)),
+                    Text(' — ', style: TextStyle(color: backupStateColor(context, state))),
+                    InkWell(
+                      key: ValueKey('corrupt-open-$sourceId'),
+                      onTap: () => ref.read(navigationIndexProvider.notifier).select(tasksDestination),
+                      child: Text(
+                        'Ver e restaurar',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: backupStateColor(context, state),
+                          decoration: TextDecoration.underline,
+                          decorationColor: backupStateColor(context, state),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                BackupStateBadge(state, count: c.counts.filesIn(state)),
           if (c.counts.verifiedUncertainDisk > 0)
             Tooltip(
               message: verifiedHint(c.counts.filesIn(BackupState.verified), c.counts.verifiedUncertainDisk),

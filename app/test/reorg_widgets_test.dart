@@ -138,6 +138,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('pasta nova'), findsWidgets);
     expect(find.text('IMG_2_1.jpg (nome ajustado: já existia)'), findsOneWidget);
+    // Nomes cortados na árvore: o nome completo aparece ao passar o mouse.
+    expect(find.byTooltip('2024-07-13 Festa'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Tooltip && (w.message?.startsWith('IMG_2_1.jpg (nome ajustado: já existia)\nVem de: ') ?? false),
+      ),
+      findsOneWidget,
+    );
     expect(backend.calls.where((c) => c.startsWith('start-reorg')), isEmpty, reason: 'nada antes de confirmar');
 
     // Trocar a pasta refaz a prévia.
@@ -264,8 +272,13 @@ void main() {
     await openTasks(tester);
     expect(find.text('Desfazer a reorganização de "HD › Bagunça"'), findsOneWidget);
     expect(find.byKey(const ValueKey('op-undo-r1')), findsNothing, reason: 'já há um Desfazer em andamento');
-    // O que espera decisão já vem aberto.
-    expect(find.textContaining('mudou depois da reorganização'), findsOneWidget);
+    // O que espera decisão aparece direto no cartão, sem abrir Detalhes.
+    expect(find.text('Esconder detalhes'), findsNothing);
+    expect(find.byKey(const ValueKey('op-pending-u1')), findsOneWidget);
+    expect(find.textContaining('1 arquivo mudou depois da reorganização'), findsOneWidget);
+    expect(find.textContaining('1 arquivo encontrou o lugar ocupado'), findsOneWidget);
+    expect(find.text('Devolver mesmo assim'), findsOneWidget);
+    expect(find.text('Deixar onde está'), findsNWidgets(2));
     await tester.tap(find.byKey(const ValueKey('decide-back-5')));
     await tester.pump();
     expect(backend.calls, contains('resolve:5:moveAnyway'));
@@ -298,6 +311,13 @@ void main() {
     expect(find.byKey(const ValueKey('empty-Bagunça/thumbs')), findsNothing);
     expect(find.byKey(const ValueKey('hidden-Bagunça/thumbs')), findsOneWidget);
     expect(find.textContaining('arquivos ocultos ou de sistema'), findsOneWidget);
+    // Remover é uma decisão: nada vem marcado.
+    expect(find.text('Marque as pastas para remover'), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.byKey(const ValueKey('empty-confirm'))).onPressed, isNull);
+    await tester.tap(find.byKey(const ValueKey('empty-mark-all')));
+    await tester.pump();
+    expect(find.text('Remover 2 pastas vazias'), findsOneWidget);
+    expect(find.text('Desmarcar todas'), findsOneWidget);
     // Desmarca uma: só a outra é removida.
     await tester.tap(find.byKey(const ValueKey('empty-Bagunça/velha')));
     await tester.pump();

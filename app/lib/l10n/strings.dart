@@ -34,6 +34,7 @@ String backupStateLabel(BackupState state) => switch (state) {
   BackupState.verified => 'Tem cópia conferida',
   BackupState.independent => 'Backup em outro disco',
   BackupState.unknown => 'Ainda não dá para saber',
+  BackupState.corrupt => 'Possivelmente corrompido',
 };
 
 /// Explicação curta de cada situação.
@@ -45,6 +46,9 @@ String backupStateHint(BackupState state) => switch (state) {
     'Tem cópia com conteúdo idêntico, mas no mesmo disco: se esse disco falhar, as duas se perdem.',
   BackupState.independent => 'Backup em outro disco: há cópia idêntica num disco diferente. É a situação mais segura.',
   BackupState.unknown => 'O conteúdo ainda não foi conferido; a situação aparece depois da conferência.',
+  BackupState.corrupt =>
+    'O conteúdo mudou sem a data mudar (sinal de dano no disco): não conta como cópia. Veja em Tarefas e restaure de '
+        'outra cópia conferida.',
 };
 
 /// Dica de um item, com onde ele está: "Sem backup: este arquivo só existe no Pixel de Teste."
@@ -96,6 +100,7 @@ String backupStateCount(BackupState state, int n) => switch (state) {
   BackupState.verified => '${plural(n, 'arquivo', 'arquivos')} com cópia conferida',
   BackupState.independent => '${plural(n, 'arquivo', 'arquivos')} com backup em outro disco',
   BackupState.unknown => '${plural(n, 'arquivo', 'arquivos')} que ainda não dá para saber',
+  BackupState.corrupt => plural(n, 'arquivo possivelmente corrompido', 'arquivos possivelmente corrompidos'),
 };
 
 /// Caminho com um só separador: "HD_antigo › pasta2 › notas.txt".

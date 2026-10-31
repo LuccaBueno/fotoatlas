@@ -34,7 +34,7 @@ class _Volume implements VolumeProvider, PathResolver {
 
 /// Biblioteca de verdade: câmera (EXIF, quando o ExifTool existe; senão a data
 /// vem do nome) + "celular" (pasta) + WhatsApp + um arquivo sem data.
-Future<(FotoAtlasCore, Map<String, String>)> _open(WidgetTester tester, ExternalTools tools) async {
+Future<(FotoAtlasCore, Map<String, String>)> _open(WidgetTester tester, ExternalTools tools, {bool hash = true}) async {
   final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
   FotoAtlasCore? opened;
   addTearDown(() async {
@@ -84,6 +84,7 @@ Future<(FotoAtlasCore, Map<String, String>)> _open(WidgetTester tester, External
       sources[name] = id;
       await core.scans.wait(await core.scans.start(id));
     }
+    if (!hash) return;
     await core.hashes.start();
     await core.hashes.waitIdle();
     await core.metadata.start();
@@ -195,6 +196,48 @@ void main() {
     await _until(tester, () => find.textContaining('6 itens ·').evaluate().isNotEmpty);
     expect(find.textContaining('6 itens ·'), findsOneWidget);
     expect(find.text('Só 1 cópia (6)').evaluate().isNotEmpty || find.textContaining('6').evaluate().isNotEmpty, isTrue);
+    await _close(tester);
+  });
+
+  testWidgets('logo depois do escaneamento: itens "conferindo…" que viram itens normais com a conferência', (
+    tester,
+  ) async {
+    final (core, _) = await _open(tester, ExternalTools.none, hash: false);
+    tester.view
+      ..physicalSize = const Size(1600, 1000)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(FotoAtlasApp(firstRunGuide: false, openCore: () async => core));
+    await _until(tester, () => find.text('Biblioteca').evaluate().isNotEmpty);
+    await tester.tap(find.text('Biblioteca').first);
+    final provisional = find.byWidgetPredicate(
+      (w) => w.key is ValueKey<String> && (w.key! as ValueKey<String>).value.startsWith('tile--'),
+    );
+    await _until(tester, () => provisional.evaluate().length == 6);
+    expect(provisional, findsNWidgets(6), reason: 'nada conferido e as 6 fotos já aparecem');
+    await _until(tester, () => find.text('conferindo…').evaluate().length == 6);
+    expect(find.text('conferindo…'), findsNWidgets(6));
+    expect(find.byKey(const ValueKey('provisional-line')), findsOneWidget);
+    expect(find.text('Quarta-feira, 1 de maio de 2024'), findsOneWidget, reason: 'data do nome do arquivo');
+
+    // Detalhes só com o que o escaneamento sabe; não dá para marcar.
+    await tester.tap(provisional.first);
+    await _until(tester, () => find.byKey(const ValueKey('details-provisional')).evaluate().isNotEmpty);
+    expect(find.byKey(const ValueKey('details-provisional')), findsOneWidget);
+    expect(find.textContaining('itens ·'), findsNothing, reason: 'item conferindo não entra na seleção');
+
+    // A conferência avança: os mesmos itens viram normais, sem duplicar.
+    await tester.runAsync(() async {
+      await core.hashes.start();
+      await core.hashes.waitIdle();
+      await core.metadata.start();
+      await core.settleDates();
+    });
+    await _until(tester, () => find.text('conferindo…').evaluate().isEmpty && provisional.evaluate().isEmpty);
+    expect(find.text('conferindo…'), findsNothing);
+    expect(find.byKey(const ValueKey('provisional-line')), findsNothing);
+    await _until(tester, () => find.text('6 itens').evaluate().isNotEmpty);
+    expect(find.text('6 itens'), findsOneWidget);
     await _close(tester);
   });
 

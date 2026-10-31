@@ -72,17 +72,47 @@ class _Content extends ConsumerWidget {
             ),
           );
 
+    final header = Row(
+      children: [
+        Expanded(
+          child: Text(item.name, style: theme.textTheme.titleMedium, maxLines: 2, overflow: TextOverflow.ellipsis),
+        ),
+        IconButton(tooltip: 'Fechar detalhes', onPressed: onClose, icon: const Icon(Icons.close)),
+      ],
+    );
+    if (item.provisional) {
+      // Ainda conferindo: só o que o escaneamento sabe; as ações esperam a conferência.
+      return ListView(
+        key: const ValueKey('details-provisional'),
+        padding: const EdgeInsets.all(16),
+        children: [
+          header,
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.hourglass_top, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Conferindo… O conteúdo deste arquivo ainda vai ser lido. Depois aparecem a data certa (da foto), a '
+                  'situação de backup, a câmera e as ações.',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          row('Data provisória', local == null ? 'Sem data' : formatWallDateTime(local)),
+          row('Veio de', dateSourceLabel(item.dateSource)),
+          row('Tamanho', formatBytes(item.sizeBytes)),
+          for (final l in detail.locations) row('Onde está', displayPath(l.sourceName, l.relPath)),
+        ],
+      );
+    }
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(item.name, style: theme.textTheme.titleMedium, maxLines: 2, overflow: TextOverflow.ellipsis),
-            ),
-            IconButton(tooltip: 'Fechar detalhes', onPressed: onClose, icon: const Icon(Icons.close)),
-          ],
-        ),
+        header,
         const SizedBox(height: 8),
         AspectRatio(
           aspectRatio: 4 / 3,

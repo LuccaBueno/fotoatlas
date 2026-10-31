@@ -129,6 +129,9 @@ abstract interface class AppBackend {
   /// Pedido de cópia segura que restaura a partir de outra cópia (prévia antes).
   Future<CopyRequest> restoreRequest(int instanceId, {required int fromInstanceId});
   Future<bool> acceptAsIs(int instanceId);
+
+  /// "Marcar como resolvido" (só catálogo; o arquivo danificado fica).
+  Future<bool> markIntegrityResolved(int instanceId);
   Future<IntegritySchedule> integritySchedule();
   Future<void> setIntegritySchedule(IntegritySchedule schedule);
 
@@ -374,6 +377,9 @@ class CoreBackend implements AppBackend {
 
   @override
   Future<bool> acceptAsIs(int instanceId) => core.integrity.acceptAsIs(instanceId);
+
+  @override
+  Future<bool> markIntegrityResolved(int instanceId) => core.integrity.markResolved(instanceId);
 
   @override
   Future<IntegritySchedule> integritySchedule() => core.integrity.schedule();

@@ -39,12 +39,6 @@ class _ReorgOperationCardState extends ConsumerState<ReorgOperationCard> {
   bool _expanded = false;
 
   @override
-  void initState() {
-    super.initState();
-    _expanded = widget.op.needsAttention > 0 && widget.op.isOpen;
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = StatusColors.of(context);
@@ -130,6 +124,7 @@ class _ReorgOperationCardState extends ConsumerState<ReorgOperationCard> {
                   style: theme.textTheme.bodySmall,
                 ),
               ),
+            if (o.needsAttention > 0) _PendingDecisions(op: o),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -372,10 +367,8 @@ class EmptyFoldersDialog extends StatefulWidget {
 }
 
 class _EmptyFoldersDialogState extends State<EmptyFoldersDialog> {
-  late final Set<String> _chosen = {
-    for (final f in widget.folders)
-      if (f.empty) f.relPath,
-  };
+  // Remover é uma decisão: nada vem marcado (spec §12).
+  final Set<String> _chosen = {};
 
   @override
   Widget build(BuildContext context) {
@@ -396,8 +389,23 @@ class _EmptyFoldersDialogState extends State<EmptyFoldersDialog> {
                 empty.isEmpty
                     ? 'Nenhuma pasta vazia: nada a remover.'
                     : 'Estas pastas de "${widget.sourceName}" estão vazias (sem nenhum arquivo, nem oculto). Só as '
-                          'marcadas são removidas, e cada uma é conferida de novo na hora: se aparecer algo dentro, ela fica.',
+                          'que você marcar são removidas, e cada uma é conferida de novo na hora: se aparecer algo '
+                          'dentro, ela fica.',
               ),
+              if (empty.length > 1)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: const ValueKey('empty-mark-all'),
+                    onPressed: () => setState(() {
+                      final all = _chosen.length == empty.length;
+                      _chosen.clear();
+                      if (!all) _chosen.addAll(empty.map((f) => f.relPath));
+                    }),
+                    icon: Icon(_chosen.length == empty.length ? Icons.deselect : Icons.select_all),
+                    label: Text(_chosen.length == empty.length ? 'Desmarcar todas' : 'Marcar todas'),
+                  ),
+                ),
               const SizedBox(height: 8),
               for (final f in empty)
                 CheckboxListTile(
@@ -431,15 +439,143 @@ class _EmptyFoldersDialogState extends State<EmptyFoldersDialog> {
         FilledButton(
           key: const ValueKey('empty-confirm'),
           onPressed: _chosen.isEmpty ? null : () => Navigator.pop(context, _chosen.toList()),
-          child: Text('Remover ${plural(_chosen.length, 'pasta vazia', 'pastas vazias')}'),
+          child: Text(
+            _chosen.isEmpty
+                ? 'Marque as pastas para remover'
+                : 'Remover ${plural(_chosen.length, 'pasta vazia', 'pastas vazias')}',
+          ),
         ),
       ],
     );
   }
 }
 
-/// Arquivo por arquivo: o que espera decisão, o que não foi movido e por quê,
-/// os renomeados e os movidos.
+/// O que espera a decisão da pessoa, direto no cartão (sem abrir Detalhes):
+/// uma frase por motivo ("1 arquivo mudou depois da reorganização") e, para
+/// cada arquivo, os botões da decisão.
+class _PendingDecisions extends ConsumerWidget {
+  const _PendingDecisions({required this.op});
+  final OperationView op;
+
+  static const _shown = 20;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colors = StatusColors.of(context);
+    final backend = ref.read(backendProvider);
+    ref.watch(operationsProvider);
+    return FutureBuilder(
+      future: backend.operationItems(op.id, states: {ItemState.needsAttention}),
+      builder: (context, snap) {
+        if (!snap.hasData) return const SizedBox.shrink();
+        final waiting = snap.data!;
+        if (waiting.isEmpty) return const SizedBox.shrink();
+        final groups = <String, List<OperationItemView>>{};
+        for (final i in waiting) {
+          groups.putIfAbsent(i.errorCode ?? '', () => []).add(i);
+        }
+        String headline(String code, int n) => switch (code) {
+          'changed_since_reorg' =>
+            '${plural(n, 'arquivo mudou', 'arquivos mudaram')} depois da reorganização (tamanho ou data diferente, '
+                'talvez editado em outro programa). Devolver ao lugar de antes?',
+          'name_conflict' =>
+            '${plural(n, 'arquivo encontrou', 'arquivos encontraram')} o lugar ocupado por outro arquivo com o mesmo '
+                'nome. Nada foi sobrescrito.',
+          'recovery_unknown' =>
+            '${plural(n, 'arquivo precisa', 'arquivos precisam')} ser conferido${n == 1 ? '' : 's'} de novo antes de '
+                'continuar.',
+          _ => '${plural(n, 'arquivo espera', 'arquivos esperam')} a sua decisão.',
+        };
+        return Container(
+          key: ValueKey('op-pending-${op.id}'),
+          margin: const EdgeInsets.only(top: 10),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            border: Border.all(color: colors.attention),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final MapEntry(key: code, value: items) in groups.entries) ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      code == 'changed_since_reorg' ? Icons.warning_amber : Icons.help_outline,
+                      size: 20,
+                      color: code == 'changed_since_reorg' ? colors.single : colors.attention,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        headline(code, items.length),
+                        key: ValueKey('op-pending-$code-${op.id}'),
+                        style: theme.textTheme.titleSmall,
+                      ),
+                    ),
+                  ],
+                ),
+                for (final i in items.take(_shown))
+                  Padding(
+                    key: ValueKey('op-item-${i.id}'),
+                    padding: const EdgeInsets.only(left: 28, top: 4),
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        Tooltip(
+                          message: i.errorMessage ?? '',
+                          child: Text(folderLabel(i.srcRelPath), style: theme.textTheme.bodyMedium),
+                        ),
+                        if (code == 'changed_since_reorg')
+                          FilledButton.tonal(
+                            key: ValueKey('decide-back-${i.id}'),
+                            onPressed: () => backend.resolveReorg(i.id, ReorgDecision.moveAnyway),
+                            child: const Text('Devolver mesmo assim'),
+                          ),
+                        if (code == 'name_conflict')
+                          FilledButton.tonal(
+                            key: ValueKey('decide-rename-${i.id}'),
+                            onPressed: () => backend.resolveReorg(i.id, ReorgDecision.rename),
+                            child: const Text('Mover com outro nome'),
+                          ),
+                        if (code == 'recovery_unknown')
+                          FilledButton.tonal(
+                            key: ValueKey('decide-retry-${i.id}'),
+                            onPressed: () => backend.resolveReorg(i.id, ReorgDecision.retry),
+                            child: const Text('Conferir de novo'),
+                          ),
+                        OutlinedButton(
+                          key: ValueKey('decide-leave-${i.id}'),
+                          onPressed: () => backend.resolveReorg(i.id, ReorgDecision.leave),
+                          child: const Text('Deixar onde está'),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (items.length > _shown)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 28, top: 4),
+                    child: Text(
+                      'e mais ${plural(items.length - _shown, 'arquivo', 'arquivos')}: decida estes primeiro.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                const SizedBox(height: 6),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Arquivo por arquivo: o que não foi movido e por quê, os renomeados e os
+/// movidos (o que espera decisão fica no próprio cartão).
 class _ReorgDetails extends ConsumerWidget {
   const _ReorgDetails({required this.op});
   final OperationView op;
@@ -459,7 +595,6 @@ class _ReorgDetails extends ConsumerWidget {
       builder: (context, snap) {
         if (!snap.hasData) return const Padding(padding: EdgeInsets.all(8), child: LinearProgressIndicator());
         final items = snap.data!;
-        final waiting = items.where((i) => i.state == ItemState.needsAttention).toList();
         final notMoved = items
             .where((i) => i.state == ItemState.failed || i.state == ItemState.skippedIdentical)
             .toList();
@@ -488,47 +623,6 @@ class _ReorgDetails extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Divider(),
-            if (waiting.isNotEmpty) heading('Esperando a sua decisão'),
-            for (final i in waiting)
-              ListTile(
-                key: ValueKey('op-item-${i.id}'),
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  i.errorCode == 'changed_since_reorg' ? Icons.warning_amber : Icons.help_outline,
-                  color: i.errorCode == 'changed_since_reorg' ? colors.single : colors.attention,
-                ),
-                title: Text(folderLabel(i.srcRelPath)),
-                subtitle: Text(i.errorMessage ?? ''),
-                trailing: Wrap(
-                  spacing: 4,
-                  children: [
-                    if (i.errorCode == 'changed_since_reorg')
-                      TextButton(
-                        key: ValueKey('decide-back-${i.id}'),
-                        onPressed: () => backend.resolveReorg(i.id, ReorgDecision.moveAnyway),
-                        child: const Text('Devolver mesmo assim'),
-                      ),
-                    if (i.errorCode == 'name_conflict')
-                      TextButton(
-                        key: ValueKey('decide-rename-${i.id}'),
-                        onPressed: () => backend.resolveReorg(i.id, ReorgDecision.rename),
-                        child: const Text('Mover com outro nome'),
-                      ),
-                    if (i.errorCode == 'recovery_unknown')
-                      TextButton(
-                        key: ValueKey('decide-retry-${i.id}'),
-                        onPressed: () => backend.resolveReorg(i.id, ReorgDecision.retry),
-                        child: const Text('Conferir de novo'),
-                      ),
-                    TextButton(
-                      key: ValueKey('decide-leave-${i.id}'),
-                      onPressed: () => backend.resolveReorg(i.id, ReorgDecision.leave),
-                      child: const Text('Deixar onde está'),
-                    ),
-                  ],
-                ),
-              ),
             if (notMoved.isNotEmpty) ...[
               heading(
                 isUndo

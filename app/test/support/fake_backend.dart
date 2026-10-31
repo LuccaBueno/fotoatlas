@@ -426,6 +426,12 @@ class FakeBackend implements AppBackend {
   }
 
   @override
+  Future<bool> markIntegrityResolved(int instanceId) async {
+    calls.add('resolved:$instanceId');
+    return true;
+  }
+
+  @override
   Future<IntegritySchedule> integritySchedule() async => schedule;
 
   @override

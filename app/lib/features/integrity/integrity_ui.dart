@@ -229,8 +229,14 @@ class IntegritySection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final runs = ref.watch(verifyRunsProvider).value ?? const <IntegrityRunView>[];
-    final problems = ref.watch(integrityProblemsProvider).value ?? const <IntegrityProblem>[];
-    if (runs.isEmpty && problems.isEmpty) return const SizedBox.shrink();
+    final all = ref.watch(integrityProblemsProvider).value ?? const <IntegrityProblem>[];
+    if (runs.isEmpty && all.isEmpty) return const SizedBox.shrink();
+    final problems = all.where((p) => p.pending).toList();
+    // Restaurados (esperando "Marcar como resolvido") primeiro, depois os resolvidos.
+    final settled = [
+      ...all.where((p) => !p.pending && p.resolvedAt == null),
+      ...all.where((p) => p.resolvedAt != null),
+    ];
     final open = runs.where((r) => r.isOpen).toList();
     final done = runs.where((r) => !r.isOpen).take(10).toList();
     return Column(
@@ -250,6 +256,21 @@ class IntegritySection extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           for (final p in problems) ProblemCard(key: ValueKey('problem-${p.instanceId}'), problem: p),
+          const SizedBox(height: 16),
+        ],
+        if (settled.isNotEmpty) ...[
+          Text(
+            'Restaurados e resolvidos (${formatInt(settled.length)})',
+            style: theme.textTheme.titleMedium,
+            key: const ValueKey('settled-title'),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Os arquivos danificados continuam onde estavam: o FotoAtlas não apaga nada. Depois de conferir a foto '
+            'restaurada, você pode apagá-los pelo Windows, se quiser.',
+          ),
+          const SizedBox(height: 8),
+          for (final p in settled) ProblemCard(key: ValueKey('problem-${p.instanceId}'), problem: p),
           const SizedBox(height: 16),
         ],
         if (runs.isNotEmpty) ...[
@@ -437,6 +458,7 @@ class ProblemCard extends ConsumerWidget {
     final p = problem;
     final copies = p.otherCopies;
     final canWrite = p.connected && copies.every((c) => c.sourceId != p.sourceId || c.sourceKind != 'phone');
+    if (!p.pending) return _settled(context, ref);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -510,6 +532,55 @@ class ProblemCard extends ConsumerWidget {
                         ),
                 ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Restaurado (a cópia boa está na mesma pasta) ou marcado como resolvido.
+  Widget _settled(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colors = StatusColors.of(context);
+    final p = problem;
+    final restoredName = p.restoredRelPath?.split('/').last;
+    final status = [
+      if (restoredName != null) 'Restaurado — a cópia boa está em $restoredName',
+      if (p.resolvedAt != null) 'Marcado como resolvido em ${formatDateTime(p.resolvedAt!)}',
+    ].join(' · ');
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(restoredName != null ? Icons.restore : Icons.task_alt, color: colors.verified),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(p.name, style: theme.textTheme.titleSmall),
+                  Text(
+                    status,
+                    key: ValueKey('problem-status-${p.instanceId}'),
+                    style: TextStyle(color: colors.verified),
+                  ),
+                  Text(
+                    'Danificado: ${p.sourceName} › ${p.relPath.replaceAll('/', ' › ')} (continua lá, sem mudança)',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            if (p.resolvedAt == null)
+              Tooltip(
+                message: 'Tira da lista. Só no catálogo: o arquivo danificado não é apagado nem mexido.',
+                child: FilledButton.tonal(
+                  key: ValueKey('resolve-${p.instanceId}'),
+                  onPressed: () => ref.read(backendProvider).markIntegrityResolved(p.instanceId),
+                  child: const Text('Marcar como resolvido'),
+                ),
+              ),
           ],
         ),
       ),

@@ -58,7 +58,13 @@ class LibraryState {
     index: index ?? this.index,
     loading: loading ?? this.loading,
     error: clearError ? null : (error ?? this.error),
-    selection: selection ?? this.selection,
+    // Itens "conferindo…" (ID negativo) não são marcados: ainda não há conteúdo para copiar ou verificar.
+    selection: selection == null
+        ? this.selection
+        : {
+            for (final id in selection)
+              if (id >= 0) id,
+          },
     anchor: anchor ?? this.anchor,
     focused: clearFocus ? null : (focused ?? this.focused),
   );

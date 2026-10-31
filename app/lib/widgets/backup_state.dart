@@ -13,6 +13,7 @@ IconData backupStateIcon(BackupState s) => switch (s) {
   BackupState.verified => Icons.check_circle_outline,
   BackupState.independent => Icons.verified_user_outlined,
   BackupState.unknown => Icons.help_outline,
+  BackupState.corrupt => Icons.report_outlined,
 };
 
 Color backupStateColor(BuildContext context, BackupState s) {
@@ -23,6 +24,7 @@ Color backupStateColor(BuildContext context, BackupState s) {
     BackupState.verified => c.verified,
     BackupState.independent => c.independent,
     BackupState.unknown => c.unknown,
+    BackupState.corrupt => c.single,
   };
 }
 
@@ -102,3 +104,13 @@ class HashProgressBar extends ConsumerWidget {
     );
   }
 }
+
+/// Ordem de exibição: o que pede ação primeiro.
+const backupStatesInOrder = [
+  BackupState.corrupt,
+  BackupState.single,
+  BackupState.probable,
+  BackupState.verified,
+  BackupState.independent,
+  BackupState.unknown,
+];

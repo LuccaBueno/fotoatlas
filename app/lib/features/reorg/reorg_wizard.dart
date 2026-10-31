@@ -497,7 +497,9 @@ List<Widget> _files(BuildContext context, TreeNode node, bool before, int depth)
       Padding(
         padding: EdgeInsets.only(left: 16.0 * depth + 28, top: 1, bottom: 1),
         child: Tooltip(
-          message: before ? 'Vai para: ${f.other.replaceAll('/', ' › ')}' : 'Vem de: ${f.other.replaceAll('/', ' › ')}',
+          message:
+              '${f.name}${f.conflict && !before ? ' (nome ajustado: já existia)' : ''}\n'
+              '${before ? 'Vai para' : 'Vem de'}: ${f.other.replaceAll('/', ' › ')}',
           child: Text(
             before
                 ? '${f.name} → ${f.other.replaceAll('/', ' › ')}'
@@ -547,7 +549,10 @@ class _Node extends StatelessWidget {
           before ? Icons.folder_outlined : (n.isNew ? Icons.create_new_folder_outlined : Icons.folder),
           size: 20,
         ),
-        title: Text(n.name, overflow: TextOverflow.ellipsis),
+        title: Tooltip(
+          message: n.name,
+          child: Text(n.name, overflow: TextOverflow.ellipsis),
+        ),
         subtitle: Text(
           tags.join(' · '),
           style: theme.textTheme.bodySmall?.copyWith(color: n.totalConflicts > 0 && !before ? colors.attention : null),

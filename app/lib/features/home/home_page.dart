@@ -197,7 +197,7 @@ class _CoveragePanel extends ConsumerWidget {
             Text(headline, style: theme.textTheme.titleLarge),
             if (report != null && report.overall.totalFiles > 0) ...[
               const SizedBox(height: 12),
-              for (final state in BackupState.values)
+              for (final state in backupStatesInOrder)
                 if (report.overall.filesIn(state) > 0)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -320,7 +320,10 @@ class _IntegrityAlerts extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = StatusColors.of(context);
-    final problems = ref.watch(integrityProblemsProvider).value ?? const <IntegrityProblem>[];
+    final problems = [
+      for (final p in ref.watch(integrityProblemsProvider).value ?? const <IntegrityProblem>[])
+        if (p.pending) p,
+    ];
     final overview = ref.watch(integrityOverviewProvider).value ?? const <SourceIntegrity>[];
     final byId = {for (final s in sources) s.id: s};
     final days = ref.watch(integrityScheduleProvider).value?.everyDays ?? 90;

@@ -148,6 +148,7 @@ class HelpDialog extends ConsumerWidget {
                   BackupState.independent,
                   BackupState.probable,
                   BackupState.unknown,
+                  BackupState.corrupt,
                 ])
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 3),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fotoatlas/app/theme.dart';
 import 'package:fotoatlas/l10n/format.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
@@ -9,30 +10,33 @@ import 'device_flow_widgets_test.dart' show phone;
 import 'support/fake_backend.dart';
 import 'widgets_test.dart' show harness, openDevices;
 
-IntegrityProblem problem({bool connected = true, List<OtherCopy>? copies}) => IntegrityProblem(
-  instanceId: 7,
-  sourceId: 's1',
-  sourceName: 'HD principal',
-  relPath: '2024/a.jpg',
-  size: 4000,
-  detectedAt: DateTime(2026, 10, 30, 9),
-  connected: connected,
-  expectedContentId: 3,
-  otherCopies:
-      copies ??
-      const [
-        OtherCopy(
-          instanceId: 9,
-          sourceId: 's2',
-          sourceName: 'HD backup',
-          sourceKind: 'external_hd',
-          relPath: 'Backup/copia_a.jpg',
-          connected: true,
-          sameSource: false,
-          samePhysicalDisk: false,
-        ),
-      ],
-);
+IntegrityProblem problem({bool connected = true, List<OtherCopy>? copies, String? restored, DateTime? resolvedAt}) =>
+    IntegrityProblem(
+      restoredRelPath: restored,
+      resolvedAt: resolvedAt,
+      instanceId: 7,
+      sourceId: 's1',
+      sourceName: 'HD principal',
+      relPath: '2024/a.jpg',
+      size: 4000,
+      detectedAt: DateTime(2026, 10, 30, 9),
+      connected: connected,
+      expectedContentId: 3,
+      otherCopies:
+          copies ??
+          const [
+            OtherCopy(
+              instanceId: 9,
+              sourceId: 's2',
+              sourceName: 'HD backup',
+              sourceKind: 'external_hd',
+              relPath: 'Backup/copia_a.jpg',
+              connected: true,
+              sameSource: false,
+              samePhysicalDisk: false,
+            ),
+          ],
+    );
 
 IntegrityRunView run(String status, {bool byUser = false, Map<String, int> counts = const {}, String? message}) =>
     IntegrityRunView(
@@ -235,5 +239,82 @@ void main() {
     expect(formatAgo(DateTime(2026, 10, 10), now: now), 'há 20 dias');
     expect(formatAgo(DateTime(2026, 4, 30), now: now), 'há 6 meses');
     expect(formatAgo(DateTime(2023, 10, 30), now: now), 'há 3 anos');
+  });
+
+  testWidgets('restaurado: sai dos pendentes, diz onde está a cópia boa e oferece "Marcar como resolvido"', (
+    tester,
+  ) async {
+    final backend = FakeBackend([source('s1', 'HD principal'), source('s2', 'HD backup')])
+      ..problems = [
+        problem(restored: '2024/a_1.jpg'),
+        IntegrityProblem(
+          instanceId: 8,
+          sourceId: 's1',
+          sourceName: 'HD principal',
+          relPath: '2024/b.jpg',
+          size: 10,
+          detectedAt: DateTime(2026, 10, 29),
+          connected: true,
+          otherCopies: const [],
+          resolvedAt: DateTime(2026, 10, 30, 10),
+        ),
+      ];
+    await tester.pumpWidget(harness(backend));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('alert-corrupt')), findsNothing, reason: 'nada pendente no Início');
+    await openTasks(tester);
+    expect(find.byKey(const ValueKey('problems-title')), findsNothing);
+    expect(find.text('Restaurados e resolvidos (2)'), findsOneWidget);
+    expect(find.text('Restaurado — a cópia boa está em a_1.jpg'), findsOneWidget);
+    expect(find.textContaining('Marcado como resolvido em'), findsOneWidget);
+    expect(find.textContaining('continua lá, sem mudança'), findsNWidgets(2));
+    expect(find.text('Restaurar desta cópia…'), findsNothing);
+    expect(find.byKey(const ValueKey('resolve-8')), findsNothing, reason: 'já resolvido');
+    await tester.tap(find.byKey(const ValueKey('resolve-7')));
+    await tester.pump();
+    expect(backend.calls, contains('resolved:7'));
+  });
+
+  testWidgets('cartão do dispositivo e Início: corrompido em vermelho com "Ver e restaurar" e texto próprio', (
+    tester,
+  ) async {
+    const counts = CoverageCounts(
+      {BackupState.corrupt: 1, BackupState.single: 2},
+      {BackupState.corrupt: 4000, BackupState.single: 8000},
+    );
+    final backend = FakeBackend([source('s1', 'HD principal')])
+      ..problems = [problem()]
+      ..coverage = CoverageReport(
+        overall: counts,
+        perSource: {
+          's1': const SourceCoverage(
+            sourceId: 's1',
+            counts: counts,
+            cloudOnly: 0,
+            duplicateFiles: 0,
+            duplicateBytes: 0,
+          ),
+        },
+        pendingFiles: 0,
+        computedAt: DateTime.utc(2026),
+      );
+    await tester.pumpWidget(harness(backend));
+    await tester.pumpAndSettle();
+    // Início: o arquivo corrompido não é explicado como "ainda não conferido".
+    expect(find.textContaining('O conteúdo mudou sem a data mudar (sinal de dano no disco)'), findsOneWidget);
+    expect(find.textContaining('ainda não foi conferido'), findsNothing);
+
+    await openDevices(tester);
+    final badge = find.byKey(const ValueKey('corrupt-s1'));
+    expect(badge, findsOneWidget);
+    expect(find.descendant(of: badge, matching: find.text('1 arquivo possivelmente corrompido')), findsOneWidget);
+    final label = tester.widget<Text>(
+      find.descendant(of: badge, matching: find.text('1 arquivo possivelmente corrompido')),
+    );
+    expect(label.style?.color, StatusColors.of(tester.element(badge)).single, reason: 'vermelho, não cinza');
+    expect(find.text('2 arquivos sem backup (só em 1 lugar)'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('corrupt-open-s1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Possivelmente corrompidos (1)'), findsOneWidget, reason: 'abriu Tarefas');
   });
 }
