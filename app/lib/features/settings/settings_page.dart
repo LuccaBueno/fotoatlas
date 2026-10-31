@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
+import '../../app/app_info.dart';
 import '../../app/providers.dart';
 import '../../l10n/format.dart';
 import '../integrity/integrity_ui.dart';
@@ -76,6 +77,27 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           const DatesSettingsCard(),
           const SizedBox(height: 16),
           const IntegritySettingsCard(),
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Sobre o FotoAtlas', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  Text(appVersionLabel()),
+                  const SizedBox(height: 8),
+                  SelectableText('Catálogo e configurações: ${ref.read(backendProvider).catalogFolder}'),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Atualizar o FotoAtlas não mexe nessa pasta. Ao desinstalar, ela fica guardada, '
+                    'a menos que você diga que quer apagá-la (e então vai para a Lixeira).',
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -29,6 +29,16 @@ set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 set(CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 
+# FotoAtlas: runtime do C++ estático (/MT) no executável e nos plugins, para
+# o app abrir numa máquina sem o "Visual C++ Redistributable" sem empacotar
+# DLLs da Microsoft (ADR 0019). O flutter_windows.dll já não depende dele.
+# (A política CMP0091 ainda não vale no project() acima: troca nas flags.)
+foreach(flag_var CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_PROFILE CMAKE_CXX_FLAGS_RELEASE
+    CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_PROFILE CMAKE_C_FLAGS_RELEASE)
+  string(REPLACE "/MDd" "/MTd" ${flag_var} "${${flag_var}}")
+  string(REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+endforeach()
+
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 

@@ -175,6 +175,9 @@ class FakeBackend implements AppBackend {
   List<CatalogBackupInfo> catalogBackups() => backups;
 
   @override
+  String get catalogFolder => r'C:\Users\Teste\AppData\Roaming\FotoAtlas';
+
+  @override
   Future<CatalogBackupInfo> backupCatalogNow() async {
     calls.add('backup');
     return CatalogBackupInfo('x', DateTime.utc(2026), 1024);

@@ -13,6 +13,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     CreateAndAttachConsole();
   }
 
+  // FotoAtlas: o instalador (AppMutex em installer\fotoatlas.iss) não atualiza
+  // nem desinstala enquanto este mutex existe, ou seja, com o app aberto.
+  // Fica aberto até o processo terminar.
+  ::CreateMutexW(nullptr, FALSE, L"FotoAtlas.App.Aberto");
+
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);

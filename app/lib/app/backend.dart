@@ -138,6 +138,9 @@ abstract interface class AppBackend {
   // Backup do catálogo.
   List<CatalogBackupInfo> catalogBackups();
 
+  /// Pasta do catálogo e das configurações (o instalador nunca mexe nela).
+  String get catalogFolder;
+
   /// O guia de primeiros passos já foi visto (ou pulado)?
   Future<bool> isFirstRunGuideDone();
   Future<void> setFirstRunGuideDone();
@@ -389,6 +392,9 @@ class CoreBackend implements AppBackend {
 
   @override
   List<CatalogBackupInfo> catalogBackups() => core.backups.list();
+
+  @override
+  String get catalogFolder => core.paths.dataDir;
 
   static const _guideKey = 'ui.firstRunGuideDone';
 
