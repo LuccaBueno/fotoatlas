@@ -232,7 +232,7 @@ class FotoAtlasCore {
         metadata: metadata,
         moments: moments,
         dates: DatesService(catalog.db, metadata.effective, moments),
-        library: LibraryService(catalog.db),
+        library: LibraryService(catalog.db, strategy: () => metadata.strategy),
         thumbnails: ThumbnailService(
           catalog.db,
           sources,

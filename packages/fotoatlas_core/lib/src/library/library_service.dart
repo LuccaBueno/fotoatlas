@@ -14,10 +14,17 @@ import 'library_filter.dart';
 /// Resultado de uma consulta: só IDs e chaves de ordenação (a galeria nunca
 /// carrega a biblioteca inteira; os detalhes vêm por página, spec §10).
 class LibraryIndex {
-  LibraryIndex(this.ids, this.utc, this.day, this.moment);
+  LibraryIndex(this.ids, this.utc, this.day, this.moment, {this.provisionalCount = 0});
 
-  /// IDs de conteúdo, na ordem da linha do tempo.
+  /// IDs de conteúdo, na ordem da linha do tempo. **Negativo** = item
+  /// provisório: `-id` do arquivo (`file_instances`) ainda sem conteúdo
+  /// conferido, mostrado logo depois do escaneamento ([isProvisional]).
   final Int64List ids;
+
+  /// Quantos itens provisórios ("conferindo…") há em [ids].
+  final int provisionalCount;
+
+  static bool isProvisional(int id) => id < 0;
 
   /// Instante efetivo (ms UTC); [noDate] = sem data.
   final Int64List utc;
@@ -60,9 +67,15 @@ class LibraryItem {
     this.metaError,
     this.sha256Hex,
     this.places = const [],
+    this.provisional = false,
   });
 
+  /// ID do conteúdo; negativo num item [provisional] (`-id` do arquivo).
   final int contentId;
+
+  /// Ainda conferindo: só os dados do escaneamento (nome, tamanho, data do
+  /// nome ou do arquivo). Vira um item normal quando a conferência termina.
+  final bool provisional;
 
   /// Nome de uma das cópias (a primeira encontrada).
   final String name;
@@ -222,8 +235,11 @@ class SavedFilter {
 
 /// Consultas da Biblioteca. Só lê o catálogo.
 class LibraryService {
-  LibraryService(this.db);
+  LibraryService(this.db, {DateStrategy Function()? strategy}) : _strategy = strategy ?? (() => const DateStrategy());
   final CatalogDatabase db;
+
+  /// Fuso e prioridade atuais (para a data provisória pelo nome/arquivo).
+  final DateStrategy Function() _strategy;
 
   static const _base =
       "FROM contents c LEFT JOIN media_metadata mm ON mm.content_id = c.id "
@@ -295,7 +311,154 @@ class LibraryService {
       day[i] = next(',') ?? 0;
       moment[i] = next(';') ?? 0;
     }
-    return LibraryIndex(ids, utc, day, moment);
+    _momentsOnStartDay(day, moment);
+    final index = LibraryIndex(ids, utc, day, moment);
+    final provisional = await _provisional(filter);
+    return provisional.isEmpty ? index : _merge(index, provisional, ascending: ascending);
+  }
+
+  // --- Itens provisórios ("conferindo…") -------------------------------------
+
+  static const _provisionalKinds = {FilterKind.sources, FilterKind.types, FilterKind.extensions};
+
+  static const _provisionalSql =
+      'SELECT fi.id, fi.source_id, fi.name, fi.ext, fi.size_bytes, fi.mtime, s.name AS source_name '
+      'FROM file_instances fi JOIN sources s ON s.id = fi.source_id AND s.forgotten_at IS NULL '
+      "WHERE fi.availability = 'present' AND fi.content_id IS NULL AND fi.hash_status = 'pending' "
+      "AND fi.integrity != 'possibly_corrupt'";
+
+  /// Fotos e vídeos escaneados que ainda esperam a conferência (spec §10):
+  /// aparecem logo, com a data do nome ou do arquivo. Só sem filtro ou com
+  /// filtros que o escaneamento já responde (dispositivo, tipo, extensão);
+  /// com os outros (data efetiva, backup, câmera…) esperam a conferência.
+  Future<List<_Provisional>> _provisional(LibraryFilter filter) async {
+    if (filter.any || filter.conditions.any((c) => !_provisionalKinds.contains(c.kind))) return const [];
+    final rows = await db.customSelect('$_provisionalSql AND fi.ext IN ${MediaTypes.sqlList(MediaTypes.media)}').get();
+    if (rows.isEmpty) return const [];
+    final strategy = _strategy();
+    final out = <_Provisional>[];
+    for (final r in rows) {
+      final ext = r.read<String>('ext');
+      final source = r.read<String>('source_id');
+      final type = MediaTypes.mediaTypeOf(ext);
+      var keep = true;
+      for (final c in filter.conditions) {
+        final hit = switch (c.kind) {
+          FilterKind.sources => c.values.map((v) => '$v').contains(source),
+          FilterKind.types => c.values.map((v) => '$v').contains(type),
+          _ => c.values.map((v) => '$v'.toLowerCase()).contains(ext),
+        };
+        if (hit == c.negate) keep = false;
+      }
+      if (keep) out.add(_Provisional.of(r, strategy));
+    }
+    return out;
+  }
+
+  /// Junta os provisórios ao índice, na mesma ordem (sem data no fim).
+  static LibraryIndex _merge(LibraryIndex index, List<_Provisional> extra, {required bool ascending}) {
+    final n = index.length + extra.length;
+    final order = List<int>.generate(n, (i) => i);
+    int utcOf(int i) => i < index.length ? index.utc[i] : extra[i - index.length].utc;
+    int idOf(int i) => i < index.length ? index.ids[i] : -extra[i - index.length].instanceId;
+    order.sort((a, b) {
+      final ua = utcOf(a), ub = utcOf(b);
+      final na = ua == LibraryIndex.noDate, nb = ub == LibraryIndex.noDate;
+      if (na != nb) return na ? 1 : -1;
+      final byTime = ascending ? ua.compareTo(ub) : ub.compareTo(ua);
+      if (byTime != 0) return byTime;
+      // Mesmo instante: a ordem original do índice; provisórios depois.
+      if ((a < index.length) != (b < index.length)) return a < index.length ? -1 : 1;
+      return a < index.length ? a.compareTo(b) : idOf(b).compareTo(idOf(a));
+    });
+    final ids = Int64List(n), utc = Int64List(n);
+    final day = Int32List(n), moment = Int32List(n);
+    for (var k = 0; k < n; k++) {
+      final i = order[k];
+      if (i < index.length) {
+        ids[k] = index.ids[i];
+        utc[k] = index.utc[i];
+        day[k] = index.day[i];
+        moment[k] = index.moment[i];
+      } else {
+        final p = extra[i - index.length];
+        ids[k] = -p.instanceId;
+        utc[k] = p.utc;
+        day[k] = p.day;
+      }
+    }
+    // Provisórios que caem no meio de um momento ficam nele (senão o momento
+    // apareceria partido em dois cabeçalhos).
+    var k = 0;
+    while (k < n) {
+      if (ids[k] >= 0) {
+        k++;
+        continue;
+      }
+      var e = k;
+      while (e < n && ids[e] < 0) {
+        e++;
+      }
+      if (k > 0 && e < n && moment[k - 1] != 0 && moment[k - 1] == moment[e]) {
+        for (var x = k; x < e; x++) {
+          moment[x] = moment[k - 1];
+        }
+      }
+      k = e;
+    }
+    _momentsOnStartDay(day, moment);
+    return LibraryIndex(ids, utc, day, moment, provisionalCount: extra.length);
+  }
+
+  Future<List<LibraryItem>> _provisionalItems(List<int> instanceIds) async {
+    if (instanceIds.isEmpty) return const [];
+    final rows = await db.customSelect('$_provisionalSql AND fi.id IN (${instanceIds.join(',')})').get();
+    final strategy = _strategy();
+    return [
+      for (final r in rows)
+        () {
+          final p = _Provisional.of(r, strategy);
+          return LibraryItem(
+            contentId: -p.instanceId,
+            name: r.read<String>('name'),
+            ext: r.read<String>('ext'),
+            mediaType: MediaTypes.mediaTypeOf(r.read<String>('ext')),
+            sizeBytes: r.read<int>('size_bytes'),
+            copies: 1,
+            backup: BackupState.unknown,
+            local: p.wall,
+            utcMs: p.utc == LibraryIndex.noDate ? null : p.utc,
+            confidence: p.confidence,
+            dateSource: p.source,
+            places: [r.read<String>('source_name')],
+            provisional: true,
+          );
+        }(),
+    ];
+  }
+
+  /// Um momento que atravessa a meia-noite (23:30–00:15) aparece uma vez só,
+  /// no dia em que começa: cada sequência seguida do mesmo momento fica com o
+  /// menor dia dela (vale nas duas ordens da linha do tempo).
+  static void _momentsOnStartDay(Int32List day, Int32List moment) {
+    var i = 0;
+    while (i < moment.length) {
+      final m = moment[i];
+      var j = i + 1;
+      while (j < moment.length && moment[j] == m) {
+        j++;
+      }
+      if (m != 0 && j - i > 1) {
+        var first = day[i];
+        for (var k = i + 1; k < j; k++) {
+          if (day[k] != 0 && (first == 0 || day[k] < first)) first = day[k];
+        }
+        for (var k = i; k < j; k++) {
+          if (day[k] != 0) day[k] = first;
+        }
+      }
+      i = j;
+    }
   }
 
   /// Só a contagem (para os chips e o Início).
@@ -309,6 +472,20 @@ class LibraryService {
   /// Detalhes de uma página de itens, na ordem de [ids].
   Future<List<LibraryItem>> items(List<int> ids) async {
     if (ids.isEmpty) return const [];
+    if (ids.any(LibraryIndex.isProvisional)) {
+      final real = await items([
+        for (final id in ids)
+          if (id >= 0) id,
+      ]);
+      final extra = await _provisionalItems([
+        for (final id in ids)
+          if (id < 0) -id,
+      ]);
+      final byId = {
+        for (final i in [...real, ...extra]) i.contentId: i,
+      };
+      return [for (final id in ids) ?byId[id]];
+    }
     final list = ids.join(',');
     final rows = await db.customSelect('''
           SELECT c.id, c.media_type, c.size_bytes, hex(c.sha256) AS sha,
@@ -360,9 +537,32 @@ class LibraryService {
     places: r.readNullable<String>('places')?.split(String.fromCharCode(31)) ?? const [],
   );
 
+  static ItemLocation _location(QueryRow l) => ItemLocation(
+    sourceId: l.read<String>('source_id'),
+    sourceName: l.read<String>('name'),
+    sourceKind: l.read<String>('kind'),
+    relPath: l.read<String>('rel_path'),
+    availability: l.read<String>('availability'),
+    hashStatus: l.read<String>('hash_status'),
+    mtime: switch (l.readNullable<int>('mtime')) {
+      final ft? when ft > 0 => DateTime.fromMillisecondsSinceEpoch((ft - 116444736000000000) ~/ 10000, isUtc: true),
+      _ => null,
+    },
+  );
+
   Future<LibraryItemDetail?> detail(int contentId) async {
     final item = (await items([contentId])).firstOrNull;
     if (item == null) return null;
+    if (item.provisional) {
+      final l = await db
+          .customSelect(
+            'SELECT fi.source_id, s.name, s.kind, fi.rel_path, fi.availability, fi.hash_status, fi.mtime '
+            'FROM file_instances fi JOIN sources s ON s.id = fi.source_id WHERE fi.id = ?',
+            variables: [Variable.withInt(-contentId)],
+          )
+          .getSingleOrNull();
+      return LibraryItemDetail(item: item, locations: [?l == null ? null : _location(l)], candidates: const []);
+    }
     final mm = await db
         .customSelect('SELECT * FROM media_metadata WHERE content_id = ?', variables: [Variable.withInt(contentId)])
         .getSingleOrNull();
@@ -390,24 +590,7 @@ class LibraryService {
         .getSingleOrNull();
     return LibraryItemDetail(
       item: item,
-      locations: [
-        for (final l in locs)
-          ItemLocation(
-            sourceId: l.read<String>('source_id'),
-            sourceName: l.read<String>('name'),
-            sourceKind: l.read<String>('kind'),
-            relPath: l.read<String>('rel_path'),
-            availability: l.read<String>('availability'),
-            hashStatus: l.read<String>('hash_status'),
-            mtime: switch (l.readNullable<int>('mtime')) {
-              final ft? when ft > 0 => DateTime.fromMillisecondsSinceEpoch(
-                (ft - 116444736000000000) ~/ 10000,
-                isUtc: true,
-              ),
-              _ => null,
-            },
-          ),
-      ],
+      locations: [for (final l in locs) _location(l)],
       candidates: DateStrategy.candidatesFromJson(mm?.readNullable<String>('candidates_json')),
       extracted: parseWall(mm?.readNullable<String>('capture_local')),
       extractedConfidence: mm == null ? null : DateConfidence.fromSql(mm.readNullable<String>('date_confidence')),
@@ -556,4 +739,37 @@ class LibraryService {
     updates: {db.savedFilters},
     updateKind: UpdateKind.delete,
   );
+}
+
+/// Arquivo escaneado ainda sem conteúdo conferido, com a data provisória
+/// (nome do arquivo ou data de modificação; nunca lê o arquivo).
+class _Provisional {
+  const _Provisional(this.instanceId, this.utc, this.day, this.wall, this.confidence, this.source);
+
+  final int instanceId;
+  final int utc;
+  final int day;
+  final WallTime? wall;
+  final DateConfidence confidence;
+  final DateSource source;
+
+  factory _Provisional.of(QueryRow r, DateStrategy strategy) {
+    final id = r.read<int>('id');
+    final ft = r.readNullable<int>('mtime');
+    final ms = ft == null || ft <= 0 ? 0 : (ft - 116444736000000000) ~/ 10000;
+    final resolved = strategy.resolve([
+      ?filenameDate(r.read<String>('name')),
+      if (ms > 0) DateCandidate(source: DateSource.filesystem, utcMs: ms),
+    ]);
+    if (resolved == null) return _Provisional(id, LibraryIndex.noDate, 0, null, DateConfidence.none, DateSource.none);
+    final w = resolved.wall;
+    return _Provisional(
+      id,
+      resolved.utcMs,
+      w.year * 10000 + w.month * 100 + w.day,
+      w,
+      resolved.confidence,
+      resolved.source,
+    );
+  }
 }
