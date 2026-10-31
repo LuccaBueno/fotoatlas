@@ -36,7 +36,8 @@ class ReorgPlanner {
     }
     final root = sources.accessRoot(source);
     if (root == null) return _blocked(request, name, '"$name" está desconectado. Conecte o disco para reorganizar.');
-    final display = joinNative(root, folder);
+    final displayRoot = sources.displayRoot(source);
+    final display = displayRoot == null ? null : joinNative(displayRoot, folder);
     if (await _scanning(source.id)) {
       return _blocked(request, name, 'Um escaneamento de "$name" está em andamento. Espere terminar.', display);
     }

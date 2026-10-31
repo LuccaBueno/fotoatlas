@@ -124,6 +124,8 @@ void main() {
     final s = await ReorgScenario.create();
     final preview = await s.preview();
     expect(preview.blocker, isNull);
+    // Na tela, a letra da unidade — nunca a raiz técnica de acesso (\\?\Volume{…}).
+    expect(preview.sourceDisplay, r'E:\Fotos');
     expect(
       {for (final m in preview.moves) m.srcRelPath: m.dstRelPath},
       {

@@ -73,4 +73,14 @@ void main() {
     expect(p.isWithin(root, temp.path), isTrue);
     expect(volumeGuidForRoot(root), startsWith(r'\\?\Volume{'));
   });
+
+  test('caminho técnico nunca vai para a tela: sem a raiz do volume e sem o prefixo estendido', () {
+    const guid = r'\\?\Volume{0b3c8f1e-1111-2222-3333-444455556666}';
+    expect(isTechnicalPath('$guid\\Users\\Fotos'), isTrue);
+    expect(isTechnicalPath(r'C:\Users\Fotos'), isFalse);
+    expect(withoutTechnicalRoot('$guid\\Users\\Fotos\\a.jpg'), r'…\Users\Fotos\a.jpg');
+    expect(withoutTechnicalRoot(r'\\?\C:\Users\a.jpg'), r'C:\Users\a.jpg');
+    expect(withoutTechnicalRoot(r'D:\Fotos'), r'D:\Fotos');
+    expect(Win32Exception('Abrir', 5, '$guid\\Fotos\\a.jpg').toString(), r'Abrir falhou (Win32 5): …\Fotos\a.jpg');
+  });
 }

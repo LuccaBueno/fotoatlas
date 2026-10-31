@@ -13,7 +13,19 @@ class Win32Exception implements Exception {
   final String? path;
 
   @override
-  String toString() => '$operation falhou (Win32 $code)${path == null ? '' : ': $path'}';
+  String toString() => '$operation falhou (Win32 $code)${path == null ? '' : ': ${withoutTechnicalRoot(path!)}'}';
+}
+
+/// Tira a raiz técnica (`\\?\Volume{…}\`) de um caminho para mensagens que
+/// podem chegar à tela; caminhos com letra ficam como estão (sem o `\\?\`).
+String withoutTechnicalRoot(String path) {
+  final lower = path.toLowerCase();
+  if (lower.startsWith(r'\\?\volume{')) {
+    final end = path.indexOf('}', 11);
+    if (end > 0) return '…${path.substring(end + 1)}';
+  }
+  if (path.startsWith(r'\\?\') && path.length > 6 && path[5] == ':') return path.substring(4);
+  return path;
 }
 
 /// Refaz [op] quando ela falha com código 0.
@@ -68,6 +80,12 @@ String toExtendedPath(String path) {
   if (p.startsWith(r'\\.\')) return r'\\?\' + p.substring(4);
   if (p.startsWith(r'\\')) return r'\\?\UNC\' + p.substring(2);
   return r'\\?\' + p;
+}
+
+/// Caminho que não serve para mostrar ao usuário (`\\?\Volume{…}`, `\\.\…`).
+bool isTechnicalPath(String path) {
+  final p = path.toLowerCase();
+  return p.startsWith(r'\\?\volume{') || p.startsWith(r'\\.\') || p.startsWith(r'\\?\globalroot');
 }
 
 /// Junta uma raiz Win32 e um caminho relativo com `/`.

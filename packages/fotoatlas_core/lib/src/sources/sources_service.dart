@@ -517,6 +517,16 @@ class SourcesService {
     return joinNative(m.volume.guidPath, row.rootRelPath);
   }
 
+  /// Raiz para exibição com a letra da unidade (`E:\Fotos`) — a atual ou a
+  /// última conhecida; `null` se nenhuma letra é conhecida. Nunca devolve o
+  /// caminho técnico `\\?\Volume{…}` (spec §3: nada técnico na tela).
+  String? displayRoot(SourceRow row) {
+    final m = _matches[row.id];
+    final mount = (m is Matched ? m.volume.displayMount : null) ?? row.lastMountPath;
+    if (mount == null || isTechnicalPath(mount)) return null;
+    return row.rootRelPath.isEmpty ? mount : joinNative(mount, row.rootRelPath);
+  }
+
   /// Estado atual de uma fonte.
   SourceState stateOf(String sourceId) => _phones.containsKey(sourceId)
       ? SourceState.connected
