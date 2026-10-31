@@ -299,6 +299,8 @@ class IntegrityEngine {
           // como "conferido" esconderia o problema.
           changed = await db.customUpdate(
             "UPDATE file_instances SET content_id = NULL, hash_status = 'error', hash_error = ?, "
+            // Dano novo (não era corrompido antes) desfaz um "resolvido" antigo.
+            "integrity_resolved_at = CASE WHEN integrity = 'possibly_corrupt' THEN integrity_resolved_at END, "
             "integrity = 'possibly_corrupt' $guard",
             variables: _vars([
               'Possivelmente corrompido: o conteúdo mudou, mas a data de modificação não. '

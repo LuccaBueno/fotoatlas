@@ -128,6 +128,7 @@ CREATE TABLE file_instances (
   missing_confirmed_at INTEGER,
   hash_error           TEXT,                   -- v2: motivo legível de hash_status error/changed_during_read
   device_object_id     TEXT,                   -- v3: ID do objeto WPD no celular (pode mudar entre sessões)
+  integrity_resolved_at INTEGER,               -- v7: "Marcar como resolvido" de um possivelmente corrompido (só catálogo)
   UNIQUE (source_id, rel_path)
 ) AS FileInstanceRow;
 CREATE INDEX ix_fi_content      ON file_instances(content_id);

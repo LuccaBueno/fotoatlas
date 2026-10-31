@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 
 import '../catalog/catalog_database.dart';
+import '../integrity/integrity_models.dart' show settledCorruptSql;
 import '../sources/media_types.dart';
 
 /// Situação de backup de um arquivo (`docs/arquitetura.md` §4.6).
@@ -21,6 +22,10 @@ enum BackupState {
 
   /// ⚪ Ainda não dá para saber.
   unknown,
+
+  /// ❗ Possivelmente corrompido (a verificação de integridade achou o
+  /// conteúdo mudado com a data igual): não conta como cópia de nada.
+  corrupt,
 }
 
 /// Contagem por situação.
@@ -103,6 +108,7 @@ class CoverageService {
       '''
       inst AS MATERIALIZED (
         SELECT fi.id, fi.source_id, fi.content_id, fi.size_bytes, lower(fi.name) AS lname, fi.hash_status,
+          fi.integrity = 'possibly_corrupt' AS corrupt,
           COALESCE(lower(s.volume_guid), s.id) || '|' ||
             lower(CASE WHEN s.root_rel_path = '' THEN fi.rel_path ELSE s.root_rel_path || '/' || fi.rel_path END) AS phys,
           CASE WHEN d.identity_confidence = 'reliable' OR d.user_confirmed THEN d.id END AS rdisk,
@@ -111,7 +117,8 @@ class CoverageService {
         FROM file_instances fi
         JOIN sources s ON s.id = fi.source_id AND s.forgotten_at IS NULL
         LEFT JOIN physical_disks d ON d.id = s.physical_disk_id
-        WHERE fi.availability = 'present' ${mediaOnly ? 'AND fi.ext IN ${MediaTypes.sqlList(MediaTypes.media)}' : ''}
+        WHERE fi.availability = 'present' AND NOT ${settledCorruptSql('fi')}
+          ${mediaOnly ? 'AND fi.ext IN ${MediaTypes.sqlList(MediaTypes.media)}' : ''}
       ),
       per_content AS MATERIALIZED (
         SELECT content_id, COUNT(DISTINCT phys) AS copies, COUNT(DISTINCT rdisk) AS disks, COUNT(DISTINCT adisk) AS all_disks
@@ -120,15 +127,18 @@ class CoverageService {
       by_size AS MATERIALIZED (
         SELECT size_bytes, COUNT(DISTINCT phys) AS phys_n,
           SUM(CASE WHEN content_id IS NULL OR hash_status != 'done' THEN 1 ELSE 0 END) AS unhashed
-        FROM inst GROUP BY size_bytes
+        FROM inst WHERE NOT corrupt GROUP BY size_bytes
       ),
       by_name AS MATERIALIZED (
         SELECT size_bytes, lname, COUNT(DISTINCT phys) AS phys_n, COUNT(DISTINCT source_id) AS src_n
-        FROM inst GROUP BY size_bytes, lname
+        FROM inst WHERE NOT corrupt GROUP BY size_bytes, lname
       ),
       classified AS (
         SELECT i.*,
           CASE
+            -- Possivelmente corrompido (Fase 7): não é cópia de nada e não deixa a
+            -- cópia boa em "ainda não dá para saber" (fica fora de by_size/by_name).
+            WHEN i.corrupt THEN 'corrupt'
             WHEN i.content_id IS NOT NULL AND i.hash_status = 'done' THEN
               CASE
                 WHEN pc.disks >= 2 THEN 'independent'
@@ -148,8 +158,8 @@ class CoverageService {
             AND pc.all_disks >= 2 THEN 1 ELSE 0 END AS uncertain
         FROM inst i
         LEFT JOIN per_content pc ON pc.content_id = i.content_id
-        JOIN by_size bs ON bs.size_bytes = i.size_bytes
-        JOIN by_name bn ON bn.size_bytes = i.size_bytes AND bn.lname = i.lname
+        LEFT JOIN by_size bs ON bs.size_bytes = i.size_bytes
+        LEFT JOIN by_name bn ON bn.size_bytes = i.size_bytes AND bn.lname = i.lname
       )
       ''';
 

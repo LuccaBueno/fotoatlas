@@ -3581,6 +3581,15 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _integrityResolvedAtMeta = const VerificationMeta('integrityResolvedAt');
+  late final GeneratedColumn<int> integrityResolvedAt = GeneratedColumn<int>(
+    'integrity_resolved_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3606,6 +3615,7 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
     missingConfirmedAt,
     hashError,
     deviceObjectId,
+    integrityResolvedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3712,6 +3722,12 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
         deviceObjectId.isAcceptableOrUnknown(data['device_object_id']!, _deviceObjectIdMeta),
       );
     }
+    if (data.containsKey('integrity_resolved_at')) {
+      context.handle(
+        _integrityResolvedAtMeta,
+        integrityResolvedAt.isAcceptableOrUnknown(data['integrity_resolved_at']!, _integrityResolvedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -3757,6 +3773,10 @@ class FileInstances extends Table with TableInfo<FileInstances, FileInstanceRow>
         DriftSqlType.string,
         data['${effectivePrefix}device_object_id'],
       ),
+      integrityResolvedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}integrity_resolved_at'],
+      ),
     );
   }
 
@@ -3797,6 +3817,9 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
 
   /// v2: motivo legível de hash_status error/changed_during_read
   final String? deviceObjectId;
+
+  /// v3: ID do objeto WPD no celular (pode mudar entre sessões)
+  final int? integrityResolvedAt;
   const FileInstanceRow({
     required this.id,
     required this.sourceId,
@@ -3821,6 +3844,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     this.missingConfirmedAt,
     this.hashError,
     this.deviceObjectId,
+    this.integrityResolvedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3874,6 +3898,9 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     if (!nullToAbsent || deviceObjectId != null) {
       map['device_object_id'] = Variable<String>(deviceObjectId);
     }
+    if (!nullToAbsent || integrityResolvedAt != null) {
+      map['integrity_resolved_at'] = Variable<int>(integrityResolvedAt);
+    }
     return map;
   }
 
@@ -3902,6 +3929,9 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       missingConfirmedAt: missingConfirmedAt == null && nullToAbsent ? const Value.absent() : Value(missingConfirmedAt),
       hashError: hashError == null && nullToAbsent ? const Value.absent() : Value(hashError),
       deviceObjectId: deviceObjectId == null && nullToAbsent ? const Value.absent() : Value(deviceObjectId),
+      integrityResolvedAt: integrityResolvedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(integrityResolvedAt),
     );
   }
 
@@ -3931,6 +3961,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       missingConfirmedAt: serializer.fromJson<int?>(json['missing_confirmed_at']),
       hashError: serializer.fromJson<String?>(json['hash_error']),
       deviceObjectId: serializer.fromJson<String?>(json['device_object_id']),
+      integrityResolvedAt: serializer.fromJson<int?>(json['integrity_resolved_at']),
     );
   }
   @override
@@ -3960,6 +3991,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       'missing_confirmed_at': serializer.toJson<int?>(missingConfirmedAt),
       'hash_error': serializer.toJson<String?>(hashError),
       'device_object_id': serializer.toJson<String?>(deviceObjectId),
+      'integrity_resolved_at': serializer.toJson<int?>(integrityResolvedAt),
     };
   }
 
@@ -3987,6 +4019,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     Value<int?> missingConfirmedAt = const Value.absent(),
     Value<String?> hashError = const Value.absent(),
     Value<String?> deviceObjectId = const Value.absent(),
+    Value<int?> integrityResolvedAt = const Value.absent(),
   }) => FileInstanceRow(
     id: id ?? this.id,
     sourceId: sourceId ?? this.sourceId,
@@ -4011,6 +4044,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     missingConfirmedAt: missingConfirmedAt.present ? missingConfirmedAt.value : this.missingConfirmedAt,
     hashError: hashError.present ? hashError.value : this.hashError,
     deviceObjectId: deviceObjectId.present ? deviceObjectId.value : this.deviceObjectId,
+    integrityResolvedAt: integrityResolvedAt.present ? integrityResolvedAt.value : this.integrityResolvedAt,
   );
   FileInstanceRow copyWithCompanion(FileInstancesCompanion data) {
     return FileInstanceRow(
@@ -4037,6 +4071,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
       missingConfirmedAt: data.missingConfirmedAt.present ? data.missingConfirmedAt.value : this.missingConfirmedAt,
       hashError: data.hashError.present ? data.hashError.value : this.hashError,
       deviceObjectId: data.deviceObjectId.present ? data.deviceObjectId.value : this.deviceObjectId,
+      integrityResolvedAt: data.integrityResolvedAt.present ? data.integrityResolvedAt.value : this.integrityResolvedAt,
     );
   }
 
@@ -4065,7 +4100,8 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
           ..write('lastSeenScanId: $lastSeenScanId, ')
           ..write('missingConfirmedAt: $missingConfirmedAt, ')
           ..write('hashError: $hashError, ')
-          ..write('deviceObjectId: $deviceObjectId')
+          ..write('deviceObjectId: $deviceObjectId, ')
+          ..write('integrityResolvedAt: $integrityResolvedAt')
           ..write(')'))
         .toString();
   }
@@ -4095,6 +4131,7 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
     missingConfirmedAt,
     hashError,
     deviceObjectId,
+    integrityResolvedAt,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -4122,7 +4159,8 @@ class FileInstanceRow extends DataClass implements Insertable<FileInstanceRow> {
           other.lastSeenScanId == this.lastSeenScanId &&
           other.missingConfirmedAt == this.missingConfirmedAt &&
           other.hashError == this.hashError &&
-          other.deviceObjectId == this.deviceObjectId);
+          other.deviceObjectId == this.deviceObjectId &&
+          other.integrityResolvedAt == this.integrityResolvedAt);
 }
 
 class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
@@ -4149,6 +4187,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
   final Value<int?> missingConfirmedAt;
   final Value<String?> hashError;
   final Value<String?> deviceObjectId;
+  final Value<int?> integrityResolvedAt;
   const FileInstancesCompanion({
     this.id = const Value.absent(),
     this.sourceId = const Value.absent(),
@@ -4173,6 +4212,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     this.missingConfirmedAt = const Value.absent(),
     this.hashError = const Value.absent(),
     this.deviceObjectId = const Value.absent(),
+    this.integrityResolvedAt = const Value.absent(),
   });
   FileInstancesCompanion.insert({
     this.id = const Value.absent(),
@@ -4198,6 +4238,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     this.missingConfirmedAt = const Value.absent(),
     this.hashError = const Value.absent(),
     this.deviceObjectId = const Value.absent(),
+    this.integrityResolvedAt = const Value.absent(),
   }) : sourceId = Value(sourceId),
        relPath = Value(relPath),
        dirRelPath = Value(dirRelPath),
@@ -4228,6 +4269,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     Expression<int>? missingConfirmedAt,
     Expression<String>? hashError,
     Expression<String>? deviceObjectId,
+    Expression<int>? integrityResolvedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4253,6 +4295,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
       if (missingConfirmedAt != null) 'missing_confirmed_at': missingConfirmedAt,
       if (hashError != null) 'hash_error': hashError,
       if (deviceObjectId != null) 'device_object_id': deviceObjectId,
+      if (integrityResolvedAt != null) 'integrity_resolved_at': integrityResolvedAt,
     });
   }
 
@@ -4280,6 +4323,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     Value<int?>? missingConfirmedAt,
     Value<String?>? hashError,
     Value<String?>? deviceObjectId,
+    Value<int?>? integrityResolvedAt,
   }) {
     return FileInstancesCompanion(
       id: id ?? this.id,
@@ -4305,6 +4349,7 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
       missingConfirmedAt: missingConfirmedAt ?? this.missingConfirmedAt,
       hashError: hashError ?? this.hashError,
       deviceObjectId: deviceObjectId ?? this.deviceObjectId,
+      integrityResolvedAt: integrityResolvedAt ?? this.integrityResolvedAt,
     );
   }
 
@@ -4380,6 +4425,9 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
     if (deviceObjectId.present) {
       map['device_object_id'] = Variable<String>(deviceObjectId.value);
     }
+    if (integrityResolvedAt.present) {
+      map['integrity_resolved_at'] = Variable<int>(integrityResolvedAt.value);
+    }
     return map;
   }
 
@@ -4408,7 +4456,8 @@ class FileInstancesCompanion extends UpdateCompanion<FileInstanceRow> {
           ..write('lastSeenScanId: $lastSeenScanId, ')
           ..write('missingConfirmedAt: $missingConfirmedAt, ')
           ..write('hashError: $hashError, ')
-          ..write('deviceObjectId: $deviceObjectId')
+          ..write('deviceObjectId: $deviceObjectId, ')
+          ..write('integrityResolvedAt: $integrityResolvedAt')
           ..write(')'))
         .toString();
   }
@@ -15424,6 +15473,7 @@ typedef $FileInstancesCreateCompanionBuilder = FileInstancesCompanion Function({
   Value<int?> missingConfirmedAt,
   Value<String?> hashError,
   Value<String?> deviceObjectId,
+  Value<int?> integrityResolvedAt,
 });
 typedef $FileInstancesUpdateCompanionBuilder = FileInstancesCompanion Function({
   Value<int> id,
@@ -15449,6 +15499,7 @@ typedef $FileInstancesUpdateCompanionBuilder = FileInstancesCompanion Function({
   Value<int?> missingConfirmedAt,
   Value<String?> hashError,
   Value<String?> deviceObjectId,
+  Value<int?> integrityResolvedAt,
 });
 
 final class $FileInstancesReferences extends BaseReferences<_$CatalogDatabase, FileInstances, FileInstanceRow> {
@@ -15627,6 +15678,9 @@ class $FileInstancesFilterComposer extends Composer<_$CatalogDatabase, FileInsta
 
   ColumnFilters<String> get deviceObjectId =>
       $composableBuilder(column: $table.deviceObjectId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get integrityResolvedAt =>
+      $composableBuilder(column: $table.integrityResolvedAt, builder: (column) => ColumnFilters(column));
 
   $SourcesFilterComposer get sourceId {
     final $SourcesFilterComposer composer = $composerBuilder(
@@ -15837,6 +15891,9 @@ class $FileInstancesOrderingComposer extends Composer<_$CatalogDatabase, FileIns
   ColumnOrderings<String> get deviceObjectId =>
       $composableBuilder(column: $table.deviceObjectId, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get integrityResolvedAt =>
+      $composableBuilder(column: $table.integrityResolvedAt, builder: (column) => ColumnOrderings(column));
+
   $SourcesOrderingComposer get sourceId {
     final $SourcesOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -15959,6 +16016,9 @@ class $FileInstancesAnnotationComposer extends Composer<_$CatalogDatabase, FileI
 
   GeneratedColumn<String> get deviceObjectId =>
       $composableBuilder(column: $table.deviceObjectId, builder: (column) => column);
+
+  GeneratedColumn<int> get integrityResolvedAt =>
+      $composableBuilder(column: $table.integrityResolvedAt, builder: (column) => column);
 
   $SourcesAnnotationComposer get sourceId {
     final $SourcesAnnotationComposer composer = $composerBuilder(
@@ -16166,6 +16226,7 @@ class $FileInstancesTableManager
                 Value<int?> missingConfirmedAt = const Value.absent(),
                 Value<String?> hashError = const Value.absent(),
                 Value<String?> deviceObjectId = const Value.absent(),
+                Value<int?> integrityResolvedAt = const Value.absent(),
               }) => FileInstancesCompanion(
                 id: id,
                 sourceId: sourceId,
@@ -16190,6 +16251,7 @@ class $FileInstancesTableManager
                 missingConfirmedAt: missingConfirmedAt,
                 hashError: hashError,
                 deviceObjectId: deviceObjectId,
+                integrityResolvedAt: integrityResolvedAt,
               ),
           createCompanionCallback:
               ({
@@ -16216,6 +16278,7 @@ class $FileInstancesTableManager
                 Value<int?> missingConfirmedAt = const Value.absent(),
                 Value<String?> hashError = const Value.absent(),
                 Value<String?> deviceObjectId = const Value.absent(),
+                Value<int?> integrityResolvedAt = const Value.absent(),
               }) => FileInstancesCompanion.insert(
                 id: id,
                 sourceId: sourceId,
@@ -16240,6 +16303,7 @@ class $FileInstancesTableManager
                 missingConfirmedAt: missingConfirmedAt,
                 hashError: hashError,
                 deviceObjectId: deviceObjectId,
+                integrityResolvedAt: integrityResolvedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable<FileInstances, FileInstanceRow>(table), $FileInstancesReferences(db, table, e)))

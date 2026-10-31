@@ -59,6 +59,7 @@ Comandos:
   verify restore ITEM --from ITEM2 [--yes]
                                  Restaura pela cópia segura (prévia; nada é substituído)
   verify accept ITEM --yes       Aceita o conteúdo atual (só catálogo)
+  verify resolve ITEM            Marca como resolvido (só catálogo; o arquivo fica)
   verify schedule [on|off] [--every DIAS]
                                  Verificação periódica (leve; nunca celulares)
   verify tick                    Um passo da verificação periódica
@@ -571,7 +572,15 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
       final problems = await core.integrity.problems();
       if (problems.isEmpty) stdout.writeln('Nenhum arquivo possivelmente corrompido.');
       for (final p in problems) {
-        stdout.writeln('PROBLEM ${p.instanceId} ${p.sourceName}:${p.relPath} copias=${p.otherCopies.length}');
+        stdout.writeln(
+          'PROBLEM ${p.instanceId} ${p.sourceName}:${p.relPath} copias=${p.otherCopies.length} '
+          'situacao=${p.resolvedAt != null
+              ? 'resolvido'
+              : p.restored
+              ? 'restaurado'
+              : 'pendente'}'
+          '${p.restoredRelPath == null ? '' : ' restaurado_em=${p.restoredRelPath}'}',
+        );
         for (final c in p.otherCopies) {
           stdout.writeln(
             '  COPY ${c.instanceId} ${c.sourceName}:${c.relPath} conectada=${c.connected} '
@@ -607,6 +616,11 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
         return 2;
       }
       stdout.writeln('ACCEPTED ${await core.integrity.acceptAsIs(int.parse(item))}');
+      return 0;
+
+    case ['verify', 'resolve', final item]:
+      // Só catálogo: o arquivo danificado fica onde está.
+      stdout.writeln('RESOLVED ${await core.integrity.markResolved(int.parse(item))}');
       return 0;
 
     case ['backup'] || ['backup', 'now']:
@@ -655,6 +669,7 @@ String _stateLabel(BackupState s) => switch (s) {
   BackupState.verified => 'Cópia conferida',
   BackupState.independent => 'Backup em disco independente',
   BackupState.unknown => 'Situação desconhecida',
+  BackupState.corrupt => 'Possivelmente corrompido',
 };
 
 /// Confere o conteúdo até acabar; Ctrl+C pausa (os pendentes ficam para depois).

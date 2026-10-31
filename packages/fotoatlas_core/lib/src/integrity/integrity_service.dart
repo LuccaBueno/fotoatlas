@@ -779,12 +779,13 @@ class IntegrityService {
     ];
   }
 
-  static const _problemsSql = '''
-    SELECT fi.id, fi.source_id, fi.rel_path, fi.size_bytes, s.name, s.physical_disk_id,
-      (SELECT ic.expected_content_id FROM integrity_checks ic WHERE ic.instance_id = fi.id
-         AND ic.result = 'possibly_corrupt' ORDER BY ic.checked_at DESC, ic.id DESC LIMIT 1) AS expected,
+  static final _problemsSql =
+      '''
+    SELECT fi.id, fi.source_id, fi.rel_path, fi.size_bytes, fi.integrity_resolved_at, s.name, s.physical_disk_id,
+      ${expectedContentSql('fi')} AS expected,
       (SELECT MAX(ic.checked_at) FROM integrity_checks ic WHERE ic.instance_id = fi.id
-         AND ic.result = 'possibly_corrupt') AS detected
+         AND ic.result = 'possibly_corrupt') AS detected,
+      (SELECT r.rel_path FROM file_instances r WHERE ${restoredCopyWhere('fi')} ORDER BY r.id DESC LIMIT 1) AS restored
     FROM file_instances fi JOIN sources s ON s.id = fi.source_id
     WHERE fi.integrity = 'possibly_corrupt' AND s.forgotten_at IS NULL
     ORDER BY detected DESC, s.name, fi.rel_path
@@ -815,6 +816,11 @@ class IntegrityService {
           detectedAt: DateTime.fromMillisecondsSinceEpoch(r.readNullable<int>('detected') ?? 0),
           connected: sources.stateOf(sourceId) == SourceState.connected,
           expectedContentId: expected,
+          restoredRelPath: r.readNullable<String>('restored'),
+          resolvedAt: switch (r.readNullable<int>('integrity_resolved_at')) {
+            final ms? => DateTime.fromMillisecondsSinceEpoch(ms),
+            null => null,
+          },
           otherCopies: expected == null
               ? const []
               : await otherCopies(
@@ -953,6 +959,18 @@ class IntegrityService {
       origin: 'restore',
     );
   }
+
+  /// "Marcar como resolvido": sai da lista de pendentes e da cobertura. Só
+  /// catálogo — o arquivo danificado fica onde está, sem mudança (nada é
+  /// apagado; spec §2 regra 4). `false` se não estava marcado como corrompido.
+  Future<bool> markResolved(int instanceId) async =>
+      await db.customUpdate(
+        'UPDATE file_instances SET integrity_resolved_at = ? '
+        "WHERE id = ? AND integrity = 'possibly_corrupt' AND integrity_resolved_at IS NULL",
+        variables: [Variable.withInt(nowMs()), Variable.withInt(instanceId)],
+        updates: {db.fileInstances},
+      ) ==
+      1;
 
   /// O usuário diz que a mudança é esperada ("aceitar como está"): o arquivo
   /// volta para a fila de conferência e passa a valer o conteúdo atual. Só

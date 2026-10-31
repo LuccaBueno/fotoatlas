@@ -13,16 +13,16 @@ import '../support/temp.dart';
 void main() {
   final verifier = SchemaVerifier(GeneratedHelper());
 
-  test('v1 a v5 → v6: schema final igual ao de um catálogo novo', () async {
-    for (final from in [1, 2, 3, 4, 5]) {
+  test('v1 a v6 → v7: schema final igual ao de um catálogo novo', () async {
+    for (final from in [1, 2, 3, 4, 5, 6]) {
       final schema = await verifier.schemaAt(from);
       final db = CatalogDatabase(schema.newConnection());
-      await verifier.migrateAndValidate(db, 6);
+      await verifier.migrateAndValidate(db, 7);
       await db.close();
     }
   });
 
-  test('v1 → v6 pelo Catalog.open: backup antes, dados preservados, colunas novas', () async {
+  test('v1 → v7 pelo Catalog.open: backup antes, dados preservados, colunas novas', () async {
     final home = await createTestTemp();
     final path = p.join(home.path, 'catalog.db');
     final schema = await verifier.schemaAt(1);
@@ -42,7 +42,7 @@ void main() {
     final catalog = await Catalog.open(path);
     addTearDown(catalog.close);
     final db = catalog.db;
-    expect((await db.customSelect('PRAGMA user_version').getSingle()).data.values.single, 6);
+    expect((await db.customSelect('PRAGMA user_version').getSingle()).data.values.single, 7);
     final row = await db.customSelect('SELECT name, hash_error, device_object_id FROM file_instances').getSingle();
     expect(row.read<String>('name'), 'a.jpg');
     expect(row.readNullable<String>('hash_error'), isNull);
@@ -150,5 +150,33 @@ void main() {
     expect(await catalog.db.select(catalog.db.integrityRunItems).get(), isEmpty);
     final backups = Directory(p.join(home.path, 'backups')).listSync().map((f) => p.basename(f.path));
     expect(backups.where((n) => n.startsWith('pre-migracao-v5-')), hasLength(1));
+  });
+
+  test('v6 → v7: corrompidos antigos continuam pendentes (resolvido vazio)', () async {
+    final home = await createTestTemp();
+    final path = p.join(home.path, 'catalog.db');
+    final schema = await verifier.schemaAt(6);
+    schema.rawDatabase
+      ..execute(
+        "INSERT INTO sources (id, name, kind, root_rel_path, connected, created_at, updated_at) "
+        "VALUES ('s1', 'HD', 'external_hd', '', 0, 1, 1)",
+      )
+      ..execute(
+        "INSERT INTO file_instances (source_id, rel_path, dir_rel_path, name, ext, size_bytes, hash_status, integrity) "
+        "VALUES ('s1', 'a.jpg', '', 'a.jpg', 'jpg', 10, 'error', 'possibly_corrupt')",
+      )
+      ..execute('PRAGMA user_version = 6')
+      ..execute('VACUUM INTO ?', [path]);
+    schema.rawDatabase.close();
+
+    final catalog = await Catalog.open(path);
+    addTearDown(catalog.close);
+    final row = await catalog.db
+        .customSelect('SELECT integrity, integrity_resolved_at FROM file_instances')
+        .getSingle();
+    expect(row.read<String>('integrity'), 'possibly_corrupt');
+    expect(row.readNullable<int>('integrity_resolved_at'), isNull);
+    final backups = Directory(p.join(home.path, 'backups')).listSync().map((f) => p.basename(f.path));
+    expect(backups.where((n) => n.startsWith('pre-migracao-v6-')), hasLength(1));
   });
 }

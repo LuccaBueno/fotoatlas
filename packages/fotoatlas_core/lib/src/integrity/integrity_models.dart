@@ -223,6 +223,8 @@ class IntegrityProblem {
     required this.connected,
     required this.otherCopies,
     this.expectedContentId,
+    this.restoredRelPath,
+    this.resolvedAt,
   });
 
   final int instanceId;
@@ -238,7 +240,19 @@ class IntegrityProblem {
   final int? expectedContentId;
   final List<OtherCopy> otherCopies;
 
+  /// Cópia boa conferida na mesma pasta do arquivo danificado (restauração
+  /// feita), ex.: `Fotos/IMG_0003_1.jpg`; `null` = ainda não restaurado.
+  final String? restoredRelPath;
+
+  /// Quando a pessoa marcou como resolvido (só catálogo); `null` = não marcou.
+  final DateTime? resolvedAt;
+
   String get name => relPath.split('/').last;
+
+  bool get restored => restoredRelPath != null;
+
+  /// Ainda precisa de atenção: nem restaurado nem marcado como resolvido.
+  bool get pending => !restored && resolvedAt == null;
 
   /// Cópias de onde dá para restaurar agora.
   List<OtherCopy> get restorable => [
@@ -327,3 +341,22 @@ class IntegrityProgress {
   final bool light;
   final Map<String, int> counts;
 }
+
+/// Conteúdo que o arquivo [fi] tinha antes do dano (última detecção). SQL.
+String expectedContentSql(String fi) =>
+    '(SELECT ic.expected_content_id FROM integrity_checks ic WHERE ic.instance_id = $fi.id '
+    "AND ic.result = 'possibly_corrupt' ORDER BY ic.checked_at DESC, ic.id DESC LIMIT 1)";
+
+/// Condição sobre `r` (outra instância): cópia boa (o conteúdo de antes,
+/// conferida) na mesma pasta do danificado [fi] — a restauração já foi feita
+/// (spec §14; o danificado continua lá). SQL.
+String restoredCopyWhere(String fi) =>
+    "r.source_id = $fi.source_id AND r.dir_rel_path = $fi.dir_rel_path AND r.id != $fi.id "
+    "AND r.availability = 'present' AND r.hash_status = 'done' AND r.content_id = ${expectedContentSql(fi)}";
+
+/// Possivelmente corrompido que já não pede atenção: restaurado ou marcado
+/// como resolvido. Fica fora da cobertura (não é cópia de nada, e a cópia boa
+/// já conta). Expressão SQL sobre a instância [fi].
+String settledCorruptSql(String fi) =>
+    "($fi.integrity = 'possibly_corrupt' AND ($fi.integrity_resolved_at IS NOT NULL OR "
+    'EXISTS (SELECT 1 FROM file_instances r WHERE ${restoredCopyWhere(fi)})))';

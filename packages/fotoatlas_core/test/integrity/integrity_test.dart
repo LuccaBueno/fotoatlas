@@ -210,6 +210,18 @@ void main() {
     await s.verifyAll();
     final damaged = s.file('2024/a.jpg').readAsBytesSync();
     final problem = (await s.integrity.problems()).single;
+    expect(problem.pending, isTrue);
+    expect(problem.restored, isFalse);
+    // Cobertura: o danificado é "possivelmente corrompido" (não "ainda não dá
+    // para saber"), e a cópia boa, cuja única outra cópia se estragou, fica
+    // "sem backup".
+    var coverage = await s.env.core.coverage.report();
+    expect(coverage.perSource[s.fotos]!.counts.filesIn(BackupState.corrupt), 1);
+    expect(coverage.perSource[s.fotos]!.counts.filesIn(BackupState.unknown), 0);
+    expect(await s.env.core.coverage.statesForSource(s.backup), {
+      'copia_a.jpg': BackupState.single,
+      'copia_b.jpg': isNot(BackupState.single),
+    });
 
     final request = await s.integrity.restoreRequest(
       problem.instanceId,
@@ -237,6 +249,44 @@ void main() {
     // com a cópia restaurada no mesmo disco.
     final again = (await s.integrity.problems()).single;
     expect(again.otherCopies.where((c) => c.sameSource).single.relPath, '2024/a_1.jpg');
+    // …mas como "restaurado", fora dos pendentes, dizendo onde está a cópia boa.
+    expect(again.restoredRelPath, '2024/a_1.jpg');
+    expect(again.pending, isFalse);
+    expect(again.resolvedAt, isNull);
+    coverage = await s.env.core.coverage.report();
+    expect(coverage.perSource[s.fotos]!.counts.filesIn(BackupState.corrupt), 0, reason: 'restaurado não pede ação');
+    expect((await s.env.core.coverage.statesForSource(s.backup))['copia_a.jpg'], BackupState.independent);
+
+    // "Marcar como resolvido": só o catálogo; o danificado continua no disco.
+    expect(await s.integrity.markResolved(problem.instanceId), isTrue);
+    expect(await s.integrity.markResolved(problem.instanceId), isFalse, reason: 'já resolvido');
+    final resolved = (await s.integrity.problems()).single;
+    expect(resolved.resolvedAt, isNotNull);
+    expect(resolved.pending, isFalse);
+    expect(s.file('2024/a.jpg').readAsBytesSync(), damaged);
+  });
+
+  test('marcar como resolvido sem restaurar: sai da cobertura; um dano novo depois volta a pedir atenção', () async {
+    final s = await Scenario.create();
+    s.corrupt('2024/c.jpg');
+    await s.verifyAll();
+    final id = (await s.integrity.problems()).single.instanceId;
+    expect(await s.integrity.markResolved(id), isTrue);
+    var coverage = await s.env.core.coverage.report();
+    expect(coverage.perSource[s.fotos]!.counts.filesIn(BackupState.corrupt), 0);
+    expect((await s.integrity.problems()).single.pending, isFalse);
+
+    // Gravado de novo (data nova) e estragado outra vez: é um dano novo.
+    s.file('2024/c.jpg').setLastModifiedSync(DateTime.utc(2025, 6, 1));
+    await s.env.scan(s.fotos);
+    await s.env.hashAll();
+    s.corrupt('2024/c.jpg');
+    await s.verifyAll();
+    final problem = (await s.integrity.problems()).single;
+    expect(problem.resolvedAt, isNull);
+    expect(problem.pending, isTrue);
+    coverage = await s.env.core.coverage.report();
+    expect(coverage.perSource[s.fotos]!.counts.filesIn(BackupState.corrupt), 1);
   });
 
   test('restaurar de uma cópia que também se estragou: a cópia segura recusa', () async {
