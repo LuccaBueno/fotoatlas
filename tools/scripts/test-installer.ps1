@@ -168,3 +168,6 @@ Check (Test-Path -LiteralPath (Join-Path $catalogDir 'sentinela-do-teste.txt')) 
 
 if ($falhas -gt 0) { throw "$falhas verificação(ões) falharam. Logs do instalador em $logs" }
 Write-Host 'Instalação, atualização e desinstalação: tudo certo.' -ForegroundColor Green
+# O Actions usa o $LASTEXITCODE do último programa chamado (ex.: o helper sai
+# com código próprio quando a entrada acaba); o resultado do teste é este.
+exit 0
