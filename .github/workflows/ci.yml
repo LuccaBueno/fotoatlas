@@ -124,3 +124,45 @@ jobs:
       - name: Build Windows
         working-directory: app
         run: flutter build windows --debug
+
+  installer:
+    name: Instalador (instalar, atualizar, desinstalar)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Ferramentas de metadados — cache
+        uses: actions/cache@v6
+        with:
+          path: third_party/bin
+          key: tools-${{ hashFiles('tools/scripts/get-tools.ps1') }}
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Inno Setup 6
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+      # O runner é uma máquina limpa e descartável: instala de verdade. Duas
+      # versões com os mesmos arquivos para testar a atualização.
+      - name: Gerar instaladores
+        shell: pwsh
+        run: |
+          ./tools/scripts/build-installer.ps1 -Versao 0.8.0
+          ./tools/scripts/build-installer.ps1 -Versao 0.8.1 -SoInstalador
+      - name: Instalar, atualizar e desinstalar
+        shell: powershell
+        run: ./tools/scripts/test-installer.ps1 -InstaladorA dist/FotoAtlas-0.8.0-instalador.exe -InstaladorB dist/FotoAtlas-0.8.1-instalador.exe
+      - name: Guardar o instalador e os logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: instalador
+          path: |
+            dist/FotoAtlas-*-instalador.exe
+            dist/teste-instalador/
+          if-no-files-found: ignore

@@ -1,0 +1,57 @@
+﻿FotoAtlas — avisos de licença de terceiros
+==========================================
+
+O FotoAtlas é software livre sob a licença MIT
+(https://github.com/LuccaBueno/fotoatlas/blob/main/LICENSE).
+
+Esta instalação inclui os programas abaixo, cada um com a sua licença. Eles
+rodam como programas separados e só leem os seus arquivos (nunca gravam neles).
+
+
+ExifTool 13.60 — pasta tools\exiftool
+-------------------------------------
+Copyright (C) Phil Harvey. https://exiftool.org
+Licença: os mesmos termos do Perl (Artistic License ou GNU GPL, versão 1 ou
+posterior). Texto completo em tools\exiftool\exiftool_files\LICENSE.
+Inclui o Strawberry Perl; licenças em
+tools\exiftool\exiftool_files\Licenses_Strawberry_Perl.zip.
+Código-fonte: https://exiftool.org e
+https://sourceforge.net/projects/exiftool/files/
+
+
+FFmpeg (ffprobe e ffmpeg), build LGPL n8.1.3 — pasta tools\ffmpeg
+-----------------------------------------------------------------
+Este software usa código do FFmpeg (https://ffmpeg.org), licenciado sob a
+GNU Lesser General Public License (LGPL) versão 2.1 ou posterior. Texto e
+detalhes em tools\ffmpeg\LICENSE.txt.
+Build: BtbN FFmpeg-Builds, autobuild-2026-09-30-13-08,
+ffmpeg-n8.1.3-9-g29e619e767-win64-lgpl-8.1
+(https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2026-09-30-13-08).
+Código-fonte correspondente: https://github.com/FFmpeg/FFmpeg, commit
+29e619e767 (ramo release/8.1, 9 commits depois da tag n8.1.3), e os scripts do
+build em https://github.com/BtbN/FFmpeg-Builds.
+Os executáveis não foram modificados e podem ser trocados por outro build.
+
+
+Flutter e pacotes Dart
+----------------------
+Motor e framework Flutter (licença BSD de 3 cláusulas) e pacotes do pub.dev
+(drift, sqlite3, riverpod, path, timezone e outros). A lista completa, com o
+texto de cada licença, está em data\flutter_assets\NOTICES.Z (compactado).
+Material Icons (ícones e a logo do app): Apache License 2.0.
+
+
+SQLite — sqlite3.dll
+--------------------
+Domínio público (https://sqlite.org/copyright.html).
+
+
+.NET — fotoatlas_helper.exe
+---------------------------
+Inclui partes do runtime do .NET (licença MIT, https://github.com/dotnet/runtime).
+
+
+Inno Setup — instalador e desinstalador
+---------------------------------------
+Copyright (C) 1997-2026 Jordan Russell. Portions Copyright (C) 2000-2026
+Martijn Laan. https://www.innosetup.com

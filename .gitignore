@@ -39,6 +39,9 @@ logs/
 tools/fixtures/out/
 tools/fixtures/generated/
 
+# ===== Instalador gerado (build-installer.ps1) =====
+dist/
+
 # ===== Binários de terceiros (baixados por script) =====
 third_party/bin/
 exiftool*/
