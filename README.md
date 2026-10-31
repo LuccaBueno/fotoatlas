@@ -28,6 +28,7 @@ Flutter · Dart · SQLite · C# .NET 10 (APIs do Windows) · ExifTool · FFmpeg
 
 ## Documentação
 
+- [Instalar, atualizar e desinstalar](docs/instalacao.md)
 - [Especificação](docs/FOTOATLAS_SPEC.md)
 - [Roteiro](docs/ROADMAP.md)
 - [Desenvolvimento: build, testes e execução](docs/desenvolvimento.md)

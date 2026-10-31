@@ -38,3 +38,4 @@ Modelo:
 | [0016](0016-copia-segura.md) | Cópia segura: diário por item, recuperação pelo disco e o que pode ser apagado | aceita |
 | [0017](0017-reorganizacao-e-desfazer.md) | Reorganização no mesmo disco, Desfazer e pastas vazias | aceita |
 | [0018](0018-verificacao-de-integridade.md) | Verificação periódica de integridade: só leitura, leve, restauração pela cópia segura | aceita |
+| [0019](0019-instalador-e-atualizacao.md) | Instalador (Inno Setup, por usuário), atualização que preserva o catálogo e desinstalação que pergunta | aceita |

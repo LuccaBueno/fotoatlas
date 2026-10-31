@@ -38,6 +38,20 @@ cd C:\dev\fotoatlas\app; flutter pub get; flutter analyze; flutter test
 
 Os testes do core marcados `slow` (50 mil arquivos, CLI) podem ser pulados com `dart test -x slow`. Os de desempenho (`perf`: geram 50 mil arquivos e saturam o disco) rodam sozinhos na CI, depois dos outros: `dart test -x perf` e depois `dart test -t perf`.
 
+## Instalador (Fase 8)
+
+Precisa do Inno Setup 6 (https://jrsoftware.org/isdl.php; ou `winget install JRSoftware.InnoSetup`). O script baixa o ExifTool e o FFmpeg se faltarem, publica o helper autocontido, compila o app em release e gera o instalador (ADR 0019):
+
+```powershell
+cd C:\dev\fotoatlas
+powershell -ExecutionPolicy Bypass -File tools\scripts\build-installer.ps1               # versão do app\pubspec.yaml
+powershell -ExecutionPolicy Bypass -File tools\scripts\build-installer.ps1 -Versao 1.0.0
+```
+
+Resultado: `C:\dev\fotoatlas\dist\FotoAtlas-<versão>-instalador.exe` (`dist\` não é versionado). O teste de instalar, atualizar e desinstalar (`tools\scripts\test-installer.ps1`) instala de verdade e só roda na CI ou numa máquina de teste (`-MaquinaDeTeste`). Roteiro manual: `docs\roteiro-teste-fase-8.md`.
+
+Ícone do app: gerado da logo do menu lateral por `flutter test tool\gen_app_icon.dart` (na pasta `app`), que grava `app\windows\runner\resources\app_icon.ico`. Só é preciso rodar de novo se a logo ou as cores do tema mudarem.
+
 ## Rodar o app
 
 ```powershell

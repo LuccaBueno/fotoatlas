@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+### Adicionado — Fase 8: Distribuição
+- **Instalador para Windows** (`FotoAtlas-<versão>-instalador.exe`, Inno Setup), em português e sem pedir permissão de administrador. Instala em `C:\Users\<usuário>\AppData\Local\Programs\FotoAtlas`, com atalho no menu Iniciar e (opcional, vem marcado) na área de trabalho. Já inclui o ExifTool e o FFmpeg; não precisa do .NET nem do "Visual C++ Redistributable".
+- **Atualizar** é instalar a versão nova por cima: o catálogo, os backups e as configurações (`C:\Users\<usuário>\AppData\Roaming\FotoAtlas`) e as miniaturas ficam intactos. Com o FotoAtlas aberto, o instalador pede para fechá-lo e nunca o fecha à força.
+- **Desinstalar** remove o programa e os atalhos e, no fim, pergunta se quer apagar também o catálogo, as configurações e as miniaturas. A resposta padrão é **Não** (reinstalar continua de onde parou); com **Sim**, as pastas vão para a Lixeira.
+- **Ícone do FotoAtlas** (o globo com lupa do menu lateral) no lugar do ícone padrão do Flutter: janela, barra de tarefas, executável, instalador e Aplicativos instalados.
+- Configurações › **Sobre o FotoAtlas**: versão instalada e a pasta do catálogo e das configurações.
+- `tools\scripts\build-installer.ps1` gera o instalador; `tools\scripts\test-installer.ps1` instala, atualiza e desinstala de verdade numa máquina limpa (job "Instalador" da CI). Guia para usuários em `docs\instalacao.md`. ADR 0019.
+
 ## [0.7.0] — 2026-10-31 — Fase 7: Integridade periódica
 
 ### Ajustes de usabilidade (depois do teste das Fases 6 e 7)
