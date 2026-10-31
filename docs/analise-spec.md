@@ -1,4 +1,4 @@
-# Análise da especificação v4.1 — contradições, riscos e lacunas
+﻿# Análise da especificação v4.1 — contradições, riscos e lacunas
 
 - Data: 2026-10-26 (Etapa 0)
 - Escopo: leitura integral de `FOTOATLAS_SPEC.md`, `CLAUDE.md` e `ROADMAP.md`.
@@ -13,7 +13,7 @@
 | C1 | §11.1 passo 8 × lista de estados | O passo 8 diz "registrar `verificado`", mas a lista de estados termina em `publicado` e não tem `verificado`. | Estados canônicos (em inglês no código, rótulo PT-BR na UI): `pending → copying → copied → verifying → verified → publishing → published`, mais `failed`, `needs_attention`, `skipped_identical`. "Conferido" = `verified`; o passo 8 corresponde a `published`. Ver `schema-v1.md`. |
 | C2 | §3.1 (5 estados na UI) × §9 (4 níveis de cobertura) | Os níveis não se encaixam um a um nos ícones. Pior: pela regra 11, toda cópia feita pelo FotoAtlas já é conferida, então não fica claro quando aparece 🟡 "Copiado, falta conferir". | Mapeamento definido na seção 4.6 de `arquitetura.md`: 🟡 = existe provável cópia (mesmo tamanho e nome em outra fonte), mas o conteúdo de um dos lados ainda não foi lido por completo. Isso é útil logo depois da listagem, antes da fila de hash terminar. |
 | C3 | §11.2 × §11.1 | A recuperação manda "conferir o `.part` com a origem", mas a origem pode estar desconectada (celular). | Gravar o hash da origem no diário quando o item entra em `copied`. A recuperação compara o `.part` com esse hash gravado, sem precisar reler a origem. |
-| C4 | §11.3 (`%APPDATA%`) × §16 Fase 8 (MSIX) | Apps empacotados em MSIX têm as gravações em `%APPDATA%` redirecionadas para uma pasta virtual do pacote, que **é apagada na desinstalação**. Além disso, `%APPDATA%` é o perfil *Roaming*. | O catálogo continua em `%APPDATA%\FotoAtlas\`, como diz a spec. Cache de miniaturas e logs vão para `%LOCALAPPDATA%\FotoAtlas\` (o cache é grande e não deve ir no perfil roaming). Instalador recomendado: **Inno Setup** (ver ❓Q3). |
+| C4 | §11.3 (`C:\Users\Lucca-PC\AppData\Roaming`) × §16 Fase 8 (MSIX) | Apps empacotados em MSIX têm as gravações em `C:\Users\Lucca-PC\AppData\Roaming` redirecionadas para uma pasta virtual do pacote, que **é apagada na desinstalação**. Além disso, `C:\Users\Lucca-PC\AppData\Roaming` é o perfil *Roaming*. | O catálogo continua em `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas\`, como diz a spec. Cache de miniaturas e logs vão para `C:\Users\Lucca-PC\AppData\Local\FotoAtlas\` (o cache é grande e não deve ir no perfil roaming). Instalador recomendado: **Inno Setup** (ver ❓Q3). |
 | C5 | CLAUDE.md (licenças permitidas) × §19 (ExifTool decidido) | O ExifTool é distribuído "nos mesmos termos do Perl" (Artistic License **ou** GPL), que não está na lista MIT/BSD/Apache/LGPL. | Ele roda como **executável separado** (agregação, sem linkagem), então não contamina a licença MIT do FotoAtlas. Mesmo assim, a regra do CLAUDE.md manda perguntar → ❓Q4. ADR 0004 fica como "proposta" até a resposta. |
 | C6 | §6 (ordem de confiança) | O GUID de volume é atribuído **por computador** pelo Mount Manager. No mesmo PC ele é estável, mas o mesmo HD ligado em outro PC recebe outro GUID. | Como o catálogo vive em um PC só, a ordem da spec funciona. A identificação usa pontuação (ADR 0009), e o caso de "vários PCs" fica registrado como fora do MVP (L6). |
 | C7 | §14 "alterado legitimamente (mtime mudou)" | Se o mtime mudou mas o conteúdo é o mesmo, o resultado é "inalterado". E em FAT32 o mtime "anda" 1 h quando muda o horário de verão (ver R4). | Classificação: conteúdo igual → *inalterado* (atualiza o mtime no catálogo); conteúdo diferente com mtime diferente → *alterado*; conteúdo diferente com mtime igual (ou diferente em exatamente ±3600 s em FAT) → *possivelmente corrompido*. |
@@ -54,7 +54,7 @@
 | L12 | Sidecars (`.xmp`, `.aae`, `.thm`) nas cópias e reorganizações. | Viajam junto com a mídia principal (Fases 5 e 6). Detectados por nome-base na mesma pasta. |
 | L13 | Copiar o backup do catálogo para os HDs é uma gravação fora do catálogo. | Opcional, desligado por padrão, numa pasta `FotoAtlas-catalogo\` e com o mesmo protocolo de cópia segura. |
 | L14 | "Esquecer uma fonte". | Remove só as linhas do catálogo, com confirmação. Arquivos nunca são tocados (regra 8). |
-| L15 | Privacidade dos logs locais. | Os logs ficam em `%LOCALAPPDATA%`, com rotação e nenhum envio. Exportar a auditoria é sempre uma ação explícita do usuário. |
+| L15 | Privacidade dos logs locais. | Os logs ficam em `C:\Users\Lucca-PC\AppData\Local`, com rotação e nenhum envio. Exportar a auditoria é sempre uma ação explícita do usuário. |
 
 ## 4. Perguntas para o usuário (§19 + novas)
 
@@ -62,7 +62,7 @@
 |---|---|---|
 | ❓Q1 | Modelo de organização padrão da biblioteca principal | `{ano}/{ano}-{mes}/` (ex.: `2019/2019-03/IMG_…jpg`): simples, estável e independente do aparelho. |
 | ❓Q2 | Política padrão de conflito de nome | **Sufixo automático** (`_1`, `_2`…) quando o conteúdo é diferente; pular quando é idêntico (L2). Tudo aparece na prévia antes de confirmar. |
-| ❓Q3 | Formato do instalador | **Inno Setup**: não virtualiza o `%APPDATA%` (C4), não exige certificado para instalar e preserva o catálogo nas atualizações. |
+| ❓Q3 | Formato do instalador | **Inno Setup**: não virtualiza o `C:\Users\Lucca-PC\AppData\Roaming` (C4), não exige certificado para instalar e preserva o catálogo nas atualizações. |
 | ❓Q4 | Aceitar o ExifTool (Artistic/GPL, executável separado) | Aceitar. Não há alternativa com cobertura equivalente de HEIC/RAW/vídeo, e o uso como processo separado não afeta a licença MIT. |
 
 Se a resposta for só "aprovado", as recomendações acima passam a valer.

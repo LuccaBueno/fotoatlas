@@ -1,4 +1,4 @@
-# Registros de Decisão de Arquitetura (ADRs)
+﻿# Registros de Decisão de Arquitetura (ADRs)
 
 Um arquivo por decisão: `NNNN-titulo-curto.md`.
 

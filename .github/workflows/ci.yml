@@ -34,6 +34,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Documentos — UTF-8 com BOM e caminhos do Windows
+        shell: powershell
+        run: ./tools/scripts/check-docs.ps1
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}

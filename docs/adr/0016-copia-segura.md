@@ -1,4 +1,4 @@
-# 0016 — Cópia segura: diário por item, recuperação pelo disco e o que pode ser apagado
+﻿# 0016 — Cópia segura: diário por item, recuperação pelo disco e o que pode ser apagado
 
 - Status: aceita
 - Data: 2026-10-29

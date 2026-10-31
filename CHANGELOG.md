@@ -1,8 +1,19 @@
-# Changelog
+﻿# Changelog
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
+
+## [0.7.0] — 2026-10-31 — Fase 7: Integridade periódica
+
+### Ajustes de usabilidade (depois do teste das Fases 6 e 7)
+- **Arquivo danificado no cartão do dispositivo:** em vez de "1 arquivo que ainda não dá para saber" (cinza), aparece em vermelho **"1 arquivo possivelmente corrompido — Ver e restaurar"**, que abre Tarefas. A cópia boa no outro dispositivo, cuja única outra cópia se danificou, passa a contar como **"sem backup"**.
+- **Início:** o painel de backup explica esses arquivos com texto próprio ("o conteúdo mudou sem a data mudar — sinal de dano no disco"), e não mais como "o conteúdo ainda não foi conferido".
+- **Depois de restaurar:** o arquivo sai de "Possivelmente corrompidos" e vai para **"Restaurados e resolvidos"**, com "Restaurado — a cópia boa está em IMG_0003_1.jpg" e o botão **"Marcar como resolvido"** (só no catálogo). O arquivo danificado continua onde está, sem ser apagado. Ele também sai do aviso do Início e da situação de backup. Se o mesmo arquivo for regravado e se danificar de novo, volta a pedir atenção.
+- **Biblioteca logo depois do escaneamento:** as fotos e vídeos aparecem sem esperar a conferência (antes, um celular de 106 GB deixava a Biblioteca quase vazia por quase 1 hora), com a data do nome ou do arquivo e o selo **"conferindo…"**. Conforme a conferência avança, viram itens normais (sem duplicar). Enquanto conferem, não dá para marcá-los, e só aparecem sem filtro ou com filtros de dispositivo, tipo e extensão.
+- **Documentos:** todos os `.md` são salvos em UTF-8 com BOM (o `Get-Content` do Windows PowerShell 5.1 trocava os acentos), e as instruções usam caminhos completos do Windows (ex.: `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente`), nunca variáveis no formato do cmd nem caminhos estilo Linux. `tools\scripts\check-docs.ps1` confere isso (também na CI).
+- CLI: `verify problems` mostra se cada arquivo está pendente, restaurado ou resolvido; `verify resolve ITEM`.
+- Catálogo v7 (só acrescenta uma coluna; backup automático antes da migração).
 
 ### Adicionado — Fase 7: Integridade periódica
 - **Verificar integridade** (Dispositivos › Mais opções, no cartão de um disco, pasta ou celular; ou "Verificar…" com itens marcados na Biblioteca): o FotoAtlas lê cada arquivo de novo e compara com o conteúdo conferido antes. **Só lê**: nenhum arquivo é alterado, movido ou apagado. Antes de começar, diz quantos arquivos e quanto vai ler; dá para escolher "Tudo" ou "Só o que não é conferido há mais de N dias".
@@ -15,6 +26,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - CLI: `verify start|resume|status|problems|restore|accept|schedule|tick`.
 - Demonstração: `run-app.ps1 -DemoPersistente` gera a pasta "Integridade" ("HD fotos" e "HD cópia"); `tools\scripts\demo-danificar.ps1` simula o dano no disco (ou, com `-Editar`, uma edição) só dentro da pasta da demonstração.
 - Catálogo v6 (só acrescenta tabelas e colunas; backup automático antes da migração). ADR 0018.
+
+## [0.6.0] — 2026-10-31 — Fase 6: Reorganização
+
+### Ajustes de usabilidade (depois do teste das Fases 6 e 7)
+- **Prévia da reorganização:** o caminho aparece com a letra da unidade (`C:\Users\…`), nunca o caminho técnico do volume (`\\?\Volume{…}`). Mensagens de erro de leitura/gravação também deixaram de mostrá-lo.
+- **Árvore da prévia:** nomes cortados ("IMG_20240713_…") mostram o nome completo ao passar o mouse, nas pastas e nos arquivos.
+- **Desfazer com arquivo editado:** a decisão aparece direto no cartão da tarefa — "1 arquivo mudou depois da reorganização", com **"Devolver mesmo assim"** e **"Deixar onde está"** —, sem precisar abrir Detalhes.
+- **Remover pastas vazias:** as pastas vêm **desmarcadas** (é uma remoção), com o botão **"Marcar todas"**.
+- **Biblioteca:** um momento que atravessa a meia-noite (ex.: 23:30–00:15) aparece **uma vez só, no dia em que começa**.
 
 ### Adicionado — Fase 6: Reorganização
 - **Reorganizar…** (Dispositivos, no cartão de um disco ou pasta): organiza as fotos e vídeos dentro do **mesmo disco**, movendo sem copiar (rápido, não ocupa espaço). Modelos: por ano e mês, por ano e dia, **por ano e momento** (`2024/2024-07-13 Aniversário da Ana`; momento sem nome usa a hora em que começou, `2024-07-13 14h03`), por tipo e ano, por ano e câmera, mesma estrutura ou tudo junto. Fotos sem hora confiável vão para "Sem data confirmada" (nome configurável); nomes que o Windows não aceita são ajustados.
@@ -90,7 +110,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - Na Comparar, depois de adicionar um dispositivo novo, a mesma pergunta aparece antes de escanear.
 
 ### Adicionado
-- **`run-app.ps1 -DemoPersistente`**: demonstração mantida entre aberturas, sempre em `%TEMP%\fotoatlas_demo_persistente` (apagável pelo `clean-temp.ps1`), para testar a retomada de verdade. Com `-CelularSimulado`, os celulares simulados são gerados uma vez na mesma pasta e o Pixel lê devagar (3 s por arquivo), para dar tempo de fechar no meio da conferência. O gerador ganhou `--leitura-lenta MS`.
+- **`run-app.ps1 -DemoPersistente`**: demonstração mantida entre aberturas, sempre em `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente` (apagável pelo `clean-temp.ps1`), para testar a retomada de verdade. Com `-CelularSimulado`, os celulares simulados são gerados uma vez na mesma pasta e o Pixel lê devagar (3 s por arquivo), para dar tempo de fechar no meio da conferência. O gerador ganhou `--leitura-lenta MS`.
 - **Várias pastas num escaneamento só** (core `scans.start(fonte, folders: [...])`; CLI `scan start FONTE --folder A --folder B`). Continua parcial e honesto: só confirma ausências dentro das pastas lidas; a comparação de partes não escaneadas dá "Resultado incompleto".
 - O cartão do dispositivo mostra **quais pastas já foram escaneadas** (e quando) e avisa que o resto ainda não foi; o próximo "Escanear" já sugere as mesmas pastas. Depois de um scan do dispositivo inteiro, pastas escaneadas sozinhas mais tarde aparecem como "atualizadas depois".
 - Core: `scans.listFolders`, `sources.folderStats`, `sources.listDrives`, `SourceView.scannedFolders`/`wholeScannedAt`/`scannedAt()`.
@@ -116,7 +136,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - **Comparar celular × HD**: o celular é uma fonte como as outras (aparelho inteiro, um armazenamento ou uma pasta como DCIM). O celular conta como disco próprio: foto no celular e num HD de identidade confiável = backup em disco independente.
 - **Escanear só uma pasta** (CLI `scan start FONTE --folder P`; no core, `scans.start(fonte, folder: …)`), útil no celular: o scan fica parcial, só confirma ausências dentro da pasta, e a comparação dá "Resultado incompleto" para pastas do escopo que ainda não foram escaneadas.
 - **"Não dá para confirmar que estão em discos diferentes"**: quando uma cópia conferida (🟢) está num disco que o Windows não identifica com certeza (ex.: SSD NVMe com número de série zerado), o Início e o cartão do dispositivo explicam por que ela não aparece como 🔵 disco independente (R1).
-- `tools/scripts/clean-temp.ps1 [-Simular]`: apaga só as pastas de `%TEMP%` que começam com `fotoatlas_`, deixando intactas as que estão em uso.
+- `tools/scripts/clean-temp.ps1 [-Simular]`: apaga só as pastas de `C:\Users\Lucca-PC\AppData\Local\Temp` que começam com `fotoatlas_`, deixando intactas as que estão em uso.
 - O mesmo celular é reconhecido pelo número de série, mesmo em outra porta USB.
 - **Celulares simulados** para testes e demonstração sem aparelho: `--fake-devices` no helper / `FOTOATLAS_FAKE_DEVICES`, gerador `tools/fixtures/bin/gen_phone_demo.dart` e `run-app.ps1 -CelularSimulado`.
 - **CLI**: `devices` e `sources add-phone CELULAR [--name N]`.
@@ -125,7 +145,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ### Corrigido (teste com celular real)
 - **Conferência no celular real falhava em quase todos os arquivos** com "Erro de leitura no dispositivo (0x800700AA)" (aparelho ocupado): o helper não fechava de verdade o stream de leitura de cada arquivo (o wrapper COM do .NET só o liberava quando o coletor de lixo rodava), e o celular aceita uma transferência por vez. Agora o stream é liberado na hora, depois de ler até o fim (ADR 0012, atualização).
-- Testes deixavam pastas em `%TEMP%` (`fotoatlas_app_test_*`, `fotoatlas_test_*`, `fotoatlas_cli_phone_build_*`): a remoção falhava em silêncio quando um arquivo ainda estava preso por instantes, e nos testes do app só era registrada depois da preparação. Agora toda pasta de teste é apagada com novas tentativas (até ~10 s) e o teste **falha** se sobrar algo; o `run-app.ps1` apaga o catálogo de demonstração e os celulares simulados quando o app fecha.
+- Testes deixavam pastas em `C:\Users\Lucca-PC\AppData\Local\Temp` (`fotoatlas_app_test_*`, `fotoatlas_test_*`, `fotoatlas_cli_phone_build_*`): a remoção falhava em silêncio quando um arquivo ainda estava preso por instantes, e nos testes do app só era registrada depois da preparação. Agora toda pasta de teste é apagada com novas tentativas (até ~10 s) e o teste **falha** se sobrar algo; o `run-app.ps1` apaga o catálogo de demonstração e os celulares simulados quando o app fecha.
 - Mensagens com acento dos scripts PowerShell saíam trocadas no Windows PowerShell 5.1 (arquivos sem BOM).
 
 ### Segurança
@@ -140,7 +160,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - Kill do processo no meio do scan do celular → retomar termina com 6 arquivos, sem duplicar.
 - Interop WPD real testado sem aparelho (objetos do próprio Windows: propriedades, chaves, gerenciador).
 - Teste do usuário com celular simulado no app: Pixel × HD → faltam 3, só em B 1, nos dois 3.
-- **Celular real, somente leitura** (Samsung Galaxy M54, Android por MTP, catálogo de demonstração em `%TEMP%`): `devices` → pronto, 1 armazenamento ("Armazenamento interno", 241,6 GB, 49,4 GB livres); scan só de `DCIM/Camera` → **6.596 arquivos** (6.255 JPG, 286 MP4, 55 HEIC; 106,8 GB = 99,5 GiB), 1 pasta, 0 erros; conferência → 6.596 conferidos, 0 erros, 0 alterados, em 47 min (~37 MB/s), nenhum conteúdo repetido. Nada foi gravado no aparelho: a sessão WPD é aberta só para leitura e o interop não tem métodos de gravação. A primeira conferência falhou em 6.575 arquivos (0x800700AA) e levou à correção acima.
+- **Celular real, somente leitura** (Samsung Galaxy M54, Android por MTP, catálogo de demonstração em `C:\Users\Lucca-PC\AppData\Local\Temp`): `devices` → pronto, 1 armazenamento ("Armazenamento interno", 241,6 GB, 49,4 GB livres); scan só de `DCIM/Camera` → **6.596 arquivos** (6.255 JPG, 286 MP4, 55 HEIC; 106,8 GB = 99,5 GiB), 1 pasta, 0 erros; conferência → 6.596 conferidos, 0 erros, 0 alterados, em 47 min (~37 MB/s), nenhum conteúdo repetido. Nada foi gravado no aparelho: a sessão WPD é aberta só para leitura e o interop não tem métodos de gravação. A primeira conferência falhou em 6.575 arquivos (0x800700AA) e levou à correção acima.
 
 ## [0.2.0] — 2026-10-27 — Fase 2: Conteúdo e cobertura
 

@@ -1,4 +1,4 @@
-# Arquitetura — FotoAtlas
+﻿# Arquitetura — FotoAtlas
 
 - Versão: 1 (Etapa 0, 2026-10-26)
 - Documentos relacionados: [`schema-v1.md`](schema-v1.md), [`protocolo-helper.md`](protocolo-helper.md), [`analise-spec.md`](analise-spec.md), [`adr/`](adr/)
@@ -89,10 +89,10 @@ Toda operação longa devolve um `TaskHandle` com `Stream<Progress>`, `pause/res
 
 | O quê | Onde | Observação |
 |---|---|---|
-| Catálogo | `%APPDATA%\FotoAtlas\catalog.db` (+ `-wal`, `-shm`) | spec §11.3 |
-| Backups do catálogo | `%APPDATA%\FotoAtlas\backups\catalog-AAAAMMDD-HHMMSS.db` | rotação (10) |
-| Miniaturas (Fase 4) | `%LOCALAPPDATA%\FotoAtlas\thumbs\` | cache descartável |
-| Logs | `%LOCALAPPDATA%\FotoAtlas\logs\` | rotação; nunca enviados |
+| Catálogo | `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas\catalog.db` (+ `-wal`, `-shm`) | spec §11.3 |
+| Backups do catálogo | `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas\backups\catalog-AAAAMMDD-HHMMSS.db` | rotação (10) |
+| Miniaturas (Fase 4) | `C:\Users\Lucca-PC\AppData\Local\FotoAtlas\thumbs\` | cache descartável |
+| Logs | `C:\Users\Lucca-PC\AppData\Local\FotoAtlas\logs\` | rotação; nunca enviados |
 | Ferramentas (dev) | `third_party/bin/` (ignorado pelo git) | baixadas por script |
 
 A variável de ambiente `FOTOATLAS_HOME` substitui as duas raízes (usada pela CLI e por **todos** os testes, sempre apontando para `Directory.systemTemp.createTemp`).
@@ -246,6 +246,7 @@ Para um conteúdo (ou uma instância cujo conteúdo ainda é desconhecido):
 | 🔴 | Só 1 cópia | Conteúdo conhecido (ou tamanho único no catálogo, L8) com uma só instância não ausente. |
 | 🟢 | Cópia conferida | 2+ instâncias não ausentes com o mesmo SHA-256, mas no mesmo disco físico (ou com disco de identidade incerta, R1). |
 | 🔵 | Backup em disco independente | 2+ instâncias com o mesmo SHA-256 em discos físicos diferentes e de identidade confiável (celular conta como disco próprio). |
+| ❗ | Possivelmente corrompido | A verificação (Fase 7) achou o conteúdo mudado com a data igual: não é cópia de nada e fica fora das contagens por tamanho/nome. Restaurado ou marcado como resolvido → sai da cobertura (ADR 0018, atualização de 2026-10-31). |
 
 - Instâncias em fontes desconectadas **contam** (regra 9), com a data em que foram vistas.
 - Instâncias `missing` e `cloud_only` não contam.

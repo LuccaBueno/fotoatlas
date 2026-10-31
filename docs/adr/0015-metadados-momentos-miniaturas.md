@@ -1,4 +1,4 @@
-# 0015 — Metadados, data efetiva, momentos e miniaturas
+﻿# 0015 — Metadados, data efetiva, momentos e miniaturas
 
 - Status: aceita
 - Data: 2026-10-29
@@ -32,9 +32,13 @@ A Fase 4 (spec §8, §10, §16) pede metadados de fotos e vídeos de todos os di
 - Medido (100 mil itens, local): consultas de 100 a 370 ms; o teste de desempenho exige < 1 s.
 
 ### Miniaturas
-- Cache descartável em `%LOCALAPPDATA%\FotoAtlas\thumbs\<ab>\<sha256>_256.jpg`. Ordem: Shell do Windows pelo helper (thread STA, JPEG pelo WIC em memória; caminhos `\\?\Volume{GUID}\` trocados pela letra atual) → FFmpeg (`-n`, nunca sobrescreve) para vídeos → miniatura embutida no EXIF lida em Dart (também do celular, pelo começo do arquivo). Arquivo temporário novo + renomear para publicar.
+- Cache descartável em `C:\Users\Lucca-PC\AppData\Local\FotoAtlas\thumbs\<ab>\<sha256>_256.jpg`. Ordem: Shell do Windows pelo helper (thread STA, JPEG pelo WIC em memória; caminhos `\\?\Volume{GUID}\` trocados pela letra atual) → FFmpeg (`-n`, nunca sobrescreve) para vídeos → miniatura embutida no EXIF lida em Dart (também do celular, pelo começo do arquivo). Arquivo temporário novo + renomear para publicar.
 
 ## Consequências
 - O core ganhou permissão de gravar só na pasta de cache (teste de arquitetura atualizado); o helper, só `CreateNew` dentro do `--cache-dir`.
 - Itens ainda não conferidos não aparecem na Biblioteca (aviso "N arquivos ainda estão sendo conferidos"); na Comparar com filtro de metadados, eles ficam no escopo e deixam o resultado "incompleto".
 - Sem tabela `thumbnail_cache`: existência do arquivo é o cache.
+
+## Atualização (2026-10-31) — itens antes da conferência e momentos na meia-noite
+- **Itens provisórios:** a Biblioteca não espera mais a conferência (com um celular de 106 GB, ficava quase vazia por quase 1 hora). Arquivos escaneados ainda sem conteúdo conferido entram no índice com **ID negativo** (`-id` do arquivo em `file_instances`), data do nome ou do arquivo (a mesma estratégia de datas, sem ler o arquivo), selo "conferindo…" e ícone do tipo no lugar da miniatura. Quando a conferência chega neles, o próximo recarregamento da Biblioteca já traz o item normal (o ID negativo some), sem duplicar. Não entram na seleção nem em ações (cópia, verificação, separar momento) e só aparecem sem filtro ou com filtros que o escaneamento responde (dispositivo, tipo, extensão). Um provisório que cai no meio de um momento fica nele, para o momento não aparecer partido.
+- **Momento que atravessa a meia-noite** aparece uma vez, no dia em que começa: no índice, cada sequência seguida do mesmo momento recebe o menor dia dela (nas duas ordens). A pasta da reorganização já usava o início do momento.

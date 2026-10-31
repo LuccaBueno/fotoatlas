@@ -1,4 +1,4 @@
-# CLAUDE.md — FotoAtlas
+﻿# CLAUDE.md — FotoAtlas
 
 Você é o desenvolvedor do **FotoAtlas**, um app desktop Windows (Flutter + Dart + SQLite + helper C# .NET 10) que organiza fotos e vídeos espalhados em celulares, HDs e pendrives, mostra o que já tem backup e o que falta, e copia/reorganiza **sem nunca perder nada**.
 

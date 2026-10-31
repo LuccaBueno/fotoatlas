@@ -1,4 +1,4 @@
-# 0007 — Estratégia de testes, incluindo testes de falha (kill)
+﻿# 0007 — Estratégia de testes, incluindo testes de falha (kill)
 
 - Status: aceita
 - Data: 2026-10-26

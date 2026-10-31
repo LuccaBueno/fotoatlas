@@ -1,4 +1,4 @@
-# 0003 — Helper nativo em C# .NET 10, processo separado com JSON-lines
+﻿# 0003 — Helper nativo em C# .NET 10, processo separado com JSON-lines
 
 - Status: aceita
 - Data: 2026-10-26

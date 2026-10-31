@@ -1,4 +1,4 @@
-# Protocolo do helper nativo — v1
+﻿# Protocolo do helper nativo — v1
 
 - Data: 2026-10-26 (Etapa 0)
 - Processo: `fotoatlas_helper.exe` (C# .NET 10), iniciado pelo core (app ou CLI)

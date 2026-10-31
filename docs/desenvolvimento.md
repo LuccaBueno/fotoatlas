@@ -1,4 +1,4 @@
-# Desenvolvimento — build, testes e execução
+﻿# Desenvolvimento — build, testes e execução
 
 Requisitos: Windows 10/11, Flutter 3.47.7 stable, Visual Studio Build Tools 2022 (C++ desktop), .NET SDK 10, Git.
 
@@ -47,17 +47,17 @@ powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -Demo
 # Catálogo temporário + celulares simulados (Pixel e iPhone) e uma pasta "HD" — sem celular real
 powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -CelularSimulado
 
-# Demonstração MANTIDA entre aberturas (sempre %TEMP%\fotoatlas_demo_persistente),
+# Demonstração MANTIDA entre aberturas (sempre C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente),
 # para testar a retomada: fechar no meio do scan/conferência e abrir de novo.
 # Com -CelularSimulado, o Pixel simulado lê devagar (3 s por arquivo).
-# Também gera, uma vez, "%TEMP%\fotoatlas_demo_persistente\HD bagunçado" (Fase 6: Reorganizar).
+# Também gera, uma vez, "C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\HD bagunçado" (Fase 6: Reorganizar).
 powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1 -DemoPersistente -CelularSimulado
 
-# Catálogo real em %APPDATA%\FotoAtlas
+# Catálogo real em C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas
 powershell -ExecutionPolicy Bypass -File tools\scripts\run-app.ps1
 ```
 
-Com `-Demo` ou `-CelularSimulado`, o app mostra a faixa "Modo demonstração — tudo será descartado ao fechar" e as pastas temporárias (`%TEMP%\fotoatlas_demo_*`, `fotoatlas_celular_*`) são apagadas quando o app fecha (`-ManterDemo` guarda para inspeção, mas a próxima abertura começa do zero). Com `-DemoPersistente`, a faixa avisa que os dados são mantidos e a pasta só é apagada pelo `clean-temp.ps1` (com o app fechado). Para limpar sobras de testes interrompidos ou de demonstrações antigas — só pastas de `%TEMP%` que começam com `fotoatlas_`; as que estão em uso ficam intactas:
+Com `-Demo` ou `-CelularSimulado`, o app mostra a faixa "Modo demonstração — tudo será descartado ao fechar" e as pastas temporárias (`C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_*`, `fotoatlas_celular_*`) são apagadas quando o app fecha (`-ManterDemo` guarda para inspeção, mas a próxima abertura começa do zero). Com `-DemoPersistente`, a faixa avisa que os dados são mantidos e a pasta só é apagada pelo `clean-temp.ps1` (com o app fechado). Para limpar sobras de testes interrompidos ou de demonstrações antigas — só pastas de `C:\Users\Lucca-PC\AppData\Local\Temp` que começam com `fotoatlas_`; as que estão em uso ficam intactas:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools\scripts\clean-temp.ps1 -Simular   # só lista
@@ -74,7 +74,7 @@ Celulares simulados: `FOTOATLAS_FAKE_DEVICES=<pasta>` faz o helper mostrar os ap
 
 ```powershell
 cd C:\dev\fotoatlas\packages\fotoatlas_core
-$env:FOTOATLAS_HOME = "$env:TEMP\fotoatlas_cli_demo"
+$env:FOTOATLAS_HOME = "C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_cli_demo"
 dart run bin/fotoatlas_cli.dart volumes
 dart run bin/fotoatlas_cli.dart sources add "C:\caminho\para\uma\pasta" --name Teste
 dart run bin/fotoatlas_cli.dart scan start Teste
@@ -105,14 +105,14 @@ Para gerar uma árvore sintética e escanear:
 
 ```powershell
 cd C:\dev\fotoatlas\tools\fixtures
-dart run bin/gen_tree.dart --out "$env:TEMP\fotoatlas_arvore" --files 50000
+dart run bin/gen_tree.dart --out "C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_arvore" --files 50000
 ```
 
 ## Variáveis de ambiente
 
 | Variável | Efeito |
 |---|---|
-| `FOTOATLAS_HOME` | Pasta do catálogo, backups, cache e logs (substitui `%APPDATA%`/`%LOCALAPPDATA%`) |
+| `FOTOATLAS_HOME` | Pasta do catálogo, backups, cache e logs (substitui `C:\Users\Lucca-PC\AppData\Roaming`/`C:\Users\Lucca-PC\AppData\Local`) |
 | `FOTOATLAS_HELPER` | Caminho do `fotoatlas_helper.exe` |
 | `FOTOATLAS_CRASHPOINT` | Só para testes de falha: `nome[:n]` bloqueia na n-ésima passagem pelo ponto (ADR 0007) |
 | `FOTOATLAS_EXIFTOOL`, `FOTOATLAS_FFPROBE`, `FOTOATLAS_FFMPEG` | Caminhos das ferramentas de metadados (senão: `tools\` ao lado do executável ou `third_party\bin\` do repositório) |

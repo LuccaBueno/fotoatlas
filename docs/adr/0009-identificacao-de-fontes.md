@@ -1,4 +1,4 @@
-# 0009 — Identificação de fontes por pontuação
+﻿# 0009 — Identificação de fontes por pontuação
 
 - Status: aceita
 - Data: 2026-10-26

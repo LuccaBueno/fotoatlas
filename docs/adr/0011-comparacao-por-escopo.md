@@ -1,4 +1,4 @@
-# 0011 — Comparação A × B com escopo livre
+﻿# 0011 — Comparação A × B com escopo livre
 
 - Status: aceita
 - Data: 2026-10-27 (requisito ajustado pelo usuário; spec §3.2, §9 e §16)

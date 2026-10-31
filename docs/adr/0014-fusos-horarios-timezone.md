@@ -1,4 +1,4 @@
-# 0014 — Fusos horários com o pacote `timezone` (base IANA embutida)
+﻿# 0014 — Fusos horários com o pacote `timezone` (base IANA embutida)
 
 - Status: aceita
 - Data: 2026-10-29

@@ -16,6 +16,7 @@ function Step($name, $dir, [scriptblock]$block) {
     }
 }
 
+Step 'Documentos .md' '.' { & (Join-Path $root 'tools\scripts\check-docs.ps1') }
 Step 'Helper: build' 'native\fotoatlas_helper' { dotnet build -warnaserror }
 Step 'Helper: testes' 'native\fotoatlas_helper' { dotnet test --no-build }
 Step 'Fixtures' 'tools\fixtures' { dart pub get; dart analyze --fatal-infos; dart test }

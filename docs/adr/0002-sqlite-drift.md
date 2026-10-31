@@ -1,4 +1,4 @@
-# 0002 — SQLite via `sqlite3` + `drift`
+﻿# 0002 — SQLite via `sqlite3` + `drift`
 
 - Status: aceita
 - Data: 2026-10-26

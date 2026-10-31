@@ -1,4 +1,4 @@
-# Schema SQLite v1 — FotoAtlas
+﻿# Schema SQLite v1 — FotoAtlas
 
 - Versão do schema: **3** (`PRAGMA user_version = 3`, gerido pelo drift). A v1 está descrita nas seções 1–6; as mudanças aditivas da v2 e da v3 estão nas seções 7 e 8.
 - Data: 2026-10-26 (Etapa 0)
@@ -534,3 +534,16 @@ Uso das colunas existentes:
 | `file_instances.last_verified_at` | última verificação que releu o arquivo e conferiu (inalterado ou alterado) |
 | `file_instances.integrity` | `ok` (inalterado), `changed` (editado; passa a valer o conteúdo novo), `possibly_corrupt` (com `content_id = NULL` e `hash_status = 'error'`: deixa de contar como cópia); o escaneamento volta para `unknown` quando tamanho ou data mudam, exceto `possibly_corrupt` com a mesma data |
 | `integrity_checks.result` | `unchanged`, `changed_legit`, `possibly_corrupt`, `unreadable`, `missing` (nunca marca o arquivo como ausente) |
+
+## 12. v7 (ajustes das Fases 6 e 7, 2026-10-31) — mudança aditiva
+
+Migração `v6 → v7` numa transação, depois do backup `pre-migracao-v6-<data>.db`. Testada a partir dos *snapshots* v1 a v6 (`drift_schemas/drift_schema_v7.json`), com um teste de dados preservados (v6 → v7: possivelmente corrompidos antigos continuam pendentes).
+
+```sql
+-- "Marcar como resolvido" de um arquivo possivelmente corrompido (ADR 0018).
+-- Só catálogo: o arquivo danificado nunca é apagado. Um dano novo (o arquivo
+-- volta a ser marcado como corrompido depois de regravado) zera o campo.
+ALTER TABLE file_instances ADD COLUMN integrity_resolved_at INTEGER;
+```
+
+"Restaurado" não tem coluna: é derivado do catálogo (há, na mesma pasta do arquivo danificado, uma cópia conferida com o conteúdo de antes do dano).

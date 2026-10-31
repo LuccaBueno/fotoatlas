@@ -1,4 +1,4 @@
-# 0018 — Verificação periódica de integridade
+﻿# 0018 — Verificação periódica de integridade
 
 - Status: aceita
 - Data: 2026-10-30
@@ -55,3 +55,9 @@ A Fase 7 (spec §14 e §16) relê os arquivos de tempos em tempos para descobrir
 - O teste de arquitetura garante que `lib/src/integrity/` não usa nenhuma API de gravação nem de cópia e lê pelo leitor da conferência.
 - Um arquivo legitimamente regravado por um programa que preserva a data de modificação aparece como "possivelmente corrompido" (falso positivo). É o limite da regra da spec; "A mudança é esperada…" resolve sem tocar no arquivo.
 - A verificação leve de um disco grande leva horas (1 TB ≈ 12 h a 24 MB/s) e só anda com o app aberto; como cede a vez e continua de onde parou, isso é aceitável. Verificações pedidas pelo usuário rodam sem limite de vazão.
+
+## Atualização (2026-10-31) — ajustes do teste do usuário
+- **Cobertura:** o arquivo possivelmente corrompido tem situação própria (`BackupState.corrupt`, vermelho, "1 arquivo possivelmente corrompido — Ver e restaurar" no cartão e texto próprio no Início). Ele não entra mais nas contagens por tamanho/nome que deixavam a cópia boa em "ainda não dá para saber": a cópia boa cuja única outra cópia se danificou conta como **sem backup**.
+- **Restaurado** é derivado, sem estado novo: existe, na mesma pasta do danificado, uma instância conferida com o conteúdo de antes do dano (`restoredCopyWhere`). Aí o problema sai dos pendentes (Tarefas › "Restaurados e resolvidos", "Restaurado — a cópia boa está em IMG_0003_1.jpg"), some do aviso do Início e da cobertura.
+- **"Marcar como resolvido"** grava `file_instances.integrity_resolved_at` (schema v7, aditivo). Só catálogo; o danificado fica no disco. Um dano novo (regravado e estragado de novo) zera o campo e volta a pedir atenção.
+- CLI: `verify problems` mostra `situacao=pendente|restaurado|resolvido` e `restaurado_em=`; `verify resolve ITEM`.

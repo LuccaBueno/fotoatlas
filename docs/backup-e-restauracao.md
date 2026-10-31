@@ -1,4 +1,4 @@
-# Cópias, backup do catálogo e o que fazer depois de uma queda
+﻿# Cópias, backup do catálogo e o que fazer depois de uma queda
 
 ## O que o FotoAtlas garante numa cópia
 - A origem nunca é alterada (só leitura).
@@ -19,4 +19,4 @@ Recomendação: depois de uma queda de energia no meio de uma cópia para HD USB
 `.fotoatlas-tmp` na raiz do destino guarda os arquivos em andamento. Arquivos que não pertencem a nenhuma cópia em andamento aparecem nos detalhes da cópia, na tela Tarefas, e **nunca são apagados automaticamente**. Os de conferência que não bateu ficam para diagnóstico (o disco pode ter problemas). Você pode apagá-los à mão depois de conferir.
 
 ## Backup do catálogo
-Automático a cada 24 h (`VACUUM INTO`, últimos 10) em `%APPDATA%\FotoAtlas\backups`. O catálogo não é armazenamento: apagar ou restaurar o catálogo nunca apaga fotos.
+Automático a cada 24 h (`VACUUM INTO`, últimos 10) em `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas\backups`. O catálogo não é armazenamento: apagar ou restaurar o catálogo nunca apaga fotos.

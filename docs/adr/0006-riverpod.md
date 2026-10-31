@@ -1,4 +1,4 @@
-# 0006 — Riverpod para o estado da interface
+﻿# 0006 — Riverpod para o estado da interface
 
 - Status: aceita
 - Data: 2026-10-26

@@ -1,4 +1,4 @@
-# 0017 — Reorganização no mesmo disco, Desfazer e pastas vazias
+﻿# 0017 — Reorganização no mesmo disco, Desfazer e pastas vazias
 
 - Status: aceita
 - Data: 2026-10-30

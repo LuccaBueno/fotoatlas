@@ -1,4 +1,4 @@
-# 0008 — Acesso Win32 no core via FFI, com bindings próprios mínimos
+﻿# 0008 — Acesso Win32 no core via FFI, com bindings próprios mínimos
 
 - Status: aceita
 - Data: 2026-10-26

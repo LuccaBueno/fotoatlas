@@ -63,7 +63,7 @@ try {
         $env:FOTOATLAS_HOME = Join-Path $pasta 'catalogo'
         $env:FOTOATLAS_DEMO = 'persistente'
         Write-Host "Demonstração mantida entre aberturas: $pasta"
-        Write-Host 'Para começar do zero, feche o app e rode tools\scripts\clean-temp.ps1.'
+        Write-Host "Para começar do zero, feche o app e rode: powershell -ExecutionPolicy Bypass -File $(Join-Path $root 'tools\scripts\clean-temp.ps1')"
         # Fase 6: HD bagunçado sintético para testar "Reorganizar…" (gerado uma vez).
         $baguncado = Join-Path $pasta 'HD bagunçado'
         if (-not (Test-Path -LiteralPath $baguncado)) {

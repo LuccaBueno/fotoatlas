@@ -1,4 +1,4 @@
-# 0013 — Encerramento com prazo: fechar o app sempre funciona
+﻿# 0013 — Encerramento com prazo: fechar o app sempre funciona
 
 - Status: aceita
 - Data: 2026-10-29

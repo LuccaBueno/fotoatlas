@@ -1,4 +1,4 @@
-# FOTOATLAS — ESPECIFICAÇÃO TÉCNICA v4.1
+﻿# FOTOATLAS — ESPECIFICAÇÃO TÉCNICA v4.1
 
 **Plataforma:** Windows 10 e 11
 **Stack:** Flutter + Dart + SQLite, com auxiliar nativo para APIs do Windows
@@ -91,7 +91,10 @@ A interface precisa ser **fácil, útil, completa e, acima de tudo, intuitiva**.
    - **Momentos**: grupos automáticos de fotos próximas no tempo (§8), com nome editável; o usuário pode **nomear, juntar e separar** momentos. Isso só muda o catálogo, nunca os arquivos.
    - Hora de **baixa confiança** (ex.: tirada da data do sistema de arquivos) aparece sinalizada (ícone + texto "hora incerta"), com atalho para confirmar ou corrigir.
    - **Corrigir relógio de um dispositivo** (§8): assistente com prévia "antes → depois" antes de aplicar.
+   - **Itens aparecem logo depois do escaneamento** (ajuste de 2026-10-31): fotos e vídeos ainda não conferidos entram na linha do tempo com a data do nome ou do arquivo e o selo **"conferindo…"**, e viram itens normais conforme a conferência avança (sem duplicar). Enquanto conferem, não são marcados nem usados em ações (cópia, verificação) e só aparecem sem filtro ou com filtros de dispositivo, tipo e extensão.
+   - **Momento que atravessa a meia-noite** (ex.: 23:30–00:15) aparece **uma vez só, no dia em que começa**.
 3. **Dispositivos.** Fontes cadastradas, conectadas e desconectadas, com último escaneamento, espaço e cobertura de backup de cada uma.
+   - Arquivo **possivelmente corrompido** (§14) aparece em vermelho no cartão ("1 arquivo possivelmente corrompido — Ver e restaurar"), nunca como "ainda não dá para saber".
    - **Um botão só, "Adicionar dispositivo"** (aqui e no seletor da Comparar), que abre uma janela listando automaticamente o que está conectado: **celulares** com a situação ("Pronto", "Bloqueado", "Falta permitir o acesso"), **unidades** (HD, SSD, pendrive, cartão de memória; as já cadastradas aparecem marcadas) e a opção **"Escolher uma pasta…"**. Cadastrar só grava no catálogo.
    - **"Escanear" pergunta o quê:** "Tudo" ou "Só algumas pastas" (ex.: só DCIM › Camera e WhatsApp do celular). As pastas são lidas do dispositivo na hora, em árvore, com o **tamanho estimado** quando a pasta já foi escaneada antes (senão, "tamanho desconhecido"). O cartão mostra **quais pastas já foram escaneadas** (e quando) e avisa que o resto ainda não foi; ao escanear de novo, as mesmas pastas vêm sugeridas.
 4. **Comparar.** Dois **escopos livres**, A e B (ex.: "pasta 1 + pasta 2 do HD antigo" × "pasta Backup do HD novo", ou celular × HD inteiro), montados com uma ou mais pastas/subpastas, dispositivos inteiros e/ou **momentos** (§8.3, a partir da Fase 4), com filtros opcionais. A pergunta principal fica no topo: **"B contém todo o conteúdo de A?"**, com resposta direta — "Sim, 100%" ou "Faltam N arquivos (X GB)" — e a lista do que falta pronta para seleção e cópia. Abaixo, "Só em B" e "Nos dois". Se algum arquivo dos escopos ainda não teve o conteúdo conferido, a resposta é "Resultado incompleto", nunca "100%". Escopos podem ser salvos com nome (ex.: "Fotos do celular antigo") para reutilizar. Regras na seção 9.
@@ -336,11 +339,11 @@ O objetivo é deixar o HD organizado sem risco.
 - **Variáveis de data e hora** usam a hora da captura já com as correções do catálogo (§8.2): `{ano}`, `{mes}`, `{dia}`, `{hora}`, `{minuto}`, `{segundo}`; `{momento}` é o nome do momento (§8.3).
 - **Momento sem nome** usa o início do momento (ex.: `2024-07-13 14h03`); itens fora de momentos (hora a confirmar) vão para uma pasta configurável (padrão `Sem data confirmada/`). Nomes são sanitizados para o Windows (caracteres proibidos, nomes reservados, espaços/pontos no fim, comprimento).
 - A prévia mostra quantos itens dependem de hora de baixa confiança antes de confirmar.
-- **Prévia em árvore** de "antes → depois", com conflitos destacados.
+- **Prévia em árvore** de "antes → depois", com conflitos destacados; nome cortado mostra o nome completo ao passar o mouse, e o caminho aparece com a letra da unidade (nunca o caminho técnico do volume).
 - **Dentro do mesmo volume:** mover por renomeação (operação de metadados, sem copiar dados), registrada no diário, sem substituição e com **Desfazer**.
 - **Entre volumes:** sempre copiar e conferir (seção 11). A origem permanece intacta. Celular nunca é reorganizado (só leitura).
-- **Desfazer** vem do diário e funciona depois de fechar e abrir o app. Antes de confirmar, avisa quais arquivos mudaram desde a reorganização (tamanho ou data diferente); esses só voltam se o usuário confirmar, um a um. Lugar antigo ocupado nunca é sobrescrito.
-- **Pastas que ficam vazias** (depois de mover ou de desfazer) **nunca são apagadas automaticamente**. Há uma ação separada, "Remover pastas vazias", que lista cada pasta, pede confirmação e só remove pastas realmente vazias (sem nenhum arquivo, nem oculto ou de sistema), conferidas de novo na hora (ADR 0017).
+- **Desfazer** vem do diário e funciona depois de fechar e abrir o app. Antes de confirmar, avisa quais arquivos mudaram desde a reorganização (tamanho ou data diferente); esses só voltam se o usuário confirmar, um a um — a decisão ("Devolver mesmo assim" / "Deixar onde está") aparece direto no cartão da tarefa. Lugar antigo ocupado nunca é sobrescrito.
+- **Pastas que ficam vazias** (depois de mover ou de desfazer) **nunca são apagadas automaticamente**. Há uma ação separada, "Remover pastas vazias", que lista cada pasta, pede confirmação e só remove pastas realmente vazias (sem nenhum arquivo, nem oculto ou de sistema), conferidas de novo na hora (ADR 0017). As pastas vêm **desmarcadas** (é uma remoção), com "Marcar todas".
 - **Remover originais após a cópia conferida:** fora do MVP. Quando existir, será uma operação separada, com confirmação explícita e exigência de pelo menos uma outra cópia conferida.
 - **Sincronização destrutiva** (apagar no destino o que sumiu da origem): **nunca**.
 
@@ -371,6 +374,8 @@ O objetivo é deixar o HD organizado sem risco.
   - restaurar a partir de outra cópia conferida **só pela cópia segura** (seção 11), com prévia e confirmação; a cópia boa é gravada na pasta do arquivo danificado com outro nome (`foto_1.jpg`) — o danificado nunca é substituído nem apagado;
   - a verificação **agendada é leve**: lê devagar, pausa sozinha quando outra tarefa (escaneamento, conferência, cópia, reorganização) está em andamento, pode ser pausada a qualquer momento e continua de onde parou; **celular nunca** entra na agendada — só quando o usuário pede, no cartão do celular.
 - Arquivo possivelmente corrompido deixa de contar como cópia (cobertura, comparação, origem de cópia) até ser restaurado, regravado (data nova) ou aceito pelo usuário ("a mudança é esperada", só catálogo).
+- Na cobertura, ele tem situação própria (**possivelmente corrompido**, em vermelho, com texto próprio no Início); a cópia boa cuja única outra cópia se danificou conta como **sem backup** (ajuste de 2026-10-31).
+- Depois de restaurar, o arquivo sai dos pendentes e vai para **"Restaurados e resolvidos"**, com "Restaurado — a cópia boa está em foto_1.jpg" e **"Marcar como resolvido"** (só catálogo). O arquivo danificado continua no disco, sem ser apagado.
 - Disco FAT: data exatamente ±1 h (horário de verão) com conteúdo diferente conta como "possivelmente corrompido", não como edição (análise C7).
 
 ---

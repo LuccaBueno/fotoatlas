@@ -1,4 +1,4 @@
-# Como usar com o Claude Code
+﻿# Como usar com o Claude Code
 
 Abra o PowerShell:
 

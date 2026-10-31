@@ -1,4 +1,4 @@
-# 0012 — Celular pelo WPD, somente leitura
+﻿# 0012 — Celular pelo WPD, somente leitura
 
 - Status: aceita
 - Data: 2026-10-27 (Fase 3)

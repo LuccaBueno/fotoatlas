@@ -1,4 +1,4 @@
-# ROADMAP — FotoAtlas
+﻿# ROADMAP — FotoAtlas
 
 Estado do projeto. O Claude Code lê este arquivo no início de cada sessão, executa a primeira etapa não concluída e o atualiza ao final.
 
@@ -98,7 +98,7 @@ Observações da Fase 2:
 - [x] Critérios da spec: com celular **simulado** pelo helper real, "listar fotos que não estão no HD" e "desconexão durante o scan não corrompe o catálogo" provados; com celular **real**, scan e conferência de DCIM/Camera sem erros (evidências no CHANGELOG) (2026-10-28)
 - [x] Teste do usuário com celular simulado (2026-10-28): Pixel × HD → Faltam 3 / Só em B 1 / Nos dois 3
 - [x] Ajustes pedidos no teste (2026-10-28)
-  - [x] Testes e `run-app.ps1` limpam as próprias pastas de `%TEMP%` (teste falha se sobrar); `tools/scripts/clean-temp.ps1`
+  - [x] Testes e `run-app.ps1` limpam as próprias pastas de `C:\Users\Lucca-PC\AppData\Local\Temp` (teste falha se sobrar); `tools/scripts/clean-temp.ps1`
   - [x] 🟢 em vez de 🔵 no Pixel × HD: confirmado que é o SSD C: (NVMe, serial zerado → identidade fraca, R1); o app agora mostra "não dá para confirmar que estão em discos diferentes"
 - [x] Celular real, **somente leitura** (Samsung Galaxy M54, Android, 2026-10-28): `devices` → pronto, "Armazenamento interno"; scan só de DCIM/Camera → 6.596 arquivos (106,8 GB), 0 erros; conferência → 6.596 conferidos, 0 erros, em 47 min. Achado e corrigido: stream WPD não liberado (0x800700AA) — ADR 0012 atualizado
 - [x] Tag `v0.3.0` (2026-10-28)
@@ -140,7 +140,7 @@ Observações:
 ## Ajustes do modo demonstração (concluídos em 2026-10-29)
 - [x] Teste do usuário do fechamento: pergunta, "Continuar trabalhando", "Fechar mesmo assim" e "Encerrando…" OK, sem exceção. Achado: com `-Demo` a conferência não continuou ao reabrir — o catálogo temporário é apagado ao fechar — mas os textos prometiam "continua de onde parou"
 - [x] Faixa fixa "Modo demonstração — tudo será descartado ao fechar" (`FOTOATLAS_DEMO`, definido pelo `run-app.ps1`); pergunta ao fechar e "Encerrando…" avisam que nada será mantido nesse modo
-- [x] `run-app.ps1 -DemoPersistente`: sempre `%TEMP%\fotoatlas_demo_persistente`, não apagada ao fechar (só pelo `clean-temp.ps1`); com `-CelularSimulado`, celulares gerados uma vez e Pixel com leitura lenta (3 s por arquivo) para fechar no meio da conferência
+- [x] `run-app.ps1 -DemoPersistente`: sempre `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente`, não apagada ao fechar (só pelo `clean-temp.ps1`); com `-CelularSimulado`, celulares gerados uma vez e Pixel com leitura lenta (3 s por arquivo) para fechar no meio da conferência
 - [x] Testes: modo pelo ambiente, textos da pergunta nos 3 modos, faixa, e fechar com core real com e sem demonstração
 
 ## Fase 4 — Metadados e Biblioteca (concluída em 2026-10-29)
@@ -204,7 +204,7 @@ Observações da Fase 5:
 - O demo do celular ganhou um arquivo no HD com o mesmo nome de uma foto que falta (outra foto, renomeada), para mostrar o sufixo `_1`; a comparação Pixel × HD continua "faltam 3 · nos dois 3 · só em B 1".
 - `{momento}` nos modelos e a prévia em árvore "antes → depois" ficam para a Fase 6 (reorganização).
 
-## Fase 6 — Reorganização (implementada em 2026-10-30; aguarda o teste do usuário)
+## Fase 6 — Reorganização (concluída em 2026-10-31)
 Cuidados pedidos pelo usuário (2026-10-30), registrados na spec §12 e no ADR 0017: pastas vazias nunca são apagadas automaticamente (só "Remover pastas vazias", pasta a pasta, com confirmação, só as realmente vazias); reorganizar só move no mesmo disco (outro disco = cópia conferida; celular nunca); Desfazer funciona depois de reabrir e não devolve sem perguntar arquivo que mudou. Decisões sem resposta do usuário, seguindo o plano aprovado: acompanhantes `.xmp`/`.aae`/`.thm` vão junto (opção no assistente, ligada por padrão) e "biblioteca principal" = configuração "disco principal" (destino sugerido nas cópias).
 - [x] Modelos de estrutura e prévia em árvore antes → depois (2026-10-30)
   - [x] Assistente "Reorganizar…" no cartão do disco: pasta, modelo, pasta de "hora a confirmar", nomes repetidos, acompanhantes; prévia com frases e árvore "Antes (de onde saem)" → "Depois (para onde vão)", pastas novas, "fica vazia (não é apagada)", nomes ajustados destacados; "Copiar para outro disco…" abre a cópia conferida
@@ -217,14 +217,20 @@ Cuidados pedidos pelo usuário (2026-10-30), registrados na spec §12 e no ADR 0
   - [x] CLI `reorg plan|start|resume|undo|resolve|folders|status`; `recover` inclui a reorganização
   - [x] Demonstração: `-DemoPersistente` gera a pasta "HD bagunçado"
 - [x] Critérios da spec (2026-10-30): interrupção recuperável (kill em 3 pontos × reorganização e Desfazer + na recuperação, 3× sem efeito colateral); Desfazer restaura exatamente a estrutura anterior (arquivos e pastas, depois de reabrir o core); modelo com momento gera a árvore esperada (momento nomeado com caracteres inválidos, sem nome, atravessando a meia-noite, hora a confirmar)
-- [ ] Teste do usuário (roteiro único das Fases 6 e 7 em `docs/roteiro-teste-fases-6-7.md`, com o "HD bagunçado" e a pasta "Integridade" da demonstração) — **aguarda teste do usuário**
-- [ ] Tag `v0.6.0` — **aguarda teste do usuário** (o usuário pediu, em 2026-10-30, para não criar a tag antes de testar)
+- [x] Teste do usuário (2026-10-31, roteiro único das Fases 6 e 7 em `docs/roteiro-teste-fases-6-7.md`): reorganizar, Desfazer depois de reabrir com o arquivo editado esperando decisão e remover pastas vazias OK
+- [x] Ajustes de usabilidade pedidos no teste (2026-10-31)
+  - [x] Prévia com o caminho com letra (`C:\Users\…`), nunca `\\?\Volume{GUID}\…` (também nas mensagens de erro: `withoutTechnicalRoot`)
+  - [x] Nome completo ao passar o mouse nas pastas e arquivos da árvore
+  - [x] Decisão do Desfazer direto no cartão ("1 arquivo mudou depois da reorganização" + "Devolver mesmo assim" / "Deixar onde está")
+  - [x] "Remover pastas vazias": tudo desmarcado, com "Marcar todas"
+  - [x] Biblioteca: momento que atravessa a meia-noite aparece uma vez, no dia em que começa
+- [x] Tag `v0.6.0` (2026-10-31)
 
 Observações da Fase 6:
 - Evidências: core — `reorg_test` (9 testes: modelos, árvore do critério, mover + catálogo + reescanear + reabrir + Desfazer exato + remover pastas criadas, Desfazer com arquivo mudado/sumido/lugar ocupado e decisões, origem mudada antes de mover, "perguntar", pastas vazias com Thumbs.db oculto, celular/desconectado/sem escaneamento bloqueiam); `reorg_demo_test` (cenário da demonstração com e sem ExifTool real); `reorg_kill_test` (8 testes com a CLI morta); migração v1–v4 → v5; teste de arquitetura (sem `COPY_ALLOWED`, `RemoveDirectoryW` só depois de conferir, reorganização sem API de exclusão). App — assistente (árvore, nada antes de confirmar, bloqueio, copiar para outro disco), celular sem botão, disco principal, Desfazer com avisos, decisões, pastas vazias; reorganizar e desfazer pela interface com o core real.
 - Arquivos criados depois do último escaneamento não entram na reorganização (a prévia só usa o catálogo); escaneie antes.
 
-## Fase 7 — Integridade periódica (implementada em 2026-10-30; aguarda o teste do usuário)
+## Fase 7 — Integridade periódica (concluída em 2026-10-31)
 Cuidados pedidos pelo usuário (2026-10-30), registrados na spec §14 e no ADR 0018: a verificação só lê, compara e relata (nenhum arquivo é modificado); restaurar só pela cópia segura da Fase 5, com prévia e confirmação; a agendada é leve (devagar, pausável, cede a vez às outras tarefas) e nunca roda em celular sem o usuário pedir.
 - [x] Verificação por fonte, por pasta (CLI) ou pelos itens marcados na Biblioteca; classificação inalterado / alterado / possivelmente corrompido (+ "não está mais no lugar" e "não deu para ler", sem nunca marcar ausente) (2026-10-30)
   - [x] Leitura pelo leitor da conferência em modo `observeOnly` (GENERIC_READ); celular pelo helper, só quando escolhido; FAT ±1 h (C7)
@@ -234,8 +240,13 @@ Cuidados pedidos pelo usuário (2026-10-30), registrados na spec §14 e no ADR 0
 - [x] Apontar outras cópias conferidas e restaurar via cópia segura (prévia + confirmação; gravada ao lado como `_1`, o danificado nunca é substituído) (2026-10-30)
 - [x] App: Tarefas (possivelmente corrompidos com as outras cópias e "Restaurar desta cópia…", verificações com progresso), Dispositivos › "Verificar integridade…", Biblioteca › "Verificar…", avisos no Início, ajuda; CLI `verify start|resume|status|problems|restore|accept|schedule|tick`; demonstração "Integridade" + `tools\scripts\demo-danificar.ps1` (2026-10-30)
 - [x] Critério da spec (2026-10-30): corrupção simulada (bytes trocados com a data preservada) detectada e outras cópias conferidas apontadas — core, CLI compilada e app com o core real
-- [ ] Teste do usuário (roteiro único das Fases 6 e 7) — **aguarda teste do usuário**
-- [ ] Tag `v0.7.0` — depois do teste do usuário (e da `v0.6.0`)
+- [x] Teste do usuário (2026-10-31, roteiro único): verificação, dano detectado, prova de só leitura (`True`), restauração e edição reconhecida OK
+- [x] Ajustes de usabilidade pedidos no teste (2026-10-31)
+  - [x] Cobertura com situação própria "possivelmente corrompido" (vermelho, "Ver e restaurar" no cartão, texto próprio no Início); a cópia boa cuja única outra cópia se danificou conta como "sem backup"
+  - [x] Depois de restaurar: "Restaurado — a cópia boa está em IMG_0003_1.jpg", fora dos pendentes ("Restaurados e resolvidos"), "Marcar como resolvido" (schema v7 aditivo, só catálogo; o danificado fica)
+  - [x] Pendente da Fase 4: Biblioteca mostra os itens logo depois do escaneamento ("conferindo…", data do nome/arquivo) e atualiza conforme a conferência avança
+  - [x] Documentos `.md` em UTF-8 com BOM e caminhos completos do Windows (`tools\scripts\check-docs.ps1`, também na CI)
+- [x] Tag `v0.7.0` (2026-10-31)
 
 Observações da Fase 7:
 - Evidências: core — `integrity_test` (18 testes: classificação e FAT, limite de vazão sem rajada, critério com o disco intacto byte a byte, não "lavar" o corrompido por retry/scan, restaurar com prévia e nome `_1`, restaurar de cópia também estragada recusada, aceitar como está, pausar logo depois de começar, fechar no meio e continuar sem repetir, fonte desconectada, periódica leve e só discos, periódica cede a vez, celular só a pedido, isolate); `verify_cli_test` (CLI compilada: critério + restauração, kill em `verify.after_file_commit` e continuação sem duplicar, agendamento); migração v1–v5 → v6; teste de arquitetura (integridade sem APIs de gravação nem de cópia). App — 9 testes de widget e o fluxo verificar → corrompido → restaurar com o core real.
@@ -270,3 +281,4 @@ Observações da Fase 7:
 - 2026-10-30 — Ajustes de usabilidade da Fase 5 (teste do usuário) — abas da Comparar com "contém/contido" e dicas com os nomes dos lados, dicas nos comandos, caminho completo e próximo passo no assistente, Detalhes da tarefa com copiados/renomeados/não copiados. Tag v0.5.0. Fase 6 **não iniciada**: aguarda o usuário.
 - 2026-10-30 — Retomada após o terminal fechar + Fase 6 — Conferido: tag v0.5.0 criada após CI verde; core da reorganização já pronto (commit). Fase 6 implementada: modelos com hora e momento, prévia em árvore, mover no mesmo disco com diário/recuperação, Desfazer pelo diário com aviso de arquivo mudado, remover pastas vazias só a pedido, disco principal, CLI reorg, demo "HD bagunçado", schema v5, ADR 0017. Tag v0.6.0 aguarda o teste do usuário.
 - 2026-10-30 — Fase 7 — Integridade periódica: verificação só leitura (leitor da conferência em modo observar), classificação inalterado/alterado/possivelmente corrompido (FAT ±1 h), rodadas pausáveis e retomáveis, periódica leve que cede a vez e nunca lê celular, outras cópias apontadas e restauração pela cópia segura (prévia, gravada ao lado com `_1`), schema v6, CLI verify, ADR 0018. Tag v0.6.0 **não criada** a pedido do usuário: Fases 6 e 7 aguardam o teste do usuário (roteiro único). Fase 8 **não iniciada**.
+- 2026-10-31 — Ajustes do teste das Fases 6 e 7 — caminho com letra e nome completo na prévia, decisão do Desfazer no cartão, pastas vazias desmarcadas, momento da meia-noite num dia só; corrompido em vermelho com "Ver e restaurar" e cópia boa como "sem backup", restaurados/resolvidos (schema v7); Biblioteca com itens "conferindo…" logo após o escaneamento; .md com BOM e caminhos do Windows (check-docs.ps1). Tags v0.6.0 e v0.7.0. Fase 8 **não iniciada**: aguarda o usuário.

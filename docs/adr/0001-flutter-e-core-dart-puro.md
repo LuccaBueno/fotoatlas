@@ -1,4 +1,4 @@
-# 0001 — Flutter para a interface e core em Dart puro com CLI
+﻿# 0001 — Flutter para a interface e core em Dart puro com CLI
 
 - Status: aceita
 - Data: 2026-10-26

@@ -1,4 +1,4 @@
-# 0010 — Fila de conferência de conteúdo (SHA-256) e `package:crypto`
+﻿# 0010 — Fila de conferência de conteúdo (SHA-256) e `package:crypto`
 
 - Status: aceita
 - Data: 2026-10-27

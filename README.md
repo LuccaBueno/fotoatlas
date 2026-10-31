@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/assets/logo-conceito.jpg" width="160" alt="FotoAtlas"></p>
+﻿<p align="center"><img src="docs/assets/logo-conceito.jpg" width="160" alt="FotoAtlas"></p>
 
 # FotoAtlas
 

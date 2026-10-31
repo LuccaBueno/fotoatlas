@@ -1,4 +1,4 @@
-# Roteiro de teste — Fases 6 (Reorganização) e 7 (Integridade)
+﻿# Roteiro de teste — Fases 6 (Reorganização) e 7 (Integridade)
 
 Teste único das duas fases, só com dados sintéticos da demonstração (nada é lido de celular real nem de pastas pessoais). Comandos para o PowerShell, com caminhos completos.
 
@@ -95,6 +95,25 @@ Verifique o HD fotos de novo. Deve dar "5 inalterados · 1 editado", e nada novo
 - abra o app de novo (comando do passo 1) e espere uns 2 minutos;
 - em Tarefas deve aparecer "Verificação periódica: …" só com as pastas e discos, **sem o Pixel**;
 - no fim, volte o intervalo para **90 dias** em Configurações.
+
+## Conferir os ajustes (2026-10-31)
+
+Comece do zero (passo 0) e abra a demonstração (passo 1). Para ler este roteiro no PowerShell sem trocar acentos:
+```powershell
+Get-Content -LiteralPath 'C:\dev\fotoatlas\docs\roteiro-teste-fases-6-7.md' -Encoding UTF8
+```
+
+**A. Biblioteca antes da conferência:** logo depois de escanear o HD bagunçado (passo 2), abra a Biblioteca: as fotos já aparecem, com o selo **"conferindo…"**, e o selo some conforme a conferência avança.
+
+**B. Prévia (passo 3):** o resumo mostra `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\HD bagunçado`, sem `\\?\Volume{…}`. Na árvore, passe o mouse num nome cortado: aparece o nome completo. Na Biblioteca, o momento de 31/12 23:30 aparece uma vez só, em 31 de dezembro.
+
+**C. Desfazer (passo 6):** no cartão da tarefa, sem abrir Detalhes, aparece "1 arquivo mudou depois da reorganização" com **Devolver mesmo assim** e **Deixar onde está**.
+
+**D. Pastas vazias (passo 7):** todas vêm desmarcadas; **Marcar todas** marca todas.
+
+**E. Corrompido (passo 12):** no cartão do HD fotos, em vermelho, "1 arquivo possivelmente corrompido — Ver e restaurar". No cartão do HD cópia, `foto_3.jpg` conta como "sem backup". No Início, o texto fala de dano no disco.
+
+**F. Depois de restaurar (passo 13):** o arquivo sai de "Possivelmente corrompidos" e aparece em "Restaurados e resolvidos" com "Restaurado — a cópia boa está em IMG_0003_1.jpg". Clique em **Marcar como resolvido**: o `IMG_0003.jpg` danificado continua na pasta.
 
 ## Nota sobre "Encerramento: etapas que estouraram o prazo: hash"
 
