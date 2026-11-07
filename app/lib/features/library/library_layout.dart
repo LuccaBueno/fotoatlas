@@ -16,12 +16,15 @@ sealed class LayoutRow {
 enum HeaderKind { month, day, moment, noDate }
 
 class HeaderRow extends LayoutRow {
-  const HeaderRow(this.kind, this.key, {this.momentId, this.firstIndex = 0});
+  const HeaderRow(this.kind, this.key, {this.momentId, this.momentVisible, this.firstIndex = 0});
   final HeaderKind kind;
 
   /// AAAAMM (mês) ou AAAAMMDD (dia); 0 = sem data.
   final int key;
   final int? momentId;
+
+  /// Itens deste momento no índice (com filtro, pode ser menos que o total).
+  final int? momentVisible;
 
   /// Primeiro item (no índice) sob este cabeçalho.
   final int firstIndex;
@@ -72,6 +75,11 @@ class LibraryLayout {
   static LibraryLayout build(LibraryIndex index, LibraryView view, int columns, double tileHeight) {
     final rows = <LayoutRow>[];
     final n = index.length;
+    // O índice inteiro: um momento pode aparecer em mais de um trecho da tela.
+    final momentVisible = <int, int>{};
+    for (var x = 0; x < n; x++) {
+      momentVisible.update(index.moment[x], (c) => c + 1, ifAbsent: () => 1);
+    }
     var i = 0;
     while (i < n) {
       final day = index.day[i];
@@ -96,7 +104,9 @@ class LibraryLayout {
           while (e < j && index.moment[e] == m) {
             e++;
           }
-          if (m != 0) rows.add(HeaderRow(HeaderKind.moment, day, momentId: m, firstIndex: k));
+          if (m != 0) {
+            rows.add(HeaderRow(HeaderKind.moment, day, momentId: m, momentVisible: momentVisible[m], firstIndex: k));
+          }
           _items(rows, k, e, columns, tileHeight);
           k = e;
         }

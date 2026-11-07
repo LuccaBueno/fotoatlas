@@ -183,6 +183,17 @@ void main() {
     await _tap(tester, find.text('Limpar filtros'));
     await _until(tester, () => find.text('6 itens').evaluate().isNotEmpty);
 
+    // Filtro que deixa só parte de um momento: o cabeçalho mostra "1 de 4 itens".
+    expect(find.textContaining('4 itens · 14:02'), findsOneWidget);
+    expect(find.textContaining(' de 4 itens'), findsNothing);
+    await tester.enterText(find.byKey(const ValueKey('library-search')), 'WA0001');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await _until(tester, () => find.textContaining('1 de 4 itens').evaluate().isNotEmpty);
+    expect(find.textContaining('1 de 4 itens · 14:02'), findsOneWidget);
+    expect(find.text('1 item'), findsOneWidget, reason: 'o total da Biblioteca continua sendo o do filtro');
+    await _tap(tester, find.text('Limpar filtros'));
+    await _until(tester, () => find.text('6 itens').evaluate().isNotEmpty);
+
     // Seleção: clique, Ctrl+clique e "todos os resultados".
     final order = _tileOrder(tester);
     await tester.tap(find.byKey(ValueKey(order[0])));

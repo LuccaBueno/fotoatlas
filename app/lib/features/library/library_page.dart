@@ -333,7 +333,7 @@ class _Header extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(momentSubtitle(m), style: theme.textTheme.bodySmall),
+                  Text(momentSubtitle(m, visible: row.momentVisible), style: theme.textTheme.bodySmall),
                   const SizedBox(width: 4),
                   Builder(
                     builder: (context) => TextButton.icon(

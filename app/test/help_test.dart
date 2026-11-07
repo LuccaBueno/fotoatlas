@@ -91,6 +91,8 @@ void main() {
     expect(momentAutoName(_moment(sabado, sabado)), 'Sábado de manhã');
     expect(momentTimeRange(_moment(sabado, sabado)), '09:00');
     expect(momentSubtitle(_moment(sabado, sabado, items: 1)), '1 item · 09:00');
+    expect(momentSubtitle(_moment(sabado, sabado, items: 4), visible: 1), '1 de 4 itens · 09:00');
+    expect(momentSubtitle(_moment(sabado, sabado, items: 4), visible: 4), '4 itens · 09:00');
     expect(momentAutoName(_moment(sabado, DateTime.utc(2024, 5, 4, 15))), 'Sábado, da manhã à tarde');
     expect(
       momentAutoName(_moment(DateTime.utc(2024, 5, 4, 21), DateTime.utc(2024, 5, 5, 1))),

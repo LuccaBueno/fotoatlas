@@ -91,9 +91,11 @@ String momentTitle(MomentView m) {
   return '${momentAutoName(m)} · ${s.day} de ${monthName(s.month)} de ${s.year}';
 }
 
-/// "4 itens · 14:02–17:10" (ou "1 item · 09:00").
-String momentSubtitle(MomentView m) {
+/// "4 itens · 14:02–17:10" (ou "1 item · 09:00"). Com um filtro deixando só
+/// [visible] itens do momento: "1 de 4 itens · 14:02–17:10".
+String momentSubtitle(MomentView m, {int? visible}) {
   final range = momentTimeRange(m);
-  final count = plural(m.itemCount, 'item', 'itens');
+  final total = plural(m.itemCount, 'item', 'itens');
+  final count = visible != null && visible < m.itemCount ? '${formatInt(visible)} de $total' : total;
   return range.isEmpty ? count : '$count · $range';
 }
