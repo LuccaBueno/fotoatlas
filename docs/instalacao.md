@@ -33,10 +33,10 @@ Baixe o instalador da versão nova e abra, com o FotoAtlas **fechado**. Ele inst
 
 **Configurações do Windows › Aplicativos › Aplicativos instalados › FotoAtlas › Desinstalar** (com o FotoAtlas fechado).
 
-1. O desinstalador remove o programa e os atalhos. Suas fotos e vídeos nunca são tocados.
-2. No fim, ele pergunta se você quer apagar também o catálogo, as configurações e as miniaturas:
-   - **Não** (o padrão): ficam guardados. Se você instalar o FotoAtlas de novo, ele continua de onde parou.
-   - **Sim**: as pastas vão para a **Lixeira** (dá para recuperar de lá até você esvaziá-la).
+1. Confirme em **Desinstalar** (ou **Cancelar** para desistir). O desinstalador remove o programa e os atalhos. Suas fotos e vídeos nunca são tocados.
+2. No fim, ele pergunta o que fazer com o catálogo, as configurações e as miniaturas:
+   - **Manter catálogo** (o padrão): ficam guardados. Se você instalar o FotoAtlas de novo, ele continua de onde parou.
+   - **Apagar catálogo (vai para a Lixeira)**: as pastas vão para a **Lixeira** (dá para recuperar de lá até você esvaziá-la).
 
 ## Problemas comuns
 

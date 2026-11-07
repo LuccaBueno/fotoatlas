@@ -74,9 +74,9 @@ Deve mostrar `True`: a atualização não mudou nenhum byte do catálogo nem das
 ## Desinstalar
 
 **11. Desinstalar mantendo o catálogo.** Com o FotoAtlas ainda aberto, vá em **Configurações do Windows › Aplicativos › Aplicativos instalados › FotoAtlas › Desinstalar**:
+- A primeira pergunta tem os botões **Desinstalar** e **Cancelar**, em português. Clique em **Desinstalar**.
 - Deve aparecer "O FotoAtlas está aberto". Feche o FotoAtlas e clique em **OK**.
-- A confirmação diz que as fotos não são tocadas e que o catálogo não é apagado agora. Confirme.
-- No fim, a pergunta "Quer apagar também o catálogo, as configurações e as miniaturas?" vem com **Não** selecionado. Clique em **Não**.
+- No fim, a pergunta "O que fazer com o catálogo?" tem os botões **Manter catálogo** (o padrão) e **Apagar catálogo (vai para a Lixeira)**. Clique em **Manter catálogo**.
 
 Confira (deve mostrar `False`, `False`, `False`, `True`):
 ```powershell
@@ -87,7 +87,7 @@ Test-Path -LiteralPath 'C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas\catalog.db'
 ```
 Se a sua área de trabalho estiver no OneDrive, o atalho fica em `C:\Users\Lucca-PC\OneDrive\Desktop` (ou `Área de Trabalho`); confira lá.
 
-**12. Reinstalar e desinstalar mandando o catálogo de teste para a Lixeira.** Instale o 0.8.1 de novo (comando do passo 7), abra pelo menu Iniciar e veja que é o mesmo catálogo (Configurações › Sobre). Feche e desinstale de novo, agora respondendo **Sim** na pergunta final. Deve aparecer "O catálogo, as configurações e as miniaturas foram para a Lixeira." Confira:
+**12. Reinstalar e desinstalar mandando o catálogo de teste para a Lixeira.** Instale o 0.8.1 de novo (comando do passo 7), abra pelo menu Iniciar e veja que é o mesmo catálogo (Configurações › Sobre). Feche e desinstale de novo, agora clicando em **Apagar catálogo (vai para a Lixeira)** na pergunta final. Deve aparecer "O catálogo, as configurações e as miniaturas foram para a Lixeira." Confira:
 ```powershell
 Test-Path -LiteralPath 'C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas'
 ```

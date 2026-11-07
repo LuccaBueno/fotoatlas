@@ -4,10 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [0.8.0] — 2026-11-06 — Fase 8: Distribuição
+
+### Ajustes de usabilidade (depois do teste da Fase 8)
+- **Desinstalar:** as duas perguntas Yes/No seguidas, com sentidos opostos, viraram botões com o texto da ação, em português: **Desinstalar** / **Cancelar** no começo e **Manter catálogo** (padrão) / **Apagar catálogo (vai para a Lixeira)** no fim. "Manter catálogo" fica no lugar de "Desinstalar": um clique repetido não apaga nada. A CI agora clica nesses botões, inclusive em "Apagar catálogo", e confere a pasta na Lixeira.
+- **Biblioteca com filtro:** o cabeçalho do momento mostra "1 de 4 itens" quando o filtro deixa só parte dele visível.
+
 ### Adicionado — Fase 8: Distribuição
 - **Instalador para Windows** (`FotoAtlas-<versão>-instalador.exe`, Inno Setup), em português e sem pedir permissão de administrador. Instala em `C:\Users\<usuário>\AppData\Local\Programs\FotoAtlas`, com atalho no menu Iniciar e (opcional, vem marcado) na área de trabalho. Já inclui o ExifTool e o FFmpeg; não precisa do .NET nem do "Visual C++ Redistributable".
 - **Atualizar** é instalar a versão nova por cima: o catálogo, os backups e as configurações (`C:\Users\<usuário>\AppData\Roaming\FotoAtlas`) e as miniaturas ficam intactos. Com o FotoAtlas aberto, o instalador pede para fechá-lo e nunca o fecha à força.
-- **Desinstalar** remove o programa e os atalhos e, no fim, pergunta se quer apagar também o catálogo, as configurações e as miniaturas. A resposta padrão é **Não** (reinstalar continua de onde parou); com **Sim**, as pastas vão para a Lixeira.
+- **Desinstalar** remove o programa e os atalhos e, no fim, pergunta o que fazer com o catálogo, as configurações e as miniaturas. O padrão é manter (reinstalar continua de onde parou); apagando, as pastas vão para a Lixeira.
 - **Ícone do FotoAtlas** (o globo com lupa do menu lateral) no lugar do ícone padrão do Flutter: janela, barra de tarefas, executável, instalador e Aplicativos instalados.
 - Configurações › **Sobre o FotoAtlas**: versão instalada e a pasta do catálogo e das configurações.
 - `tools\scripts\build-installer.ps1` gera o instalador; `tools\scripts\test-installer.ps1` instala, atualiza e desinstala de verdade numa máquina limpa (job "Instalador" da CI). Guia para usuários em `docs\instalacao.md`. ADR 0019.
