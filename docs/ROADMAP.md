@@ -254,7 +254,7 @@ Observações da Fase 7:
 - A verificação leve de um disco grande leva horas e só anda com o app aberto (continua de onde parou).
 - Achado durante a fase: o relógio do Windows tem resolução de ~15 ms; com prazo de 0 dias, um arquivo conferido "agora" ficava de fora (comparação estrita). O prazo passou a ser "conferido há N dias ou mais" (`<=`), e o limite de vazão passou a valer bloco a bloco (tempo parado não vira rajada).
 
-## Fase 8 — Distribuição
+## Fase 8 — Distribuição (concluída em 2026-11-06)
 Pedidos do usuário (2026-10-31), registrados no ADR 0019: ExifTool e FFmpeg no instalador; atalhos no menu Iniciar e na área de trabalho; ícone da logo do menu lateral (globo com lupa) na janela, barra de tarefas, executável e instalador; atualizar nunca apaga o catálogo nem as configurações; desinstalar não apaga o catálogo sem perguntar.
 - [x] Instalador com ExifTool e FFmpeg, preservando o catálogo em atualizações (2026-10-31)
   - [x] Inno Setup por usuário (`installer\fotoatlas.iss`, sem administrador), `AppId` fixo, PT-BR, atalhos no menu Iniciar e na área de trabalho, `[InstallDelete]` só em `{app}`
@@ -264,11 +264,11 @@ Pedidos do usuário (2026-10-31), registrados no ADR 0019: ExifTool e FFmpeg no 
   - [x] Runtime do Visual C++ estático (`/MT`) no executável e nos plugins: abre sem o "Visual C++ Redistributable" e sem empacotar DLLs da Microsoft
   - [x] Ícone gerado da logo do menu (`app\tool\gen_app_icon.dart`, 16–256 px) na janela, barra de tarefas, executável, instalador e Aplicativos instalados
   - [x] Configurações › Sobre o FotoAtlas: versão e pasta do catálogo
-- [~] Teste em máquina limpa, documentação de usuário
+- [x] Teste em máquina limpa, documentação de usuário (2026-11-06)
   - [x] CI (runner limpo): `tools\scripts\test-installer.ps1` instala, abre o app, recusa atualizar com o app aberto, atualiza 0.8.0 → 0.8.1 com o catálogo idêntico byte a byte e desinstala mantendo o catálogo (2026-10-31)
   - [x] `docs\instalacao.md` (instalar, atualizar, desinstalar, onde ficam os dados) e roteiro `docs\roteiro-teste-fase-8.md` (2026-10-31)
   - [x] Teste do usuário (roteiro da Fase 8): tudo funcionou; ajustes de usabilidade no desinstalador e na contagem do momento com filtro (2026-11-06)
-- [~] Release `v1.0.0` no GitHub: rascunho com o instalador, o SHA-256 e as notas; aguarda a aprovação do usuário para publicar
+- [x] Release `v1.0.0` no GitHub, com o instalador, o SHA-256 e as notas de versão (2026-11-06)
 
 Observações da Fase 8:
 - Evidências locais: `dumpbin /dependents` do executável e do plugin sem `MSVCP140`/`VCRUNTIME140`; o app empacotado abre com um catálogo temporário e usa o helper da própria pasta; testes do core com o helper real (`phone_cli_test`, `helper_client_test`, `demo_copy_test`) passam com o helper publicado (trimming); `app\test\distribution_test.dart` (ícone, versão, regras do instalador). O teste que instala de verdade só roda na CI (nunca no computador do usuário).
@@ -300,3 +300,4 @@ Observações da Fase 8:
 - 2026-10-31 — Ajustes do teste das Fases 6 e 7 — caminho com letra e nome completo na prévia, decisão do Desfazer no cartão, pastas vazias desmarcadas, momento da meia-noite num dia só; corrompido em vermelho com "Ver e restaurar" e cópia boa como "sem backup", restaurados/resolvidos (schema v7); Biblioteca com itens "conferindo…" logo após o escaneamento; .md com BOM e caminhos do Windows (check-docs.ps1). Tags v0.6.0 e v0.7.0. Fase 8 **não iniciada**: aguarda o usuário.
 - 2026-10-31 — Fase 8 (início) — Conferido: git limpo, tags v0.6.0 e v0.7.0 no GitHub, CI verde, nada pela metade. Instalador Inno Setup por usuário com ExifTool/FFmpeg, helper autocontido, runtime do C++ estático, atalhos, ícone da logo do menu, mutex contra atualizar com o app aberto, desinstalação que pergunta (padrão Não, Sim → Lixeira), Sobre com versão, teste de instalar/atualizar/desinstalar na CI, ADR 0019, docs\instalacao.md e roteiro. Aguarda o teste do usuário; release v1.0.0 depois.
 - 2026-11-06 — Teste da Fase 8 e ajustes — Roteiro aprovado pelo usuário. Desinstalador com botões "Desinstalar/Cancelar" e "Manter catálogo/Apagar catálogo (vai para a Lixeira)" (`UninstallString` com `/SILENT`, ADR 0019), testados na CI pela automação de interface; cabeçalho do momento com "1 de 4 itens" sob filtro. Tag v0.8.0.
+- 2026-11-06 — Release v1.0.0 — Publicada a pedido do usuário depois de conferir que o SHA-256 das notas, o do GitHub, o do `.sha256` e o do instalador baixado de novo são iguais (tag no commit ec435a2). README com o link de download e o resumo da instalação. Fase 9+ **não iniciada**: aguarda o usuário.

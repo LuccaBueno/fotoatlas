@@ -4,7 +4,15 @@
 
 Organizador de fotos e vídeos para Windows: descobre o que você tem em cada celular, HD e pendrive, mostra **o que já tem backup e o que ainda falta**, e copia e reorganiza tudo **sem perder nenhum arquivo**, mesmo se a energia cair no meio.
 
-> Baixe o instalador em [Versões](https://github.com/LuccaBueno/fotoatlas/releases). Veja o andamento em [`docs/ROADMAP.md`](docs/ROADMAP.md).
+## Baixar e instalar
+
+**[Baixar a versão mais recente](https://github.com/LuccaBueno/fotoatlas/releases/latest)** (Windows 10 versão 1809 ou mais nova, ou Windows 11, 64 bits).
+
+1. Na página da versão, baixe `FotoAtlas-<versão>-instalador.exe`, em **Assets**.
+2. Abra o arquivo. Se aparecer **"O Windows protegeu o computador"**, clique em **Mais informações › Executar assim mesmo** (o instalador não tem assinatura digital).
+3. Escolha se quer um atalho na área de trabalho e clique em **Instalar**.
+
+Não é preciso ser administrador nem instalar mais nada: o ExifTool e o FFmpeg já vêm junto. Para atualizar, feche o FotoAtlas e instale a versão nova por cima: o catálogo e as configurações continuam como estavam. Mais detalhes em [Instalar, atualizar e desinstalar](docs/instalacao.md).
 
 ## Por que existe
 
