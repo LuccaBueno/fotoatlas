@@ -4,7 +4,7 @@
 
 Organizador de fotos e vídeos para Windows: descobre o que você tem em cada celular, HD e pendrive, mostra **o que já tem backup e o que ainda falta**, e copia e reorganiza tudo **sem perder nenhum arquivo**, mesmo se a energia cair no meio.
 
-> 🚧 Em desenvolvimento. Veja o andamento em [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> Baixe o instalador em [Versões](https://github.com/LuccaBueno/fotoatlas/releases). Veja o andamento em [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Por que existe
 

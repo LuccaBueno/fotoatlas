@@ -3,6 +3,9 @@
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
+n## [1.0.0] — 2026-11-06 — Primeira versão estável
+
+Mesmas funções da 0.8.0, agora como versão estável, com o instalador publicado na página de versões do GitHub.
 
 ## [0.8.0] — 2026-11-06 — Fase 8: Distribuição
 

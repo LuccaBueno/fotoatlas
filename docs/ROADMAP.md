@@ -268,7 +268,7 @@ Pedidos do usuário (2026-10-31), registrados no ADR 0019: ExifTool e FFmpeg no 
   - [x] CI (runner limpo): `tools\scripts\test-installer.ps1` instala, abre o app, recusa atualizar com o app aberto, atualiza 0.8.0 → 0.8.1 com o catálogo idêntico byte a byte e desinstala mantendo o catálogo (2026-10-31)
   - [x] `docs\instalacao.md` (instalar, atualizar, desinstalar, onde ficam os dados) e roteiro `docs\roteiro-teste-fase-8.md` (2026-10-31)
   - [x] Teste do usuário (roteiro da Fase 8): tudo funcionou; ajustes de usabilidade no desinstalador e na contagem do momento com filtro (2026-11-06)
-- [ ] Release `v1.0.0` no GitHub
+- [~] Release `v1.0.0` no GitHub: rascunho com o instalador, o SHA-256 e as notas; aguarda a aprovação do usuário para publicar
 
 Observações da Fase 8:
 - Evidências locais: `dumpbin /dependents` do executável e do plugin sem `MSVCP140`/`VCRUNTIME140`; o app empacotado abre com um catálogo temporário e usa o helper da própria pasta; testes do core com o helper real (`phone_cli_test`, `helper_client_test`, `demo_copy_test`) passam com o helper publicado (trimming); `app\test\distribution_test.dart` (ícone, versão, regras do instalador). O teste que instala de verdade só roda na CI (nunca no computador do usuário).
