@@ -105,8 +105,18 @@ void main() {
       final setup = iss.substring(0, iss.indexOf('[Code]')).split('\n').where((l) => !l.startsWith(';')).join('\n');
       expect(setup, isNot(contains('{userappdata}')));
       expect(setup, isNot(contains('{localappdata}')));
-      expect(code, contains('MB_YESNO or MB_DEFBUTTON2, IDNO) <> IDYES then'));
+      // Só o segundo botão apaga; o primeiro (padrão e resposta do silencioso) mantém.
+      expect(code, contains("['Manter catálogo', 'Apagar catálogo (vai para a Lixeira)'], 0, IDYES) <> IDNO then"));
       expect(code, contains("'SendToRecycleBin'"));
+    });
+
+    test('desinstalar pelo Windows pergunta com o texto da ação, sem os botões Yes/No do Inno', () {
+      final code = iss.substring(iss.indexOf('[Code]'));
+      final appId = setting('AppId').substring(1); // {{ no .iss é { literal
+      expect(code, contains("Uninstall\\${appId}_is1'"));
+      expect(code, contains("'UninstallString', '\"' + ExpandConstant('{uninstallexe}') + '\" /SILENT'"));
+      expect(code, contains("['Desinstalar', 'Cancelar'], 0, IDYES) = IDYES"));
+      expect(code, isNot(contains('MB_DEFBUTTON')), reason: 'TaskDialogMsgBox recusa e dá erro ao desinstalar');
     });
   });
 }

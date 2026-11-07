@@ -9,9 +9,9 @@
 ;   atualizar nunca mexem neles.
 ; - Não atualiza nem desinstala com o app aberto (AppMutex; o app cria o mutex
 ;   em app\windows\runner\main.cpp). Nunca fecha o app à força.
-; - Desinstalar pergunta antes de tocar no catálogo; a resposta padrão (e a do
-;   modo silencioso) é "Não". Se a resposta for "Sim", as pastas vão para a
-;   Lixeira, nunca são apagadas de vez.
+; - Desinstalar pergunta antes de tocar no catálogo, com o texto da ação nos
+;   botões; o padrão (e a resposta do modo silencioso) é "Manter catálogo". Com
+;   "Apagar catálogo", as pastas vão para a Lixeira, nunca são apagadas de vez.
 
 #ifndef AppVersion
   #error Defina AppVersion (use tools\scripts\build-installer.ps1)
@@ -61,6 +61,8 @@ ShowLanguageDialog=no
 Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [Messages]
+; Só aparece para quem abre o unins000.exe direto: pelo Windows, a pergunta é a
+; do [Code] (esta mensagem tem botões do sistema, que não dá para trocar).
 ConfirmUninstall=Remover o %1 deste computador?%n%nSuas fotos e vídeos não são tocados. O catálogo e as configurações não são apagados agora: no fim, o desinstalador pergunta o que fazer com eles.
 SetupAppRunningError=O %1 está aberto.%n%nFeche o FotoAtlas (se houver uma tarefa em andamento, ele guarda onde parou) e clique em OK para continuar, ou em Cancelar para sair.
 UninstallAppRunningError=O %1 está aberto.%n%nFeche o FotoAtlas e clique em OK para continuar, ou em Cancelar para sair.
@@ -103,6 +105,30 @@ begin
   Result := not DirExists(Path);
 end;
 
+// O Windows abre o desinstalador com /SILENT: sem isso aparece a pergunta do
+// próprio Inno, com botões Yes/No do sistema, que não dá para trocar. Relançar
+// o desinstalador não serve: o segundo processo falha enquanto o primeiro está
+// com o unins000.dat aberto. A chave é a do AppId.
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+    RegWriteStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6B0E5A52-3C4D-4F7B-9E21-8A1D2F0C7B3E}_is1',
+      'UninstallString', '"' + ExpandConstant('{uninstallexe}') + '" /SILENT');
+end;
+
+// Nos diálogos com botões próprios, o primeiro é IDYES, o segundo é IDNO e o
+// padrão é sempre o primeiro. O X não fecha: só os botões respondem.
+function InitializeUninstall(): Boolean;
+begin
+  Result := True;
+  if not UninstallSilent then
+    Exit;
+  Result := SuppressibleTaskDialogMsgBox('Desinstalar o FotoAtlas?',
+    'O programa e os atalhos serão removidos. Suas fotos e vídeos não são tocados. O catálogo e as configurações ' +
+    'não são apagados agora: no fim, você escolhe o que fazer com eles.',
+    mbConfirmation, MB_YESNO, ['Desinstalar', 'Cancelar'], 0, IDYES) = IDYES;
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   Catalog, Cache: String;
@@ -111,17 +137,19 @@ begin
     Exit;
   Catalog := ExpandConstant('{userappdata}\FotoAtlas');
   Cache := ExpandConstant('{localappdata}\FotoAtlas');
-  if not DirExists(Catalog) and not DirExists(Cache) then
+  if not DirExists(Catalog) and not DirExists(Cache) then begin
+    SuppressibleMsgBox('O FotoAtlas foi removido.', mbInformation, MB_OK, IDOK);
     Exit;
-  // Padrão "Não" (também no modo silencioso): o catálogo fica.
-  if SuppressibleMsgBox(
-      'O FotoAtlas foi removido. O catálogo (o que o FotoAtlas sabe sobre suas fotos: dispositivos, ' +
-      'conferências, momentos, datas corrigidas) e as configurações continuam guardados em:' + #13#10#13#10 +
+  end;
+  // "Manter catálogo" vem primeiro: é o padrão, também no modo silencioso, e
+  // fica no lugar de "Desinstalar" (um clique repetido não apaga nada).
+  if SuppressibleTaskDialogMsgBox('O FotoAtlas foi removido. O que fazer com o catálogo?',
+      'O catálogo (o que o FotoAtlas sabe sobre suas fotos: dispositivos, conferências, momentos, datas corrigidas) ' +
+      'e as configurações continuam guardados em:' + #13#10#13#10 +
       Catalog + #13#10#13#10 +
-      'Se instalar o FotoAtlas de novo, ele continua de onde parou. Suas fotos e vídeos não estão nessa pasta ' +
-      'e não são tocados.' + #13#10#13#10 +
-      'Quer apagar também o catálogo, as configurações e as miniaturas? Eles vão para a Lixeira.',
-      mbConfirmation, MB_YESNO or MB_DEFBUTTON2, IDNO) <> IDYES then
+      'Mantendo, se instalar o FotoAtlas de novo, ele continua de onde parou. Apagando, o catálogo, as configurações ' +
+      'e as miniaturas vão para a Lixeira. Suas fotos e vídeos não estão nessa pasta e não são tocados.',
+      mbConfirmation, MB_YESNO, ['Manter catálogo', 'Apagar catálogo (vai para a Lixeira)'], 0, IDYES) <> IDNO then
     Exit;
   if RecycleFolder(Catalog) and RecycleFolder(Cache) then
     SuppressibleMsgBox('O catálogo, as configurações e as miniaturas foram para a Lixeira.',

@@ -11,7 +11,9 @@
 # executável, ExifTool/FFmpeg/helper funcionando da pasta instalada, o app
 # abrindo e usando o helper instalado; atualização recusada com o app aberto;
 # atualização A → B sem mudar um byte do catálogo; desinstalação silenciosa que
-# remove o programa e os atalhos e deixa o catálogo intacto.
+# remove o programa e os atalhos e deixa o catálogo intacto; desinstalação como
+# o Windows faz, clicando nos botões: Cancelar, Manter catálogo e Apagar catálogo
+# (a pasta vai para a Lixeira).
 param(
     [Parameter(Mandatory)][string]$InstaladorA,
     [Parameter(Mandatory)][string]$InstaladorB,
@@ -84,6 +86,63 @@ function Stop-App($p) {
 }
 
 function Shortcut-Target([string]$lnk) { (New-Object -ComObject WScript.Shell).CreateShortcut($lnk).TargetPath }
+
+# Diálogos do desinstalador, pela automação de interface. Os botões próprios são
+# "command links" sem padrão de clique na automação: o clique vai por mensagem.
+Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
+Add-Type -Namespace FotoAtlasTeste -Name User32 -MemberDefinition '[DllImport("user32.dll")] public static extern bool PostMessage(System.IntPtr h, uint m, System.IntPtr w, System.IntPtr l);'
+$BM_CLICK = 0xF5
+
+function Dialog-Controls {
+    # Controles de cada diálogo aberto, na ordem da tela.
+    $raiz = [System.Windows.Automation.AutomationElement]::RootElement
+    $tudo = [System.Windows.Automation.Condition]::TrueCondition
+    foreach ($janela in $raiz.FindAll('Children', $tudo)) {
+        if ($janela.Current.ClassName -ne '#32770') { continue }
+        , @($janela.FindAll('Descendants', $tudo))
+    }
+}
+
+function Find-Dialog([string]$texto, [int]$segundos = 90) {
+    $limite = (Get-Date).AddSeconds($segundos)
+    while ((Get-Date) -lt $limite) {
+        foreach ($controles in Dialog-Controls) {
+            if ($controles | Where-Object { $_.Current.Name -eq $texto }) { return , $controles }
+        }
+        Start-Sleep -Milliseconds 300
+    }
+    throw "Diálogo com '$texto' não apareceu em $segundos s."
+}
+
+function Wait-Buttons([string]$texto) {
+    $controles = Find-Dialog $texto
+    @($controles | Where-Object { $_.Current.ClassName -eq 'CCCommandLink' } | ForEach-Object { $_.Current.Name })
+}
+
+function Click-Button([string]$texto) {
+    $botao = (Find-Dialog $texto) | Where-Object { $_.Current.Name -eq $texto } | Select-Object -First 1
+    [void][FotoAtlasTeste.User32]::PostMessage([IntPtr]$botao.Current.NativeWindowHandle, $BM_CLICK, [IntPtr]::Zero, [IntPtr]::Zero)
+}
+
+function Close-Message([string]$texto) {
+    $ok = (Find-Dialog $texto) | Where-Object { $_.Current.ClassName -eq 'Button' } | Select-Object -First 1
+    [void][FotoAtlasTeste.User32]::PostMessage([IntPtr]$ok.Current.NativeWindowHandle, $BM_CLICK, [IntPtr]::Zero, [IntPtr]::Zero)
+}
+
+function Start-WindowsUninstall {
+    # O mesmo comando que Configurações › Aplicativos executa.
+    $comando = (Get-ItemProperty -LiteralPath $chave).UninstallString
+    $m = [regex]::Match($comando, '^"([^"]+)"\s*(.*)$')
+    if ($m.Groups[2].Value) { Start-Process -FilePath $m.Groups[1].Value -ArgumentList $m.Groups[2].Value }
+    else { Start-Process -FilePath $m.Groups[1].Value }
+}
+
+function Wait-UninstallerClosed {
+    # O desinstalador continua numa cópia temporária (_unins.tmp).
+    $limite = (Get-Date).AddSeconds(90)
+    while ((Get-Process -Name '_unins*', 'unins000' -ErrorAction SilentlyContinue) -and (Get-Date) -lt $limite) { Start-Sleep -Milliseconds 300 }
+    if (Get-Process -Name '_unins*', 'unins000' -ErrorAction SilentlyContinue) { Check $false 'o desinstalador termina em até 90 s' }
+}
 
 Write-Host "== 1. Instalar $versaoA"
 Check ((Install $InstaladorA 'instalar-A') -eq 0) 'instalador terminou sem erro'
@@ -165,6 +224,42 @@ Check (-not (Test-Path -LiteralPath $atalhoIniciar)) 'atalho do menu Iniciar rem
 Check (-not (Test-Path -LiteralPath $atalhoDesktop)) 'atalho da área de trabalho removido'
 Check ((Snapshot) -eq $antes) 'catálogo, backups e configurações continuam idênticos'
 Check (Test-Path -LiteralPath (Join-Path $catalogDir 'sentinela-do-teste.txt')) 'nada da pasta do catálogo foi apagado'
+
+Write-Host '== 7. Desinstalar como o Windows faz: Cancelar não muda nada'
+Check ((Install $InstaladorB 'reinstalar-1') -eq 0) 'reinstalou'
+Check ((Get-ItemProperty -LiteralPath $chave).UninstallString -eq "`"$unins`" /SILENT") 'o Windows abre o desinstalador sem a pergunta Yes/No do Inno'
+Start-WindowsUninstall
+$botoes = Wait-Buttons 'Desinstalar'
+Check (($botoes -join '|') -eq 'Desinstalar|Cancelar') "pergunta inicial: $($botoes -join ' / ')"
+Click-Button 'Cancelar'
+Wait-UninstallerClosed
+Check (Test-Path -LiteralPath $exe) 'Cancelar deixa o programa instalado'
+Check ((Snapshot) -eq $antes) 'Cancelar não toca no catálogo'
+
+Write-Host '== 8. "Manter catálogo"'
+Start-WindowsUninstall
+[void](Wait-Buttons 'Desinstalar')
+Click-Button 'Desinstalar'
+$botoes = Wait-Buttons 'Manter catálogo'
+Check (($botoes -join '|') -eq 'Manter catálogo|Apagar catálogo (vai para a Lixeira)') "pergunta final, padrão no primeiro: $($botoes -join ' / ')"
+Click-Button 'Manter catálogo'
+Wait-UninstallerClosed
+Check (-not (Test-Path -LiteralPath $exe)) 'programa removido'
+Check ((Snapshot) -eq $antes) 'catálogo, backups e configurações continuam idênticos'
+
+Write-Host '== 9. "Apagar catálogo": vai para a Lixeira'
+Check ((Install $InstaladorB 'reinstalar-2') -eq 0) 'reinstalou'
+Start-WindowsUninstall
+[void](Wait-Buttons 'Desinstalar')
+Click-Button 'Desinstalar'
+[void](Wait-Buttons 'Manter catálogo')
+Click-Button 'Apagar catálogo (vai para a Lixeira)'
+Close-Message 'O catálogo, as configurações e as miniaturas foram para a Lixeira.'
+Wait-UninstallerClosed
+Check (-not (Test-Path -LiteralPath $exe)) 'programa removido'
+Check (-not (Test-Path -LiteralPath $catalogDir)) 'a pasta do catálogo saiu do lugar'
+$lixeira = @((New-Object -ComObject Shell.Application).Namespace(10).Items() | Where-Object { $_.Name -eq 'FotoAtlas' })
+Check ($lixeira.Count -ge 1) 'a pasta do catálogo está na Lixeira'
 
 if ($falhas -gt 0) { throw "$falhas verificação(ões) falharam. Logs do instalador em $logs" }
 Write-Host 'Instalação, atualização e desinstalação: tudo certo.' -ForegroundColor Green
