@@ -4,6 +4,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+### Documentação
+- README começa com a seção **⬇️ Baixar**: botão para a versão mais recente, três passos e o aviso de que "Source code" não é o programa. A descrição e o site do repositório no GitHub apontam para o download.
+
 ## [1.0.0] — 2026-11-06 — Primeira versão estável
 
 Mesmas funções da 0.8.0, agora como versão estável, com o instalador publicado na página de versões do GitHub.
