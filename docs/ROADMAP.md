@@ -289,8 +289,12 @@ Pedido do usuário (2026-11-14):
 - [x] Testes: core (servidor local: SHA-256 errado, arquivo trocado, download interrompido, servidor mudo, cancelar, sem internet, `.sha256` ausente/ilegível/de outro arquivo), app (fluxo, cada falha, cancelar, instalador que não inicia, encerramento seguro com o core real) e CI (`test-installer.ps1`, passo 5b: instalador com os argumentos do app espera, termina e reabre o app)
 - [x] Release `v1.2.0` no GitHub, com o instalador, o `.sha256` e as notas de versão (2026-11-14)
 
-## Pendências
-- [ ] Investigar a folga pequena do teste de desempenho do scan (`packages\fotoatlas_core\test\perf\perf_test.dart`, "50 mil arquivos… event loop principal responsivo", limite de 100 ms de atraso máximo). Na CI o normal é 16–23 ms, mas em runner lento já deu 90 ms (run 43633788956) e 118 ms com o scan levando 26,6 s em vez de ~4 s (run 43638933920, que passou ao rodar de novo com 16 ms). Achar a causa (suspeita: commits SQLite síncronos no isolate principal com disco lento) em vez de subir o limite; a linha `FASE1-EVIDENCIA` do log traz o tempo de scan e o atraso. Registrado a pedido do usuário (2026-11-14).
+## Versão 1.2.1 (2026-11-14)
+Pedido do usuário (2026-11-14): resolver a pendência do teste de desempenho do scan, achando a causa em vez de subir o limite.
+- [x] Investigada a folga pequena do teste de desempenho do scan (`packages\fotoatlas_core\test\perf\perf_test.dart`, limite de 100 ms de atraso máximo; na CI o normal é 16–23 ms, mas deu 90 ms no run 43633788956 e 118 ms com scan de 26,6 s no run 43638933920). **Causa:** as funções do kernel32 eram `isLeaf: true`; durante uma chamada leaf a VM não consegue parar o isolate para a coleta de lixo, que é do grupo de isolates inteiro — com disco lento, um `FindNextFileW` preso no isolate do scan parava também o isolate principal. A suspeita do SQLite não se confirmou (`sqlite3_step` não é leaf). **Correção:** só `GetLastError` continua leaf; teste de arquitetura impede a volta; limite inalterado (ADR 0008, atualização de 2026-11-14)
+- [x] Evidências: experimento isolado (`Sleep(150)` leaf × normal, com outro isolate gerando lixo): 160 ms e até 6,4 s × 15–19 ms. No próprio teste do scan com disco lento simulado (espera de 150 ms injetada em cada pasta, só para a medição, fora do commit): 155 ms e falha com leaf × 13 ms sem. Taxa de `GetLastError` zerado igual nos dois casos (~1 em 1.000, já tratada)
+- [ ] Teste de desempenho 5× seguidas localmente e CI 3× seguidas, todos verdes
+- [ ] Release `v1.2.1` no GitHub, com o instalador, o `.sha256` e as notas de versão
 
 ## Fase 9+ — Avançados
 - [ ] Item lógico (RAW+JPEG, Live Photos) · duplicatas visuais · mapa · IA local · Google Takeout

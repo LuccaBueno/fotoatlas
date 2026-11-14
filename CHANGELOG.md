@@ -4,6 +4,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.2.1] — 2026-11-14
+
+### Corrigido
+- A interface podia travar por instantes durante o escaneamento, a conferência ou a cópia num disco lento (HD externo, pendrive): enquanto o Windows demorava para responder a uma leitura do disco, o FotoAtlas inteiro esperava junto. Agora só a tarefa espera e a interface continua respondendo. Causa: as chamadas ao Windows estavam marcadas como "leaf" no FFI, o que impede a coleta de lixo do Dart de parar aquela thread; como a coleta é de todos os isolates juntos, os outros ficavam parados até a chamada voltar. Só `GetLastError` continua leaf. Evidências e decisão no ADR 0008 (atualização de 2026-11-14).
+- O teste de desempenho do escaneamento de 50 mil arquivos, que em runner lento da CI chegava a 90–118 ms de atraso (limite de 100 ms, mantido), volta a ter folga. Um teste de arquitetura novo impede `isLeaf` em funções que esperam o disco.
+
 ## [1.2.0] — 2026-11-14
 
 ### Adicionado
