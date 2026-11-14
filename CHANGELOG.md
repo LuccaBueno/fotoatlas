@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.2.0] — 2026-11-14
+
+### Adicionado
+- **Atualizar agora:** o aviso de versão nova ganhou o botão **Atualizar agora**, ao lado de **Baixar**. Ele baixa o instalador da release oficial (github.com/LuccaBueno/fotoatlas) para uma pasta temporária, com progresso e **Cancelar**; confere se o SHA-256 do arquivo (relido do disco) é igual ao do `.sha256` da mesma release, e se não for apaga o download e avisa; pergunta antes de fechar, listando as tarefas em andamento, que são pausadas com segurança; e então inicia o instalador, fecha o FotoAtlas com segurança e, no fim da instalação, o abre de novo na versão nova. Nada acontece sem o clique e a confirmação do usuário. Sem internet, download interrompido ou arquivo diferente: avisa e não mexe em nada. A atualização nunca toca no catálogo nem nas configurações. ADR 0021.
+- **Configurações › Atualizações › Procurar atualização agora:** consulta na hora (mesmo com a consulta ao abrir desligada) e diz se há versão nova (mostrando o aviso), se já está na mais nova ou se não deu para consultar.
+- Instalador: com `/ATUALIZARDOAPP=1`, espera o FotoAtlas fechar sozinho (até 2 min, nunca fecha à força) e o abre de novo no fim. Sem o parâmetro, continua recusando atualizar com o app aberto.
+- `tools/scripts/build-installer.ps1` grava o `.sha256` ao lado do instalador.
+- Testes: download conferido, SHA-256 errado, arquivo trocado, conexão que cai, servidor mudo, cancelar, sem internet, `.sha256` ausente ou de outro arquivo; fluxo completo na interface; encerramento seguro antes de sair; e, na CI, o instalador com os argumentos do app esperando o app fechar e reabrindo-o com o catálogo intacto.
+
 ## [1.1.0] — 2026-11-14
 
 ### Adicionado

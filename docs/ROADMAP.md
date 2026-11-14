@@ -282,6 +282,13 @@ Pedidos do usuário (2026-11-14), numa versão só:
 - [x] Aviso de versão nova: consulta diária ao GitHub (desligável em Configurações › Atualizações), faixa com "Baixar"/"Agora não", nunca baixa nem instala, sem dados do usuário, falha em silêncio (ADR 0020)
 - [x] Release `v1.1.0` no GitHub, com o instalador, o SHA-256 e as notas de versão (2026-11-14)
 
+## Versão 1.2.0 (2026-11-14)
+Pedido do usuário (2026-11-14):
+- [x] "Atualizar agora" no aviso de versão nova: baixa o instalador da release oficial para a pasta temporária (progresso e Cancelar), confere o SHA-256 relido do disco com o `.sha256` da release (diferente → apaga e avisa), pergunta antes de fechar listando as tarefas (pausadas com segurança), inicia o instalador e só então fecha com segurança; o instalador (`/ATUALIZARDOAPP=1`) espera o app fechar e o reabre no fim. Nada sem o clique; falhas avisam e não mexem em nada; catálogo e configurações intocados (ADR 0021)
+- [x] Configurações › Atualizações › "Procurar atualização agora"
+- [x] Testes: core (servidor local: SHA-256 errado, arquivo trocado, download interrompido, servidor mudo, cancelar, sem internet, `.sha256` ausente/ilegível/de outro arquivo), app (fluxo, cada falha, cancelar, instalador que não inicia, encerramento seguro com o core real) e CI (`test-installer.ps1`, passo 5b: instalador com os argumentos do app espera, termina e reabre o app)
+- [ ] Release `v1.2.0` no GitHub, com o instalador, o `.sha256` e as notas de versão (aguarda o usuário aprovar as notas)
+
 ## Fase 9+ — Avançados
 - [ ] Item lógico (RAW+JPEG, Live Photos) · duplicatas visuais · mapa · IA local · Google Takeout
 
@@ -310,3 +317,4 @@ Pedidos do usuário (2026-11-14), numa versão só:
 - 2026-11-06 — Release v1.0.0 — Publicada a pedido do usuário depois de conferir que o SHA-256 das notas, o do GitHub, o do `.sha256` e o do instalador baixado de novo são iguais (tag no commit ec435a2). README com o link de download e o resumo da instalação. Fase 9+ **não iniciada**: aguarda o usuário.
 - 2026-11-14 — Versão 1.1.0 — Avisos de tarefa que não sumiam (persist padrão do SnackBar com ação) corrigidos com helper único e testes; logo-conceito.jpg removida; aviso de versão nova com consulta diária ao GitHub, desligável, sem dados do usuário (ADR 0020). Release v1.1.0 aguarda o usuário aprovar as notas.
 - 2026-11-14 — Release v1.1.0 — Publicada após o usuário aprovar as notas e a CI ficar verde (tag no commit c0efa45); SHA-256 das notas, do GitHub, do `.sha256` e do instalador baixado de novo são iguais.
+- 2026-11-14 — Versão 1.2.0 — "Atualizar agora" (download da release oficial com progresso e cancelar, SHA-256 conferido no disco, pergunta com as tarefas em andamento, instalador que espera o app fechar e o reabre) e "Procurar atualização agora" em Configurações (ADR 0021). Release v1.2.0 aguarda o usuário aprovar as notas.
