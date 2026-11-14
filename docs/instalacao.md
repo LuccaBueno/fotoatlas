@@ -23,6 +23,8 @@ O caminho exato do catálogo aparece em **Configurações › Sobre o FotoAtlas*
 
 ## Atualizar
 
+A partir da 1.1.0, o FotoAtlas avisa quando sai uma versão nova: ao abrir (no máximo uma vez por dia), ele pergunta ao GitHub qual é a versão mais nova, sem enviar nenhuma informação sua. Se houver, aparece uma faixa no topo com **Baixar**, que abre a página da versão no navegador. Ele nunca baixa nem instala nada sozinho, e sem internet nada acontece. Para desligar: **Configurações › Atualizações › Procurar versão nova ao abrir**.
+
 Baixe o instalador da versão nova e abra, com o FotoAtlas **fechado**. Ele instala por cima, na mesma pasta, e mantém os atalhos. O catálogo e as configurações continuam exatamente como estavam: na próxima vez que o FotoAtlas abrir, ele continua de onde parou.
 
 - Se o FotoAtlas estiver aberto, o instalador pede para fechá-lo antes. Ele nunca fecha o FotoAtlas sozinho (uma cópia em andamento não é interrompida pelo instalador). Se você fechar no meio de uma tarefa, ela continua de onde parou depois.

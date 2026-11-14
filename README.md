@@ -52,7 +52,7 @@ Backups espalhados, pastas organizadas de jeitos diferentes, fotos do celular co
 - Analisar nunca modifica seus arquivos.
 - Nada é apagado ou sobrescrito automaticamente.
 - Toda cópia é conferida byte a byte (SHA-256) e recuperável após interrupções.
-- Funciona offline; nenhuma foto ou localização sai do seu computador.
+- Funciona offline; nenhuma foto ou localização sai do seu computador. (A única consulta à internet é o aviso de versão nova, uma vez por dia e desligável.)
 
 ## Destaques técnicos
 

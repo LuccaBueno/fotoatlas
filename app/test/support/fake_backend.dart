@@ -332,6 +332,24 @@ class FakeBackend implements AppBackend {
 
   bool guideDone = true;
 
+  bool updateEnabled = true;
+  ReleaseInfo? latestRelease;
+
+  @override
+  Future<bool> updateCheckEnabled() async => updateEnabled;
+
+  @override
+  Future<void> setUpdateCheckEnabled(bool enabled) async {
+    calls.add('update-enabled:$enabled');
+    updateEnabled = enabled;
+  }
+
+  @override
+  Future<ReleaseInfo?> checkForUpdate(String currentVersion) async {
+    calls.add('update-check:$currentVersion');
+    return updateEnabled ? latestRelease : null;
+  }
+
   @override
   Future<bool> isFirstRunGuideDone() async => guideDone;
 

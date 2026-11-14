@@ -8,6 +8,7 @@ import '../features/home/home_page.dart';
 import '../features/library/library_page.dart';
 import '../features/tasks/tasks_page.dart';
 import '../features/settings/settings_page.dart';
+import '../features/update/update_notice.dart';
 import 'help.dart';
 import 'providers.dart';
 import '../l10n/strings.dart';
@@ -124,7 +125,14 @@ class _AppShellState extends ConsumerState<AppShell> {
             ),
           ),
           const VerticalDivider(width: 1),
-          Expanded(child: _destinations[index].builder()),
+          Expanded(
+            child: Column(
+              children: [
+                const UpdateBanner(),
+                Expanded(child: _destinations[index].builder()),
+              ],
+            ),
+          ),
         ],
       ),
     );

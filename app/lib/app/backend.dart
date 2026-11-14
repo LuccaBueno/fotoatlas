@@ -145,6 +145,14 @@ abstract interface class AppBackend {
   Future<bool> isFirstRunGuideDone();
   Future<void> setFirstRunGuideDone();
   Future<CatalogBackupInfo> backupCatalogNow();
+
+  /// "Procurar versão nova ao abrir" (ligado por padrão).
+  Future<bool> updateCheckEnabled();
+  Future<void> setUpdateCheckEnabled(bool enabled);
+
+  /// Versão publicada mais nova que [currentVersion], se a consulta diária
+  /// estiver ligada e já for hora (no máximo uma por dia). Falha = `null`.
+  Future<ReleaseInfo?> checkForUpdate(String currentVersion);
 }
 
 class CoreBackend implements AppBackend {
@@ -406,4 +414,15 @@ class CoreBackend implements AppBackend {
 
   @override
   Future<CatalogBackupInfo> backupCatalogNow() => core.backups.backupNow();
+
+  late final _updates = UpdateChecker(SettingsStore(core.catalog.db));
+
+  @override
+  Future<bool> updateCheckEnabled() => _updates.isEnabled();
+
+  @override
+  Future<void> setUpdateCheckEnabled(bool enabled) => _updates.setEnabled(enabled);
+
+  @override
+  Future<ReleaseInfo?> checkForUpdate(String currentVersion) => _updates.checkIfDue(currentVersion);
 }

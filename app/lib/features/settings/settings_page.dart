@@ -6,6 +6,7 @@ import '../../app/app_info.dart';
 import '../../app/providers.dart';
 import '../../l10n/format.dart';
 import '../integrity/integrity_ui.dart';
+import '../update/update_notice.dart';
 import 'dates_settings.dart';
 
 /// Configurações: backup do catálogo, datas e verificação periódica (o disco
@@ -77,6 +78,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           const DatesSettingsCard(),
           const SizedBox(height: 16),
           const IntegritySettingsCard(),
+          const SizedBox(height: 16),
+          const UpdateSettingsCard(),
           const SizedBox(height: 16),
           Card(
             child: Padding(

@@ -39,3 +39,4 @@ Modelo:
 | [0017](0017-reorganizacao-e-desfazer.md) | Reorganização no mesmo disco, Desfazer e pastas vazias | aceita |
 | [0018](0018-verificacao-de-integridade.md) | Verificação periódica de integridade: só leitura, leve, restauração pela cópia segura | aceita |
 | [0019](0019-instalador-e-atualizacao.md) | Instalador (Inno Setup, por usuário), atualização que preserva o catálogo e desinstalação que pergunta | aceita |
+| [0020](0020-aviso-de-versao-nova.md) | Aviso de versão nova: consulta diária ao GitHub, desligável, sem dados do usuário e sem instalar sozinho | aceita |
