@@ -5,8 +5,9 @@
 //
 // Uso (na pasta app\):
 //   flutter test tool\gen_app_icon.dart
-// Grava windows\runner\resources\app_icon.ico (16 a 256 px). O ícone gerado
-// é versionado; rode de novo só se a logo ou as cores do tema mudarem.
+// Grava windows\runner\resources\app_icon.ico (16 a 256 px) e a logo do
+// README, ..\docs\assets\logo.png (512 px). Os dois são versionados; rode de
+// novo só se a logo ou as cores do tema mudarem.
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -34,6 +35,10 @@ void main() {
       }
       final ico = await encodeIco(images);
       File('windows/runner/resources/app_icon.ico').writeAsBytesSync(ico);
+
+      final logo = await renderIcon(512, glyph: scheme.primary, tile: scheme.surfaceContainerLow);
+      final png = await logo.toByteData(format: ui.ImageByteFormat.png);
+      File('../docs/assets/logo.png').writeAsBytesSync(png!.buffer.asUint8List());
     });
   });
 }

@@ -1,4 +1,4 @@
-﻿<p align="center"><img src="docs/assets/logo-conceito.jpg" width="160" alt="FotoAtlas"></p>
+﻿<p align="center"><img src="docs/assets/logo.png" width="128" alt="FotoAtlas"></p>
 
 # FotoAtlas
 
@@ -20,6 +20,20 @@ Funciona no Windows 10 (versão 1809 ou mais nova) e no Windows 11, 64 bits.
 
 Organizador de fotos e vídeos para Windows: descobre o que você tem em cada celular, HD e pendrive, mostra **o que já tem backup e o que ainda falta**, e copia e reorganiza tudo **sem perder nenhum arquivo**, mesmo se a energia cair no meio.
 
+## Telas
+
+> Capturas geradas com dados sintéticos do modo demonstração (nenhuma foto real).
+
+<p align="center"><img src="docs/assets/screenshots/comparar.gif" width="800" alt="Comparar o celular com o HD de backup"></p>
+
+| Início | Biblioteca |
+|---|---|
+| ![Início](docs/assets/screenshots/inicio.png) | ![Biblioteca](docs/assets/screenshots/biblioteca.png) |
+| **Comparar** | **Reorganizar** |
+| ![Comparar](docs/assets/screenshots/comparar.png) | ![Reorganizar](docs/assets/screenshots/reorganizar.png) |
+| **Tarefas** | |
+| ![Tarefas](docs/assets/screenshots/tarefas.png) | |
+
 ## Instalar e atualizar
 
 Não é preciso ser administrador nem instalar mais nada: o ExifTool e o FFmpeg já vêm junto. Na instalação, você pode escolher se quer um atalho na área de trabalho. Para atualizar, feche o FotoAtlas e instale a versão nova por cima: o catálogo e as configurações continuam como estavam. Mais detalhes em [Instalar, atualizar e desinstalar](docs/instalacao.md).
@@ -39,6 +53,28 @@ Backups espalhados, pastas organizadas de jeitos diferentes, fotos do celular co
 - Nada é apagado ou sobrescrito automaticamente.
 - Toda cópia é conferida byte a byte (SHA-256) e recuperável após interrupções.
 - Funciona offline; nenhuma foto ou localização sai do seu computador.
+
+## Destaques técnicos
+
+- **Flutter + Dart + SQLite + helper C#**: UI Flutter fina; toda a regra de negócio num core em Dart puro (com CLI própria); catálogo SQLite (drift) com um único escritor; helper C# .NET 10 em processo separado para celular (WPD, só leitura), volumes e miniaturas, falando JSON-lines.
+- **Cópia segura com diário e recuperação**: cada arquivo é gravado num `.part`, conferido por SHA-256 na origem e no destino e só então publicado com `MoveFileExW` sem substituir. Cada passo fica num diário persistente; a recuperação é idempotente e roda ao abrir o app.
+- **Testes de falha matando o processo**: a CLI compilada é morta (`TerminateProcess`) em pontos instrumentados da cópia e da própria recuperação; o teste confere diário e disco, roda a recuperação 3 vezes e termina a cópia sem perder nem sobrescrever nada.
+- **CI com 4 jobs** no GitHub Actions (Windows): helper .NET, core Dart (inclui testes em VHD FAT32/NTFS e de desempenho com 50 e 100 mil arquivos), app Flutter e instalador (instalar, atualizar e desinstalar de verdade).
+- **382 testes automatizados** em todas as camadas: 234 no core e 8 nos fixtures (`dart test`), 84 no app (`flutter test`) e 56 no helper (`dotnet test`).
+
+## Arquitetura
+
+```mermaid
+flowchart LR
+    UI["App Flutter<br/>(telas + Riverpod)"] --> Core["Core Dart puro<br/>catálogo · scan · hash · cópia · diário"]
+    CLI["CLI<br/>(testes de falha)"] --> Core
+    Core --> DB[("SQLite<br/>catálogo")]
+    Core -- "JSON-lines<br/>stdin/stdout" --> Helper["Helper C# .NET 10<br/>celular (WPD) · volumes · miniaturas"]
+    Core --> Tools["ExifTool · FFprobe"]
+    Core --> Disk["Discos e pastas<br/>(gravação só via safe_io)"]
+```
+
+Detalhes em [Arquitetura](docs/arquitetura.md).
 
 ## Tecnologias
 
