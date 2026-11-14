@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
-import '../../app/shell.dart' show tasksDestination;
 import '../../app/theme.dart';
 import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
+import '../../widgets/task_notice.dart';
 import '../tasks/copy_wizard.dart';
 import 'compare_controller.dart';
 import 'scope_editor.dart' show entryLabel;
@@ -356,15 +356,11 @@ class _ItemListState extends ConsumerState<_ItemList> {
       _selected.clear();
       _all = false;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        key: const ValueKey('copy-started'),
-        content: const Text('Cópia iniciada. Acompanhe em Tarefas.'),
-        action: SnackBarAction(
-          label: 'Ver em Tarefas',
-          onPressed: () => ref.read(navigationIndexProvider.notifier).select(tasksDestination),
-        ),
-      ),
+    showTaskStartedNotice(
+      ScaffoldMessenger.of(context),
+      ref,
+      'Cópia iniciada. Acompanhe em Tarefas.',
+      key: const ValueKey('copy-started'),
     );
   }
 

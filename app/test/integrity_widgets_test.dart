@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fotoatlas/app/theme.dart';
 import 'package:fotoatlas/l10n/format.dart';
+import 'package:fotoatlas/widgets/task_notice.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import 'compare_widgets_test.dart' show source;
@@ -85,6 +86,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.calls, contains('start-verify:s1:0:90'));
     expect(find.text('Verificação começou. Acompanhe em Tarefas.'), findsOneWidget);
+    // Some sozinho (não fica preso na tela).
+    await tester.pump(taskNoticeDuration);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('verify-started')), findsNothing);
   });
 
   testWidgets('celular: só a pedido, com aviso de leitura lenta', (tester) async {

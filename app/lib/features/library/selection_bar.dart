@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
-import '../../app/shell.dart' show tasksDestination;
 import '../../l10n/format.dart';
 import '../../widgets/backup_state.dart';
+import '../../widgets/task_notice.dart';
 import '../integrity/integrity_ui.dart';
 import '../tasks/copy_wizard.dart';
 import 'date_dialogs.dart';
@@ -149,14 +149,11 @@ class SelectionBar extends ConsumerWidget {
                   final ids = sel.toList();
                   final id = await showCopyWizard(context, contents: () async => ids, origin: 'library');
                   if (id == null || !context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Cópia iniciada. Acompanhe em Tarefas.'),
-                      action: SnackBarAction(
-                        label: 'Ver em Tarefas',
-                        onPressed: () => ref.read(navigationIndexProvider.notifier).select(tasksDestination),
-                      ),
-                    ),
+                  showTaskStartedNotice(
+                    ScaffoldMessenger.of(context),
+                    ref,
+                    'Cópia iniciada. Acompanhe em Tarefas.',
+                    key: const ValueKey('copy-started'),
                   );
                 },
                 child: const Text('Copiar para…'),

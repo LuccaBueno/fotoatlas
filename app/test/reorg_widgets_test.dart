@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fotoatlas/features/tasks/tasks_page.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import 'compare_widgets_test.dart' show source;
@@ -158,6 +159,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.calls, contains('start-reorg:3'));
     expect(find.byKey(const ValueKey('reorg-started')), findsOneWidget);
+    // "Ver em Tarefas" leva para Tarefas e fecha o aviso.
+    await tester.tap(find.text('Ver em Tarefas'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('reorg-started')), findsNothing);
+    expect(find.byType(TasksPage), findsOneWidget);
   });
 
   testWidgets('Reorganizar bloqueado mostra o motivo; "Copiar para outro disco…" abre a cópia', (tester) async {

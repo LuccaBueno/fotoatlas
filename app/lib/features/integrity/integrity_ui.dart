@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
-import '../../app/shell.dart' show tasksDestination;
 import '../../app/theme.dart';
 import '../../l10n/format.dart';
+import '../../widgets/task_notice.dart';
 import '../tasks/copy_wizard.dart' show CopyPreviewView;
 
 /// Resultado de um arquivo verificado, em palavras simples.
@@ -44,14 +44,11 @@ Future<void> verifyFlow(
     builder: (_) => VerifyDialog(title: title, entries: entries, contentIds: contentIds, phone: phone),
   );
   if (started != true) return;
-  messenger.showSnackBar(
-    SnackBar(
-      content: const Text('Verificação começou. Acompanhe em Tarefas.'),
-      action: SnackBarAction(
-        label: 'Ver em Tarefas',
-        onPressed: () => ref.read(navigationIndexProvider.notifier).select(tasksDestination),
-      ),
-    ),
+  showTaskStartedNotice(
+    messenger,
+    ref,
+    'Verificação começou. Acompanhe em Tarefas.',
+    key: const ValueKey('verify-started'),
   );
 }
 

@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../../app/providers.dart';
-import '../../app/shell.dart' show tasksDestination;
 import '../../app/theme.dart';
 import '../../l10n/format.dart';
+import '../../widgets/task_notice.dart';
 import '../tasks/copy_wizard.dart';
 
 /// Resultado do assistente: reorganização iniciada ou "copiar para outro disco".
@@ -37,15 +37,11 @@ Future<void> reorganizeFlow(BuildContext context, WidgetRef ref, SourceView sour
   final messenger = ScaffoldMessenger.of(context);
   switch (result) {
     case ReorgStarted():
-      messenger.showSnackBar(
-        SnackBar(
-          key: const ValueKey('reorg-started'),
-          content: const Text('Reorganização iniciada. Acompanhe (e desfaça, se quiser) em Tarefas.'),
-          action: SnackBarAction(
-            label: 'Ver em Tarefas',
-            onPressed: () => ref.read(navigationIndexProvider.notifier).select(tasksDestination),
-          ),
-        ),
+      showTaskStartedNotice(
+        messenger,
+        ref,
+        'Reorganização iniciada. Acompanhe (e desfaça, se quiser) em Tarefas.',
+        key: const ValueKey('reorg-started'),
       );
     case CopyElsewhere(:final folder):
       final backend = ref.read(backendProvider);
@@ -59,7 +55,12 @@ Future<void> reorganizeFlow(BuildContext context, WidgetRef ref, SourceView sour
         origin: 'reorg',
       );
       if (id != null) {
-        messenger.showSnackBar(const SnackBar(content: Text('Cópia iniciada. Acompanhe em Tarefas.')));
+        showTaskStartedNotice(
+          messenger,
+          ref,
+          'Cópia iniciada. Acompanhe em Tarefas.',
+          key: const ValueKey('copy-started'),
+        );
       }
   }
 }

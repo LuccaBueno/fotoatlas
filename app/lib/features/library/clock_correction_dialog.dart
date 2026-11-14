@@ -172,6 +172,8 @@ class _ClockCorrectionDialogState extends ConsumerState<ClockCorrectionDialog> {
         ),
         action: SnackBarAction(label: 'Desfazer', onPressed: () => backend.undoCorrection(id)),
         duration: const Duration(seconds: 10),
+        // Com ação, o SnackBar ficaria fixo por padrão.
+        persist: false,
       ),
     );
   }
