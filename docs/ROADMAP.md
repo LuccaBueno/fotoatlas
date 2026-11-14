@@ -287,7 +287,10 @@ Pedido do usuário (2026-11-14):
 - [x] "Atualizar agora" no aviso de versão nova: baixa o instalador da release oficial para a pasta temporária (progresso e Cancelar), confere o SHA-256 relido do disco com o `.sha256` da release (diferente → apaga e avisa), pergunta antes de fechar listando as tarefas (pausadas com segurança), inicia o instalador e só então fecha com segurança; o instalador (`/ATUALIZARDOAPP=1`) espera o app fechar e o reabre no fim. Nada sem o clique; falhas avisam e não mexem em nada; catálogo e configurações intocados (ADR 0021)
 - [x] Configurações › Atualizações › "Procurar atualização agora"
 - [x] Testes: core (servidor local: SHA-256 errado, arquivo trocado, download interrompido, servidor mudo, cancelar, sem internet, `.sha256` ausente/ilegível/de outro arquivo), app (fluxo, cada falha, cancelar, instalador que não inicia, encerramento seguro com o core real) e CI (`test-installer.ps1`, passo 5b: instalador com os argumentos do app espera, termina e reabre o app)
-- [ ] Release `v1.2.0` no GitHub, com o instalador, o `.sha256` e as notas de versão (aguarda o usuário aprovar as notas)
+- [x] Release `v1.2.0` no GitHub, com o instalador, o `.sha256` e as notas de versão (2026-11-14)
+
+## Pendências
+- [ ] Investigar a folga pequena do teste de desempenho do scan (`packages\fotoatlas_core\test\perf\perf_test.dart`, "50 mil arquivos… event loop principal responsivo", limite de 100 ms de atraso máximo). Na CI o normal é 16–23 ms, mas em runner lento já deu 90 ms (run 43633788956) e 118 ms com o scan levando 26,6 s em vez de ~4 s (run 43638933920, que passou ao rodar de novo com 16 ms). Achar a causa (suspeita: commits SQLite síncronos no isolate principal com disco lento) em vez de subir o limite; a linha `FASE1-EVIDENCIA` do log traz o tempo de scan e o atraso. Registrado a pedido do usuário (2026-11-14).
 
 ## Fase 9+ — Avançados
 - [ ] Item lógico (RAW+JPEG, Live Photos) · duplicatas visuais · mapa · IA local · Google Takeout
@@ -318,3 +321,4 @@ Pedido do usuário (2026-11-14):
 - 2026-11-14 — Versão 1.1.0 — Avisos de tarefa que não sumiam (persist padrão do SnackBar com ação) corrigidos com helper único e testes; logo-conceito.jpg removida; aviso de versão nova com consulta diária ao GitHub, desligável, sem dados do usuário (ADR 0020). Release v1.1.0 aguarda o usuário aprovar as notas.
 - 2026-11-14 — Release v1.1.0 — Publicada após o usuário aprovar as notas e a CI ficar verde (tag no commit c0efa45); SHA-256 das notas, do GitHub, do `.sha256` e do instalador baixado de novo são iguais.
 - 2026-11-14 — Versão 1.2.0 — "Atualizar agora" (download da release oficial com progresso e cancelar, SHA-256 conferido no disco, pergunta com as tarefas em andamento, instalador que espera o app fechar e o reabre) e "Procurar atualização agora" em Configurações (ADR 0021). Release v1.2.0 aguarda o usuário aprovar as notas.
+- 2026-11-14 — Release v1.2.0 — Publicada após o usuário aprovar as notas e a CI ficar verde (tag no commit ed13c00); SHA-256 das notas, do GitHub, do `.sha256` e do instalador baixado de novo são iguais; endereços montados pelo app respondem 200. Pendência registrada: folga pequena do teste de desempenho do scan.
