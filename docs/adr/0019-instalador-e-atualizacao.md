@@ -39,4 +39,4 @@ O executável e o plugin `file_selector_windows` dependiam de `MSVCP140.dll`/`VC
 ## Consequências
 - O instalador tem ~100 MB, a maior parte do FFmpeg (ffmpeg.exe e ffprobe.exe estáticos).
 - Sem assinatura de código: o Windows SmartScreen avisa na primeira execução ("O Windows protegeu o computador" → "Mais informações" → "Executar assim mesmo"). Assinar exige um certificado pago; fica para depois.
-- Sem atualização automática: o usuário baixa a versão nova do GitHub e instala por cima.
+- Sem atualização automática: o usuário baixa a versão nova do GitHub e instala por cima. Desde a 1.2.0, o "Atualizar agora" do aviso de versão nova faz isso por ele, só com o clique e a confirmação dele (ADR 0021).

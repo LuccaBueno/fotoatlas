@@ -41,11 +41,17 @@ class AppVersion implements Comparable<AppVersion> {
   String toString() => '$major.$minor.$patch';
 }
 
-/// Última versão publicada e a página dela.
+/// Última versão publicada, a página dela e, se a release tiver o instalador e
+/// o `.sha256` dele, os endereços para "Atualizar agora".
 class ReleaseInfo {
-  const ReleaseInfo({required this.version, required this.pageUrl});
+  const ReleaseInfo({required this.version, required this.pageUrl, this.installerUrl, this.checksumUrl});
   final AppVersion version;
   final Uri pageUrl;
+  final Uri? installerUrl;
+  final Uri? checksumUrl;
+
+  /// Dá para baixar e conferir o instalador (senão, só "Baixar").
+  bool get canInstall => installerUrl != null && checksumUrl != null;
 }
 
 /// Consulta a última versão publicada (`null` = não deu para saber).
@@ -65,6 +71,14 @@ Uri releasePageFor(String? htmlUrl, AppVersion version) {
   return Uri.parse('$releasesPage/tag/v$version');
 }
 
+/// Nome do instalador publicado na release de [version].
+String installerFileName(AppVersion version) => 'FotoAtlas-$version-instalador.exe';
+
+/// Endereço de um arquivo da release [version] no repositório oficial. Sempre
+/// montado aqui (nunca o endereço que veio na resposta).
+Uri releaseAssetUrl(AppVersion version, String name) =>
+    Uri.parse('$releasesPage/download/v$version/${Uri.encodeComponent(name)}');
+
 /// Lê a resposta da API do GitHub (`releases/latest`).
 ReleaseInfo? parseLatestRelease(String body) {
   final Object? json;
@@ -79,7 +93,20 @@ ReleaseInfo? parseLatestRelease(String body) {
   final version = tag is String ? AppVersion.tryParse(tag) : null;
   if (version == null) return null;
   final html = json['html_url'];
-  return ReleaseInfo(version: version, pageUrl: releasePageFor(html is String ? html : null, version));
+  final assets = json['assets'];
+  final names = {
+    if (assets is List)
+      for (final a in assets)
+        if (a is Map<String, Object?> && a['name'] is String) a['name']! as String,
+  };
+  final installer = installerFileName(version);
+  final installable = names.contains(installer) && names.contains('$installer.sha256');
+  return ReleaseInfo(
+    version: version,
+    pageUrl: releasePageFor(html is String ? html : null, version),
+    installerUrl: installable ? releaseAssetUrl(version, installer) : null,
+    checksumUrl: installable ? releaseAssetUrl(version, '$installer.sha256') : null,
+  );
 }
 
 /// Pede ao GitHub a última versão publicada. Não envia nada além do pedido em
@@ -119,8 +146,36 @@ abstract final class UpdateSettingKeys {
   static const lastCheckMs = 'update.lastCheckMs';
 }
 
+/// Resultado de "Procurar atualização agora".
+sealed class UpdateCheckResult {
+  const UpdateCheckResult();
+}
+
+/// Há versão mais nova publicada.
+final class UpdateAvailable extends UpdateCheckResult {
+  const UpdateAvailable(this.release);
+  final ReleaseInfo release;
+}
+
+/// A versão em uso já é a mais nova publicada.
+final class UpToDate extends UpdateCheckResult {
+  const UpToDate(this.latest);
+  final AppVersion latest;
+}
+
+/// Não deu para consultar (sem internet, GitHub fora do ar, resposta estranha).
+final class UpdateCheckFailed extends UpdateCheckResult {
+  const UpdateCheckFailed();
+}
+
+/// Versão de desenvolvimento: não há o que comparar.
+final class UpdateCheckUnavailable extends UpdateCheckResult {
+  const UpdateCheckUnavailable();
+}
+
 /// "Procurar versão nova ao abrir": no máximo uma consulta por dia, desligável.
-/// Nunca baixa nem instala nada; só diz se há versão nova.
+/// Só diz se há versão nova; baixar e instalar só com o clique do usuário
+/// (`update_download.dart`).
 class UpdateChecker {
   UpdateChecker(this.settings, {ReleaseFetcher? fetch, int Function()? now})
     : _fetch = fetch ?? fetchLatestRelease,
@@ -156,5 +211,21 @@ class UpdateChecker {
       return null;
     }
     return latest != null && latest.version > current ? latest : null;
+  }
+
+  /// "Procurar atualização agora": consulta já, mesmo com a consulta ao abrir
+  /// desligada (o usuário pediu), e conta como a consulta do dia.
+  Future<UpdateCheckResult> checkNow(String currentVersion) async {
+    final current = AppVersion.tryParse(currentVersion);
+    if (current == null) return const UpdateCheckUnavailable();
+    await settings.set(UpdateSettingKeys.lastCheckMs, _now());
+    final ReleaseInfo? latest;
+    try {
+      latest = await _fetch();
+    } on Object {
+      return const UpdateCheckFailed();
+    }
+    if (latest == null) return const UpdateCheckFailed();
+    return latest.version > current ? UpdateAvailable(latest) : UpToDate(latest.version);
   }
 }

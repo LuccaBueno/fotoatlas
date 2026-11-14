@@ -102,7 +102,7 @@ const helpTopics = [
     'Escolher o intervalo dos momentos, o fuso e de onde tirar a data.',
     'Desfazer correções de relógio.',
     'Ligar ou desligar a verificação periódica e escolher de quanto em quanto tempo (celulares nunca entram).',
-    'Ligar ou desligar o aviso de versão nova (uma consulta por dia ao GitHub, sem enviar nada seu).',
+    'Ligar ou desligar o aviso de versão nova (uma consulta por dia ao GitHub, sem enviar nada seu) e procurar uma versão nova na hora. "Atualizar agora" baixa a versão oficial, confere e só instala depois da sua confirmação.',
   ]),
 ];
 

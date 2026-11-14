@@ -44,6 +44,45 @@ void main() {
       }
     });
 
+    test('com o instalador e o .sha256 na release: endereços montados no repositório oficial', () {
+      final json = jsonEncode({
+        'tag_name': 'v1.2.0',
+        'assets': [
+          {'name': 'FotoAtlas-1.2.0-instalador.exe', 'browser_download_url': 'https://exemplo.invalid/mal.exe'},
+          {'name': 'FotoAtlas-1.2.0-instalador.exe.sha256', 'browser_download_url': 'https://exemplo.invalid/x'},
+        ],
+      });
+      final r = parseLatestRelease(json)!;
+      expect(r.canInstall, isTrue);
+      expect(
+        r.installerUrl.toString(),
+        'https://github.com/LuccaBueno/fotoatlas/releases/download/v1.2.0/FotoAtlas-1.2.0-instalador.exe',
+      );
+      expect(
+        r.checksumUrl.toString(),
+        'https://github.com/LuccaBueno/fotoatlas/releases/download/v1.2.0/FotoAtlas-1.2.0-instalador.exe.sha256',
+      );
+    });
+
+    test('sem o .sha256 (ou sem o instalador): só "Baixar"', () {
+      for (final names in [
+        ['FotoAtlas-1.2.0-instalador.exe'],
+        ['FotoAtlas-1.2.0-instalador.exe.sha256'],
+        ['FotoAtlas-1.1.0-instalador.exe', 'FotoAtlas-1.1.0-instalador.exe.sha256'],
+      ]) {
+        final json = jsonEncode({
+          'tag_name': 'v1.2.0',
+          'assets': [
+            for (final n in names) {'name': n},
+          ],
+        });
+        final r = parseLatestRelease(json)!;
+        expect(r.canInstall, isFalse, reason: '$names');
+        expect(r.installerUrl, isNull);
+      }
+      expect(parseLatestRelease(_release('v1.2.0'))!.canInstall, isFalse);
+    });
+
     test('resposta estranha, pré-lançamento ou sem versão: nada', () {
       expect(parseLatestRelease('não é json'), isNull);
       expect(parseLatestRelease('[]'), isNull);
@@ -150,6 +189,37 @@ void main() {
       expect(await checker.isEnabled(), isFalse);
       expect(await checker.checkIfDue('1.0.0'), isNull);
       expect(calls, 0);
+    });
+
+    test('"Procurar agora": consulta mesmo desligado e diz o resultado', () async {
+      final env = await TestEnv.open();
+      var calls = 0;
+      Object? answer = newer;
+      final checker = UpdateChecker(
+        SettingsStore(env.db),
+        fetch: () async {
+          calls++;
+          if (answer is Exception) throw answer;
+          return answer as ReleaseInfo?;
+        },
+        now: () => 5 * day,
+      );
+      await checker.setEnabled(false);
+      expect(await checker.checkNow(''), isA<UpdateCheckUnavailable>());
+      expect(calls, 0, reason: 'versão de desenvolvimento não consulta');
+
+      final available = await checker.checkNow('1.0.0');
+      expect(available, isA<UpdateAvailable>());
+      expect((available as UpdateAvailable).release.version, const AppVersion(1, 1, 0));
+      final upToDate = await checker.checkNow('1.1.0');
+      expect((upToDate as UpToDate).latest, const AppVersion(1, 1, 0));
+      answer = null;
+      expect(await checker.checkNow('1.0.0'), isA<UpdateCheckFailed>());
+      answer = const SocketException('sem rede');
+      expect(await checker.checkNow('1.0.0'), isA<UpdateCheckFailed>());
+      expect(calls, 4);
+      expect(await checker.isEnabled(), isFalse, reason: 'não religa a consulta ao abrir');
+      expect(await SettingsStore(env.db).get(UpdateSettingKeys.lastCheckMs), 5 * day);
     });
 
     test('falha na consulta não escapa', () async {

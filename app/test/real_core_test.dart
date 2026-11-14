@@ -488,6 +488,81 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
   });
 
+  testWidgets('"Atualizar agora": sem instalador não fecha nada; com ele, encerra com segurança e sai', (tester) async {
+    final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;
+    final paths = CorePaths(dataDir: p.join(temp.path, 'home'), localDir: p.join(temp.path, 'local'));
+    final fake = _OneVolume((Directory(p.join(temp.path, 'vol'))..createSync()).path);
+    FotoAtlasCore? opened;
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+      await tester.runAsync(() async {
+        await opened?.close();
+        await deleteTestDir(temp);
+      });
+    });
+    late FotoAtlasCore core;
+    await tester.runAsync(() async {
+      core = opened = await FotoAtlasCore.open(paths: paths, volumes: fake, pathResolver: fake, useHelper: false);
+    });
+    final started = <DownloadedInstaller>[];
+    var startResult = false;
+    var exited = 0;
+    await tester.pumpWidget(
+      FotoAtlasApp(
+        firstRunGuide: false,
+        openCore: () async => core,
+        startInstaller: (installer) async {
+          started.add(installer);
+          return startResult;
+        },
+        exitProcess: () async => exited++,
+      ),
+    );
+    for (var i = 0; i < 20 && find.text('Comparar').evaluate().isEmpty; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+    }
+    final state = tester.state<FotoAtlasAppState>(find.byType(FotoAtlasApp));
+    final installer = DownloadedInstaller(
+      file: File(p.join(temp.path, 'FotoAtlas-9.9.9-instalador.exe')),
+      version: const AppVersion(9, 9, 9),
+      sha256: '00' * 32,
+    );
+
+    // O instalador não iniciou: nada é fechado nem pausado.
+    bool? result;
+    await tester.runAsync(() async => result = await state.installUpdateAndExit(installer));
+    await tester.pump();
+    expect(result, isFalse);
+    expect(started, [installer]);
+    expect(exited, 0);
+    expect(find.text('Encerrando com segurança…'), findsNothing);
+    expect((await tester.runAsync(core.runningTasks))!, isEmpty, reason: 'o catálogo continua aberto e respondendo');
+
+    // Iniciou: "Encerrando com segurança…", catálogo fechado, e só então sai.
+    startResult = true;
+    result = null;
+    var sawOverlay = false;
+    await tester.runAsync(() async => unawaited(state.installUpdateAndExit(installer).then((r) => result = r)));
+    for (var i = 0; i < 200 && result == null; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+      sawOverlay |= find.text('Encerrando com segurança…').evaluate().isNotEmpty;
+    }
+    expect(result, isTrue);
+    expect(sawOverlay, isTrue);
+    expect(exited, 1);
+    expect(started, hasLength(2));
+    expect(await state.installUpdateAndExit(installer), isFalse, reason: 'já fechando: não inicia outro instalador');
+    expect(started, hasLength(2));
+    // O catálogo foi fechado de verdade: dá para abrir de novo (a trava saiu).
+    await tester.runAsync(() async {
+      opened = await FotoAtlasCore.open(paths: paths, volumes: fake, pathResolver: fake, useHelper: false);
+    });
+    expect(opened, isNot(same(core)));
+  });
+
   for (final demo in [DemoMode.off, DemoMode.discarded]) {
     testWidgets('fechar sem nada em andamento ($demo): fecha direto, sem perguntar', (tester) async {
       final temp = (await tester.runAsync(() => Directory.systemTemp.createTemp('fotoatlas_app_test_')))!;

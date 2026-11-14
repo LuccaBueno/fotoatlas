@@ -23,7 +23,20 @@ O caminho exato do catálogo aparece em **Configurações › Sobre o FotoAtlas*
 
 ## Atualizar
 
-A partir da 1.1.0, o FotoAtlas avisa quando sai uma versão nova: ao abrir (no máximo uma vez por dia), ele pergunta ao GitHub qual é a versão mais nova, sem enviar nenhuma informação sua. Se houver, aparece uma faixa no topo com **Baixar**, que abre a página da versão no navegador. Ele nunca baixa nem instala nada sozinho, e sem internet nada acontece. Para desligar: **Configurações › Atualizações › Procurar versão nova ao abrir**.
+A partir da 1.1.0, o FotoAtlas avisa quando sai uma versão nova: ao abrir (no máximo uma vez por dia), ele pergunta ao GitHub qual é a versão mais nova, sem enviar nenhuma informação sua. Se houver, aparece uma faixa no topo com **Baixar**, que abre a página da versão no navegador. Ele nunca baixa nem instala nada sozinho, e sem internet nada acontece. Para desligar: **Configurações › Atualizações › Procurar versão nova ao abrir**. Para procurar na hora (mesmo com o aviso desligado): **Configurações › Atualizações › Procurar atualização agora**.
+
+### Atualizar pelo próprio FotoAtlas (a partir da 1.2.0)
+
+Na faixa de versão nova, clique em **Atualizar agora**:
+
+1. O FotoAtlas baixa o instalador da página oficial (github.com/LuccaBueno/fotoatlas) para a pasta temporária do Windows, mostrando o progresso. **Cancelar** para o download e apaga o que foi baixado.
+2. Ele confere se o arquivo baixado é idêntico ao publicado. Se não for (download corrompido ou interrompido), o arquivo é apagado e nada é instalado. Sem internet, ele só avisa.
+3. Ele pergunta antes de fechar. Se houver tarefas em andamento (cópia, conferência, escaneamento), elas aparecem na pergunta: são pausadas com segurança e continuam de onde pararam depois. **Agora não** deixa tudo como está.
+4. Em **Fechar e atualizar**, o FotoAtlas fecha com segurança, o instalador mostra o progresso e, no fim, o FotoAtlas abre de novo, já na versão nova.
+
+O catálogo e as configurações não são tocados em nenhum momento. Se algo der errado no meio da instalação, o FotoAtlas que já estava instalado continua funcionando.
+
+### Atualizar à mão
 
 Baixe o instalador da versão nova e abra, com o FotoAtlas **fechado**. Ele instala por cima, na mesma pasta, e mantém os atalhos. O catálogo e as configurações continuam exatamente como estavam: na próxima vez que o FotoAtlas abrir, ele continua de onde parou.
 

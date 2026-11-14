@@ -11,8 +11,9 @@
 # executável, ExifTool/FFmpeg/helper funcionando da pasta instalada, o app
 # abrindo e usando o helper instalado; atualização recusada com o app aberto;
 # atualização A → B sem mudar um byte do catálogo; desinstalação silenciosa que
-# remove o programa e os atalhos e deixa o catálogo intacto; desinstalação como
-# o Windows faz, clicando nos botões: Cancelar, Manter catálogo e Apagar catálogo
+# remove o programa e os atalhos e deixa o catálogo intacto; "Atualizar agora"
+# (instalador com os argumentos do app espera o app fechar e o abre de novo);
+# desinstalação como o Windows faz, clicando nos botões: Cancelar, Manter catálogo e Apagar catálogo
 # (a pasta vai para a Lixeira).
 param(
     [Parameter(Mandatory)][string]$InstaladorA,
@@ -204,7 +205,38 @@ Check ((Snapshot) -eq $antes) 'catálogo, backups e configurações idênticos b
 Write-Host '== 5. Abrir a versão nova com o catálogo da anterior'
 $app = Start-App
 Check (-not $app.HasExited) 'o app atualizado abre o catálogo existente'
-Stop-App $app
+
+Write-Host '== 5b. "Atualizar agora": o instalador espera o app fechar e o abre de novo (ADR 0021)'
+# Os mesmos argumentos que o app usa (installerUpdateArguments no core).
+$dart = Get-Content -Raw -LiteralPath (Join-Path $root 'packages\fotoatlas_core\lib\src\update\update_download.dart')
+$argsDoApp = @([regex]::Matches([regex]::Match($dart, 'installerUpdateArguments = \[([^\]]*)\]').Groups[1].Value, "'([^']*)'") |
+    ForEach-Object { $_.Groups[1].Value })
+Check ($argsDoApp -contains '/ATUALIZARDOAPP=1') "argumentos do app: $($argsDoApp -join ' ')"
+$sentinela = Get-Content -Raw -LiteralPath (Join-Path $catalogDir 'sentinela-do-teste.txt')
+$instalador = Start-Process -FilePath $InstaladorB -PassThru -ArgumentList ($argsDoApp + "/LOG=`"$logs\atualizar-pelo-app.log`"")
+Start-Sleep -Seconds 8
+Check (-not $instalador.HasExited) 'com o app aberto, o instalador espera em vez de recusar'
+Check (-not $app.HasExited) 'o instalador nunca fecha o app à força'
+Stop-App $app # o app fecha sozinho, como depois de iniciar o instalador
+if (-not $instalador.WaitForExit(180000)) {
+    Check $false 'o instalador termina em até 3 min depois de o app fechar'
+    $instalador.Kill()
+}
+Check ($instalador.ExitCode -eq 0) "atualização pelo app terminou sem erro (código $($instalador.ExitCode))"
+$reaberto = $null
+$limite = (Get-Date).AddSeconds(90)
+while (-not $reaberto -and (Get-Date) -lt $limite) {
+    $reaberto = Get-Process fotoatlas -ErrorAction SilentlyContinue |
+        Where-Object { $_.Id -ne $app.Id -and $_.Path -eq $exe -and $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+    if (-not $reaberto) { Start-Sleep -Milliseconds 500 }
+}
+Check ($null -ne $reaberto) 'o FotoAtlas abre de novo sozinho no fim'
+Check ((Get-ItemProperty -LiteralPath $chave).DisplayVersion -eq $versaoB) "continua instalado na versão $versaoB"
+Check ((Get-Content -Raw -LiteralPath (Join-Path $catalogDir 'sentinela-do-teste.txt')) -eq $sentinela) 'pasta do catálogo intacta'
+if ($reaberto) {
+    Start-Sleep -Seconds 5 # o app abre o catálogo e o helper
+    Stop-App $reaberto
+}
 $antes = Snapshot
 
 Write-Host '== 6. Desinstalar (silencioso: a resposta padrão é manter o catálogo)'

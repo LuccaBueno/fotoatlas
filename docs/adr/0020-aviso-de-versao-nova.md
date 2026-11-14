@@ -1,6 +1,6 @@
 ﻿# 0020 — Aviso de versão nova (consulta ao GitHub)
 
-- Status: aceita
+- Status: aceita (complementada pela [0021](0021-atualizar-agora.md): "Atualizar agora", sempre com o clique do usuário)
 - Data: 2026-11-14
 
 ## Contexto

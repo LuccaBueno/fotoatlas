@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:fotoatlas/app/backend.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
@@ -349,6 +350,49 @@ class FakeBackend implements AppBackend {
     calls.add('update-check:$currentVersion');
     return updateEnabled ? latestRelease : null;
   }
+
+  UpdateCheckResult checkNowResult = const UpdateCheckFailed();
+
+  @override
+  Future<UpdateCheckResult> checkForUpdateNow(String currentVersion) async {
+    calls.add('update-check-now:$currentVersion');
+    return checkNowResult;
+  }
+
+  /// Download falso (nada é gravado): padrão, 3 passos de progresso e sucesso.
+  Future<DownloadedInstaller> Function(
+    ReleaseInfo release,
+    void Function(int received, int? total)? onProgress,
+    UpdateCancelToken? cancel,
+  )?
+  downloadImpl;
+
+  @override
+  Future<DownloadedInstaller> downloadUpdate(
+    ReleaseInfo release, {
+    void Function(int received, int? total)? onProgress,
+    UpdateCancelToken? cancel,
+  }) async {
+    calls.add('update-download:${release.version}');
+    final impl = downloadImpl;
+    if (impl != null) return impl(release, onProgress, cancel);
+    for (final r in [0, 50, 100]) {
+      onProgress?.call(r, 100);
+    }
+    return DownloadedInstaller(
+      file: File('FotoAtlas-${release.version}-instalador.exe'),
+      version: release.version,
+      sha256: '00' * 32,
+    );
+  }
+
+  @override
+  Future<void> cleanupUpdateDownloads() async => calls.add('update-cleanup');
+
+  List<RunningTask> running = const [];
+
+  @override
+  Future<List<RunningTask>> runningTasks() async => running;
 
   @override
   Future<bool> isFirstRunGuideDone() async => guideDone;

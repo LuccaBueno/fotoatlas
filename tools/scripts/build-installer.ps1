@@ -93,5 +93,8 @@ Invoke-Checked 'ISCC' {
 $exe = Join-Path $dist "FotoAtlas-$Versao-instalador.exe"
 $sha = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
 $mb = [math]::Round((Get-Item -LiteralPath $exe).Length / 1MB, 1)
+# O .sha256 vai na release ao lado do instalador: o "Atualizar agora" do app
+# (ADR 0021) só instala se o SHA-256 do download for igual a este.
+[IO.File]::WriteAllText("$exe.sha256", "$sha  $(Split-Path $exe -Leaf)`n", [Text.Encoding]::ASCII)
 Write-Host "Pronto: $exe ($mb MB)"
 Write-Host "SHA-256: $sha"

@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,11 +39,28 @@ Widget _noticeHarness() => ProviderScope(
 
 final _release = ReleaseInfo(version: const AppVersion(1, 2, 0), pageUrl: Uri.parse('$releasesPage/tag/v1.2.0'));
 
-Widget _shell(FakeBackend backend, {String version = '1.1.0', List<Uri>? opened}) => ProviderScope(
+final _installable = ReleaseInfo(
+  version: const AppVersion(1, 2, 0),
+  pageUrl: Uri.parse('$releasesPage/tag/v1.2.0'),
+  installerUrl: releaseAssetUrl(const AppVersion(1, 2, 0), 'FotoAtlas-1.2.0-instalador.exe'),
+  checksumUrl: releaseAssetUrl(const AppVersion(1, 2, 0), 'FotoAtlas-1.2.0-instalador.exe.sha256'),
+);
+
+Widget _shell(
+  FakeBackend backend, {
+  String version = '1.1.0',
+  List<Uri>? opened,
+  List<DownloadedInstaller>? launched,
+  bool launchResult = true,
+}) => ProviderScope(
   overrides: [
     backendProvider.overrideWithValue(backend),
     currentVersionProvider.overrideWithValue(version),
     releasePageOpenerProvider.overrideWithValue((uri) async => opened?.add(uri)),
+    updateInstallerLauncherProvider.overrideWithValue((installer) async {
+      launched?.add(installer);
+      return launchResult;
+    }),
   ],
   child: MaterialApp(theme: AppTheme.light(), home: const AppShell()),
 );
@@ -101,6 +121,198 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('update-banner')), findsNothing);
       expect(backend.calls.where((c) => c.startsWith('update-check')), hasLength(1));
+    });
+
+    testWidgets('sem o arquivo de conferência na release: só "Baixar"', (tester) async {
+      await tester.pumpWidget(_shell(FakeBackend()..latestRelease = _release));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('update-banner')), findsOneWidget);
+      expect(find.byKey(const ValueKey('update-install')), findsNothing);
+      expect(find.byKey(const ValueKey('update-download')), findsOneWidget);
+    });
+
+    testWidgets('ao abrir, apaga instaladores baixados antes', (tester) async {
+      final backend = FakeBackend();
+      await tester.pumpWidget(_shell(backend));
+      await tester.pumpAndSettle();
+      expect(backend.calls, contains('update-cleanup'));
+    });
+
+    testWidgets('"Atualizar agora": baixa com progresso, pergunta (com as tarefas) e só então entrega ao instalador', (
+      tester,
+    ) async {
+      final progress = Completer<void>();
+      final backend = FakeBackend()
+        ..latestRelease = _installable
+        ..running = const [RunningTask(RunningTaskKind.copy, done: 3, total: 10)]
+        ..downloadImpl = (release, onProgress, cancel) async {
+          onProgress?.call(0, 4 * 1024 * 1024);
+          onProgress?.call(1024 * 1024, 4 * 1024 * 1024);
+          await progress.future;
+          onProgress?.call(4 * 1024 * 1024, 4 * 1024 * 1024);
+          return DownloadedInstaller(
+            file: File('FotoAtlas-1.2.0-instalador.exe'),
+            version: release.version,
+            sha256: 'ab' * 32,
+          );
+        };
+      final launched = <DownloadedInstaller>[];
+      await tester.pumpWidget(_shell(backend, launched: launched));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('update-install')), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('update-install')));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('update-downloading')), findsOneWidget);
+      expect(find.text('Baixando a versão 1.2.0'), findsOneWidget);
+      expect(find.text('1,0 MB de 4,0 MB'), findsOneWidget);
+      expect(tester.widget<LinearProgressIndicator>(find.byKey(const ValueKey('update-progress'))).value, 0.25);
+      expect(find.byKey(const ValueKey('update-cancel')), findsOneWidget);
+      expect(launched, isEmpty);
+
+      progress.complete();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('update-downloading')), findsNothing);
+      expect(find.byKey(const ValueKey('update-confirm')), findsOneWidget);
+      expect(find.text('Instalar a versão 1.2.0 agora?'), findsOneWidget);
+      expect(find.textContaining('O catálogo e as configurações não são tocados'), findsOneWidget);
+      expect(find.text('Copiando com conferência — 3 de 10 arquivos'), findsOneWidget);
+      expect(find.textContaining('pausadas com segurança'), findsOneWidget);
+      expect(
+        tester.widget<TextButton>(find.byKey(const ValueKey('update-later'))).autofocus,
+        isTrue,
+        reason: '"Agora não" é o padrão',
+      );
+      expect(launched, isEmpty, reason: 'nada é instalado sem confirmar');
+
+      await tester.tap(find.byKey(const ValueKey('update-close-and-install')));
+      await tester.pumpAndSettle();
+      expect(launched.single.version, const AppVersion(1, 2, 0));
+      expect(launched.single.sha256, 'ab' * 32);
+    });
+
+    testWidgets('"Agora não" na pergunta: nada é instalado nem fechado', (tester) async {
+      final backend = FakeBackend()..latestRelease = _installable;
+      final launched = <DownloadedInstaller>[];
+      await tester.pumpWidget(_shell(backend, launched: launched));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('update-install')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('update-confirm')), findsOneWidget);
+      expect(find.textContaining('Há tarefas em andamento'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('update-later')));
+      await tester.pumpAndSettle();
+      expect(launched, isEmpty);
+      expect(find.byKey(const ValueKey('update-banner')), findsOneWidget, reason: 'dá para atualizar depois');
+    });
+
+    for (final (failure, text) in [
+      (UpdateDownloadFailure.hashMismatch, 'não é idêntico ao publicado'),
+      (UpdateDownloadFailure.interrupted, 'interrompido antes de terminar'),
+      (UpdateDownloadFailure.network, 'sem internet'),
+      (UpdateDownloadFailure.checksumMissing, 'sem o arquivo de conferência'),
+      (UpdateDownloadFailure.disk, 'disco cheio'),
+    ]) {
+      testWidgets('falha no download (${failure.name}): avisa e não mexe em nada', (tester) async {
+        final backend = FakeBackend()
+          ..latestRelease = _installable
+          ..downloadImpl = (release, onProgress, cancel) async {
+            onProgress?.call(10, 100);
+            throw UpdateDownloadException(failure);
+          };
+        final launched = <DownloadedInstaller>[];
+        await tester.pumpWidget(_shell(backend, launched: launched));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('update-install')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('update-failed')), findsOneWidget);
+        expect(find.textContaining(text), findsOneWidget);
+        expect(find.textContaining('Nada foi alterado'), findsOneWidget);
+        expect(find.textContaining('catálogo e as configurações como estavam'), findsOneWidget);
+        expect(find.textContaining('hash'), findsNothing, reason: 'sem jargão na tela');
+        expect(find.byKey(const ValueKey('update-confirm')), findsNothing);
+        await tester.tap(find.byKey(const ValueKey('update-failed-close')));
+        await tester.pumpAndSettle();
+        expect(launched, isEmpty);
+        expect(find.byKey(const ValueKey('update-banner')), findsOneWidget);
+      });
+    }
+
+    testWidgets('"Cancelar" para o download, fecha a janela e não instala nada', (tester) async {
+      UpdateCancelToken? token;
+      final backend = FakeBackend()
+        ..latestRelease = _installable
+        ..downloadImpl = (release, onProgress, cancel) async {
+          token = cancel;
+          onProgress?.call(10, 100);
+          await cancel!.whenCancelled;
+          throw const UpdateDownloadException(UpdateDownloadFailure.cancelled);
+        };
+      final launched = <DownloadedInstaller>[];
+      await tester.pumpWidget(_shell(backend, launched: launched));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('update-install')));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('update-downloading')), findsOneWidget);
+      expect(token!.isCancelled, isFalse);
+
+      await tester.tap(find.byKey(const ValueKey('update-cancel')));
+      await tester.pumpAndSettle();
+      expect(token!.isCancelled, isTrue);
+      expect(find.byKey(const ValueKey('update-downloading')), findsNothing);
+      expect(find.byKey(const ValueKey('update-failed')), findsNothing, reason: 'cancelar não é erro');
+      expect(find.byKey(const ValueKey('update-confirm')), findsNothing);
+      expect(launched, isEmpty);
+    });
+
+    testWidgets('instalador não iniciou: avisa e o app continua', (tester) async {
+      final backend = FakeBackend()..latestRelease = _installable;
+      await tester.pumpWidget(_shell(backend, launchResult: false));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('update-install')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('update-close-and-install')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('update-start-failed')), findsOneWidget);
+      expect(find.textContaining('Nada foi alterado'), findsOneWidget);
+    });
+
+    testWidgets('Configurações: "Procurar atualização agora" diz o resultado e mostra o aviso', (tester) async {
+      final backend = FakeBackend()..updateEnabled = false;
+      final launched = <DownloadedInstaller>[];
+      await tester.pumpWidget(_shell(backend, launched: launched));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Configurações').first);
+      await tester.pumpAndSettle();
+      final button = find.byKey(const ValueKey('update-check-now'));
+      Future<String> check(UpdateCheckResult result) async {
+        backend.checkNowResult = result;
+        await tester.ensureVisible(button);
+        await tester.pumpAndSettle();
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        return tester.widget<Text>(find.byKey(const ValueKey('update-check-result'))).data!;
+      }
+
+      expect(await check(const UpToDate(AppVersion(1, 1, 0))), 'Você já tem a versão mais nova (1.1.0).');
+      expect(await check(const UpdateCheckFailed()), contains('Não foi possível consultar agora'));
+      expect(await check(const UpdateCheckUnavailable()), contains('Versão de desenvolvimento'));
+      expect(find.byKey(const ValueKey('update-banner')), findsNothing);
+      expect(
+        backend.calls,
+        contains('update-check-now:1.1.0'),
+        reason: 'procura mesmo com a consulta ao abrir desligada',
+      );
+
+      expect(await check(UpdateAvailable(_installable)), 'Versão 1.2.0 disponível.');
+      expect(find.byKey(const ValueKey('update-banner')), findsOneWidget, reason: 'o aviso aparece no topo');
+      await tester.ensureVisible(find.byKey(const ValueKey('update-check-install')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('update-check-install')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('update-close-and-install')));
+      await tester.pumpAndSettle();
+      expect(launched.single.version, const AppVersion(1, 2, 0));
     });
 
     testWidgets('sem versão nova (ou sem internet): nenhum aviso', (tester) async {

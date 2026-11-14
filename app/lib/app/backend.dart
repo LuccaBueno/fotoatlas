@@ -153,6 +153,24 @@ abstract interface class AppBackend {
   /// Versão publicada mais nova que [currentVersion], se a consulta diária
   /// estiver ligada e já for hora (no máximo uma por dia). Falha = `null`.
   Future<ReleaseInfo?> checkForUpdate(String currentVersion);
+
+  /// "Procurar atualização agora" (mesmo com a consulta ao abrir desligada).
+  Future<UpdateCheckResult> checkForUpdateNow(String currentVersion);
+
+  /// "Atualizar agora": baixa o instalador de [release] numa pasta temporária
+  /// e confere com o `.sha256` da release. Falha ou cancelamento apagam o
+  /// download e lançam [UpdateDownloadException].
+  Future<DownloadedInstaller> downloadUpdate(
+    ReleaseInfo release, {
+    void Function(int received, int? total)? onProgress,
+    UpdateCancelToken? cancel,
+  });
+
+  /// Apaga instaladores baixados em vezes anteriores.
+  Future<void> cleanupUpdateDownloads();
+
+  /// O que está em andamento agora (para avisar antes de fechar).
+  Future<List<RunningTask>> runningTasks();
 }
 
 class CoreBackend implements AppBackend {
@@ -425,4 +443,22 @@ class CoreBackend implements AppBackend {
 
   @override
   Future<ReleaseInfo?> checkForUpdate(String currentVersion) => _updates.checkIfDue(currentVersion);
+
+  @override
+  Future<UpdateCheckResult> checkForUpdateNow(String currentVersion) => _updates.checkNow(currentVersion);
+
+  final _downloader = UpdateDownloader();
+
+  @override
+  Future<DownloadedInstaller> downloadUpdate(
+    ReleaseInfo release, {
+    void Function(int received, int? total)? onProgress,
+    UpdateCancelToken? cancel,
+  }) => _downloader.download(release, onProgress: onProgress, cancel: cancel);
+
+  @override
+  Future<void> cleanupUpdateDownloads() => _downloader.cleanup();
+
+  @override
+  Future<List<RunningTask>> runningTasks() => core.runningTasks();
 }

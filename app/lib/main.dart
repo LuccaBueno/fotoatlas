@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:fotoatlas_core/fotoatlas_core.dart';
+import 'package:fotoatlas_core/fotoatlas_core.dart' as fotoatlas show startInstaller;
 
 import 'app/backend.dart';
 import 'app/close_confirm_dialog.dart';
@@ -11,6 +13,7 @@ import 'app/library_backend.dart';
 import 'app/providers.dart';
 import 'app/shell.dart';
 import 'app/theme.dart';
+import 'features/update/update_notice.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +22,14 @@ void main() {
 
 /// Abre o core (catálogo, helper, monitor de dispositivos) e mostra o app.
 class FotoAtlasApp extends StatefulWidget {
-  const FotoAtlasApp({super.key, this.openCore, this.demoMode, this.firstRunGuide = true});
+  const FotoAtlasApp({
+    super.key,
+    this.openCore,
+    this.demoMode,
+    this.firstRunGuide = true,
+    this.startInstaller = fotoatlas.startInstaller,
+    this.exitProcess = _exitProcess,
+  });
 
   /// Mostra o guia de primeiros passos se ainda não foi visto (testes desligam).
   final bool firstRunGuide;
@@ -29,6 +39,15 @@ class FotoAtlasApp extends StatefulWidget {
 
   /// Padrão: `FOTOATLAS_DEMO` (definido pelo `run-app.ps1`).
   final DemoMode? demoMode;
+
+  /// "Atualizar agora": confere de novo e inicia o instalador (substituível em
+  /// testes, que nunca iniciam nada).
+  final Future<bool> Function(DownloadedInstaller) startInstaller;
+
+  /// Fecha o processo depois do encerramento seguro (substituível em testes).
+  final Future<void> Function() exitProcess;
+
+  static Future<void> _exitProcess() => ServicesBinding.instance.exitApplication(AppExitType.required);
 
   /// Prazo máximo do encerramento: depois disso o app sai de qualquer jeito
   /// (o que ficou pela metade é recuperável ao abrir de novo).
@@ -69,13 +88,30 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
   /// a tempo. Clicar no X de novo não abre outra pergunta nem recomeça.
   Future<AppExitResponse> requestExit() => _exit ??= _confirmAndShutdown();
 
-  Future<AppExitResponse> _confirmAndShutdown() async {
-    FotoAtlasCore? core;
+  /// "Atualizar agora", depois de o usuário confirmar (e ver as tarefas em
+  /// andamento): inicia o instalador, que espera o app fechar, e só então faz
+  /// o mesmo encerramento seguro do X, sem perguntar de novo, e sai. Se o
+  /// instalador não iniciar, devolve `false` e nada muda (o app continua).
+  Future<bool> installUpdateAndExit(DownloadedInstaller installer) async {
+    if (_exit != null) return false; // já está fechando
+    if (!await widget.startInstaller(installer)) return false;
+    final exit = _exit = (() async => _shutdown(await _openedCore()))();
+    await exit;
+    await widget.exitProcess();
+    return true;
+  }
+
+  /// O core, se abriu (`null` se não abriu ou travou abrindo: nada a pausar).
+  Future<FotoAtlasCore?> _openedCore() async {
     try {
-      core = await _core.timeout(const Duration(seconds: 2));
+      return await _core.timeout(const Duration(seconds: 2));
     } on Object {
-      // Core não abriu (ou travou abrindo): nada a pausar.
+      return null;
     }
+  }
+
+  Future<AppExitResponse> _confirmAndShutdown() async {
+    final core = await _openedCore();
     if (core != null) {
       final List<RunningTask> tasks;
       try {
@@ -162,6 +198,7 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
           overrides: [
             backendProvider.overrideWithValue(CoreBackend(core)),
             libraryBackendProvider.overrideWithValue(CoreLibraryBackend(core)),
+            updateInstallerLauncherProvider.overrideWithValue(installUpdateAndExit),
           ],
           child: _app(AppShell(firstRunGuide: widget.firstRunGuide), navigatorKey: _navigatorKey),
         );

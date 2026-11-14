@@ -8,7 +8,9 @@
 ;   {userappdata}\FotoAtlas e o cache em {localappdata}\FotoAtlas: instalar e
 ;   atualizar nunca mexem neles.
 ; - Não atualiza nem desinstala com o app aberto (AppMutex; o app cria o mutex
-;   em app\windows\runner\main.cpp). Nunca fecha o app à força.
+;   em app\windows\runner\main.cpp). Nunca fecha o app à força. Pelo
+;   "Atualizar agora" (/ATUALIZARDOAPP=1), espera o app fechar sozinho e o
+;   abre de novo no fim (ADR 0021).
 ; - Desinstalar pergunta antes de tocar no catálogo, com o texto da ação nos
 ;   botões; o padrão (e a resposta do modo silencioso) é "Manter catálogo". Com
 ;   "Apagar catálogo", as pastas vão para a Lixeira, nunca são apagadas de vez.
@@ -87,6 +89,53 @@ Name: "{autodesktop}\FotoAtlas"; Filename: "{app}\fotoatlas.exe"; WorkingDir: "{
 Filename: "{app}\fotoatlas.exe"; Description: "Abrir o FotoAtlas"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+const
+  MutexDoApp = 'FotoAtlas.App.Aberto';
+  ChaveDesinstalacao = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6B0E5A52-3C4D-4F7B-9E21-8A1D2F0C7B3E}_is1';
+
+var
+  AtualizandoPeloApp: Boolean;
+  AppFechou: Boolean;
+
+// "Atualizar agora" (ADR 0021): o app inicia este instalador com
+// /SILENT /NORESTART /ATUALIZARDOAPP=1 (installerUpdateArguments no core) e só
+// então fecha com segurança. Aqui o instalador espera o app fechar (até 2 min)
+// antes da checagem do AppMutex. Se ele não fechar, vale a regra de sempre: a
+// mensagem SetupAppRunningError, nunca fechar à força. Não mude o nome do
+// parâmetro: versões instaladas do app chamam a versão nova com ele.
+function InitializeSetup(): Boolean;
+var
+  Espera: Integer;
+begin
+  Result := True;
+  AtualizandoPeloApp := ExpandConstant('{param:ATUALIZARDOAPP|0}') = '1';
+  if not AtualizandoPeloApp then
+    Exit;
+  Espera := 0;
+  while CheckForMutexes(MutexDoApp) and (Espera < 480) do begin
+    Sleep(250);
+    Espera := Espera + 1;
+  end;
+  AppFechou := not CheckForMutexes(MutexDoApp);
+end;
+
+// No fim da atualização pelo app (instalada ou não), abre o FotoAtlas que
+// estiver instalado: o novo, ou o anterior se algo falhou (o Inno desfaz uma
+// instalação interrompida). Só se foi o instalador que esperou o app fechar.
+procedure DeinitializeSetup();
+var
+  Pasta: String;
+  ResultCode: Integer;
+begin
+  if not (AtualizandoPeloApp and AppFechou) then
+    Exit;
+  if not RegQueryStringValue(HKCU, ChaveDesinstalacao, 'InstallLocation', Pasta) then
+    Exit;
+  Pasta := AddBackslash(Pasta);
+  if FileExists(Pasta + 'fotoatlas.exe') then
+    Exec(Pasta + 'fotoatlas.exe', '', Pasta, SW_SHOWNORMAL, ewNoWait, ResultCode);
+end;
+
 // Manda uma pasta para a Lixeira (recuperável). Devolve True se ela sumiu.
 function RecycleFolder(const Path: String): Boolean;
 var
@@ -112,8 +161,7 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
-    RegWriteStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{6B0E5A52-3C4D-4F7B-9E21-8A1D2F0C7B3E}_is1',
-      'UninstallString', '"' + ExpandConstant('{uninstallexe}') + '" /SILENT');
+    RegWriteStringValue(HKCU, ChaveDesinstalacao, 'UninstallString', '"' + ExpandConstant('{uninstallexe}') + '" /SILENT');
 end;
 
 // Nos diálogos com botões próprios, o primeiro é IDYES, o segundo é IDNO e o

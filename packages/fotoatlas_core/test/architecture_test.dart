@@ -111,6 +111,13 @@ const _allowed = {
   ('thumbs/thumbnail_service.dart', 'writeAsBytes'),
   ('thumbs/thumbnail_service.dart', 'renameSync'),
   ('thumbs/thumbnail_service.dart', 'deleteSync'),
+  // "Atualizar agora" (ADR 0021): só a pasta temporária própria
+  // (pasta temporária do Windows\FotoAtlas-atualizacao\download-*), nunca arquivos de usuário nem o catálogo.
+  ('update/update_download.dart', '.create('),
+  ('update/update_download.dart', 'openWrite'),
+  ('update/update_download.dart', 'FileMode.write'),
+  ('update/update_download.dart', '.rename('),
+  ('update/update_download.dart', '.delete('),
 };
 
 void main() {
