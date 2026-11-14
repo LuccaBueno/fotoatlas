@@ -213,6 +213,23 @@ void main() {
     expect(engine, contains('observeOnly: true'));
   });
 
+  test('nenhuma função nativa que espera o disco é isLeaf (travaria a interface)', () {
+    // Chamada leaf impede a coleta de lixo do grupo de isolates inteiro até
+    // voltar: com disco lento, o scan travava o isolate da interface (ADR 0008).
+    final leaf = <String>[];
+    for (final file in Directory('lib').listSync(recursive: true).whereType<File>()) {
+      if (!file.path.endsWith('.dart')) continue;
+      final text = file.readAsStringSync();
+      for (final m in RegExp(r"'(\w+)',\s*isLeaf:\s*true").allMatches(text)) {
+        if (m.group(1) != 'GetLastError') leaf.add('${file.path}: ${m.group(1)}');
+      }
+      final all = RegExp(r'isLeaf:\s*true').allMatches(text).length;
+      final named = RegExp(r"'\w+',\s*isLeaf:\s*true").allMatches(text).length;
+      if (all != named) leaf.add('${file.path}: isLeaf em formato não reconhecido');
+    }
+    expect(leaf, isEmpty);
+  });
+
   test('o core não depende de Flutter', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     expect(pubspec, isNot(contains('flutter')));

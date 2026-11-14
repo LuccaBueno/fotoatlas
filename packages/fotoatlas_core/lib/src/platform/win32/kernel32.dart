@@ -2,6 +2,12 @@
 // em um só lugar. Abrir arquivo (CreateFileW) e mover (MoveFileExW) só são
 // usados por safe_io/ (teste de arquitetura): leitura de origem e publicação
 // sem sobrescrever.
+//
+// Nenhuma função que pode esperar o disco é `isLeaf`: durante uma chamada
+// leaf a VM não consegue parar o isolate para coletar lixo, e a coleta é do
+// grupo inteiro — com disco lento, um `FindNextFileW` preso no isolate do scan
+// travava também o isolate da interface (ADR 0008, atualização de 2026-11-14).
+// Só o `GetLastError` é leaf (não espera nada e é lido logo após a falha).
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
@@ -58,18 +64,12 @@ const int win32FindDataSize = 592;
 typedef _FindFirstFileExNative = IntPtr Function(Pointer<Utf16>, Int32, Pointer<Uint8>, Int32, Pointer<Void>, Uint32);
 typedef _FindFirstFileExDart = int Function(Pointer<Utf16>, int, Pointer<Uint8>, int, Pointer<Void>, int);
 
-final findFirstFileEx = _kernel32.lookupFunction<_FindFirstFileExNative, _FindFirstFileExDart>(
-  'FindFirstFileExW',
-  isLeaf: true,
-);
+final findFirstFileEx = _kernel32.lookupFunction<_FindFirstFileExNative, _FindFirstFileExDart>('FindFirstFileExW');
 
 final findNextFile = _kernel32
-    .lookupFunction<Int32 Function(IntPtr, Pointer<Uint8>), int Function(int, Pointer<Uint8>)>(
-      'FindNextFileW',
-      isLeaf: true,
-    );
+    .lookupFunction<Int32 Function(IntPtr, Pointer<Uint8>), int Function(int, Pointer<Uint8>)>('FindNextFileW');
 
-final findClose = _kernel32.lookupFunction<Int32 Function(IntPtr), int Function(int)>('FindClose', isLeaf: true);
+final findClose = _kernel32.lookupFunction<Int32 Function(IntPtr), int Function(int)>('FindClose');
 
 final getLastError = _kernel32.lookupFunction<Uint32 Function(), int Function()>('GetLastError', isLeaf: true);
 
@@ -77,36 +77,29 @@ final getVolumePathName = _kernel32
     .lookupFunction<
       Int32 Function(Pointer<Utf16>, Pointer<Utf16>, Uint32),
       int Function(Pointer<Utf16>, Pointer<Utf16>, int)
-    >('GetVolumePathNameW', isLeaf: true);
+    >('GetVolumePathNameW');
 
 final getVolumeNameForVolumeMountPoint = _kernel32
     .lookupFunction<
       Int32 Function(Pointer<Utf16>, Pointer<Utf16>, Uint32),
       int Function(Pointer<Utf16>, Pointer<Utf16>, int)
-    >('GetVolumeNameForVolumeMountPointW', isLeaf: true);
+    >('GetVolumeNameForVolumeMountPointW');
 
 final getVolumePathNamesForVolumeName = _kernel32
     .lookupFunction<
       Int32 Function(Pointer<Utf16>, Pointer<Utf16>, Uint32, Pointer<Uint32>),
       int Function(Pointer<Utf16>, Pointer<Utf16>, int, Pointer<Uint32>)
-    >('GetVolumePathNamesForVolumeNameW', isLeaf: true);
+    >('GetVolumePathNamesForVolumeNameW');
 
 final findFirstVolume = _kernel32
-    .lookupFunction<IntPtr Function(Pointer<Utf16>, Uint32), int Function(Pointer<Utf16>, int)>(
-      'FindFirstVolumeW',
-      isLeaf: true,
-    );
+    .lookupFunction<IntPtr Function(Pointer<Utf16>, Uint32), int Function(Pointer<Utf16>, int)>('FindFirstVolumeW');
 
 final findNextVolume = _kernel32
     .lookupFunction<Int32 Function(IntPtr, Pointer<Utf16>, Uint32), int Function(int, Pointer<Utf16>, int)>(
       'FindNextVolumeW',
-      isLeaf: true,
     );
 
-final findVolumeClose = _kernel32.lookupFunction<Int32 Function(IntPtr), int Function(int)>(
-  'FindVolumeClose',
-  isLeaf: true,
-);
+final findVolumeClose = _kernel32.lookupFunction<Int32 Function(IntPtr), int Function(int)>('FindVolumeClose');
 
 final getVolumeInformation = _kernel32
     .lookupFunction<
@@ -130,17 +123,16 @@ final getVolumeInformation = _kernel32
         Pointer<Utf16>,
         int,
       )
-    >('GetVolumeInformationW', isLeaf: true);
+    >('GetVolumeInformationW');
 
 final getDiskFreeSpaceEx = _kernel32
     .lookupFunction<
       Int32 Function(Pointer<Utf16>, Pointer<Uint64>, Pointer<Uint64>, Pointer<Uint64>),
       int Function(Pointer<Utf16>, Pointer<Uint64>, Pointer<Uint64>, Pointer<Uint64>)
-    >('GetDiskFreeSpaceExW', isLeaf: true);
+    >('GetDiskFreeSpaceExW');
 
 final getDriveType = _kernel32.lookupFunction<Uint32 Function(Pointer<Utf16>), int Function(Pointer<Utf16>)>(
   'GetDriveTypeW',
-  isLeaf: true,
 );
 
 // --- Arquivos (somente safe_io/) -------------------------------------------
@@ -176,67 +168,60 @@ final createFile = _kernel32
     .lookupFunction<
       IntPtr Function(Pointer<Utf16>, Uint32, Uint32, Pointer<Void>, Uint32, Uint32, IntPtr),
       int Function(Pointer<Utf16>, int, int, Pointer<Void>, int, int, int)
-    >('CreateFileW', isLeaf: true);
+    >('CreateFileW');
 
 final readFile = _kernel32
     .lookupFunction<
       Int32 Function(IntPtr, Pointer<Uint8>, Uint32, Pointer<Uint32>, Pointer<Void>),
       int Function(int, Pointer<Uint8>, int, Pointer<Uint32>, Pointer<Void>)
-    >('ReadFile', isLeaf: true);
+    >('ReadFile');
 
-final closeHandle = _kernel32.lookupFunction<Int32 Function(IntPtr), int Function(int)>('CloseHandle', isLeaf: true);
+final closeHandle = _kernel32.lookupFunction<Int32 Function(IntPtr), int Function(int)>('CloseHandle');
 
 final getFileInformationByHandle = _kernel32
     .lookupFunction<Int32 Function(IntPtr, Pointer<Uint8>), int Function(int, Pointer<Uint8>)>(
       'GetFileInformationByHandle',
-      isLeaf: true,
     );
 
 final getFileAttributesEx = _kernel32
     .lookupFunction<
       Int32 Function(Pointer<Utf16>, Int32, Pointer<Uint8>),
       int Function(Pointer<Utf16>, int, Pointer<Uint8>)
-    >('GetFileAttributesExW', isLeaf: true);
+    >('GetFileAttributesExW');
 
 final moveFileEx = _kernel32
     .lookupFunction<
       Int32 Function(Pointer<Utf16>, Pointer<Utf16>, Uint32),
       int Function(Pointer<Utf16>, Pointer<Utf16>, int)
-    >('MoveFileExW', isLeaf: true);
+    >('MoveFileExW');
 
 final writeFile = _kernel32
     .lookupFunction<
       Int32 Function(IntPtr, Pointer<Uint8>, Uint32, Pointer<Uint32>, Pointer<Void>),
       int Function(int, Pointer<Uint8>, int, Pointer<Uint32>, Pointer<Void>)
-    >('WriteFile', isLeaf: true);
+    >('WriteFile');
 
-final flushFileBuffers = _kernel32.lookupFunction<Int32 Function(IntPtr), int Function(int)>(
-  'FlushFileBuffers',
-  isLeaf: true,
-);
+final flushFileBuffers = _kernel32.lookupFunction<Int32 Function(IntPtr), int Function(int)>('FlushFileBuffers');
 
 /// FILETIME de criação, acesso e modificação (ponteiros podem ser nulos).
 final setFileTime = _kernel32
     .lookupFunction<
       Int32 Function(IntPtr, Pointer<Uint64>, Pointer<Uint64>, Pointer<Uint64>),
       int Function(int, Pointer<Uint64>, Pointer<Uint64>, Pointer<Uint64>)
-    >('SetFileTime', isLeaf: true);
+    >('SetFileTime');
 
 final createDirectory = _kernel32
     .lookupFunction<Int32 Function(Pointer<Utf16>, Pointer<Void>), int Function(Pointer<Utf16>, Pointer<Void>)>(
       'CreateDirectoryW',
-      isLeaf: true,
     );
 
 /// Só remove pasta **vazia** (o próprio Windows recusa se houver qualquer coisa).
 final removeDirectory = _kernel32.lookupFunction<Int32 Function(Pointer<Utf16>), int Function(Pointer<Utf16>)>(
   'RemoveDirectoryW',
-  isLeaf: true,
 );
 
 final deleteFile = _kernel32.lookupFunction<Int32 Function(Pointer<Utf16>), int Function(Pointer<Utf16>)>(
   'DeleteFileW',
-  isLeaf: true,
 );
 
 /// Lê uma string UTF-16 terminada em zero de um buffer de tamanho fixo.
