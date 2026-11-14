@@ -275,6 +275,13 @@ Observações da Fase 8:
 - Native AOT do helper descartado (precisa do linker do Visual Studio no PATH no build); executável único autocontido de ~14 MB.
 - Instalador com ~100 MB (a maior parte é o FFmpeg). Sem assinatura de código: o SmartScreen avisa na primeira execução.
 
+## Versão 1.1.0 (2026-11-14)
+Pedidos do usuário (2026-11-14), numa versão só:
+- [x] Avisos "… Acompanhe em Tarefas." (cópia, verificação, reorganização) somem sozinhos em 6 s e ao clicar em "Ver em Tarefas" (`app\lib\widgets\task_notice.dart`; causa: `SnackBar` com ação tem `persist = true` por padrão); "Desfazer" da correção de relógio também some; testes em `app\test\notices_test.dart` e nos fluxos de verificação e reorganização
+- [x] `docs\assets\logo-conceito.jpg` removida
+- [x] Aviso de versão nova: consulta diária ao GitHub (desligável em Configurações › Atualizações), faixa com "Baixar"/"Agora não", nunca baixa nem instala, sem dados do usuário, falha em silêncio (ADR 0020)
+- [ ] Release `v1.1.0` no GitHub, com o instalador, o SHA-256 e as notas de versão
+
 ## Fase 9+ — Avançados
 - [ ] Item lógico (RAW+JPEG, Live Photos) · duplicatas visuais · mapa · IA local · Google Takeout
 
@@ -301,3 +308,4 @@ Observações da Fase 8:
 - 2026-10-31 — Fase 8 (início) — Conferido: git limpo, tags v0.6.0 e v0.7.0 no GitHub, CI verde, nada pela metade. Instalador Inno Setup por usuário com ExifTool/FFmpeg, helper autocontido, runtime do C++ estático, atalhos, ícone da logo do menu, mutex contra atualizar com o app aberto, desinstalação que pergunta (padrão Não, Sim → Lixeira), Sobre com versão, teste de instalar/atualizar/desinstalar na CI, ADR 0019, docs\instalacao.md e roteiro. Aguarda o teste do usuário; release v1.0.0 depois.
 - 2026-11-06 — Teste da Fase 8 e ajustes — Roteiro aprovado pelo usuário. Desinstalador com botões "Desinstalar/Cancelar" e "Manter catálogo/Apagar catálogo (vai para a Lixeira)" (`UninstallString` com `/SILENT`, ADR 0019), testados na CI pela automação de interface; cabeçalho do momento com "1 de 4 itens" sob filtro. Tag v0.8.0.
 - 2026-11-06 — Release v1.0.0 — Publicada a pedido do usuário depois de conferir que o SHA-256 das notas, o do GitHub, o do `.sha256` e o do instalador baixado de novo são iguais (tag no commit ec435a2). README com o link de download e o resumo da instalação. Fase 9+ **não iniciada**: aguarda o usuário.
+- 2026-11-14 — Versão 1.1.0 — Avisos de tarefa que não sumiam (persist padrão do SnackBar com ação) corrigidos com helper único e testes; logo-conceito.jpg removida; aviso de versão nova com consulta diária ao GitHub, desligável, sem dados do usuário (ADR 0020). Release v1.1.0 aguarda o usuário aprovar as notas.

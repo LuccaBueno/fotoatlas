@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.1.0] — 2026-11-14
+
+### Adicionado
+- **Aviso de versão nova:** ao abrir, no máximo uma vez por dia, o FotoAtlas pergunta ao GitHub qual é a versão mais nova (sem enviar nenhuma informação do usuário). Se houver, aparece uma faixa discreta no topo com **Baixar** (abre a página da versão no navegador) e **Agora não**. Nunca baixa nem instala nada sozinho; sem internet, nada acontece. Desligável em Configurações › **Atualizações**. ADR 0020.
+
+### Corrigido
+- O aviso "Cópia iniciada. Acompanhe em Tarefas." não sumia (no Flutter atual, um aviso com botão fica fixo por padrão). Agora ele e os de verificação e reorganização somem sozinhos depois de alguns segundos e ao clicar em **Ver em Tarefas**. O aviso "Desfazer" da correção de relógio também some sozinho.
+
+### Removido
+- `docs/assets/logo-conceito.jpg`, que não era mais usada.
+
 ### Documentação
 - README começa com a seção **⬇️ Baixar**: botão para a versão mais recente, três passos e o aviso de que "Source code" não é o programa. A descrição e o site do repositório no GitHub apontam para o download.
 - README de portfólio: logo atual (globo com lupa, gerada por `app/tool/gen_app_icon.dart` em `docs/assets/logo.png`), capturas do modo demonstração com dados sintéticos (Início, Biblioteca, Comparar, Reorganizar, Tarefas), GIF da comparação e seções "Destaques técnicos" e "Arquitetura" (diagrama Mermaid).
