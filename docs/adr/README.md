@@ -42,3 +42,4 @@ Modelo:
 | [0020](0020-aviso-de-versao-nova.md) | Aviso de versão nova: consulta diária ao GitHub, desligável, sem dados do usuário e sem instalar sozinho | aceita |
 | [0021](0021-atualizar-agora.md) | "Atualizar agora": baixa o instalador da release oficial, confere o SHA-256, pergunta, fecha com segurança, instala e reabre | aceita |
 | [0022](0022-pre-lancamentos.md) | Pré-lançamentos `1.3.0-beta.N`: versões SemVer, instalador com sufixo, app nunca oferece pré-lançamento | aceita |
+| [0023](0023-fotos-parecidas.md) | Fotos parecidas: pHash + dHash das miniaturas em cache, níveis de confiança, só sugestões, nunca recodifica uma foto | aceita |

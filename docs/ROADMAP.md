@@ -306,7 +306,7 @@ Condições do usuário (2026-11-15):
 - (d) Nada de localização sai do computador sem consentimento explícito; padrão offline com contornos de países/estados embutidos; mapa online (OpenStreetMap) só se o usuário ligar em Configurações, com aviso claro do que é enviado.
 
 - [~] 9.0 Pré-lançamentos: `AppVersion` com pré-lançamento (SemVer), aviso e "Atualizar agora" só com versões estáveis (testes), build do instalador com sufixo, Sobre com "(pré-lançamento)", roteiro de teste criado
-- [ ] 9.a Fotos parecidas (schema v8): impressão visual das miniaturas, fila leve, grupos com nível de confiança, tela com comparação lado a lado, "Não são parecidas", nada automático → pré-lançamento `1.3.0-beta.1`
+- [~] 9.a Fotos parecidas (schema v8): impressão visual das miniaturas, fila leve, grupos com nível de confiança, tela com comparação lado a lado, "Não são parecidas", nada automático → pré-lançamento `1.3.0-beta.1`
 - [ ] 9.b Item lógico (schema v9): RAW+JPEG e Live Photos agrupados só na visualização, desagrupar/agrupar, cópia e reorganização levam o grupo todo com a prévia mostrando → `1.3.0-beta.2`
 - [ ] 9.c Google Takeout (schema v10): pasta ou zip só leitura, `.json` associados (nomes cortados, `(1)`, editados), datas e locais só no catálogo, sem `.json` = "hora a confirmar" → `1.3.0-beta.3`
 - [ ] 9.d Mapa: offline com contornos embutidos, pontos agrupados, filtro por área, OpenStreetMap só com consentimento em Configurações → `1.3.0-beta.4`

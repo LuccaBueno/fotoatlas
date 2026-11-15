@@ -75,6 +75,24 @@ const helpTopics = [
     ],
   ),
   HelpTopic(
+    'Fotos parecidas',
+    'Sugestões de fotos diferentes que parecem a mesma: a mesma foto em outro tamanho ou qualidade (como as enviadas '
+        'por mensagem), com um pequeno corte ou edição, ou tiradas em sequência. São só sugestões: o FotoAtlas nunca '
+        'apaga, move ou altera uma foto, e nunca muda a qualidade de nenhuma.',
+    [
+      'Ver os grupos sugeridos e escolher quanta certeza exigir (só quase idênticas, até muito parecidas ou todas).',
+      'Comparar lado a lado: tamanho, resolução, data, câmera, onde está cada uma e se tem backup.',
+      'Dizer "Não são parecidas" (o grupo não volta) ou tirar uma foto do grupo — só no catálogo, com Desfazer.',
+      'Marcar fotos e copiá-las para outro lugar pela cópia segura (com prévia).',
+      'Pausar ou continuar a análise; ela também espera sozinha as outras tarefas terminarem.',
+    ],
+    extraLegend: [
+      (Icons.filter_none, 'Quase idênticas', 'A mesma foto em outro tamanho ou qualidade.'),
+      (Icons.burst_mode_outlined, 'Muito parecidas', 'Pequeno corte, edição de brilho ou fotos em sequência.'),
+      (Icons.help_outline, 'Talvez parecidas', 'Parecem a mesma cena; confira com calma.'),
+    ],
+  ),
+  HelpTopic(
     'Tarefas',
     'Cópias, reorganizações e verificações em andamento e o histórico de tudo o que o FotoAtlas gravou ou moveu.',
     [

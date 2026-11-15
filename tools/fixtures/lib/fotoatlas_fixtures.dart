@@ -13,6 +13,7 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 
 import 'media_fixtures.dart';
+import 'similar_fixtures.dart';
 
 export 'media_fixtures.dart';
 export 'similar_fixtures.dart';
@@ -470,4 +471,43 @@ void generateIntegrityDemo(String outDir) {
         ..setLastModifiedSync(at);
     }
   }
+}
+
+/// Demonstração das fotos parecidas (Fase 9): uma pasta com cenas sintéticas
+/// e variações delas — a mesma foto menor, recomprimida e mais clara
+/// ("quase idênticas"/"muito parecidas"), uma rajada e uma cortada, fotos
+/// sozinhas e uma tela preta (lisa, nunca sugerida). Nada vem de fotos reais.
+void generateSimilarDemo(String outDir) {
+  assertAllowedOutput(outDir);
+  final dir = Directory(outDir);
+  if (dir.existsSync() && dir.listSync().isNotEmpty) {
+    throw StateError('A pasta de saída precisa estar vazia: $outDir');
+  }
+  final photos = <String, (int, SceneVariant)>{
+    'Praia/IMG_0101.jpg': (11, SceneVariant.original),
+    'WhatsApp/IMG-20240712-WA0003.jpg': (11, SceneVariant.half),
+    'Praia/IMG_0101_compartilhada.jpg': (11, SceneVariant.lowQuality),
+    'Praia/IMG_0101_editada.jpg': (11, SceneVariant.brighter),
+    'Festa/IMG_0201.jpg': (12, SceneVariant.original),
+    'Festa/IMG_0202.jpg': (12, SceneVariant.burst),
+    'Viagem/IMG_0301.jpg': (13, SceneVariant.original),
+    'Viagem/IMG_0301_recorte.jpg': (13, SceneVariant.cropped),
+    'Viagem/IMG_0302.jpg': (14, SceneVariant.original),
+    'Viagem/IMG_0303.jpg': (15, SceneVariant.original),
+  };
+  var n = 0;
+  for (final MapEntry(key: rel, value: (seed, variant)) in photos.entries) {
+    final at = DateTime(2024, 7, 10 + seed - 11, 9 + n, 30);
+    final bytes = jpegWithExif(
+      ExifSpec(dateTimeOriginal: at, make: 'Google', model: 'Pixel 7', thumbnail: false),
+      image: sceneJpeg(seed, variant),
+    );
+    final f = File(p.join(outDir, rel));
+    f.parent.createSync(recursive: true);
+    f
+      ..writeAsBytesSync(bytes)
+      ..setLastModifiedSync(at);
+    n++;
+  }
+  File(p.join(outDir, 'Viagem', 'tela_preta.jpg')).writeAsBytesSync(flatJpeg(3, 3, 3));
 }

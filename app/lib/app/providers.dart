@@ -5,6 +5,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import 'backend.dart';
 import 'library_backend.dart';
+import 'similar_backend.dart';
 
 /// Backend do app. Sobrescrito em `main.dart` (core real) e nos testes (falso).
 final backendProvider = Provider<AppBackend>((ref) => throw UnimplementedError('backendProvider não configurado'));
@@ -151,3 +152,36 @@ final integrityOverviewProvider = StreamProvider<List<SourceIntegrity>>(
 final integrityScheduleProvider = FutureProvider<IntegritySchedule>(
   (ref) => ref.watch(backendProvider).integritySchedule(),
 );
+
+/// Fotos parecidas (Fase 9). Sobrescrito em `main.dart`.
+final similarBackendProvider = Provider<SimilarBackend>(
+  (ref) => throw UnimplementedError('similarBackendProvider não configurado'),
+);
+
+/// Avisos de mudança nas sugestões, agrupados (no máximo um a cada 700 ms).
+final similarChangesProvider = StreamProvider<int>((ref) {
+  final backend = ref.watch(similarBackendProvider);
+  final controller = StreamController<int>();
+  var n = 0;
+  Timer? timer;
+  final sub = backend.changes().listen((_) {
+    timer ??= Timer(const Duration(milliseconds: 700), () {
+      timer = null;
+      controller.add(++n);
+    });
+  });
+  controller.add(n);
+  ref.onDispose(() {
+    timer?.cancel();
+    sub.cancel();
+    controller.close();
+  });
+  return controller.stream;
+});
+
+/// Situação da análise de fotos parecidas (começa pelo valor atual).
+final similarStatusProvider = StreamProvider<SimilarStatus>((ref) async* {
+  final backend = ref.watch(similarBackendProvider);
+  yield backend.status;
+  yield* backend.watchStatus();
+});

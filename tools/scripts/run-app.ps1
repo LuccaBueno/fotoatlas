@@ -16,7 +16,8 @@
 #     Também gera, uma vez, a pasta "HD bagunçado" (fotos sintéticas espalhadas)
 #     para testar "Reorganizar…" (Fase 6), e a pasta "Integridade" ("HD fotos" e
 #     "HD cópia", com as mesmas fotos) para testar a verificação de integridade
-#     (Fase 7; o dano no disco é simulado com tools\scripts\demo-danificar.ps1).
+#     (Fase 7; o dano no disco é simulado com tools\scripts\demo-danificar.ps1),
+#     e a pasta "Fotos parecidas" (cenas sintéticas e variações; Fase 9).
 # As pastas temporárias (%TEMP%\fotoatlas_*) de -Demo/-CelularSimulado são
 # apagadas quando o app fecha.
 param([switch]$Demo, [switch]$CelularSimulado, [switch]$ManterDemo, [switch]$DemoPersistente)
@@ -93,6 +94,20 @@ try {
         }
         Write-Host "Verificação de integridade (cadastre as duas como pasta): $(Join-Path $integridade 'HD fotos') e $(Join-Path $integridade 'HD cópia')"
         Write-Host 'Para simular um dano no disco: tools\scripts\demo-danificar.ps1 (só mexe na pasta da demonstração).'
+        # Fase 9: "Fotos parecidas" (cenas sintéticas e variações) para a tela Parecidas.
+        $parecidas = Join-Path $pasta 'Fotos parecidas'
+        if (-not (Test-Path -LiteralPath $parecidas)) {
+            $gerando = Join-Path $pasta 'parecidas_gerando'
+            if (Test-Path -LiteralPath $gerando) { Remove-Item -LiteralPath $gerando -Recurse -Force }
+            Push-Location (Join-Path $root 'tools\fixtures')
+            try {
+                dart pub get | Out-Null
+                dart run bin/gen_similar_demo.dart --out $gerando | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw 'falha ao gerar a demonstração de fotos parecidas' }
+            } finally { Pop-Location }
+            Rename-Item -LiteralPath $gerando -NewName 'Fotos parecidas'
+        }
+        Write-Host "Fotos parecidas (cadastre como pasta): $parecidas"
         if ($CelularSimulado) {
             $celular = Join-Path $pasta 'celular'
             if (-not (Test-Path -LiteralPath $celular)) {

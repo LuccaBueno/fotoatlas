@@ -6,6 +6,7 @@ import '../features/compare/compare_page.dart';
 import '../features/devices/devices_page.dart';
 import '../features/home/home_page.dart';
 import '../features/library/library_page.dart';
+import '../features/similar/similar_page.dart';
 import '../features/tasks/tasks_page.dart';
 import '../features/settings/settings_page.dart';
 import '../features/update/update_notice.dart';
@@ -26,6 +27,7 @@ final _destinations = [
   _Destination('Biblioteca', Icons.photo_library_outlined, Icons.photo_library, () => const LibraryPage()),
   _Destination('Dispositivos', Icons.storage_outlined, Icons.storage, () => const DevicesPage()),
   _Destination('Comparar', Icons.compare_arrows_outlined, Icons.compare_arrows, () => const ComparePage()),
+  _Destination('Parecidas', Icons.burst_mode_outlined, Icons.burst_mode, () => const SimilarPage()),
   _Destination('Tarefas', Icons.task_alt_outlined, Icons.task_alt, () => const TasksPage()),
   _Destination('Configurações', Icons.settings_outlined, Icons.settings, () => const SettingsPage()),
 ];
@@ -37,9 +39,9 @@ const devicesDestination = 2;
 const compareDestination = 3;
 
 /// Índice do destino "Tarefas".
-const tasksDestination = 4;
+const tasksDestination = 5;
 
-/// Navegação lateral com as 6 telas da spec (§3.2).
+/// Navegação lateral com as 6 telas da spec (§3.2) e "Parecidas" (Fase 9).
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, this.firstRunGuide = false});
 

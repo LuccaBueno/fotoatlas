@@ -90,4 +90,21 @@ void main() {
     }
     expect(() => generateIntegrityDemo(out), throwsStateError);
   });
+
+  test('fotos parecidas: cenas e variações determinísticas, todas com conteúdo diferente', () {
+    final a = p.join(temp.path, 'parecidas_a');
+    final b = p.join(temp.path, 'parecidas_b');
+    generateSimilarDemo(a);
+    generateSimilarDemo(b);
+    final files = Directory(a).listSync(recursive: true).whereType<File>().toList();
+    expect(files, hasLength(11));
+    final contents = <String>{};
+    for (final f in files) {
+      final twin = File(p.join(b, p.relative(f.path, from: a)));
+      expect(f.readAsBytesSync(), twin.readAsBytesSync(), reason: p.relative(f.path, from: a));
+      contents.add(base64Encode(f.readAsBytesSync()));
+    }
+    expect(contents, hasLength(11));
+    expect(() => generateSimilarDemo(a), throwsStateError);
+  });
 }

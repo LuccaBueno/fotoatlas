@@ -6,8 +6,8 @@ Comandos para o Windows PowerShell, com caminhos completos. Tudo usa **dados de 
 
 | Item | Pré-lançamento | Estado |
 | --- | --- | --- |
-| 0. Pré-lançamentos (aviso e "Atualizar agora" só com versões estáveis) | entra junto com a `1.3.0-beta.1` | pronto para testar |
-| a. Fotos parecidas | `1.3.0-beta.1` | em desenvolvimento |
+| 0. Pré-lançamentos (aviso e "Atualizar agora" só com versões estáveis) | `1.3.0-beta.1` | pronto para testar |
+| a. Fotos parecidas | `1.3.0-beta.1` | pronto para testar |
 | b. RAW+JPEG e Live Photos agrupados | `1.3.0-beta.2` | não iniciado |
 | c. Importação do Google Fotos (Takeout) | `1.3.0-beta.3` | não iniciado |
 | d. Mapa | `1.3.0-beta.4` | não iniciado |
@@ -64,9 +64,49 @@ Para voltar à 1.2.1, baixe `FotoAtlas-1.2.1-instalador.exe` da página da relea
 & 'C:\Users\Lucca-PC\Downloads\FotoAtlas-1.2.1-instalador.exe'
 ```
 
-## a. Fotos parecidas
+## a. Fotos parecidas (1.3.0-beta.1)
 
-_Em desenvolvimento: os passos entram aqui quando a `1.3.0-beta.1` for publicada._
+A pasta de demonstração `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Fotos parecidas` é gerada sozinha na primeira abertura com `-DemoPersistente`. Ela tem 11 fotos sintéticas (desenhos de céu e formas coloridas, nada de fotos reais):
+
+| Pasta | Fotos | O que são |
+| --- | --- | --- |
+| `Praia` e `WhatsApp` | `IMG_0101.jpg`, `IMG_0101_compartilhada.jpg`, `IMG_0101_editada.jpg`, `IMG-20240712-WA0003.jpg` | a mesma foto: original, recomprimida, mais clara e com metade do tamanho |
+| `Festa` | `IMG_0201.jpg`, `IMG_0202.jpg` | rajada (as formas andaram um pouco) |
+| `Viagem` | `IMG_0301.jpg`, `IMG_0301_recorte.jpg` | original e cortada nas bordas |
+| `Viagem` | `IMG_0302.jpg`, `IMG_0303.jpg`, `tela_preta.jpg` | fotos sozinhas e uma tela preta (nunca devem aparecer) |
+
+**a.1. Abrir e cadastrar.** Abra a demonstração (comando em "Antes de começar"). Em **Dispositivos › Adicionar dispositivo › Escolher uma pasta…**, escolha `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Fotos parecidas` e clique em **Escanear › Tudo**. Espere a conferência terminar (Início).
+
+**a.2. A tela nova.** Clique em **Parecidas** no menu lateral. O cartão do topo mostra "Analisando as fotos…" e depois "11 de 11 fotos analisadas". Se aparecer "Esperando outras tarefas terminarem", é normal: a análise espera a conferência e a leitura das datas.
+
+**a.3. Grupos e níveis.** Com **Mostrar: Até muito parecidas** (padrão), devem aparecer **3 grupos sugeridos**:
+- **Quase idênticas**, 4 fotos (a praia);
+- **Muito parecidas**, 2 fotos (a festa);
+- **Muito parecidas**, 2 fotos (a viagem com o recorte).
+
+As fotos sozinhas e a tela preta não aparecem. Passe o mouse sobre o selo de nível: aparece a explicação. Troque para **Só quase idênticas**: fica só a praia. Troque para **Todas, até "talvez"**: continuam os 3. Volte para **Até muito parecidas**.
+
+> Na demonstração, as miniaturas vêm do Windows; o nível de algum grupo pode subir ou descer um degrau em relação à lista acima. Anote se isso acontecer.
+
+**a.4. Comparar lado a lado.** No grupo da praia, clique em **Comparar lado a lado**. Confira, para cada foto: miniatura grande, nome, resolução (a do WhatsApp tem metade da largura e da altura), tamanho, data, câmera ("Google Pixel 7"), cópias, **Onde está** e a situação de backup. A primeira tem a etiqueta **Referência**; as outras, o nível em relação a ela.
+
+**a.5. Copiar (cópia segura de sempre).** Marque duas fotos: o botão vira "Copiar 2 fotos marcadas para…". Clique e veja que abre o mesmo assistente "Copiar para…" de sempre, com prévia. Pode cancelar.
+
+**a.6. Tirar do grupo e Desfazer.** Clique em **Tirar do grupo** na foto `IMG_0101_editada.jpg`. Ela some da comparação e aparece o aviso "A foto saiu do grupo. Nenhuma foto foi alterada." com **Desfazer**. Feche a comparação: o grupo da praia agora tem 3 fotos. Clique em **Desfazer** (se o aviso já tiver sumido, use **Mostrar de novo as descartadas**, no topo): o grupo volta a ter 4.
+
+**a.7. Não são parecidas.** No grupo da festa, clique em **Não são parecidas**: o grupo some e aparece o aviso com **Desfazer**. Feche e abra o FotoAtlas: o grupo continua fora (está guardado no catálogo). Clique em **Mostrar de novo as descartadas**: o grupo volta.
+
+**a.8. Nada foi alterado.** Com o FotoAtlas aberto ou fechado, confira que a pasta continua com as mesmas 11 fotos, com as datas de modificação de julho de 2024:
+```powershell
+Get-ChildItem -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Fotos parecidas' -Recurse -File | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize
+```
+(`tela_preta.jpg` tem a data do dia em que a pasta foi gerada.)
+
+**a.9. Pausar e continuar.** Ainda em **Parecidas**, se a análise estiver rodando, clique em **Pausar** e depois em **Continuar**. Se já terminou, o botão diz **Analisar agora** e não faz nada de novo (tudo já foi analisado).
+
+**a.10. Ajuda.** Clique no **?** (canto inferior esquerdo) com a tela Parecidas aberta: aparecem "Fotos parecidas", o que dá para fazer e o significado dos três selos.
+
+**Limitações conhecidas:** recortes grandes, fotos giradas ou espelhadas não são reconhecidas como parecidas. Fotos que estão só no celular entram na análise depois que a miniatura delas aparece na Biblioteca (a análise nunca lê do celular sozinha).
 
 ## b. RAW+JPEG e Live Photos agrupados
 

@@ -12,6 +12,7 @@ import 'app/demo_mode.dart';
 import 'app/library_backend.dart';
 import 'app/providers.dart';
 import 'app/shell.dart';
+import 'app/similar_backend.dart';
 import 'app/theme.dart';
 import 'features/update/update_notice.dart';
 
@@ -66,6 +67,7 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
         autoMetadata: true,
         backupOnOpen: true,
         scheduleIntegrity: true,
+        autoSimilar: true,
       ))();
   late final AppLifecycleListener _lifecycle;
   late final DemoMode _demo = widget.demoMode ?? DemoMode.fromEnvironment();
@@ -198,6 +200,7 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
           overrides: [
             backendProvider.overrideWithValue(CoreBackend(core)),
             libraryBackendProvider.overrideWithValue(CoreLibraryBackend(core)),
+            similarBackendProvider.overrideWithValue(CoreSimilarBackend(core)),
             updateInstallerLauncherProvider.overrideWithValue(installUpdateAndExit),
           ],
           child: _app(AppShell(firstRunGuide: widget.firstRunGuide), navigatorKey: _navigatorKey),

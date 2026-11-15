@@ -547,3 +547,31 @@ ALTER TABLE file_instances ADD COLUMN integrity_resolved_at INTEGER;
 ```
 
 "Restaurado" não tem coluna: é derivado do catálogo (há, na mesma pasta do arquivo danificado, uma cópia conferida com o conteúdo de antes do dano).
+
+## 13. v8 (Fase 9, fotos parecidas, 2026-11-15) — mudança aditiva
+
+Migração `v7 → v8` numa transação, depois do backup `pre-migracao-v7-<data>.db`. Testada a partir dos *snapshots* v1 a v7 (`drift_schemas/drift_schema_v8.json`), com um teste de dados preservados. ADR 0023.
+
+```sql
+-- Impressão visual de cada foto (pHash e dHash de 64 bits), calculada da
+-- miniatura em cache. Descartável: pode ser recalculada (algorithm muda → recalcula).
+CREATE TABLE visual_hashes (
+  content_id  INTEGER NOT NULL PRIMARY KEY REFERENCES contents(id),
+  hash_p      INTEGER NOT NULL,
+  hash_d      INTEGER NOT NULL,
+  flat        BOOLEAN NOT NULL DEFAULT 0,   -- imagem lisa: nunca vira sugestão
+  algorithm   INTEGER NOT NULL,
+  computed_at INTEGER NOT NULL
+);
+
+-- "Não são parecidas" (só catálogo): o par nunca mais é sugerido junto.
+CREATE TABLE visual_dismissals (
+  content_a  INTEGER NOT NULL REFERENCES contents(id),
+  content_b  INTEGER NOT NULL REFERENCES contents(id),
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (content_a, content_b),
+  CHECK (content_a < content_b)
+);
+```
+
+Os grupos de fotos parecidas não são gravados: são calculados na hora a partir destas duas tabelas.

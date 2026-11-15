@@ -4,7 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.3.0-beta.1] — 2026-11-15 (pré-lançamento)
+
 ### Adicionado
+- **Fotos parecidas** (nova tela **Parecidas**): o FotoAtlas sugere grupos de fotos diferentes que parecem a mesma — a mesma foto em outro tamanho ou qualidade (como as enviadas por mensagem), mais clara, com um pequeno corte, ou tiradas em sequência —, cada grupo com o nível de confiança (**Quase idênticas**, **Muito parecidas**, **Talvez parecidas**) e um filtro por nível. **Comparar lado a lado** mostra cada foto grande, com resolução, tamanho, data, câmera, onde está e se tem backup. Dá para dizer **Não são parecidas** (o grupo não volta), **Tirar do grupo** uma foto (as duas com **Desfazer**), marcar fotos e **Copiar para…** pela cópia segura, e **Mostrar de novo as descartadas**. São só sugestões: nada é apagado, movido ou alterado, e a qualidade de nenhuma foto muda. A análise usa as miniaturas, roda devagar em segundo plano, espera as outras tarefas e nunca lê do celular para isso. ADR 0023.
+- Catálogo na versão 8 (só acréscimos; cópia `pre-migracao-v7-<data>.db` antes de migrar). Um catálogo aberto pela 1.3.0-beta.1 não abre mais na 1.2.1.
+- Demonstração: pasta "Fotos parecidas" no `run-app.ps1 -DemoPersistente`. CLI: `similar run | groups | dismiss | restore`.
+- Teste de arquitetura: codificar imagem só é permitido no cache de miniaturas — o app nunca recodifica uma foto do usuário.
+- Miniatura de último recurso para JPEG/PNG sem o Shell do Windows (lida em modo leitura, gravada só no cache).
 - **Pré-lançamentos** (`1.3.0-beta.N`): cada item da Fase 9 é publicado no GitHub como pré-lançamento, com instalador e `.sha256`, para teste. O Sobre mostra "Versão 1.3.0-beta.1 (pré-lançamento)". ADR 0022.
 
 ### Alterado

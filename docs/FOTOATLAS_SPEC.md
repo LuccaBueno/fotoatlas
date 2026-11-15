@@ -260,7 +260,7 @@ Os caminhos são guardados **relativos à raiz da fonte**, para que a troca da l
   - **Escopos salvos:** o usuário pode salvar um escopo com nome (ex.: "Fotos do celular antigo") e reutilizá-lo em qualquer lado da comparação. Escopos salvos ficam no catálogo; apagar um escopo nunca toca em arquivos.
   - A comparação é somente leitura (regra 2).
 - Espaço ocupado por duplicatas, por fonte.
-- **Duplicatas visuais** (perceptuais) ficam fora do MVP. Quando entrarem, serão só sugestões com comparação lado a lado.
+- **Duplicatas visuais** (perceptuais) ficam fora do MVP. Quando entrarem, serão só sugestões com comparação lado a lado. (Entraram na Fase 9, versão 1.3.0-beta.1: tela "Parecidas", com nível de confiança; o app nunca altera a qualidade de uma foto — ADR 0023.)
 
 ---
 
