@@ -315,6 +315,33 @@ void main() {
       expect(launched.single.version, const AppVersion(1, 2, 0));
     });
 
+    testWidgets('num pré-lançamento, "Procurar agora" explica que só versões estáveis são oferecidas', (tester) async {
+      final backend = FakeBackend()..checkNowResult = const UpToDate(AppVersion(1, 2, 1));
+      await tester.pumpWidget(_shell(backend, version: '1.3.0-beta.2'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Configurações').first);
+      await tester.pumpAndSettle();
+      final button = find.byKey(const ValueKey('update-check-now'));
+      await tester.ensureVisible(button);
+      await tester.pumpAndSettle();
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      final text = tester.widget<Text>(find.byKey(const ValueKey('update-check-result'))).data!;
+      expect(text, contains('pré-lançamento (1.3.0-beta.2)'));
+      expect(text, contains('Só versões estáveis são oferecidas'));
+      expect(text, contains('1.2.1'));
+      expect(backend.calls, contains('update-check-now:1.3.0-beta.2'));
+      expect(find.byKey(const ValueKey('update-banner')), findsNothing);
+    });
+
+    test('mensagem de "já está na mais nova": estável × pré-lançamento', () {
+      expect(upToDateMessage('1.2.1', const AppVersion(1, 2, 1)), 'Você já tem a versão mais nova (1.2.1).');
+      expect(
+        upToDateMessage('1.3.0-beta.1', const AppVersion(1, 2, 1)),
+        startsWith('Você está usando um pré-lançamento'),
+      );
+    });
+
     testWidgets('sem versão nova (ou sem internet): nenhum aviso', (tester) async {
       await tester.pumpWidget(_shell(FakeBackend()));
       await tester.pumpAndSettle();

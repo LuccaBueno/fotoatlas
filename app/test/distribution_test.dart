@@ -47,6 +47,7 @@ void main() {
     test('rótulo com e sem versão definida pelo build', () {
       expect(appVersionLabel('1.0.0'), 'Versão 1.0.0');
       expect(appVersionLabel(''), 'Versão de desenvolvimento');
+      expect(appVersionLabel('1.3.0-beta.1'), 'Versão 1.3.0-beta.1 (pré-lançamento)');
     });
 
     testWidgets('Configurações mostra a versão e onde ficam o catálogo e as configurações', (tester) async {

@@ -448,7 +448,7 @@ class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
               const SizedBox(height: 8),
               Text(key: const ValueKey('update-check-result'), switch (result) {
                 UpdateAvailable(:final release) => 'Versão ${release.version} disponível.',
-                UpToDate(:final latest) => 'Você já tem a versão mais nova ($latest).',
+                UpToDate(:final latest) => upToDateMessage(ref.read(currentVersionProvider), latest),
                 UpdateCheckFailed() =>
                   'Não foi possível consultar agora (sem internet, ou o GitHub não respondeu). Nada foi alterado.',
                 UpdateCheckUnavailable() => 'Versão de desenvolvimento: não há versão publicada para comparar.',
@@ -459,4 +459,15 @@ class _UpdateSettingsCardState extends ConsumerState<UpdateSettingsCard> {
       ),
     );
   }
+}
+
+/// Texto do "Procurar atualização agora" quando não há versão estável mais
+/// nova. Num pré-lançamento, explica que só versões estáveis são oferecidas.
+String upToDateMessage(String current, AppVersion latest) {
+  final version = AppVersion.tryParse(current);
+  if (version != null && version.isPreRelease) {
+    return 'Você está usando um pré-lançamento ($version). Só versões estáveis são oferecidas: '
+        'a mais nova publicada é a $latest; quando sair uma estável mais nova que a sua, ela aparece aqui.';
+  }
+  return 'Você já tem a versão mais nova ($latest).';
 }

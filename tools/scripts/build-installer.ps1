@@ -1,5 +1,5 @@
 ﻿# Gera o instalador do FotoAtlas para Windows (Inno Setup; ADR 0019).
-# Uso: powershell -ExecutionPolicy Bypass -File tools\scripts\build-installer.ps1 [-Versao 1.0.0] [-SoInstalador]
+# Uso: powershell -ExecutionPolicy Bypass -File tools\scripts\build-installer.ps1 [-Versao 1.0.0 | 1.3.0-beta.1] [-SoInstalador]
 #   -Versao: versão do app e do instalador (padrão: a do app\pubspec.yaml).
 #   -SoInstalador: não compila de novo; reaproveita dist\pacote (para gerar
 #     outra versão do instalador com os mesmos arquivos, no teste de atualização).
@@ -14,10 +14,19 @@ $dist = Join-Path $root 'dist'
 $pacote = Join-Path $dist 'pacote'
 
 if (-not $Versao) {
-    $linha = Select-String -LiteralPath (Join-Path $root 'app\pubspec.yaml') -Pattern '^version:\s*([0-9.]+)' | Select-Object -First 1
+    $linha = Select-String -LiteralPath (Join-Path $root 'app\pubspec.yaml') -Pattern '^version:\s*([0-9A-Za-z.\-]+)' | Select-Object -First 1
     $Versao = $linha.Matches[0].Groups[1].Value
 }
-if ($Versao -notmatch '^\d+\.\d+\.\d+$') { throw "Versão inválida: '$Versao' (use 1.2.3)." }
+# Estável (1.3.0) ou pré-lançamento (1.3.0-beta.1), como no Versionamento Semântico.
+if ($Versao -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$') {
+    throw "Versão inválida: '$Versao' (use 1.2.3 ou 1.2.3-beta.1)."
+}
+# O Windows (VersionInfoVersion do instalador) só aceita números: 1.3.0-beta.2
+# vira 1.3.0.2; uma estável fica 1.3.0.0, como antes.
+$partes = $Versao -split '-', 2
+$numero = 0
+if ($partes.Count -gt 1 -and $partes[1] -match '(\d+)$') { $numero = [int]$Matches[1] }
+$VersaoNumerica = "$($partes[0]).$numero"
 
 function Find-Iscc {
     $cmd = Get-Command ISCC.exe -ErrorAction SilentlyContinue
@@ -88,7 +97,7 @@ if ($proibidos) { throw "O pacote tem arquivos que não podem ir no instalador: 
 
 Write-Host "== Instalador (Inno Setup: $iscc)"
 Invoke-Checked 'ISCC' {
-    & $iscc /Q "/DAppVersion=$Versao" "/DSourceDir=$pacote" "/DOutputDir=$dist" (Join-Path $root 'installer\fotoatlas.iss')
+    & $iscc /Q "/DAppVersion=$Versao" "/DAppVersionNumeric=$VersaoNumerica" "/DSourceDir=$pacote" "/DOutputDir=$dist" (Join-Path $root 'installer\fotoatlas.iss')
 }
 $exe = Join-Path $dist "FotoAtlas-$Versao-instalador.exe"
 $sha = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()

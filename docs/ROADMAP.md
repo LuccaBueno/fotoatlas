@@ -296,8 +296,20 @@ Pedido do usuário (2026-11-14): resolver a pendência do teste de desempenho do
 - [x] Teste de desempenho 5× seguidas localmente (atraso máximo 15, 16, 9, 16 e 10 ms) e CI 3× seguidas no commit 4b1ebb1 (run 43644785668, tentativas 1–3: 16, 16 e 13 ms), todos verdes
 - [x] Release `v1.2.1` no GitHub, com o instalador, o `.sha256` e as notas de versão (2026-11-15)
 
-## Fase 9+ — Avançados
-- [ ] Item lógico (RAW+JPEG, Live Photos) · duplicatas visuais · mapa · IA local · Google Takeout
+## Fase 9 — Avançados (plano aprovado em 2026-11-15)
+Modo de trabalho pedido pelo usuário (2026-11-15): um item por vez; ao terminar cada item com a CI verde 3 rodadas seguidas, publicar **pré-lançamento** no GitHub (`1.3.0-beta.N`, instalador + `.sha256` + notas curtas) **sem esperar aprovação**; manter `docs\roteiro-teste-fase-9.md` atualizado; o usuário testa tudo em dezembro e só então promovemos a 1.3.0 estável. IA local fica fora deste ciclo.
+
+Condições do usuário (2026-11-15):
+- (b) Agrupar é só visual no catálogo; copiar, comparar, reorganizar e verificar continuam por arquivo físico; copiar/reorganizar um item agrupado leva todos os arquivos do grupo juntos e mostra isso na prévia; dá para desagrupar.
+- (c) Só leitura da pasta **ou zip** do Takeout; datas e locais dos `.json` só no catálogo, nunca gravados nos arquivos; arquivo sem `.json` correspondente aparece como "hora a confirmar".
+- (d) Nada de localização sai do computador sem consentimento explícito; padrão offline com contornos de países/estados embutidos; mapa online (OpenStreetMap) só se o usuário ligar em Configurações, com aviso claro do que é enviado.
+
+- [~] 9.0 Pré-lançamentos: `AppVersion` com pré-lançamento (SemVer), aviso e "Atualizar agora" só com versões estáveis (testes), build do instalador com sufixo, Sobre com "(pré-lançamento)", roteiro de teste criado
+- [ ] 9.a Fotos parecidas (schema v8): impressão visual das miniaturas, fila leve, grupos com nível de confiança, tela com comparação lado a lado, "Não são parecidas", nada automático → pré-lançamento `1.3.0-beta.1`
+- [ ] 9.b Item lógico (schema v9): RAW+JPEG e Live Photos agrupados só na visualização, desagrupar/agrupar, cópia e reorganização levam o grupo todo com a prévia mostrando → `1.3.0-beta.2`
+- [ ] 9.c Google Takeout (schema v10): pasta ou zip só leitura, `.json` associados (nomes cortados, `(1)`, editados), datas e locais só no catálogo, sem `.json` = "hora a confirmar" → `1.3.0-beta.3`
+- [ ] 9.d Mapa: offline com contornos embutidos, pontos agrupados, filtro por área, OpenStreetMap só com consentimento em Configurações → `1.3.0-beta.4`
+- [ ] 9.e Teste do usuário (dezembro) com `docs\roteiro-teste-fase-9.md` e release `1.3.0` estável
 
 ---
 

@@ -18,6 +18,10 @@
 #ifndef AppVersion
   #error Defina AppVersion (use tools\scripts\build-installer.ps1)
 #endif
+#ifndef AppVersionNumeric
+  ; Só números (1.3.0.2 para 1.3.0-beta.2): o Windows não aceita sufixo aqui.
+  #define AppVersionNumeric AppVersion
+#endif
 #ifndef SourceDir
   #error Defina SourceDir (use tools\scripts\build-installer.ps1)
 #endif
@@ -35,7 +39,7 @@ AppPublisher=Lucca Bueno
 AppPublisherURL=https://github.com/LuccaBueno/fotoatlas
 AppSupportURL=https://github.com/LuccaBueno/fotoatlas/issues
 AppCopyright=Copyright (C) 2026 Lucca Bueno Cuzzolin. Licença MIT.
-VersionInfoVersion={#AppVersion}
+VersionInfoVersion={#AppVersionNumeric}
 VersionInfoDescription=Instalador do FotoAtlas
 ; Só para o usuário atual: sem pedir permissão de administrador, e o catálogo
 ; (que é por usuário) é o do mesmo usuário que instalou.

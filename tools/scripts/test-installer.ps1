@@ -5,7 +5,7 @@
 # Recusa se já houver um FotoAtlas instalado ou um catálogo nesta conta.
 #
 # Uso: powershell -ExecutionPolicy Bypass -File tools\scripts\test-installer.ps1 `
-#        -InstaladorA dist\FotoAtlas-0.8.0-instalador.exe -InstaladorB dist\FotoAtlas-0.8.1-instalador.exe [-MaquinaDeTeste]
+#        -InstaladorA dist\FotoAtlas-0.8.0-beta.1-instalador.exe -InstaladorB dist\FotoAtlas-0.8.0-instalador.exe [-MaquinaDeTeste]
 #
 # Confere: arquivos, atalhos (menu Iniciar e área de trabalho), ícone do
 # executável, ExifTool/FFmpeg/helper funcionando da pasta instalada, o app
@@ -29,8 +29,10 @@ if ($env:GITHUB_ACTIONS -ne 'true' -and -not $MaquinaDeTeste) {
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $InstaladorA = (Resolve-Path $InstaladorA).Path
 $InstaladorB = (Resolve-Path $InstaladorB).Path
-$versaoA = [regex]::Match((Split-Path $InstaladorA -Leaf), 'FotoAtlas-(\d+\.\d+\.\d+)-').Groups[1].Value
-$versaoB = [regex]::Match((Split-Path $InstaladorB -Leaf), 'FotoAtlas-(\d+\.\d+\.\d+)-').Groups[1].Value
+# Aceita pré-lançamento (FotoAtlas-1.3.0-beta.1-instalador.exe).
+$versaoA = [regex]::Match((Split-Path $InstaladorA -Leaf), '^FotoAtlas-(.+)-instalador\.exe$').Groups[1].Value
+$versaoB = [regex]::Match((Split-Path $InstaladorB -Leaf), '^FotoAtlas-(.+)-instalador\.exe$').Groups[1].Value
+if (-not $versaoA -or -not $versaoB) { throw 'Nome de instalador inesperado (use FotoAtlas-<versão>-instalador.exe).' }
 
 $appDir = Join-Path $env:LOCALAPPDATA 'Programs\FotoAtlas'
 $catalogDir = Join-Path $env:APPDATA 'FotoAtlas'

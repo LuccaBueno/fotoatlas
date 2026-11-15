@@ -5,29 +5,59 @@ import 'dart:io';
 import '../settings/settings_store.dart';
 import '../util/clock.dart';
 
-/// Versão "maior.menor.correção" (aceita `v` na frente; ignora sufixos como
-/// `-beta` e `+build`).
+/// Versão "maior.menor.correção", com pré-lançamento opcional (`1.3.0-beta.1`).
+/// Aceita `v` na frente; ignora `+build`. A ordem é a do Versionamento
+/// Semântico: `1.2.1 < 1.3.0-beta.1 < 1.3.0-beta.2 < 1.3.0`.
 class AppVersion implements Comparable<AppVersion> {
-  const AppVersion(this.major, this.minor, this.patch);
+  const AppVersion(this.major, this.minor, this.patch, [this.preRelease]);
   final int major;
   final int minor;
   final int patch;
 
-  static final _pattern = RegExp(r'^v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$');
+  /// Sufixo do pré-lançamento (`beta.1`); `null` numa versão estável.
+  final String? preRelease;
+
+  bool get isPreRelease => preRelease != null;
+
+  static final _pattern = RegExp(r'^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+.*)?$');
 
   /// `null` se [text] não for uma versão.
   static AppVersion? tryParse(String text) {
     final m = _pattern.firstMatch(text.trim());
     if (m == null) return null;
-    return AppVersion(int.parse(m[1]!), int.parse(m[2]!), int.parse(m[3]!));
+    return AppVersion(int.parse(m[1]!), int.parse(m[2]!), int.parse(m[3]!), m[4]);
   }
 
   @override
-  int compareTo(AppVersion other) => major != other.major
-      ? major.compareTo(other.major)
-      : minor != other.minor
-      ? minor.compareTo(other.minor)
-      : patch.compareTo(other.patch);
+  int compareTo(AppVersion other) {
+    if (major != other.major) return major.compareTo(other.major);
+    if (minor != other.minor) return minor.compareTo(other.minor);
+    if (patch != other.patch) return patch.compareTo(other.patch);
+    return _comparePreRelease(preRelease, other.preRelease);
+  }
+
+  /// Sem sufixo vem depois de qualquer pré-lançamento da mesma versão; entre
+  /// pré-lançamentos, parte a parte (números como números, e antes de texto).
+  static int _comparePreRelease(String? a, String? b) {
+    if (a == b) return 0;
+    if (a == null) return 1;
+    if (b == null) return -1;
+    final pa = a.split('.');
+    final pb = b.split('.');
+    for (var i = 0; i < pa.length && i < pb.length; i++) {
+      final na = int.tryParse(pa[i]);
+      final nb = int.tryParse(pb[i]);
+      final c = na != null && nb != null
+          ? na.compareTo(nb)
+          : na != null
+          ? -1
+          : nb != null
+          ? 1
+          : pa[i].compareTo(pb[i]);
+      if (c != 0) return c;
+    }
+    return pa.length.compareTo(pb.length);
+  }
 
   bool operator >(AppVersion other) => compareTo(other) > 0;
 
@@ -35,10 +65,10 @@ class AppVersion implements Comparable<AppVersion> {
   bool operator ==(Object other) => other is AppVersion && compareTo(other) == 0;
 
   @override
-  int get hashCode => Object.hash(major, minor, patch);
+  int get hashCode => Object.hash(major, minor, patch, preRelease);
 
   @override
-  String toString() => '$major.$minor.$patch';
+  String toString() => '$major.$minor.$patch${preRelease == null ? '' : '-$preRelease'}';
 }
 
 /// Última versão publicada, a página dela e, se a release tiver o instalador e
@@ -79,7 +109,9 @@ String installerFileName(AppVersion version) => 'FotoAtlas-$version-instalador.e
 Uri releaseAssetUrl(AppVersion version, String name) =>
     Uri.parse('$releasesPage/download/v$version/${Uri.encodeComponent(name)}');
 
-/// Lê a resposta da API do GitHub (`releases/latest`).
+/// Lê a resposta da API do GitHub (`releases/latest`). Só versões estáveis:
+/// rascunho, release marcada como pré-lançamento ou tag com sufixo (`-beta.1`)
+/// viram `null` — o aviso e o "Atualizar agora" nunca oferecem pré-lançamento.
 ReleaseInfo? parseLatestRelease(String body) {
   final Object? json;
   try {
@@ -91,7 +123,7 @@ ReleaseInfo? parseLatestRelease(String body) {
   if (json['draft'] == true || json['prerelease'] == true) return null;
   final tag = json['tag_name'];
   final version = tag is String ? AppVersion.tryParse(tag) : null;
-  if (version == null) return null;
+  if (version == null || version.isPreRelease) return null;
   final html = json['html_url'];
   final assets = json['assets'];
   final names = {
@@ -210,7 +242,7 @@ class UpdateChecker {
     } on Object {
       return null;
     }
-    return latest != null && latest.version > current ? latest : null;
+    return latest != null && _isStableNewer(latest, current) ? latest : null;
   }
 
   /// "Procurar atualização agora": consulta já, mesmo com a consulta ao abrir
@@ -225,7 +257,12 @@ class UpdateChecker {
     } on Object {
       return const UpdateCheckFailed();
     }
-    if (latest == null) return const UpdateCheckFailed();
-    return latest.version > current ? UpdateAvailable(latest) : UpToDate(latest.version);
+    if (latest == null || latest.version.isPreRelease) return const UpdateCheckFailed();
+    return _isStableNewer(latest, current) ? UpdateAvailable(latest) : UpToDate(latest.version);
   }
 }
+
+/// Só uma versão estável mais nova que a em uso é oferecida (a em uso pode
+/// ser um pré-lançamento: quem tem a `1.3.0-beta.2` recebe a `1.3.0`, nunca
+/// a `1.2.1`).
+bool _isStableNewer(ReleaseInfo latest, AppVersion current) => !latest.version.isPreRelease && latest.version > current;

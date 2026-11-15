@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+### Adicionado
+- **Pré-lançamentos** (`1.3.0-beta.N`): cada item da Fase 9 é publicado no GitHub como pré-lançamento, com instalador e `.sha256`, para teste. O Sobre mostra "Versão 1.3.0-beta.1 (pré-lançamento)". ADR 0022.
+
+### Alterado
+- O aviso de versão nova e o "Atualizar agora" oferecem **só versões estáveis**: pré-lançamentos nunca aparecem, nem marcados como tal no GitHub nem com sufixo na versão. Quem estiver numa beta recebe a estável da mesma versão (ou mais nova), nunca uma mais velha; o "Procurar atualização agora" explica isso.
+- O instalador aceita versões com sufixo (`FotoAtlas-1.3.0-beta.1-instalador.exe`); a CI passa a testar um pré-lançamento atualizado pela estável.
+
+### Corrigido
+- Versões com sufixo eram lidas como se não tivessem sufixo: quem estivesse numa `1.3.0-beta.2` nunca seria avisado da `1.3.0`.
+
 ## [1.2.1] — 2026-11-14
 
 ### Corrigido

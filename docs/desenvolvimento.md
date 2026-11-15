@@ -46,7 +46,10 @@ Precisa do Inno Setup 6 (https://jrsoftware.org/isdl.php; ou `winget install JRS
 cd C:\dev\fotoatlas
 powershell -ExecutionPolicy Bypass -File tools\scripts\build-installer.ps1               # versão do app\pubspec.yaml
 powershell -ExecutionPolicy Bypass -File tools\scripts\build-installer.ps1 -Versao 1.0.0
+powershell -ExecutionPolicy Bypass -File tools\scripts\build-installer.ps1 -Versao 1.3.0-beta.1   # pré-lançamento
 ```
+
+Pré-lançamentos (ADR 0022): versão com sufixo (`1.3.0-beta.N`), publicada com `gh release create v1.3.0-beta.N --prerelease` só depois de 3 rodadas verdes seguidas da CI no commit da tag. O aviso de versão nova e o "Atualizar agora" nunca os oferecem. Roteiro de teste da Fase 9: `docs\roteiro-teste-fase-9.md`.
 
 Resultado: `C:\dev\fotoatlas\dist\FotoAtlas-<versão>-instalador.exe` (`dist\` não é versionado). O teste de instalar, atualizar e desinstalar (`tools\scripts\test-installer.ps1`) instala de verdade e só roda na CI ou numa máquina de teste (`-MaquinaDeTeste`). Roteiro manual: `docs\roteiro-teste-fase-8.md`.
 

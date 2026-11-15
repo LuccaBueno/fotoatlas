@@ -17,7 +17,7 @@ Até a 1.0.0, o usuário só sabia de uma versão nova se fosse olhar o GitHub (
 - **Falhas:** sem internet, DNS, demora (limite de 10 s), resposta diferente de 200, JSON estranho, rascunho ou pré-lançamento → nenhum aviso, nada registrado na tela.
 - **"Baixar":** abre a página da versão no navegador padrão (`explorer.exe <endereço>`). Só abre páginas que começam com `https://github.com/LuccaBueno/fotoatlas/releases/`: se o `html_url` da resposta for outro, usa o endereço montado a partir da versão. O FotoAtlas nunca baixa nem executa o instalador.
 - **"Agora não"** esconde o aviso até a próxima abertura do app (e a próxima consulta só acontece no dia seguinte).
-- Versões comparadas número a número (`1.10.0 > 1.9.0`); `v` na frente e sufixos (`-beta`, `+build`) são ignorados.
+- Versões comparadas número a número (`1.10.0 > 1.9.0`); `v` na frente e `+build` são ignorados. Pré-lançamentos (`-beta.N`) seguem o Versionamento Semântico e nunca são oferecidos (ADR 0022, de 2026-11-15).
 
 ## Alternativas descartadas
 - **Atualizar sozinho** (baixar e instalar): contraria o pedido e a regra de prévia + confirmação; o instalador também não deve fechar o app no meio de uma cópia (ADR 0019).
