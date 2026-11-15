@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:drift/drift.dart' show OrderingTerm;
+import 'package:drift/drift.dart' show OrderingTerm, Variable;
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 const _usage = '''
@@ -63,6 +63,11 @@ Comandos:
   verify schedule [on|off] [--every DIAS]
                                  Verificação periódica (leve; nunca celulares)
   verify tick                    Um passo da verificação periódica
+  similar run                    Calcula as impressões visuais que faltam (fotos parecidas; só lê)
+  similar groups [--level near|high|maybe]
+                                 Sugestões de fotos parecidas (nada é apagado nem alterado)
+  similar dismiss ID ID…         "Não são parecidas" (só catálogo)
+  similar restore                Mostra de novo as sugestões descartadas
   recover                        Roda a recuperação de cópias e reorganizações interrompidas
 
 FONTE pode ser o nome, o id ou o começo do id.
@@ -621,6 +626,48 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
     case ['verify', 'resolve', final item]:
       // Só catálogo: o arquivo danificado fica onde está.
       stdout.writeln('RESOLVED ${await core.integrity.markResolved(int.parse(item))}');
+      return 0;
+
+    case ['similar', 'run']:
+      await core.similar.start();
+      final o = await core.similar.overview();
+      stdout.writeln('SIMILAR fotos=${o.photos} analisadas=${o.analyzed} descartados=${o.dismissedPairs}');
+      return 0;
+
+    case ['similar', 'groups', ...final rest]:
+      final level = switch (_option(rest, '--level')) {
+        null || 'maybe' => SimilarLevel.maybe,
+        'high' => SimilarLevel.high,
+        'near' => SimilarLevel.nearIdentical,
+        final other => throw SourceException('Nível desconhecido: $other (use near, high ou maybe).'),
+      };
+      final groups = await core.similar.groups(minLevel: level);
+      if (groups.isEmpty) stdout.writeln('Nenhuma sugestão de fotos parecidas.');
+      for (final g in groups) {
+        stdout.writeln('GROUP nivel=${g.level.name} fotos=${g.contentIds.length}');
+        for (final id in g.contentIds) {
+          final where = await core.catalog.db
+              .customSelect(
+                'SELECT s.name, fi.rel_path FROM file_instances fi JOIN sources s ON s.id = fi.source_id '
+                'WHERE fi.content_id = ? ORDER BY fi.id LIMIT 1',
+                variables: [Variable.withInt(id)],
+              )
+              .getSingleOrNull();
+          stdout.writeln(
+            '  ITEM $id ${where == null ? '?' : '${where.read<String>('name')}:${where.read<String>('rel_path')}'}',
+          );
+        }
+      }
+      return 0;
+
+    case ['similar', 'dismiss', ...final ids] when ids.length >= 2:
+      // Só catálogo: as fotos deixam de ser sugeridas juntas.
+      final pairs = await core.similar.dismiss([for (final id in ids) int.parse(id)]);
+      stdout.writeln('DISMISSED pares=${pairs.length}');
+      return 0;
+
+    case ['similar', 'restore']:
+      stdout.writeln('RESTORED pares=${await core.similar.restoreAllDismissed()}');
       return 0;
 
     case ['backup'] || ['backup', 'now']:

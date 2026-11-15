@@ -384,3 +384,24 @@ CREATE TABLE clock_corrections (
   created_at          INTEGER NOT NULL,
   undone_at           INTEGER
 ) AS ClockCorrectionRow;
+
+-- v8 (Fase 9): impressão visual de cada foto, para as sugestões de fotos
+-- parecidas (ADR 0023). Calculada da miniatura em cache; descartável (pode ser
+-- recalculada). algorithm = versão do cálculo (mudou → recalcula).
+CREATE TABLE visual_hashes (
+  content_id  INTEGER NOT NULL PRIMARY KEY REFERENCES contents(id),
+  hash_p      INTEGER NOT NULL,           -- pHash de 64 bits
+  hash_d      INTEGER NOT NULL,           -- dHash de 64 bits
+  flat        BOOLEAN NOT NULL DEFAULT 0, -- imagem lisa: nunca vira sugestão
+  algorithm   INTEGER NOT NULL,
+  computed_at INTEGER NOT NULL
+) AS VisualHashRow;
+
+-- v8: pares que o usuário marcou como "Não são parecidas" (só catálogo).
+CREATE TABLE visual_dismissals (
+  content_a  INTEGER NOT NULL REFERENCES contents(id),
+  content_b  INTEGER NOT NULL REFERENCES contents(id),
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (content_a, content_b),
+  CHECK (content_a < content_b)
+) AS VisualDismissalRow;

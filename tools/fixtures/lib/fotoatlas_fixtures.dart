@@ -15,6 +15,7 @@ import 'package:path/path.dart' as p;
 import 'media_fixtures.dart';
 
 export 'media_fixtures.dart';
+export 'similar_fixtures.dart';
 
 /// Resumo do que foi gerado (para conferência nos testes).
 class FixtureManifest {

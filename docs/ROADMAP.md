@@ -302,6 +302,7 @@ Modo de trabalho pedido pelo usuário (2026-11-15): um item por vez; ao terminar
 Condições do usuário (2026-11-15):
 - (b) Agrupar é só visual no catálogo; copiar, comparar, reorganizar e verificar continuam por arquivo físico; copiar/reorganizar um item agrupado leva todos os arquivos do grupo juntos e mostra isso na prévia; dá para desagrupar.
 - (c) Só leitura da pasta **ou zip** do Takeout; datas e locais dos `.json` só no catálogo, nunca gravados nos arquivos; arquivo sem `.json` correspondente aparece como "hora a confirmar".
+- Regra geral reforçada (2026-11-15): o app **jamais altera a qualidade de uma foto** (pixels, recompressão, tamanho); no máximo, quando pedido, o nome ou a pasta. Datas e locais corrigidos ficam só no catálogo. Codificar imagem só é permitido no cache de miniaturas (teste de arquitetura).
 - (d) Nada de localização sai do computador sem consentimento explícito; padrão offline com contornos de países/estados embutidos; mapa online (OpenStreetMap) só se o usuário ligar em Configurações, com aviso claro do que é enviado.
 
 - [~] 9.0 Pré-lançamentos: `AppVersion` com pré-lançamento (SemVer), aviso e "Atualizar agora" só com versões estáveis (testes), build do instalador com sufixo, Sobre com "(pré-lançamento)", roteiro de teste criado

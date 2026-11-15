@@ -62,6 +62,44 @@ void main() {
     expect(parsed.where((v) => (v as Map)['isBoot'] == true), hasLength(1));
   });
 
+  test('fotos parecidas pela CLI: calcula, lista, descarta e restaura (arquivos intactos)', () async {
+    final temp = await createTestTemp();
+    final home = p.join(temp.path, 'home');
+    final dir = Directory(p.join(temp.path, 'Fotos'))..createSync();
+    final files = {
+      'praia.jpg': sceneJpeg(1),
+      'praia_pequena.jpg': sceneJpeg(1, SceneVariant.half),
+      'outra.jpg': sceneJpeg(2),
+    };
+    for (final MapEntry(:key, :value) in files.entries) {
+      File(p.join(dir.path, key)).writeAsBytesSync(value);
+    }
+    Future<String> ok(List<String> args) async {
+      final r = await run(home, args);
+      expect(r.exitCode, 0, reason: '${r.stdout}${r.stderr}');
+      return r.stdout as String;
+    }
+
+    await ok(['sources', 'add', dir.path, '--name', 'Fotos']);
+    await ok(['scan', 'start', 'Fotos']);
+    await ok(['hash', 'run']);
+    expect(await ok(['similar', 'run']), contains('SIMILAR fotos=3 analisadas=3 descartados=0'));
+    final groups = await ok(['similar', 'groups']);
+    expect(groups, contains('GROUP nivel=nearIdentical fotos=2'));
+    expect(groups, contains('Fotos:praia.jpg'));
+    expect(groups, contains('Fotos:praia_pequena.jpg'));
+    expect(groups, isNot(contains('outra.jpg')));
+    final ids = [for (final m in RegExp(r'ITEM (\d+)').allMatches(groups)) m[1]!];
+    expect(await ok(['similar', 'dismiss', ...ids]), contains('DISMISSED pares=1'));
+    expect(await ok(['similar', 'groups']), contains('Nenhuma sugestão'));
+    expect(await ok(['similar', 'restore']), contains('RESTORED pares=1'));
+    expect(await ok(['similar', 'groups']), contains('GROUP nivel=nearIdentical fotos=2'));
+    for (final MapEntry(:key, :value) in files.entries) {
+      expect(File(p.join(dir.path, key)).readAsBytesSync(), value, reason: '$key intacto');
+    }
+    expect(dir.listSync(), hasLength(3), reason: 'nada criado na pasta das fotos');
+  });
+
   test('segundo processo no mesmo catálogo é recusado', () async {
     final temp = await createTestTemp();
     final home = p.join(temp.path, 'home');

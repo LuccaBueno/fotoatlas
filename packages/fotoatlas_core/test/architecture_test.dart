@@ -213,6 +213,30 @@ void main() {
     expect(engine, contains('observeOnly: true'));
   });
 
+  test('o app nunca recodifica uma foto: codificar imagem só no cache de miniaturas', () {
+    // Regra do usuário (2026-11-15): a qualidade de uma foto nunca muda.
+    // Decodificar (ler) pode; codificar só para gravar a miniatura no cache.
+    final root = Directory(p.join('lib', 'src'));
+    final imports = <String>[];
+    final encodes = <String>[];
+    for (final file in root.listSync(recursive: true).whereType<File>()) {
+      if (!file.path.endsWith('.dart') || file.path.endsWith('.g.dart')) continue;
+      final rel = p.relative(file.path, from: root.path).replaceAll(r'\', '/');
+      final src = file.readAsStringSync();
+      if (src.contains('package:image/')) imports.add(rel);
+      if (RegExp(r'\bencode(Jpg|Png|Image|Gif|Bmp|Tiff|Tga|Ico|Cur|Pvr|Exr|Webp|Named)\b').hasMatch(src)) {
+        encodes.add(rel);
+      }
+    }
+    expect(imports.toSet(), {'thumbs/thumbnail_service.dart', 'similar/visual_hash.dart'});
+    expect(encodes, ['thumbs/thumbnail_service.dart']);
+    // E a miniatura codificada vai para o temporário do cache, publicado no cache.
+    final thumbs = File(p.join(root.path, 'thumbs', 'thumbnail_service.dart')).readAsStringSync();
+    expect(RegExp(r'encodeJpg').allMatches(thumbs), hasLength(1));
+    expect(thumbs, contains('File(out).writeAsBytesSync(img.encodeJpg('));
+    expect(thumbs, contains("assert(p.isWithin(cacheDir, path))"));
+  });
+
   test('nenhuma função nativa que espera o disco é isLeaf (travaria a interface)', () {
     // Chamada leaf impede a coleta de lixo do grupo de isolates inteiro até
     // voltar: com disco lento, o scan travava o isolate da interface (ADR 0008).

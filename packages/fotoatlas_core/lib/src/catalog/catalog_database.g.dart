@@ -12652,6 +12652,576 @@ class MomentEditsCompanion extends UpdateCompanion<MomentEditRow> {
   }
 }
 
+class VisualHashes extends Table with TableInfo<VisualHashes, VisualHashRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  VisualHashes(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _contentIdMeta = const VerificationMeta('contentId');
+  late final GeneratedColumn<int> contentId = GeneratedColumn<int>(
+    'content_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY REFERENCES contents(id)',
+  );
+  static const VerificationMeta _hashPMeta = const VerificationMeta('hashP');
+  late final GeneratedColumn<int> hashP = GeneratedColumn<int>(
+    'hash_p',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _hashDMeta = const VerificationMeta('hashD');
+  late final GeneratedColumn<int> hashD = GeneratedColumn<int>(
+    'hash_d',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _flatMeta = const VerificationMeta('flat');
+  late final GeneratedColumn<bool> flat = GeneratedColumn<bool>(
+    'flat',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _algorithmMeta = const VerificationMeta('algorithm');
+  late final GeneratedColumn<int> algorithm = GeneratedColumn<int>(
+    'algorithm',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _computedAtMeta = const VerificationMeta('computedAt');
+  late final GeneratedColumn<int> computedAt = GeneratedColumn<int>(
+    'computed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [contentId, hashP, hashD, flat, algorithm, computedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'visual_hashes';
+  @override
+  VerificationContext validateIntegrity(Insertable<VisualHashRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('content_id')) {
+      context.handle(_contentIdMeta, contentId.isAcceptableOrUnknown(data['content_id']!, _contentIdMeta));
+    }
+    if (data.containsKey('hash_p')) {
+      context.handle(_hashPMeta, hashP.isAcceptableOrUnknown(data['hash_p']!, _hashPMeta));
+    } else if (isInserting) {
+      context.missing(_hashPMeta);
+    }
+    if (data.containsKey('hash_d')) {
+      context.handle(_hashDMeta, hashD.isAcceptableOrUnknown(data['hash_d']!, _hashDMeta));
+    } else if (isInserting) {
+      context.missing(_hashDMeta);
+    }
+    if (data.containsKey('flat')) {
+      context.handle(_flatMeta, flat.isAcceptableOrUnknown(data['flat']!, _flatMeta));
+    }
+    if (data.containsKey('algorithm')) {
+      context.handle(_algorithmMeta, algorithm.isAcceptableOrUnknown(data['algorithm']!, _algorithmMeta));
+    } else if (isInserting) {
+      context.missing(_algorithmMeta);
+    }
+    if (data.containsKey('computed_at')) {
+      context.handle(_computedAtMeta, computedAt.isAcceptableOrUnknown(data['computed_at']!, _computedAtMeta));
+    } else if (isInserting) {
+      context.missing(_computedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {contentId};
+  @override
+  VisualHashRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VisualHashRow(
+      contentId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}content_id'])!,
+      hashP: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}hash_p'])!,
+      hashD: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}hash_d'])!,
+      flat: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}flat'])!,
+      algorithm: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}algorithm'])!,
+      computedAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}computed_at'])!,
+    );
+  }
+
+  @override
+  VisualHashes createAlias(String alias) {
+    return VisualHashes(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class VisualHashRow extends DataClass implements Insertable<VisualHashRow> {
+  final int contentId;
+  final int hashP;
+
+  /// pHash de 64 bits
+  final int hashD;
+
+  /// dHash de 64 bits
+  final bool flat;
+
+  /// imagem lisa: nunca vira sugestão
+  final int algorithm;
+  final int computedAt;
+  const VisualHashRow({
+    required this.contentId,
+    required this.hashP,
+    required this.hashD,
+    required this.flat,
+    required this.algorithm,
+    required this.computedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['content_id'] = Variable<int>(contentId);
+    map['hash_p'] = Variable<int>(hashP);
+    map['hash_d'] = Variable<int>(hashD);
+    map['flat'] = Variable<bool>(flat);
+    map['algorithm'] = Variable<int>(algorithm);
+    map['computed_at'] = Variable<int>(computedAt);
+    return map;
+  }
+
+  VisualHashesCompanion toCompanion(bool nullToAbsent) {
+    return VisualHashesCompanion(
+      contentId: Value(contentId),
+      hashP: Value(hashP),
+      hashD: Value(hashD),
+      flat: Value(flat),
+      algorithm: Value(algorithm),
+      computedAt: Value(computedAt),
+    );
+  }
+
+  factory VisualHashRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VisualHashRow(
+      contentId: serializer.fromJson<int>(json['content_id']),
+      hashP: serializer.fromJson<int>(json['hash_p']),
+      hashD: serializer.fromJson<int>(json['hash_d']),
+      flat: serializer.fromJson<bool>(json['flat']),
+      algorithm: serializer.fromJson<int>(json['algorithm']),
+      computedAt: serializer.fromJson<int>(json['computed_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'content_id': serializer.toJson<int>(contentId),
+      'hash_p': serializer.toJson<int>(hashP),
+      'hash_d': serializer.toJson<int>(hashD),
+      'flat': serializer.toJson<bool>(flat),
+      'algorithm': serializer.toJson<int>(algorithm),
+      'computed_at': serializer.toJson<int>(computedAt),
+    };
+  }
+
+  VisualHashRow copyWith({int? contentId, int? hashP, int? hashD, bool? flat, int? algorithm, int? computedAt}) =>
+      VisualHashRow(
+        contentId: contentId ?? this.contentId,
+        hashP: hashP ?? this.hashP,
+        hashD: hashD ?? this.hashD,
+        flat: flat ?? this.flat,
+        algorithm: algorithm ?? this.algorithm,
+        computedAt: computedAt ?? this.computedAt,
+      );
+  VisualHashRow copyWithCompanion(VisualHashesCompanion data) {
+    return VisualHashRow(
+      contentId: data.contentId.present ? data.contentId.value : this.contentId,
+      hashP: data.hashP.present ? data.hashP.value : this.hashP,
+      hashD: data.hashD.present ? data.hashD.value : this.hashD,
+      flat: data.flat.present ? data.flat.value : this.flat,
+      algorithm: data.algorithm.present ? data.algorithm.value : this.algorithm,
+      computedAt: data.computedAt.present ? data.computedAt.value : this.computedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisualHashRow(')
+          ..write('contentId: $contentId, ')
+          ..write('hashP: $hashP, ')
+          ..write('hashD: $hashD, ')
+          ..write('flat: $flat, ')
+          ..write('algorithm: $algorithm, ')
+          ..write('computedAt: $computedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(contentId, hashP, hashD, flat, algorithm, computedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VisualHashRow &&
+          other.contentId == this.contentId &&
+          other.hashP == this.hashP &&
+          other.hashD == this.hashD &&
+          other.flat == this.flat &&
+          other.algorithm == this.algorithm &&
+          other.computedAt == this.computedAt);
+}
+
+class VisualHashesCompanion extends UpdateCompanion<VisualHashRow> {
+  final Value<int> contentId;
+  final Value<int> hashP;
+  final Value<int> hashD;
+  final Value<bool> flat;
+  final Value<int> algorithm;
+  final Value<int> computedAt;
+  const VisualHashesCompanion({
+    this.contentId = const Value.absent(),
+    this.hashP = const Value.absent(),
+    this.hashD = const Value.absent(),
+    this.flat = const Value.absent(),
+    this.algorithm = const Value.absent(),
+    this.computedAt = const Value.absent(),
+  });
+  VisualHashesCompanion.insert({
+    this.contentId = const Value.absent(),
+    required int hashP,
+    required int hashD,
+    this.flat = const Value.absent(),
+    required int algorithm,
+    required int computedAt,
+  }) : hashP = Value(hashP),
+       hashD = Value(hashD),
+       algorithm = Value(algorithm),
+       computedAt = Value(computedAt);
+  static Insertable<VisualHashRow> custom({
+    Expression<int>? contentId,
+    Expression<int>? hashP,
+    Expression<int>? hashD,
+    Expression<bool>? flat,
+    Expression<int>? algorithm,
+    Expression<int>? computedAt,
+  }) {
+    return RawValuesInsertable({
+      if (contentId != null) 'content_id': contentId,
+      if (hashP != null) 'hash_p': hashP,
+      if (hashD != null) 'hash_d': hashD,
+      if (flat != null) 'flat': flat,
+      if (algorithm != null) 'algorithm': algorithm,
+      if (computedAt != null) 'computed_at': computedAt,
+    });
+  }
+
+  VisualHashesCompanion copyWith({
+    Value<int>? contentId,
+    Value<int>? hashP,
+    Value<int>? hashD,
+    Value<bool>? flat,
+    Value<int>? algorithm,
+    Value<int>? computedAt,
+  }) {
+    return VisualHashesCompanion(
+      contentId: contentId ?? this.contentId,
+      hashP: hashP ?? this.hashP,
+      hashD: hashD ?? this.hashD,
+      flat: flat ?? this.flat,
+      algorithm: algorithm ?? this.algorithm,
+      computedAt: computedAt ?? this.computedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (contentId.present) {
+      map['content_id'] = Variable<int>(contentId.value);
+    }
+    if (hashP.present) {
+      map['hash_p'] = Variable<int>(hashP.value);
+    }
+    if (hashD.present) {
+      map['hash_d'] = Variable<int>(hashD.value);
+    }
+    if (flat.present) {
+      map['flat'] = Variable<bool>(flat.value);
+    }
+    if (algorithm.present) {
+      map['algorithm'] = Variable<int>(algorithm.value);
+    }
+    if (computedAt.present) {
+      map['computed_at'] = Variable<int>(computedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisualHashesCompanion(')
+          ..write('contentId: $contentId, ')
+          ..write('hashP: $hashP, ')
+          ..write('hashD: $hashD, ')
+          ..write('flat: $flat, ')
+          ..write('algorithm: $algorithm, ')
+          ..write('computedAt: $computedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class VisualDismissals extends Table with TableInfo<VisualDismissals, VisualDismissalRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  VisualDismissals(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _contentAMeta = const VerificationMeta('contentA');
+  late final GeneratedColumn<int> contentA = GeneratedColumn<int>(
+    'content_a',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES contents(id)',
+  );
+  static const VerificationMeta _contentBMeta = const VerificationMeta('contentB');
+  late final GeneratedColumn<int> contentB = GeneratedColumn<int>(
+    'content_b',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES contents(id)',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [contentA, contentB, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'visual_dismissals';
+  @override
+  VerificationContext validateIntegrity(Insertable<VisualDismissalRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('content_a')) {
+      context.handle(_contentAMeta, contentA.isAcceptableOrUnknown(data['content_a']!, _contentAMeta));
+    } else if (isInserting) {
+      context.missing(_contentAMeta);
+    }
+    if (data.containsKey('content_b')) {
+      context.handle(_contentBMeta, contentB.isAcceptableOrUnknown(data['content_b']!, _contentBMeta));
+    } else if (isInserting) {
+      context.missing(_contentBMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {contentA, contentB};
+  @override
+  VisualDismissalRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VisualDismissalRow(
+      contentA: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}content_a'])!,
+      contentB: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}content_b'])!,
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  VisualDismissals createAlias(String alias) {
+    return VisualDismissals(attachedDatabase, alias);
+  }
+
+  @override
+  List<String> get customConstraints => const ['PRIMARY KEY(content_a, content_b)', 'CHECK(content_a < content_b)'];
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class VisualDismissalRow extends DataClass implements Insertable<VisualDismissalRow> {
+  final int contentA;
+  final int contentB;
+  final int createdAt;
+  const VisualDismissalRow({required this.contentA, required this.contentB, required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['content_a'] = Variable<int>(contentA);
+    map['content_b'] = Variable<int>(contentB);
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  VisualDismissalsCompanion toCompanion(bool nullToAbsent) {
+    return VisualDismissalsCompanion(contentA: Value(contentA), contentB: Value(contentB), createdAt: Value(createdAt));
+  }
+
+  factory VisualDismissalRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VisualDismissalRow(
+      contentA: serializer.fromJson<int>(json['content_a']),
+      contentB: serializer.fromJson<int>(json['content_b']),
+      createdAt: serializer.fromJson<int>(json['created_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'content_a': serializer.toJson<int>(contentA),
+      'content_b': serializer.toJson<int>(contentB),
+      'created_at': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  VisualDismissalRow copyWith({int? contentA, int? contentB, int? createdAt}) => VisualDismissalRow(
+    contentA: contentA ?? this.contentA,
+    contentB: contentB ?? this.contentB,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  VisualDismissalRow copyWithCompanion(VisualDismissalsCompanion data) {
+    return VisualDismissalRow(
+      contentA: data.contentA.present ? data.contentA.value : this.contentA,
+      contentB: data.contentB.present ? data.contentB.value : this.contentB,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisualDismissalRow(')
+          ..write('contentA: $contentA, ')
+          ..write('contentB: $contentB, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(contentA, contentB, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VisualDismissalRow &&
+          other.contentA == this.contentA &&
+          other.contentB == this.contentB &&
+          other.createdAt == this.createdAt);
+}
+
+class VisualDismissalsCompanion extends UpdateCompanion<VisualDismissalRow> {
+  final Value<int> contentA;
+  final Value<int> contentB;
+  final Value<int> createdAt;
+  final Value<int> rowid;
+  const VisualDismissalsCompanion({
+    this.contentA = const Value.absent(),
+    this.contentB = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VisualDismissalsCompanion.insert({
+    required int contentA,
+    required int contentB,
+    required int createdAt,
+    this.rowid = const Value.absent(),
+  }) : contentA = Value(contentA),
+       contentB = Value(contentB),
+       createdAt = Value(createdAt);
+  static Insertable<VisualDismissalRow> custom({
+    Expression<int>? contentA,
+    Expression<int>? contentB,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (contentA != null) 'content_a': contentA,
+      if (contentB != null) 'content_b': contentB,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VisualDismissalsCompanion copyWith({
+    Value<int>? contentA,
+    Value<int>? contentB,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return VisualDismissalsCompanion(
+      contentA: contentA ?? this.contentA,
+      contentB: contentB ?? this.contentB,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (contentA.present) {
+      map['content_a'] = Variable<int>(contentA.value);
+    }
+    if (contentB.present) {
+      map['content_b'] = Variable<int>(contentB.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisualDismissalsCompanion(')
+          ..write('contentA: $contentA, ')
+          ..write('contentB: $contentB, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$CatalogDatabase extends GeneratedDatabase {
   _$CatalogDatabase(QueryExecutor e) : super(e);
   $CatalogDatabaseManager get managers => $CatalogDatabaseManager(this);
@@ -12742,6 +13312,8 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     'CREATE INDEX ix_moments_start ON moments (start_utc_ms)',
   );
   late final MomentEdits momentEdits = MomentEdits(this);
+  late final VisualHashes visualHashes = VisualHashes(this);
+  late final VisualDismissals visualDismissals = VisualDismissals(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
@@ -12794,6 +13366,8 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     savedScopes,
     ixMomentsStart,
     momentEdits,
+    visualHashes,
+    visualDismissals,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -15050,6 +15624,19 @@ final class $ContentsReferences extends BaseReferences<_$CatalogDatabase, Conten
     final cache = $_typedResult.readTableOrNull(_integrityChecksRefsTable($_db));
     return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<VisualHashes, List<VisualHashRow>> _visualHashesRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.visualHashes, aliasName: 'contents__id__visual_hashes__content_id');
+
+  $VisualHashesProcessedTableManager get visualHashesRefs {
+    final manager = $VisualHashesTableManager(
+      $_db,
+      $_db.visualHashes,
+    ).filter((f) => f.contentId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_visualHashesRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $ContentsFilterComposer extends Composer<_$CatalogDatabase, Contents> {
@@ -15156,6 +15743,24 @@ class $ContentsFilterComposer extends Composer<_$CatalogDatabase, Contents> {
           $IntegrityChecksFilterComposer(
             $db: $db,
             $table: $db.integrityChecks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> visualHashesRefs(Expression<bool> Function($VisualHashesFilterComposer f) f) {
+    final $VisualHashesFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.visualHashes,
+      getReferencedColumn: (t) => t.contentId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $VisualHashesFilterComposer(
+            $db: $db,
+            $table: $db.visualHashes,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
@@ -15295,6 +15900,24 @@ class $ContentsAnnotationComposer extends Composer<_$CatalogDatabase, Contents> 
     );
     return f(composer);
   }
+
+  Expression<T> visualHashesRefs<T extends Object>(Expression<T> Function($VisualHashesAnnotationComposer a) f) {
+    final $VisualHashesAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.visualHashes,
+      getReferencedColumn: (t) => t.contentId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $VisualHashesAnnotationComposer(
+            $db: $db,
+            $table: $db.visualHashes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $ContentsTableManager
@@ -15316,6 +15939,7 @@ class $ContentsTableManager
             bool dateCorrectionsRefs,
             bool contentTagsRefs,
             bool integrityChecksRefs,
+            bool visualHashesRefs,
           })
         > {
   $ContentsTableManager(_$CatalogDatabase db, Contents table)
@@ -15363,6 +15987,7 @@ class $ContentsTableManager
                 dateCorrectionsRefs = false,
                 contentTagsRefs = false,
                 integrityChecksRefs = false,
+                visualHashesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -15372,6 +15997,7 @@ class $ContentsTableManager
                     if (dateCorrectionsRefs) db.dateCorrections,
                     if (contentTagsRefs) db.contentTags,
                     if (integrityChecksRefs) db.integrityChecks,
+                    if (visualHashesRefs) db.visualHashes,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -15421,6 +16047,15 @@ class $ContentsTableManager
                           referencedColumn: 'expected_content_id',
                           typedResults: items,
                         ),
+                      if (visualHashesRefs)
+                        await $_getPrefetchedDataByColumns<ContentRow, Contents, VisualHashRow, VisualHashes>(
+                          currentTable: table,
+                          referencedTable: $ContentsReferences._visualHashesRefsTable(db),
+                          managerFromTypedResult: (p0) => $ContentsReferences(db, table, p0).visualHashesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'content_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -15447,6 +16082,7 @@ typedef $ContentsProcessedTableManager =
         bool dateCorrectionsRefs,
         bool contentTagsRefs,
         bool integrityChecksRefs,
+        bool visualHashesRefs,
       })
     >;
 typedef $FileInstancesCreateCompanionBuilder = FileInstancesCompanion Function({
@@ -22680,6 +23316,565 @@ typedef $MomentEditsProcessedTableManager =
       MomentEditRow,
       PrefetchHooks Function()
     >;
+typedef $VisualHashesCreateCompanionBuilder = VisualHashesCompanion Function({
+  Value<int> contentId,
+  required int hashP,
+  required int hashD,
+  Value<bool> flat,
+  required int algorithm,
+  required int computedAt,
+});
+typedef $VisualHashesUpdateCompanionBuilder = VisualHashesCompanion Function({
+  Value<int> contentId,
+  Value<int> hashP,
+  Value<int> hashD,
+  Value<bool> flat,
+  Value<int> algorithm,
+  Value<int> computedAt,
+});
+
+final class $VisualHashesReferences extends BaseReferences<_$CatalogDatabase, VisualHashes, VisualHashRow> {
+  $VisualHashesReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static Contents _contentIdTable(_$CatalogDatabase db) =>
+      db.contents.createAlias('visual_hashes__content_id__contents__id');
+
+  $ContentsProcessedTableManager get contentId {
+    final $_column = $_itemColumn<int>('content_id')!;
+
+    final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contentIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $VisualHashesFilterComposer extends Composer<_$CatalogDatabase, VisualHashes> {
+  $VisualHashesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get hashP => $composableBuilder(column: $table.hashP, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get hashD => $composableBuilder(column: $table.hashD, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get flat => $composableBuilder(column: $table.flat, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get algorithm =>
+      $composableBuilder(column: $table.algorithm, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get computedAt =>
+      $composableBuilder(column: $table.computedAt, builder: (column) => ColumnFilters(column));
+
+  $ContentsFilterComposer get contentId {
+    final $ContentsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsFilterComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $VisualHashesOrderingComposer extends Composer<_$CatalogDatabase, VisualHashes> {
+  $VisualHashesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get hashP =>
+      $composableBuilder(column: $table.hashP, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get hashD =>
+      $composableBuilder(column: $table.hashD, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get flat =>
+      $composableBuilder(column: $table.flat, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get algorithm =>
+      $composableBuilder(column: $table.algorithm, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get computedAt =>
+      $composableBuilder(column: $table.computedAt, builder: (column) => ColumnOrderings(column));
+
+  $ContentsOrderingComposer get contentId {
+    final $ContentsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsOrderingComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $VisualHashesAnnotationComposer extends Composer<_$CatalogDatabase, VisualHashes> {
+  $VisualHashesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get hashP => $composableBuilder(column: $table.hashP, builder: (column) => column);
+
+  GeneratedColumn<int> get hashD => $composableBuilder(column: $table.hashD, builder: (column) => column);
+
+  GeneratedColumn<bool> get flat => $composableBuilder(column: $table.flat, builder: (column) => column);
+
+  GeneratedColumn<int> get algorithm => $composableBuilder(column: $table.algorithm, builder: (column) => column);
+
+  GeneratedColumn<int> get computedAt => $composableBuilder(column: $table.computedAt, builder: (column) => column);
+
+  $ContentsAnnotationComposer get contentId {
+    final $ContentsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsAnnotationComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $VisualHashesTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          VisualHashes,
+          VisualHashRow,
+          $VisualHashesFilterComposer,
+          $VisualHashesOrderingComposer,
+          $VisualHashesAnnotationComposer,
+          $VisualHashesCreateCompanionBuilder,
+          $VisualHashesUpdateCompanionBuilder,
+          (VisualHashRow, $VisualHashesReferences),
+          VisualHashRow,
+          PrefetchHooks Function({bool contentId})
+        > {
+  $VisualHashesTableManager(_$CatalogDatabase db, VisualHashes table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $VisualHashesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $VisualHashesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $VisualHashesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> contentId = const Value.absent(),
+                Value<int> hashP = const Value.absent(),
+                Value<int> hashD = const Value.absent(),
+                Value<bool> flat = const Value.absent(),
+                Value<int> algorithm = const Value.absent(),
+                Value<int> computedAt = const Value.absent(),
+              }) => VisualHashesCompanion(
+                contentId: contentId,
+                hashP: hashP,
+                hashD: hashD,
+                flat: flat,
+                algorithm: algorithm,
+                computedAt: computedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> contentId = const Value.absent(),
+                required int hashP,
+                required int hashD,
+                Value<bool> flat = const Value.absent(),
+                required int algorithm,
+                required int computedAt,
+              }) => VisualHashesCompanion.insert(
+                contentId: contentId,
+                hashP: hashP,
+                hashD: hashD,
+                flat: flat,
+                algorithm: algorithm,
+                computedAt: computedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable<VisualHashes, VisualHashRow>(table), $VisualHashesReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: ({contentId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (contentId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.contentId,
+                        referencedTable: $VisualHashesReferences._contentIdTable(db),
+                        referencedColumn: $VisualHashesReferences._contentIdTable(db).id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $VisualHashesProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      VisualHashes,
+      VisualHashRow,
+      $VisualHashesFilterComposer,
+      $VisualHashesOrderingComposer,
+      $VisualHashesAnnotationComposer,
+      $VisualHashesCreateCompanionBuilder,
+      $VisualHashesUpdateCompanionBuilder,
+      (VisualHashRow, $VisualHashesReferences),
+      VisualHashRow,
+      PrefetchHooks Function({bool contentId})
+    >;
+typedef $VisualDismissalsCreateCompanionBuilder = VisualDismissalsCompanion Function({
+  required int contentA,
+  required int contentB,
+  required int createdAt,
+  Value<int> rowid,
+});
+typedef $VisualDismissalsUpdateCompanionBuilder = VisualDismissalsCompanion Function({
+  Value<int> contentA,
+  Value<int> contentB,
+  Value<int> createdAt,
+  Value<int> rowid,
+});
+
+final class $VisualDismissalsReferences
+    extends BaseReferences<_$CatalogDatabase, VisualDismissals, VisualDismissalRow> {
+  $VisualDismissalsReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static Contents _contentATable(_$CatalogDatabase db) =>
+      db.contents.createAlias('visual_dismissals__content_a__contents__id');
+
+  $ContentsProcessedTableManager get contentA {
+    final $_column = $_itemColumn<int>('content_a')!;
+
+    final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contentATable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static Contents _contentBTable(_$CatalogDatabase db) =>
+      db.contents.createAlias('visual_dismissals__content_b__contents__id');
+
+  $ContentsProcessedTableManager get contentB {
+    final $_column = $_itemColumn<int>('content_b')!;
+
+    final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contentBTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $VisualDismissalsFilterComposer extends Composer<_$CatalogDatabase, VisualDismissals> {
+  $VisualDismissalsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $ContentsFilterComposer get contentA {
+    final $ContentsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentA,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsFilterComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ContentsFilterComposer get contentB {
+    final $ContentsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentB,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsFilterComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $VisualDismissalsOrderingComposer extends Composer<_$CatalogDatabase, VisualDismissals> {
+  $VisualDismissalsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $ContentsOrderingComposer get contentA {
+    final $ContentsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentA,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsOrderingComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ContentsOrderingComposer get contentB {
+    final $ContentsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentB,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsOrderingComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $VisualDismissalsAnnotationComposer extends Composer<_$CatalogDatabase, VisualDismissals> {
+  $VisualDismissalsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $ContentsAnnotationComposer get contentA {
+    final $ContentsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentA,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsAnnotationComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ContentsAnnotationComposer get contentB {
+    final $ContentsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentB,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsAnnotationComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $VisualDismissalsTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          VisualDismissals,
+          VisualDismissalRow,
+          $VisualDismissalsFilterComposer,
+          $VisualDismissalsOrderingComposer,
+          $VisualDismissalsAnnotationComposer,
+          $VisualDismissalsCreateCompanionBuilder,
+          $VisualDismissalsUpdateCompanionBuilder,
+          (VisualDismissalRow, $VisualDismissalsReferences),
+          VisualDismissalRow,
+          PrefetchHooks Function({bool contentA, bool contentB})
+        > {
+  $VisualDismissalsTableManager(_$CatalogDatabase db, VisualDismissals table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $VisualDismissalsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $VisualDismissalsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $VisualDismissalsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> contentA = const Value.absent(),
+            Value<int> contentB = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => VisualDismissalsCompanion(contentA: contentA, contentB: contentB, createdAt: createdAt, rowid: rowid),
+          createCompanionCallback:
+              ({
+                required int contentA,
+                required int contentB,
+                required int createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => VisualDismissalsCompanion.insert(
+                contentA: contentA,
+                contentB: contentB,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<VisualDismissals, VisualDismissalRow>(table),
+                  $VisualDismissalsReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({contentA = false, contentB = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (contentA) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.contentA,
+                        referencedTable: $VisualDismissalsReferences._contentATable(db),
+                        referencedColumn: $VisualDismissalsReferences._contentATable(db).id,
+                      ) as T;
+                    }
+                    if (contentB) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.contentB,
+                        referencedTable: $VisualDismissalsReferences._contentBTable(db),
+                        referencedColumn: $VisualDismissalsReferences._contentBTable(db).id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $VisualDismissalsProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      VisualDismissals,
+      VisualDismissalRow,
+      $VisualDismissalsFilterComposer,
+      $VisualDismissalsOrderingComposer,
+      $VisualDismissalsAnnotationComposer,
+      $VisualDismissalsCreateCompanionBuilder,
+      $VisualDismissalsUpdateCompanionBuilder,
+      (VisualDismissalRow, $VisualDismissalsReferences),
+      VisualDismissalRow,
+      PrefetchHooks Function({bool contentA, bool contentB})
+    >;
 
 class $CatalogDatabaseManager {
   final _$CatalogDatabase _db;
@@ -22710,4 +23905,6 @@ class $CatalogDatabaseManager {
   $IntegrityChecksTableManager get integrityChecks => $IntegrityChecksTableManager(_db, _db.integrityChecks);
   $SavedScopesTableManager get savedScopes => $SavedScopesTableManager(_db, _db.savedScopes);
   $MomentEditsTableManager get momentEdits => $MomentEditsTableManager(_db, _db.momentEdits);
+  $VisualHashesTableManager get visualHashes => $VisualHashesTableManager(_db, _db.visualHashes);
+  $VisualDismissalsTableManager get visualDismissals => $VisualDismissalsTableManager(_db, _db.visualDismissals);
 }

@@ -20,6 +20,7 @@ import 'ops/reorg_service.dart';
 import 'scan/scan_service.dart';
 import 'sources/sources_service.dart';
 import 'sources/volumes.dart';
+import 'similar/similar_service.dart';
 import 'thumbs/thumbnail_service.dart';
 import 'util/instance_lock.dart';
 import 'util/paths.dart';
@@ -45,6 +46,7 @@ class FotoAtlasCore {
     required this.copies,
     required this.reorg,
     required this.integrity,
+    required this.similar,
     required this._lock,
   });
 
@@ -88,6 +90,9 @@ class FotoAtlasCore {
 
   /// Miniaturas em cache.
   final ThumbnailService thumbnails;
+
+  /// Fotos parecidas (Fase 9): só sugestões, nada é tocado.
+  final SimilarService similar;
   final VolumeProvider volumes;
 
   /// `null` se o helper não foi encontrado ou não iniciou (o core segue
@@ -117,6 +122,8 @@ class FotoAtlasCore {
   /// - [autoMetadata]: lê os metadados sozinho depois da conferência e quando
   ///   uma fonte conecta (o app liga).
   /// - [scheduleIntegrity]: liga a verificação periódica leve (o app liga).
+  /// - [autoSimilar]: calcula as impressões visuais sozinho, cedendo a vez às
+  ///   outras tarefas (o app liga).
   static Future<FotoAtlasCore> open({
     CorePaths? paths,
     VolumeProvider? volumes,
@@ -138,6 +145,7 @@ class FotoAtlasCore {
     FreeSpaceProbe? freeSpace,
     bool verifyInIsolate = true,
     bool scheduleIntegrity = false,
+    bool autoSimilar = false,
   }) async {
     final resolvedPaths = paths ?? CorePaths.fromEnvironment();
     Directory(resolvedPaths.dataDir).createSync(recursive: true);
@@ -220,6 +228,26 @@ class FotoAtlasCore {
         await reorg.recoverAll();
       }
       if (monitor) sources.startMonitoring();
+      final thumbnails = ThumbnailService(
+        catalog.db,
+        sources,
+        cacheDir: resolvedPaths.thumbsDir,
+        helper: helper,
+        tools: externalTools,
+      );
+      // Fila leve: cede a vez a qualquer outra tarefa.
+      final similar = SimilarService(
+        catalog.db,
+        sources,
+        thumbnails,
+        busy: () =>
+            scans.runningProgress.isNotEmpty ||
+            hashes.isRunning ||
+            metadata.isRunning ||
+            copies.isRunning ||
+            reorg.isRunning ||
+            integrity.isRunning,
+      );
       final core = FotoAtlasCore._(
         paths: resolvedPaths,
         catalog: catalog,
@@ -233,18 +261,13 @@ class FotoAtlasCore {
         moments: moments,
         dates: DatesService(catalog.db, metadata.effective, moments),
         library: LibraryService(catalog.db, strategy: () => metadata.strategy),
-        thumbnails: ThumbnailService(
-          catalog.db,
-          sources,
-          cacheDir: resolvedPaths.thumbsDir,
-          helper: helper,
-          tools: externalTools,
-        ),
+        thumbnails: thumbnails,
         volumes: provider,
         helper: helper,
         copies: copies,
         reorg: reorg,
         integrity: integrity,
+        similar: similar,
         lock: lock,
       );
       if (backupOnOpen) {
@@ -263,6 +286,7 @@ class FotoAtlasCore {
       if (autoHash) hashes.enableAuto();
       if (autoMetadata) metadata.enableAuto();
       if (scheduleIntegrity) integrity.enableSchedule();
+      if (autoSimilar) similar.enableAuto();
       return core;
     } catch (_) {
       await helper?.close();
@@ -352,6 +376,7 @@ class FotoAtlasCore {
               : 'Pausando $runningScans escaneamentos (o ponto de parada fica salvo)',
         ),
       if (integrity.isRunning) ShutdownStep('verify', 'Pausando a verificação de integridade (continua de onde parou)'),
+      if (similar.isRunning) ShutdownStep('similar', 'Pausando a análise de fotos parecidas (continua de onde parou)'),
       if (hashes.isRunning) ShutdownStep('hash', 'Pausando a conferência de conteúdo (o que falta continua na fila)'),
       if (metadata.isRunning)
         ShutdownStep('metadata', 'Pausando a leitura das datas e informações das fotos (o que falta continua na fila)'),
@@ -390,6 +415,7 @@ class FotoAtlasCore {
       step('scan', () => scans.dispose(timeout: stepTimeout)),
       step('hash', () => hashes.dispose(timeout: stepTimeout)),
       step('verify', () => integrity.dispose(timeout: stepTimeout)),
+      step('similar', () => similar.dispose(timeout: stepTimeout)),
       // Também fecha o ExifTool; um recálculo de momentos em andamento termina numa transação.
       step('metadata', () async {
         final ok = await metadata.dispose(timeout: stepTimeout);

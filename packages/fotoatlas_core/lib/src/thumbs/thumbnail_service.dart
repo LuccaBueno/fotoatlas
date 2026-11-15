@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:drift/drift.dart';
 import 'package:ffi/ffi.dart';
+import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 
 import '../catalog/catalog_database.dart';
@@ -44,8 +47,13 @@ class ThumbnailService {
   String pathFor(String sha256Hex) => p.join(cacheDir, sha256Hex.substring(0, 2), '${sha256Hex}_$size.jpg');
 
   /// Miniatura do conteúdo (gera se preciso); `null` se não deu.
-  Future<String?> thumbnail(int contentId) {
+  ///
+  /// [allowPhone] falso (filas em segundo plano): nunca lê do celular — serve
+  /// a miniatura em cache ou gera a partir de uma cópia num disco; uma falha
+  /// assim não impede a Biblioteca de tentar depois pelo celular.
+  Future<String?> thumbnail(int contentId, {bool allowPhone = true}) {
     if (_failed.contains(contentId) || _closed) return Future.value();
+    if (!allowPhone) return _generate(contentId, allowPhone: false);
     // Bloco (não seta): devolver o futuro removido faria o whenComplete esperar por ele mesmo.
     return _inflight[contentId] ??= _generate(contentId).whenComplete(() {
       _inflight.remove(contentId);
@@ -55,7 +63,7 @@ class ThumbnailService {
   /// Esquece as falhas (ex.: um dispositivo conectou).
   void retryFailed() => _failed.clear();
 
-  Future<String?> _generate(int contentId) async {
+  Future<String?> _generate(int contentId, {bool allowPhone = true}) async {
     final row = await db
         .customSelect(
           'SELECT hex(sha256) AS sha, media_type FROM contents WHERE id = ?',
@@ -85,7 +93,7 @@ class ThumbnailService {
         final sourceId = i.read<String>('source_id');
         final rel = i.read<String>('rel_path');
         if (i.read<String>('kind') == 'phone') {
-          if (media == 'video') continue;
+          if (media == 'video' || !allowPhone) continue;
           final ok = await _fromPhone(
             sourceId,
             rel,
@@ -103,11 +111,12 @@ class ThumbnailService {
         if (await _fromShell(path, target)) return target;
         if (media == 'video' && await _fromFfmpeg(path, target)) return target;
         if (media != 'video' && await _fromExifLocal(path, target)) return target;
+        if (media != 'video' && await _fromDecode(path, i.read<String>('ext'), target)) return target;
       }
-      _failed.add(contentId);
+      if (allowPhone) _failed.add(contentId);
       return null;
     } on Object {
-      _failed.add(contentId);
+      if (allowPhone) _failed.add(contentId);
       return null;
     } finally {
       _release();
@@ -205,6 +214,30 @@ class ThumbnailService {
     File(tmp).writeAsBytesSync(thumb, flush: true);
     return _publish(tmp, target);
   }
+
+  /// Último recurso para JPEG e PNG (sem Shell nem miniatura no EXIF):
+  /// decodifica a imagem num isolate e grava a miniatura **só no cache**. A
+  /// origem é lida em modo leitura e nunca regravada.
+  Future<bool> _fromDecode(String path, String ext, String target) async {
+    if (!_decodable.contains(ext.toLowerCase())) return false;
+    final tmp = _tmp(target);
+    try {
+      // Leitura e decodificação no isolate: não seguram a interface.
+      final ok = await Isolate.run(() {
+        final bytes = _readHead(path, _maxDecodeBytes + 1);
+        if (bytes == null || bytes.isEmpty || bytes.length > _maxDecodeBytes) return false;
+        return _writeDecodedThumbnail(bytes, tmp);
+      });
+      if (ok) return _publish(tmp, target);
+    } on Object {
+      // Imagem que não decodifica: segue sem miniatura.
+    }
+    _delete(tmp);
+    return false;
+  }
+
+  static const _decodable = {'jpg', 'jpeg', 'png'};
+  static const _maxDecodeBytes = 40 * 1024 * 1024;
 
   static Uint8List? _readHead(String path, int max) {
     SourceFile? f;
@@ -341,4 +374,25 @@ Uint8List? _thumbFromTiff(ByteData t) {
   final bytes = Uint8List.sublistView(t, offset, offset + length);
   if (bytes.length < 2 || bytes[0] != 0xFF || bytes[1] != 0xD8) return null;
   return Uint8List.fromList(bytes);
+}
+
+/// Decodifica [bytes] e grava em [out] (no cache) uma miniatura de até
+/// [ThumbnailService.size] px. Só para a pasta de miniaturas: o app nunca
+/// recodifica uma foto do usuário.
+bool _writeDecodedThumbnail(Uint8List bytes, String out) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null || decoded.width == 0 || decoded.height == 0) return false;
+  final oriented = img.bakeOrientation(decoded);
+  const max = ThumbnailService.size;
+  final scale = math.min(1.0, max / math.max(oriented.width, oriented.height));
+  final small = scale >= 1
+      ? oriented
+      : img.copyResize(
+          oriented,
+          width: math.max(1, (oriented.width * scale).round()),
+          height: math.max(1, (oriented.height * scale).round()),
+          interpolation: img.Interpolation.average,
+        );
+  File(out).writeAsBytesSync(img.encodeJpg(small, quality: 85), flush: true);
+  return true;
 }

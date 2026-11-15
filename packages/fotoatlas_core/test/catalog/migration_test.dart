@@ -13,16 +13,16 @@ import '../support/temp.dart';
 void main() {
   final verifier = SchemaVerifier(GeneratedHelper());
 
-  test('v1 a v6 → v7: schema final igual ao de um catálogo novo', () async {
-    for (final from in [1, 2, 3, 4, 5, 6]) {
+  test('v1 a v7 → v8: schema final igual ao de um catálogo novo', () async {
+    for (final from in [1, 2, 3, 4, 5, 6, 7]) {
       final schema = await verifier.schemaAt(from);
       final db = CatalogDatabase(schema.newConnection());
-      await verifier.migrateAndValidate(db, 7);
+      await verifier.migrateAndValidate(db, 8);
       await db.close();
     }
   });
 
-  test('v1 → v7 pelo Catalog.open: backup antes, dados preservados, colunas novas', () async {
+  test('v1 → v8 pelo Catalog.open: backup antes, dados preservados, colunas novas', () async {
     final home = await createTestTemp();
     final path = p.join(home.path, 'catalog.db');
     final schema = await verifier.schemaAt(1);
@@ -42,7 +42,7 @@ void main() {
     final catalog = await Catalog.open(path);
     addTearDown(catalog.close);
     final db = catalog.db;
-    expect((await db.customSelect('PRAGMA user_version').getSingle()).data.values.single, 7);
+    expect((await db.customSelect('PRAGMA user_version').getSingle()).data.values.single, 8);
     final row = await db.customSelect('SELECT name, hash_error, device_object_id FROM file_instances').getSingle();
     expect(row.read<String>('name'), 'a.jpg');
     expect(row.readNullable<String>('hash_error'), isNull);
@@ -178,5 +178,27 @@ void main() {
     expect(row.readNullable<int>('integrity_resolved_at'), isNull);
     final backups = Directory(p.join(home.path, 'backups')).listSync().map((f) => p.basename(f.path));
     expect(backups.where((n) => n.startsWith('pre-migracao-v6-')), hasLength(1));
+  });
+
+  test('v7 → v8: dados preservados, impressões visuais e descartes vazios', () async {
+    final home = await createTestTemp();
+    final path = p.join(home.path, 'catalog.db');
+    final schema = await verifier.schemaAt(7);
+    schema.rawDatabase
+      ..execute(
+        "INSERT INTO contents (id, sha256, size_bytes, media_type, created_at) "
+        "VALUES (1, zeroblob(32), 10, 'photo', 1)",
+      )
+      ..execute('PRAGMA user_version = 7')
+      ..execute('VACUUM INTO ?', [path]);
+    schema.rawDatabase.close();
+
+    final catalog = await Catalog.open(path);
+    addTearDown(catalog.close);
+    expect(await catalog.db.select(catalog.db.contents).get(), hasLength(1));
+    expect(await catalog.db.select(catalog.db.visualHashes).get(), isEmpty);
+    expect(await catalog.db.select(catalog.db.visualDismissals).get(), isEmpty);
+    final backups = Directory(p.join(home.path, 'backups')).listSync().map((f) => p.basename(f.path));
+    expect(backups.where((n) => n.startsWith('pre-migracao-v7-')), hasLength(1));
   });
 }

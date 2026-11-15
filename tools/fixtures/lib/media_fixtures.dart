@@ -56,9 +56,10 @@ class ExifSpec {
   final String? uniqueId;
 }
 
-/// JPEG com segmento APP1/EXIF logo depois do SOI.
-Uint8List jpegWithExif(ExifSpec spec) {
-  final base = baseJpeg(spec.color);
+/// JPEG com segmento APP1/EXIF logo depois do SOI. [image]: outro JPEG como
+/// imagem (ex.: uma cena de `similar_fixtures.dart`); padrão: uma cor só.
+Uint8List jpegWithExif(ExifSpec spec, {Uint8List? image}) {
+  final base = image ?? baseJpeg(spec.color);
   final tiff = _tiff(spec);
   final app1 = BytesBuilder()
     ..add([0xFF, 0xE1])
