@@ -8,6 +8,7 @@ String dateSourceLabel(DateSource s) => switch (s) {
   DateSource.manual => 'definida por você',
   DateSource.exifOriginal => 'da câmera (dados da foto)',
   DateSource.videoInternal => 'gravada no vídeo',
+  DateSource.takeout => 'do Google Fotos (.json do Takeout)',
   DateSource.filename => 'do nome do arquivo',
   DateSource.filesystem => 'data do arquivo no disco',
   DateSource.none => 'sem data',

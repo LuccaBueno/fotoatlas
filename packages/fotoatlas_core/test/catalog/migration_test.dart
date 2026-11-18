@@ -13,16 +13,16 @@ import '../support/temp.dart';
 void main() {
   final verifier = SchemaVerifier(GeneratedHelper());
 
-  test('v1 a v8 → v9: schema final igual ao de um catálogo novo', () async {
-    for (final from in [1, 2, 3, 4, 5, 6, 7, 8]) {
+  test('v1 a v9 → v10: schema final igual ao de um catálogo novo', () async {
+    for (final from in [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
       final schema = await verifier.schemaAt(from);
       final db = CatalogDatabase(schema.newConnection());
-      await verifier.migrateAndValidate(db, 9);
+      await verifier.migrateAndValidate(db, 10);
       await db.close();
     }
   });
 
-  test('v1 → v9 pelo Catalog.open: backup antes, dados preservados, colunas novas', () async {
+  test('v1 → v10 pelo Catalog.open: backup antes, dados preservados, colunas novas', () async {
     final home = await createTestTemp();
     final path = p.join(home.path, 'catalog.db');
     final schema = await verifier.schemaAt(1);
@@ -42,7 +42,7 @@ void main() {
     final catalog = await Catalog.open(path);
     addTearDown(catalog.close);
     final db = catalog.db;
-    expect((await db.customSelect('PRAGMA user_version').getSingle()).data.values.single, 9);
+    expect((await db.customSelect('PRAGMA user_version').getSingle()).data.values.single, 10);
     final row = await db.customSelect('SELECT name, hash_error, device_object_id FROM file_instances').getSingle();
     expect(row.read<String>('name'), 'a.jpg');
     expect(row.readNullable<String>('hash_error'), isNull);
@@ -225,5 +225,52 @@ void main() {
     expect(await catalog.db.select(catalog.db.mediaItemMembers).get(), isEmpty);
     final backups = Directory(p.join(home.path, 'backups')).listSync().map((f) => p.basename(f.path));
     expect(backups.where((n) => n.startsWith('pre-migracao-v8-')), hasLength(1));
+  });
+
+  test('v9 → v10: media_metadata refeita com todos os dados e índices; data "Google Fotos" aceita', () async {
+    final home = await createTestTemp();
+    final path = p.join(home.path, 'catalog.db');
+    final schema = await verifier.schemaAt(9);
+    schema.rawDatabase
+      ..execute(
+        "INSERT INTO contents (id, sha256, size_bytes, media_type, created_at) "
+        "VALUES (1, zeroblob(32), 10, 'photo', 1)",
+      )
+      ..execute(
+        'INSERT INTO media_metadata (content_id, capture_utc_ms, date_source, date_confidence, make, lat, '
+        "eff_utc_ms, eff_year, meta_status, content_identifier, candidates_json) "
+        "VALUES (1, 1000, 'exif_original', 'high', 'Canon', -23.5, 1000, 2024, 'full', 'A1', '[]')",
+      )
+      ..execute('PRAGMA user_version = 9')
+      ..execute('VACUUM INTO ?', [path]);
+    schema.rawDatabase.close();
+
+    final catalog = await Catalog.open(path);
+    addTearDown(catalog.close);
+    final db = catalog.db;
+    final row = await db
+        .customSelect(
+          'SELECT capture_utc_ms, date_source, make, lat, eff_year, meta_status, content_identifier, candidates_json '
+          'FROM media_metadata',
+        )
+        .getSingle();
+    expect(row.data, {
+      'capture_utc_ms': 1000,
+      'date_source': 'exif_original',
+      'make': 'Canon',
+      'lat': -23.5,
+      'eff_year': 2024,
+      'meta_status': 'full',
+      'content_identifier': 'A1',
+      'candidates_json': '[]',
+    });
+    await db.customStatement("UPDATE media_metadata SET date_source = 'takeout'");
+    final indexes = await db
+        .customSelect("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'media_metadata'")
+        .get();
+    expect(indexes.map((r) => r.read<String>('name')), containsAll(['ix_mm_capture', 'ix_mm_eff', 'ix_mm_moment']));
+    expect(await db.select(db.takeoutJson).get(), isEmpty);
+    final backups = Directory(p.join(home.path, 'backups')).listSync().map((f) => p.basename(f.path));
+    expect(backups.where((n) => n.startsWith('pre-migracao-v9-')), hasLength(1));
   });
 }

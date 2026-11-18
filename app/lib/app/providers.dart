@@ -6,6 +6,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 import 'backend.dart';
 import 'library_backend.dart';
 import 'similar_backend.dart';
+import 'takeout_backend.dart';
 
 /// Backend do app. Sobrescrito em `main.dart` (core real) e nos testes (falso).
 final backendProvider = Provider<AppBackend>((ref) => throw UnimplementedError('backendProvider não configurado'));
@@ -154,6 +155,10 @@ final integrityScheduleProvider = FutureProvider<IntegritySchedule>(
 );
 
 /// Fotos parecidas (Fase 9). Sobrescrito em `main.dart`.
+/// Zips do Google Takeout (Fase 9). Sobrescrito em `main.dart`.
+final takeoutBackendProvider = Provider<TakeoutBackend>(
+  (ref) => throw UnimplementedError('takeoutBackendProvider não configurado'),
+);
 final similarBackendProvider = Provider<SimilarBackend>(
   (ref) => throw UnimplementedError('similarBackendProvider não configurado'),
 );

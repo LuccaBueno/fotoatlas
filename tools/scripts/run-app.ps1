@@ -18,7 +18,8 @@
 #     "HD cópia", com as mesmas fotos) para testar a verificação de integridade
 #     (Fase 7; o dano no disco é simulado com tools\scripts\demo-danificar.ps1),
 #     a pasta "Fotos parecidas" (cenas sintéticas e variações; Fase 9) e a pasta
-#     "Fotos agrupadas" (RAW+JPEG e Live Photos sintéticos; Fase 9).
+#     "Fotos agrupadas" (RAW+JPEG e Live Photos sintéticos; Fase 9) e a pasta
+#     "Google Takeout" (pasta extraída e zips sintéticos; Fase 9).
 # As pastas temporárias (%TEMP%\fotoatlas_*) de -Demo/-CelularSimulado são
 # apagadas quando o app fecha.
 param([switch]$Demo, [switch]$CelularSimulado, [switch]$ManterDemo, [switch]$DemoPersistente)
@@ -123,6 +124,20 @@ try {
             Rename-Item -LiteralPath $gerando -NewName 'Fotos agrupadas'
         }
         Write-Host "Fotos agrupadas (cadastre como pasta): $agrupadas"
+        # Fase 9: "Google Takeout" (pasta extraída e dois zips sintéticos).
+        $takeout = Join-Path $pasta 'Google Takeout'
+        if (-not (Test-Path -LiteralPath $takeout)) {
+            $gerando = Join-Path $pasta 'takeout_gerando'
+            if (Test-Path -LiteralPath $gerando) { Remove-Item -LiteralPath $gerando -Recurse -Force }
+            Push-Location (Join-Path $root 'tools\fixtures')
+            try {
+                dart pub get | Out-Null
+                dart run bin/gen_takeout_demo.dart --out $gerando | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw 'falha ao gerar a demonstração do Google Takeout' }
+            } finally { Pop-Location }
+            Rename-Item -LiteralPath $gerando -NewName 'Google Takeout'
+        }
+        Write-Host "Google Takeout (cadastre as duas como pasta): $(Join-Path $takeout 'Pasta') e $(Join-Path $takeout 'Zips')"
         if ($CelularSimulado) {
             $celular = Join-Path $pasta 'celular'
             if (-not (Test-Path -LiteralPath $celular)) {

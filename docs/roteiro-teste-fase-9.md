@@ -9,7 +9,7 @@ Comandos para o Windows PowerShell, com caminhos completos. Tudo usa **dados de 
 | 0. Pré-lançamentos (aviso e "Atualizar agora" só com versões estáveis) | `1.3.0-beta.1` | pronto para testar |
 | a. Fotos parecidas | `1.3.0-beta.1` | pronto para testar |
 | b. RAW+JPEG e Live Photos agrupados | `1.3.0-beta.2` | pronto para testar |
-| c. Importação do Google Fotos (Takeout) | `1.3.0-beta.3` | não iniciado |
+| c. Importação do Google Fotos (Takeout) | `1.3.0-beta.3` | pronto para testar |
 | d. Mapa | `1.3.0-beta.4` | não iniciado |
 
 ## Antes de começar
@@ -152,9 +152,53 @@ Get-ChildItem -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_
 
 **Limitações conhecidas:** só agrupa arquivos da mesma pasta. A Live Photo é reconhecida pelo identificador da Apple (fotos e vídeos de iPhone de verdade) ou pelo mesmo nome com um vídeo de até 5 s. Verificar um item agrupado pela Biblioteca verifica só a foto principal; a verificação do disco inteiro lê todos os arquivos.
 
-## c. Importação do Google Fotos (Takeout)
+## c. Importação do Google Fotos (Takeout) (1.3.0-beta.3)
 
-_Não iniciado._
+Os `.json` do Takeout dão a data e o local de cada foto. O FotoAtlas lê esses `.json` **só para o catálogo**: nenhuma foto é alterada e nada é gravado dentro dos arquivos. Foto ou vídeo numa pasta do Takeout **sem o seu `.json`** aparece como **hora a confirmar**. Os zips do Takeout **só são lidos**: o FotoAtlas extrai o conteúdo para uma pasta pela cópia segura (prévia, conferência, nada sobrescrito) e nunca apaga os zips.
+
+A pasta de demonstração `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Google Takeout` é gerada sozinha com `-DemoPersistente`. As fotos são sintéticas e **não têm data no EXIF**: a data vem só do `.json`.
+
+| Onde | Arquivos | O que deve acontecer |
+| --- | --- | --- |
+| `Pasta\Takeout\Google Fotos\Viagem 2023` | `IMG_0001.jpg` + `IMG_0001.jpg.supplemental-metadata.json` | 22/07/2023 10:05 (horário de Brasília), com local |
+| | `IMG_0002(1).jpg` + `IMG_0002.jpg(1).json` | 22/07/2023 11:30 |
+| | `IMG_0003.jpg`, `IMG_0003-editado.jpg` + `IMG_0003.jpg.json` | as duas em 23/07/2023 06:00 |
+| | `sem_json.jpg` | **hora a confirmar** |
+| | `metadados.json` | do álbum: ignorado |
+| `Zips` | `takeout-20240101T000000Z-001.zip` e `-002.zip` | álbum "Aniversário": 2 fotos, com os `.json` divididos entre os dois zips |
+
+**c.1. Takeout em pasta.** Abra a demonstração (comando em "Antes de começar", com `v1.3.0-beta.3`). Cadastre a pasta `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Google Takeout\Pasta` (**Dispositivos › Adicionar dispositivo › Escolher uma pasta…**) e escaneie. Espere a conferência e a leitura das datas terminarem.
+
+**c.2. Datas e locais.** Na **Biblioteca**, filtre pelo dispositivo "Pasta". Confira as datas da tabela. Clique no `IMG_0001.jpg`: nos detalhes, "Hora provável · do Google Fotos (.json do Takeout)" e a **Localização** preenchida. Em **Detalhes** aparece a data do Google Fotos entre as candidatas.
+
+**c.3. Sem `.json`.** O `sem_json.jpg` aparece com **hora incerta** (e no filtro **Hora a confirmar**). Nos detalhes, em **Detalhes**, a linha "Google Fotos: Está numa pasta do Takeout sem o .json dela: a hora fica a confirmar."
+
+**c.4. Zips: prévia.** Crie uma pasta vazia para o destino e cadastre as duas (a dos zips e a do destino), escaneando cada uma:
+```powershell
+New-Item -ItemType Directory -Path 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Destino Takeout'
+```
+`C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Google Takeout\Zips` e `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Destino Takeout`. No cartão "Zips", em **Mais opções › Extrair zip do Google Takeout…**, aparecem os dois zips marcados. Escolha **Para onde: Destino Takeout** e clique em **Ver prévia**: "Vai extrair 4 arquivos (…): 2 fotos e vídeos, 2 .json com datas e locais." e "Os zips só são lidos…". Clique em **Voltar** e em **Cancelar** uma vez para ver que nada acontece; depois repita e clique em **Extrair**.
+
+**c.5. Zips: extração.** Em **Tarefas**, a extração termina com 4 arquivos. Confira a pasta criada:
+```powershell
+Get-ChildItem -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Destino Takeout' -Recurse -File | Select-Object FullName, Length | Format-Table -AutoSize
+```
+Ela tem `Google Fotos (Takeout)\Google Fotos\Aniversário\` com `IMG_0101.jpg`, `IMG_0102.jpg` e os dois `.json`. Na **Biblioteca**, as duas fotos aparecem em 09/03/2024, às 18:15 e 18:40 (o `.json` da segunda estava no outro zip).
+
+**c.6. Os zips não mudaram.** Rode antes do c.5 e de novo depois; os dois resultados devem ser iguais:
+```powershell
+Get-ChildItem -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Google Takeout\Zips' -File | ForEach-Object { '{0} {1} {2}' -f $_.Name, $_.LastWriteTime, (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash }
+```
+
+**c.7. Extrair de novo não sobrescreve.** Repita **Extrair zip do Google Takeout…** para o mesmo destino: a prévia avisa que os 4 nomes já existem e que eles ganham `_1`. Pode cancelar.
+
+**c.8. Nenhuma foto mudou.** As fotos de "Pasta" continuam sem data no EXIF (o FotoAtlas não grava nada nelas). Com o ExifTool baixado pelo projeto:
+```powershell
+& 'C:\dev\fotoatlas\third_party\bin\exiftool\exiftool.exe' -DateTimeOriginal -GPSPosition 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Google Takeout\Pasta\Takeout\Google Fotos\Viagem 2023\IMG_0001.jpg'
+```
+Não aparece nenhuma das duas informações.
+
+**Limitações conhecidas:** só os `takeout-….zip` aparecem para extrair. Pausar no meio de um vídeo grande do zip só pausa no fim daquele arquivo. A data do Google Fotos é "provável", não "confiável": às vezes o Google usa a data do envio.
 
 ## d. Mapa
 

@@ -11,6 +11,7 @@ import '../../widgets/connection_badge.dart';
 import '../integrity/integrity_ui.dart';
 import '../reorg/reorg_wizard.dart';
 import 'scan_dialog.dart';
+import 'takeout_dialog.dart';
 
 /// Cartão de uma fonte. Desconectada aparece esmaecida, mas com os dados do
 /// último escaneamento (regra 9).
@@ -238,6 +239,7 @@ class _Actions extends ConsumerWidget {
               entries: [VerifyEntry(source.id)],
               phone: source.isPhone,
             ),
+            'takeout' => takeoutExtractFlow(context, ref, source),
             _ => null,
           },
           itemBuilder: (_) => [
@@ -258,6 +260,12 @@ class _Actions extends ConsumerWidget {
                     : 'Verificar integridade… (só lê; descobre arquivos estragados)',
               ),
             ),
+            if (!source.isPhone)
+              PopupMenuItem(
+                value: 'takeout',
+                enabled: source.isConnected && source.lastScan != null,
+                child: const Text('Extrair zip do Google Takeout… (só lê o zip)'),
+              ),
             const PopupMenuItem(value: 'forget', child: Text('Esquecer este dispositivo')),
           ],
         ),

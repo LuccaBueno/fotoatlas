@@ -65,6 +65,7 @@ const helpTopics = [
       'Reorganizar as pastas de um disco por data ou momento, no próprio disco (celular nunca é reorganizado).',
       'Escolher o disco principal (destino sugerido nas cópias), em "Mais opções".',
       'Verificar a integridade, em "Mais opções": ler tudo de novo e descobrir arquivos estragados (só lê).',
+      'Extrair os zips do Google Takeout, em "Mais opções": os zips só são lidos; datas e locais dos .json vão para o catálogo.',
     ],
     backupLegend: true,
     extraLegend: [

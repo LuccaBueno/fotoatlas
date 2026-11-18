@@ -5526,7 +5526,7 @@ class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    $customConstraints: 'CHECK (date_source IN (\'manual\', \'exif_original\', \'video_internal\', \'filename\', \'filesystem\', \'none\'))',
+    $customConstraints: 'CHECK (date_source IN (\'manual\', \'exif_original\', \'video_internal\', \'takeout\', \'filename\', \'filesystem\', \'none\'))',
   );
   static const VerificationMeta _dateConfidenceMeta = const VerificationMeta('dateConfidence');
   late final GeneratedColumn<String> dateConfidence = GeneratedColumn<String>(
@@ -13846,6 +13846,458 @@ class MediaItemMembersCompanion extends UpdateCompanion<MediaItemMemberRow> {
   }
 }
 
+class TakeoutJson extends Table with TableInfo<TakeoutJson, TakeoutJsonRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  TakeoutJson(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _instanceIdMeta = const VerificationMeta('instanceId');
+  late final GeneratedColumn<int> instanceId = GeneratedColumn<int>(
+    'instance_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY REFERENCES file_instances(id)ON DELETE CASCADE',
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta('sizeBytes');
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _mtimeMeta = const VerificationMeta('mtime');
+  late final GeneratedColumn<int> mtime = GeneratedColumn<int>(
+    'mtime',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _validMeta = const VerificationMeta('valid');
+  late final GeneratedColumn<int> valid = GeneratedColumn<int>(
+    'valid',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _takenUtcMsMeta = const VerificationMeta('takenUtcMs');
+  late final GeneratedColumn<int> takenUtcMs = GeneratedColumn<int>(
+    'taken_utc_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _latMeta = const VerificationMeta('lat');
+  late final GeneratedColumn<double> lat = GeneratedColumn<double>(
+    'lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _lonMeta = const VerificationMeta('lon');
+  late final GeneratedColumn<double> lon = GeneratedColumn<double>(
+    'lon',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _readAtMeta = const VerificationMeta('readAt');
+  late final GeneratedColumn<int> readAt = GeneratedColumn<int>(
+    'read_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [instanceId, sizeBytes, mtime, valid, title, takenUtcMs, lat, lon, readAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'takeout_json';
+  @override
+  VerificationContext validateIntegrity(Insertable<TakeoutJsonRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('instance_id')) {
+      context.handle(_instanceIdMeta, instanceId.isAcceptableOrUnknown(data['instance_id']!, _instanceIdMeta));
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(_sizeBytesMeta, sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta));
+    } else if (isInserting) {
+      context.missing(_sizeBytesMeta);
+    }
+    if (data.containsKey('mtime')) {
+      context.handle(_mtimeMeta, mtime.isAcceptableOrUnknown(data['mtime']!, _mtimeMeta));
+    }
+    if (data.containsKey('valid')) {
+      context.handle(_validMeta, valid.isAcceptableOrUnknown(data['valid']!, _validMeta));
+    } else if (isInserting) {
+      context.missing(_validMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(_titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    }
+    if (data.containsKey('taken_utc_ms')) {
+      context.handle(_takenUtcMsMeta, takenUtcMs.isAcceptableOrUnknown(data['taken_utc_ms']!, _takenUtcMsMeta));
+    }
+    if (data.containsKey('lat')) {
+      context.handle(_latMeta, lat.isAcceptableOrUnknown(data['lat']!, _latMeta));
+    }
+    if (data.containsKey('lon')) {
+      context.handle(_lonMeta, lon.isAcceptableOrUnknown(data['lon']!, _lonMeta));
+    }
+    if (data.containsKey('read_at')) {
+      context.handle(_readAtMeta, readAt.isAcceptableOrUnknown(data['read_at']!, _readAtMeta));
+    } else if (isInserting) {
+      context.missing(_readAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {instanceId};
+  @override
+  TakeoutJsonRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TakeoutJsonRow(
+      instanceId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}instance_id'])!,
+      sizeBytes: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}size_bytes'])!,
+      mtime: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}mtime']),
+      valid: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}valid'])!,
+      title: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}title']),
+      takenUtcMs: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}taken_utc_ms']),
+      lat: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}lat']),
+      lon: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}lon']),
+      readAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}read_at'])!,
+    );
+  }
+
+  @override
+  TakeoutJson createAlias(String alias) {
+    return TakeoutJson(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class TakeoutJsonRow extends DataClass implements Insertable<TakeoutJsonRow> {
+  final int instanceId;
+  final int sizeBytes;
+  final int? mtime;
+  final int valid;
+
+  /// 1 = `.json` de foto do Takeout
+  final String? title;
+  final int? takenUtcMs;
+  final double? lat;
+  final double? lon;
+  final int readAt;
+  const TakeoutJsonRow({
+    required this.instanceId,
+    required this.sizeBytes,
+    this.mtime,
+    required this.valid,
+    this.title,
+    this.takenUtcMs,
+    this.lat,
+    this.lon,
+    required this.readAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['instance_id'] = Variable<int>(instanceId);
+    map['size_bytes'] = Variable<int>(sizeBytes);
+    if (!nullToAbsent || mtime != null) {
+      map['mtime'] = Variable<int>(mtime);
+    }
+    map['valid'] = Variable<int>(valid);
+    if (!nullToAbsent || title != null) {
+      map['title'] = Variable<String>(title);
+    }
+    if (!nullToAbsent || takenUtcMs != null) {
+      map['taken_utc_ms'] = Variable<int>(takenUtcMs);
+    }
+    if (!nullToAbsent || lat != null) {
+      map['lat'] = Variable<double>(lat);
+    }
+    if (!nullToAbsent || lon != null) {
+      map['lon'] = Variable<double>(lon);
+    }
+    map['read_at'] = Variable<int>(readAt);
+    return map;
+  }
+
+  TakeoutJsonCompanion toCompanion(bool nullToAbsent) {
+    return TakeoutJsonCompanion(
+      instanceId: Value(instanceId),
+      sizeBytes: Value(sizeBytes),
+      mtime: mtime == null && nullToAbsent ? const Value.absent() : Value(mtime),
+      valid: Value(valid),
+      title: title == null && nullToAbsent ? const Value.absent() : Value(title),
+      takenUtcMs: takenUtcMs == null && nullToAbsent ? const Value.absent() : Value(takenUtcMs),
+      lat: lat == null && nullToAbsent ? const Value.absent() : Value(lat),
+      lon: lon == null && nullToAbsent ? const Value.absent() : Value(lon),
+      readAt: Value(readAt),
+    );
+  }
+
+  factory TakeoutJsonRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TakeoutJsonRow(
+      instanceId: serializer.fromJson<int>(json['instance_id']),
+      sizeBytes: serializer.fromJson<int>(json['size_bytes']),
+      mtime: serializer.fromJson<int?>(json['mtime']),
+      valid: serializer.fromJson<int>(json['valid']),
+      title: serializer.fromJson<String?>(json['title']),
+      takenUtcMs: serializer.fromJson<int?>(json['taken_utc_ms']),
+      lat: serializer.fromJson<double?>(json['lat']),
+      lon: serializer.fromJson<double?>(json['lon']),
+      readAt: serializer.fromJson<int>(json['read_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'instance_id': serializer.toJson<int>(instanceId),
+      'size_bytes': serializer.toJson<int>(sizeBytes),
+      'mtime': serializer.toJson<int?>(mtime),
+      'valid': serializer.toJson<int>(valid),
+      'title': serializer.toJson<String?>(title),
+      'taken_utc_ms': serializer.toJson<int?>(takenUtcMs),
+      'lat': serializer.toJson<double?>(lat),
+      'lon': serializer.toJson<double?>(lon),
+      'read_at': serializer.toJson<int>(readAt),
+    };
+  }
+
+  TakeoutJsonRow copyWith({
+    int? instanceId,
+    int? sizeBytes,
+    Value<int?> mtime = const Value.absent(),
+    int? valid,
+    Value<String?> title = const Value.absent(),
+    Value<int?> takenUtcMs = const Value.absent(),
+    Value<double?> lat = const Value.absent(),
+    Value<double?> lon = const Value.absent(),
+    int? readAt,
+  }) => TakeoutJsonRow(
+    instanceId: instanceId ?? this.instanceId,
+    sizeBytes: sizeBytes ?? this.sizeBytes,
+    mtime: mtime.present ? mtime.value : this.mtime,
+    valid: valid ?? this.valid,
+    title: title.present ? title.value : this.title,
+    takenUtcMs: takenUtcMs.present ? takenUtcMs.value : this.takenUtcMs,
+    lat: lat.present ? lat.value : this.lat,
+    lon: lon.present ? lon.value : this.lon,
+    readAt: readAt ?? this.readAt,
+  );
+  TakeoutJsonRow copyWithCompanion(TakeoutJsonCompanion data) {
+    return TakeoutJsonRow(
+      instanceId: data.instanceId.present ? data.instanceId.value : this.instanceId,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+      mtime: data.mtime.present ? data.mtime.value : this.mtime,
+      valid: data.valid.present ? data.valid.value : this.valid,
+      title: data.title.present ? data.title.value : this.title,
+      takenUtcMs: data.takenUtcMs.present ? data.takenUtcMs.value : this.takenUtcMs,
+      lat: data.lat.present ? data.lat.value : this.lat,
+      lon: data.lon.present ? data.lon.value : this.lon,
+      readAt: data.readAt.present ? data.readAt.value : this.readAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TakeoutJsonRow(')
+          ..write('instanceId: $instanceId, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('mtime: $mtime, ')
+          ..write('valid: $valid, ')
+          ..write('title: $title, ')
+          ..write('takenUtcMs: $takenUtcMs, ')
+          ..write('lat: $lat, ')
+          ..write('lon: $lon, ')
+          ..write('readAt: $readAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(instanceId, sizeBytes, mtime, valid, title, takenUtcMs, lat, lon, readAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TakeoutJsonRow &&
+          other.instanceId == this.instanceId &&
+          other.sizeBytes == this.sizeBytes &&
+          other.mtime == this.mtime &&
+          other.valid == this.valid &&
+          other.title == this.title &&
+          other.takenUtcMs == this.takenUtcMs &&
+          other.lat == this.lat &&
+          other.lon == this.lon &&
+          other.readAt == this.readAt);
+}
+
+class TakeoutJsonCompanion extends UpdateCompanion<TakeoutJsonRow> {
+  final Value<int> instanceId;
+  final Value<int> sizeBytes;
+  final Value<int?> mtime;
+  final Value<int> valid;
+  final Value<String?> title;
+  final Value<int?> takenUtcMs;
+  final Value<double?> lat;
+  final Value<double?> lon;
+  final Value<int> readAt;
+  const TakeoutJsonCompanion({
+    this.instanceId = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    this.mtime = const Value.absent(),
+    this.valid = const Value.absent(),
+    this.title = const Value.absent(),
+    this.takenUtcMs = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lon = const Value.absent(),
+    this.readAt = const Value.absent(),
+  });
+  TakeoutJsonCompanion.insert({
+    this.instanceId = const Value.absent(),
+    required int sizeBytes,
+    this.mtime = const Value.absent(),
+    required int valid,
+    this.title = const Value.absent(),
+    this.takenUtcMs = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lon = const Value.absent(),
+    required int readAt,
+  }) : sizeBytes = Value(sizeBytes),
+       valid = Value(valid),
+       readAt = Value(readAt);
+  static Insertable<TakeoutJsonRow> custom({
+    Expression<int>? instanceId,
+    Expression<int>? sizeBytes,
+    Expression<int>? mtime,
+    Expression<int>? valid,
+    Expression<String>? title,
+    Expression<int>? takenUtcMs,
+    Expression<double>? lat,
+    Expression<double>? lon,
+    Expression<int>? readAt,
+  }) {
+    return RawValuesInsertable({
+      if (instanceId != null) 'instance_id': instanceId,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
+      if (mtime != null) 'mtime': mtime,
+      if (valid != null) 'valid': valid,
+      if (title != null) 'title': title,
+      if (takenUtcMs != null) 'taken_utc_ms': takenUtcMs,
+      if (lat != null) 'lat': lat,
+      if (lon != null) 'lon': lon,
+      if (readAt != null) 'read_at': readAt,
+    });
+  }
+
+  TakeoutJsonCompanion copyWith({
+    Value<int>? instanceId,
+    Value<int>? sizeBytes,
+    Value<int?>? mtime,
+    Value<int>? valid,
+    Value<String?>? title,
+    Value<int?>? takenUtcMs,
+    Value<double?>? lat,
+    Value<double?>? lon,
+    Value<int>? readAt,
+  }) {
+    return TakeoutJsonCompanion(
+      instanceId: instanceId ?? this.instanceId,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      mtime: mtime ?? this.mtime,
+      valid: valid ?? this.valid,
+      title: title ?? this.title,
+      takenUtcMs: takenUtcMs ?? this.takenUtcMs,
+      lat: lat ?? this.lat,
+      lon: lon ?? this.lon,
+      readAt: readAt ?? this.readAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (instanceId.present) {
+      map['instance_id'] = Variable<int>(instanceId.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    if (mtime.present) {
+      map['mtime'] = Variable<int>(mtime.value);
+    }
+    if (valid.present) {
+      map['valid'] = Variable<int>(valid.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (takenUtcMs.present) {
+      map['taken_utc_ms'] = Variable<int>(takenUtcMs.value);
+    }
+    if (lat.present) {
+      map['lat'] = Variable<double>(lat.value);
+    }
+    if (lon.present) {
+      map['lon'] = Variable<double>(lon.value);
+    }
+    if (readAt.present) {
+      map['read_at'] = Variable<int>(readAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TakeoutJsonCompanion(')
+          ..write('instanceId: $instanceId, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('mtime: $mtime, ')
+          ..write('valid: $valid, ')
+          ..write('title: $title, ')
+          ..write('takenUtcMs: $takenUtcMs, ')
+          ..write('lat: $lat, ')
+          ..write('lon: $lon, ')
+          ..write('readAt: $readAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$CatalogDatabase extends GeneratedDatabase {
   _$CatalogDatabase(QueryExecutor e) : super(e);
   $CatalogDatabaseManager get managers => $CatalogDatabaseManager(this);
@@ -13944,6 +14396,7 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     'ix_mim_content',
     'CREATE INDEX ix_mim_content ON media_item_members (content_id)',
   );
+  late final TakeoutJson takeoutJson = TakeoutJson(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
@@ -14001,6 +14454,7 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     mediaItems,
     mediaItemMembers,
     ixMimContent,
+    takeoutJson,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -14027,6 +14481,10 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     WritePropagation(
       on: TableUpdateQuery.onTableName('media_items', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('media_item_members', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('file_instances', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('takeout_json', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -17017,6 +17475,19 @@ final class $FileInstancesReferences extends BaseReferences<_$CatalogDatabase, F
     final cache = $_typedResult.readTableOrNull(_integrityChecksRefsTable($_db));
     return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<TakeoutJson, List<TakeoutJsonRow>> _takeoutJsonRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.takeoutJson, aliasName: 'file_instances__id__takeout_json__instance_id');
+
+  $TakeoutJsonProcessedTableManager get takeoutJsonRefs {
+    final manager = $TakeoutJsonTableManager(
+      $_db,
+      $_db.takeoutJson,
+    ).filter((f) => f.instanceId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_takeoutJsonRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $FileInstancesFilterComposer extends Composer<_$CatalogDatabase, FileInstances> {
@@ -17218,6 +17689,24 @@ class $FileInstancesFilterComposer extends Composer<_$CatalogDatabase, FileInsta
           $IntegrityChecksFilterComposer(
             $db: $db,
             $table: $db.integrityChecks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> takeoutJsonRefs(Expression<bool> Function($TakeoutJsonFilterComposer f) f) {
+    final $TakeoutJsonFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.takeoutJson,
+      getReferencedColumn: (t) => t.instanceId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $TakeoutJsonFilterComposer(
+            $db: $db,
+            $table: $db.takeoutJson,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
@@ -17567,6 +18056,24 @@ class $FileInstancesAnnotationComposer extends Composer<_$CatalogDatabase, FileI
     );
     return f(composer);
   }
+
+  Expression<T> takeoutJsonRefs<T extends Object>(Expression<T> Function($TakeoutJsonAnnotationComposer a) f) {
+    final $TakeoutJsonAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.takeoutJson,
+      getReferencedColumn: (t) => t.instanceId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $TakeoutJsonAnnotationComposer(
+            $db: $db,
+            $table: $db.takeoutJson,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $FileInstancesTableManager
@@ -17591,6 +18098,7 @@ class $FileInstancesTableManager
             bool selectionSetItemsRefs,
             bool integrityRunItemsRefs,
             bool integrityChecksRefs,
+            bool takeoutJsonRefs,
           })
         > {
   $FileInstancesTableManager(_$CatalogDatabase db, FileInstances table)
@@ -17718,6 +18226,7 @@ class $FileInstancesTableManager
                 selectionSetItemsRefs = false,
                 integrityRunItemsRefs = false,
                 integrityChecksRefs = false,
+                takeoutJsonRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -17726,6 +18235,7 @@ class $FileInstancesTableManager
                     if (selectionSetItemsRefs) db.selectionSetItems,
                     if (integrityRunItemsRefs) db.integrityRunItems,
                     if (integrityChecksRefs) db.integrityChecks,
+                    if (takeoutJsonRefs) db.takeoutJson,
                   ],
                   addJoins:
                       <
@@ -17836,6 +18346,15 @@ class $FileInstancesTableManager
                           referencedColumn: 'instance_id',
                           typedResults: items,
                         ),
+                      if (takeoutJsonRefs)
+                        await $_getPrefetchedDataByColumns<FileInstanceRow, FileInstances, TakeoutJsonRow, TakeoutJson>(
+                          currentTable: table,
+                          referencedTable: $FileInstancesReferences._takeoutJsonRefsTable(db),
+                          managerFromTypedResult: (p0) => $FileInstancesReferences(db, table, p0).takeoutJsonRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'instance_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -17865,6 +18384,7 @@ typedef $FileInstancesProcessedTableManager =
         bool selectionSetItemsRefs,
         bool integrityRunItemsRefs,
         bool integrityChecksRefs,
+        bool takeoutJsonRefs,
       })
     >;
 typedef $ClockCorrectionsCreateCompanionBuilder = ClockCorrectionsCompanion Function({
@@ -25268,6 +25788,310 @@ typedef $MediaItemMembersProcessedTableManager =
       MediaItemMemberRow,
       PrefetchHooks Function({bool itemId, bool contentId})
     >;
+typedef $TakeoutJsonCreateCompanionBuilder = TakeoutJsonCompanion Function({
+  Value<int> instanceId,
+  required int sizeBytes,
+  Value<int?> mtime,
+  required int valid,
+  Value<String?> title,
+  Value<int?> takenUtcMs,
+  Value<double?> lat,
+  Value<double?> lon,
+  required int readAt,
+});
+typedef $TakeoutJsonUpdateCompanionBuilder = TakeoutJsonCompanion Function({
+  Value<int> instanceId,
+  Value<int> sizeBytes,
+  Value<int?> mtime,
+  Value<int> valid,
+  Value<String?> title,
+  Value<int?> takenUtcMs,
+  Value<double?> lat,
+  Value<double?> lon,
+  Value<int> readAt,
+});
+
+final class $TakeoutJsonReferences extends BaseReferences<_$CatalogDatabase, TakeoutJson, TakeoutJsonRow> {
+  $TakeoutJsonReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static FileInstances _instanceIdTable(_$CatalogDatabase db) =>
+      db.fileInstances.createAlias('takeout_json__instance_id__file_instances__id');
+
+  $FileInstancesProcessedTableManager get instanceId {
+    final $_column = $_itemColumn<int>('instance_id')!;
+
+    final manager = $FileInstancesTableManager($_db, $_db.fileInstances).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_instanceIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $TakeoutJsonFilterComposer extends Composer<_$CatalogDatabase, TakeoutJson> {
+  $TakeoutJsonFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get mtime => $composableBuilder(column: $table.mtime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get valid => $composableBuilder(column: $table.valid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get takenUtcMs =>
+      $composableBuilder(column: $table.takenUtcMs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get lat => $composableBuilder(column: $table.lat, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get lon => $composableBuilder(column: $table.lon, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get readAt =>
+      $composableBuilder(column: $table.readAt, builder: (column) => ColumnFilters(column));
+
+  $FileInstancesFilterComposer get instanceId {
+    final $FileInstancesFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.fileInstances,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesFilterComposer(
+            $db: $db,
+            $table: $db.fileInstances,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $TakeoutJsonOrderingComposer extends Composer<_$CatalogDatabase, TakeoutJson> {
+  $TakeoutJsonOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get mtime =>
+      $composableBuilder(column: $table.mtime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get valid =>
+      $composableBuilder(column: $table.valid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get takenUtcMs =>
+      $composableBuilder(column: $table.takenUtcMs, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get lat =>
+      $composableBuilder(column: $table.lat, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get lon =>
+      $composableBuilder(column: $table.lon, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get readAt =>
+      $composableBuilder(column: $table.readAt, builder: (column) => ColumnOrderings(column));
+
+  $FileInstancesOrderingComposer get instanceId {
+    final $FileInstancesOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.fileInstances,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesOrderingComposer(
+            $db: $db,
+            $table: $db.fileInstances,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $TakeoutJsonAnnotationComposer extends Composer<_$CatalogDatabase, TakeoutJson> {
+  $TakeoutJsonAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get sizeBytes => $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+
+  GeneratedColumn<int> get mtime => $composableBuilder(column: $table.mtime, builder: (column) => column);
+
+  GeneratedColumn<int> get valid => $composableBuilder(column: $table.valid, builder: (column) => column);
+
+  GeneratedColumn<String> get title => $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<int> get takenUtcMs => $composableBuilder(column: $table.takenUtcMs, builder: (column) => column);
+
+  GeneratedColumn<double> get lat => $composableBuilder(column: $table.lat, builder: (column) => column);
+
+  GeneratedColumn<double> get lon => $composableBuilder(column: $table.lon, builder: (column) => column);
+
+  GeneratedColumn<int> get readAt => $composableBuilder(column: $table.readAt, builder: (column) => column);
+
+  $FileInstancesAnnotationComposer get instanceId {
+    final $FileInstancesAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.instanceId,
+      referencedTable: $db.fileInstances,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $FileInstancesAnnotationComposer(
+            $db: $db,
+            $table: $db.fileInstances,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $TakeoutJsonTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          TakeoutJson,
+          TakeoutJsonRow,
+          $TakeoutJsonFilterComposer,
+          $TakeoutJsonOrderingComposer,
+          $TakeoutJsonAnnotationComposer,
+          $TakeoutJsonCreateCompanionBuilder,
+          $TakeoutJsonUpdateCompanionBuilder,
+          (TakeoutJsonRow, $TakeoutJsonReferences),
+          TakeoutJsonRow,
+          PrefetchHooks Function({bool instanceId})
+        > {
+  $TakeoutJsonTableManager(_$CatalogDatabase db, TakeoutJson table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $TakeoutJsonFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $TakeoutJsonOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $TakeoutJsonAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> instanceId = const Value.absent(),
+                Value<int> sizeBytes = const Value.absent(),
+                Value<int?> mtime = const Value.absent(),
+                Value<int> valid = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+                Value<int?> takenUtcMs = const Value.absent(),
+                Value<double?> lat = const Value.absent(),
+                Value<double?> lon = const Value.absent(),
+                Value<int> readAt = const Value.absent(),
+              }) => TakeoutJsonCompanion(
+                instanceId: instanceId,
+                sizeBytes: sizeBytes,
+                mtime: mtime,
+                valid: valid,
+                title: title,
+                takenUtcMs: takenUtcMs,
+                lat: lat,
+                lon: lon,
+                readAt: readAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> instanceId = const Value.absent(),
+                required int sizeBytes,
+                Value<int?> mtime = const Value.absent(),
+                required int valid,
+                Value<String?> title = const Value.absent(),
+                Value<int?> takenUtcMs = const Value.absent(),
+                Value<double?> lat = const Value.absent(),
+                Value<double?> lon = const Value.absent(),
+                required int readAt,
+              }) => TakeoutJsonCompanion.insert(
+                instanceId: instanceId,
+                sizeBytes: sizeBytes,
+                mtime: mtime,
+                valid: valid,
+                title: title,
+                takenUtcMs: takenUtcMs,
+                lat: lat,
+                lon: lon,
+                readAt: readAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable<TakeoutJson, TakeoutJsonRow>(table), $TakeoutJsonReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: ({instanceId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (instanceId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.instanceId,
+                        referencedTable: $TakeoutJsonReferences._instanceIdTable(db),
+                        referencedColumn: $TakeoutJsonReferences._instanceIdTable(db).id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $TakeoutJsonProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      TakeoutJson,
+      TakeoutJsonRow,
+      $TakeoutJsonFilterComposer,
+      $TakeoutJsonOrderingComposer,
+      $TakeoutJsonAnnotationComposer,
+      $TakeoutJsonCreateCompanionBuilder,
+      $TakeoutJsonUpdateCompanionBuilder,
+      (TakeoutJsonRow, $TakeoutJsonReferences),
+      TakeoutJsonRow,
+      PrefetchHooks Function({bool instanceId})
+    >;
 
 class $CatalogDatabaseManager {
   final _$CatalogDatabase _db;
@@ -25302,4 +26126,5 @@ class $CatalogDatabaseManager {
   $VisualDismissalsTableManager get visualDismissals => $VisualDismissalsTableManager(_db, _db.visualDismissals);
   $MediaItemsTableManager get mediaItems => $MediaItemsTableManager(_db, _db.mediaItems);
   $MediaItemMembersTableManager get mediaItemMembers => $MediaItemMembersTableManager(_db, _db.mediaItemMembers);
+  $TakeoutJsonTableManager get takeoutJson => $TakeoutJsonTableManager(_db, _db.takeoutJson);
 }

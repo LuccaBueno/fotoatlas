@@ -575,3 +575,48 @@ CREATE TABLE visual_dismissals (
 ```
 
 Os grupos de fotos parecidas não são gravados: são calculados na hora a partir destas duas tabelas.
+
+## 14. v9 (Fase 9, itens agrupados, 2026-11-18) — mudança aditiva
+
+Migração `v8 → v9` numa transação, depois do backup `pre-migracao-v8-<data>.db`. ADR 0024.
+
+```sql
+ALTER TABLE media_metadata ADD COLUMN content_identifier TEXT;  -- Live Photo (Apple ContentIdentifier)
+
+-- Item lógico (RAW+JPEG, Live Photo, agrupado à mão). Só visual: nenhum arquivo muda.
+CREATE TABLE media_items (
+  id                 INTEGER NOT NULL PRIMARY KEY,
+  kind               TEXT    NOT NULL CHECK (kind IN ('raw_jpeg','live_photo','manual')),
+  primary_content_id INTEGER NOT NULL REFERENCES contents(id),
+  origin             TEXT    NOT NULL CHECK (origin IN ('auto','manual')),
+  split_at           INTEGER,            -- desagrupado pelo usuário: não volta sozinho
+  created_at         INTEGER NOT NULL
+);
+CREATE TABLE media_item_members (
+  item_id    INTEGER NOT NULL REFERENCES media_items(id) ON DELETE CASCADE,
+  content_id INTEGER NOT NULL REFERENCES contents(id),
+  role       TEXT    NOT NULL CHECK (role IN ('photo','raw','video')),
+  PRIMARY KEY (item_id, content_id)
+);
+CREATE INDEX ix_mim_content ON media_item_members(content_id);
+```
+
+## 15. v10 (Fase 9, Google Takeout, 2026-11-18) — aditiva, com uma exceção
+
+Migração `v9 → v10` numa transação, depois do backup `pre-migracao-v9-<data>.db`. ADR 0025.
+
+```sql
+-- `.json` do Google Takeout lidos em modo leitura; datas e locais só aqui.
+CREATE TABLE takeout_json (
+  instance_id   INTEGER NOT NULL PRIMARY KEY REFERENCES file_instances(id) ON DELETE CASCADE,
+  size_bytes    INTEGER NOT NULL,
+  mtime         INTEGER,
+  valid         INTEGER NOT NULL,
+  title         TEXT,
+  taken_utc_ms  INTEGER,
+  lat REAL, lon REAL,
+  read_at       INTEGER NOT NULL
+);
+```
+
+**Exceção à regra das migrações aditivas:** o CHECK de `media_metadata.date_source` ganha `'takeout'`. Como o SQLite não muda um CHECK no lugar, a tabela `media_metadata` é refeita (`TableMigration` do drift) com os mesmos dados e índices, na mesma transação. Nenhuma outra tabela aponta para ela. O teste `v9 → v10` confere os dados, os índices e a origem nova.

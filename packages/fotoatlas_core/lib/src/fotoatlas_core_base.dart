@@ -22,6 +22,7 @@ import 'scan/scan_service.dart';
 import 'sources/sources_service.dart';
 import 'sources/volumes.dart';
 import 'similar/similar_service.dart';
+import 'takeout/takeout_zips.dart';
 import 'thumbs/thumbnail_service.dart';
 import 'util/instance_lock.dart';
 import 'util/paths.dart';
@@ -49,6 +50,7 @@ class FotoAtlasCore {
     required this.integrity,
     required this.similar,
     required this.items,
+    required this.takeoutZips,
     required this._lock,
   });
 
@@ -99,6 +101,9 @@ class FotoAtlasCore {
   /// Itens lógicos (Fase 9): RAW+JPEG e Live Photos como um item só na
   /// Biblioteca. Só catálogo; cópia e reorganização levam o grupo todo.
   final MediaItemsService items;
+
+  /// Zips do Google Takeout: extração pela cópia segura (só lê o zip).
+  final TakeoutZips takeoutZips;
   final VolumeProvider volumes;
 
   /// `null` se o helper não foi encontrado ou não iniciou (o core segue
@@ -282,6 +287,7 @@ class FotoAtlasCore {
         integrity: integrity,
         similar: similar,
         items: items,
+        takeoutZips: TakeoutZips(catalog.db, sources, freeSpace: freeSpace),
         lock: lock,
       );
       if (backupOnOpen) {

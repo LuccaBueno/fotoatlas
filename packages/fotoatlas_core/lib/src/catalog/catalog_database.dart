@@ -9,7 +9,7 @@ part 'catalog_database.g.dart';
 class CatalogDatabase extends _$CatalogDatabase {
   CatalogDatabase(super.e);
 
-  static const int currentSchemaVersion = 9;
+  static const int currentSchemaVersion = 10;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -81,6 +81,14 @@ class CatalogDatabase extends _$CatalogDatabase {
         await m.createTable(mediaItems);
         await m.createTable(mediaItemMembers);
         await m.createIndex(ixMimContent);
+      }
+      if (from < 10) {
+        await m.createTable(takeoutJson);
+        // Única exceção às mudanças aditivas (ADR 0025): o CHECK de date_source
+        // ganha 'takeout'. O SQLite não muda CHECK no lugar, então a tabela é
+        // refeita com os mesmos dados, na mesma transação (e com o backup
+        // pre-migracao feito antes). Nenhuma outra tabela aponta para ela.
+        await m.alterTable(TableMigration(mediaMetadata));
       }
     },
   );

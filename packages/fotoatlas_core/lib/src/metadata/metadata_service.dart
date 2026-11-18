@@ -11,6 +11,7 @@ import '../hash/hash_service.dart';
 import '../scan/scan_service.dart';
 import '../settings/settings_store.dart';
 import '../sources/sources_service.dart';
+import '../takeout/takeout_service.dart';
 import '../util/clock.dart';
 import '../util/uuid.dart';
 import 'capture_date.dart';
@@ -101,7 +102,11 @@ class MetadataService {
     this.batchSize = 48,
   }) : settings = SettingsStore(catalog.db) {
     effective = EffectiveDates(db, zone: () => zone);
+    takeout = TakeoutService(db, sources);
   }
+
+  /// `.json` do Google Takeout (datas e locais só no catálogo).
+  late final TakeoutService takeout;
 
   final Catalog catalog;
   final SourcesService sources;
@@ -144,6 +149,11 @@ class MetadataService {
     final pr = await settings.get(MetadataSettingKeys.priority);
     if (pr is List) {
       final list = [for (final s in pr) DateSource.fromSql(s as String?)].where((s) => s != DateSource.none).toList();
+      // Ordem salva antes da origem "Google Fotos": ela entra logo depois do vídeo.
+      if (list.isNotEmpty && !list.contains(DateSource.takeout)) {
+        final after = list.indexOf(DateSource.videoInternal);
+        list.insert(after < 0 ? list.length : after + 1, DateSource.takeout);
+      }
       if (list.isNotEmpty) priority = list;
     }
     // Regras novas (ex.: relógio zerado vira hora incerta): reescolhe as datas
@@ -254,6 +264,65 @@ class MetadataService {
     return changed;
   }
 
+  /// Troca a candidata do Takeout (ou a marca "sem .json") dos conteúdos já
+  /// lidos e reescolhe a data. O local do `.json` só entra onde não há local
+  /// do próprio arquivo. `true` se alguma data efetiva mudou.
+  Future<bool> _applyTakeout(Set<int> contentIds) async {
+    final ids = contentIds.join(',');
+    final rows = await db
+        .customSelect('SELECT content_id, candidates_json FROM media_metadata WHERE content_id IN ($ids)')
+        .get();
+    if (rows.isEmpty) return false;
+    final inst = await db.customSelect('''
+      SELECT fi.content_id, fi.source_id, fi.rel_path, fi.name FROM file_instances fi
+      JOIN sources s ON s.id = fi.source_id AND s.forgotten_at IS NULL AND s.kind <> 'phone'
+      WHERE fi.content_id IN ($ids) AND fi.availability = 'present'
+      ''').get();
+    final info = await takeout.forInstances([
+      for (final r in inst)
+        (
+          contentId: r.read<int>('content_id'),
+          sourceId: r.read<String>('source_id'),
+          relPath: r.read<String>('rel_path'),
+          name: r.read<String>('name'),
+        ),
+    ]);
+    final written = <int>[];
+    await db.transaction(() async {
+      for (final r in rows) {
+        final id = r.read<int>('content_id');
+        final candidates = [
+          for (final c in DateStrategy.candidatesFromJson(r.readNullable<String>('candidates_json')))
+            if (c.source != DateSource.takeout) c,
+          ?_takeoutCandidate(info[id]),
+        ];
+        final d = strategy.resolve(candidates);
+        final j = info[id]?.json;
+        await db.customStatement(
+          'UPDATE media_metadata SET capture_utc_ms = ?, capture_local = ?, tz_offset_min = ?, date_source = ?, '
+          'date_confidence = ?, date_conflict = ?, candidates_json = ?, '
+          'lat = CASE WHEN lat IS NULL AND lon IS NULL THEN ? ELSE lat END, '
+          'lon = CASE WHEN lat IS NULL AND lon IS NULL THEN ? ELSE lon END WHERE content_id = ?',
+          [
+            d?.utcMs,
+            d == null ? null : formatWall(d.wall),
+            d?.offsetMin,
+            (d?.source ?? DateSource.none).sql,
+            (d?.confidence ?? DateConfidence.none).name,
+            d?.conflict ?? false ? 1 : 0,
+            DateStrategy.candidatesJson(candidates),
+            j?.lat,
+            j?.lon,
+            id,
+          ],
+        );
+        written.add(id);
+      }
+    });
+    db.notifyUpdates({TableUpdate.onTable(db.mediaMetadata, kind: UpdateKind.update)});
+    return await effective.recompute(contentIds: written) > 0;
+  }
+
   /// Volta para a fila os itens com erro de leitura.
   Future<int> retryErrors() async {
     final n = await db.customUpdate(
@@ -275,6 +344,10 @@ class MetadataService {
 
   Future<void> _loop() async {
     _stop = false;
+    // `.json` do Takeout novos ou mudados: refaz as datas das fotos das pastas
+    // deles pelas candidatas guardadas (sem ler as fotos de novo).
+    final affected = await takeout.sync();
+    if (affected.isNotEmpty && await _applyTakeout(affected)) _datesChanged.add(null);
     final total = await _pendingCount();
     if (total == 0) return;
     _emit(MetadataStatus(running: true, total: total, exifToolMissing: tools.exiftool == null));
@@ -414,6 +487,11 @@ class MetadataService {
       await _readPhoneHeads(phone, results, notes);
     }
 
+    final fromTakeout = await takeout.forInstances([
+      for (final t in targets)
+        for (final i in t.instances)
+          if (i.kind != 'phone') (contentId: t.contentId, sourceId: i.sourceId, relPath: i.relPath, name: i.name),
+    ]);
     final now = nowMs();
     final written = <int>[];
     var errors = 0;
@@ -435,9 +513,11 @@ class MetadataService {
         final candidates = <DateCandidate>[
           ?meta?.exifDate,
           ?meta?.videoDate,
+          ?_takeoutCandidate(fromTakeout[t.contentId]),
           ..._nameCandidates(t.instances),
           ?_fsCandidate(t.instances),
         ];
+        final tj = fromTakeout[t.contentId]?.json;
         final resolved = strategy.resolve(candidates);
         await db.customStatement(
           '''
@@ -478,8 +558,8 @@ class MetadataService {
             meta?.width,
             meta?.height,
             meta?.orientation,
-            meta?.lat,
-            meta?.lon,
+            meta?.lat ?? (meta?.lon == null ? tj?.lat : null),
+            meta?.lon ?? (meta?.lat == null ? tj?.lon : null),
             meta?.durationMs,
             meta?.fps,
             meta?.videoCodec,
@@ -578,6 +658,15 @@ class MetadataService {
     for (final f in dir.listSync().whereType<File>()) {
       _deleteQuietly(f.path);
     }
+  }
+
+  /// Data do `.json` do Takeout, ou a marca "sem .json" (hora a confirmar).
+  static DateCandidate? _takeoutCandidate(TakeoutInfo? info) {
+    if (info == null) return null;
+    final j = info.json;
+    if (j == null) return const DateCandidate.takeoutMissing();
+    if (j.takenUtcMs == null) return null;
+    return DateCandidate(source: DateSource.takeout, utcMs: j.takenUtcMs, detail: j.fileName);
   }
 
   static List<DateCandidate> _nameCandidates(List<_Instance> instances) {

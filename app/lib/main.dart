@@ -13,6 +13,7 @@ import 'app/library_backend.dart';
 import 'app/providers.dart';
 import 'app/shell.dart';
 import 'app/similar_backend.dart';
+import 'app/takeout_backend.dart';
 import 'app/theme.dart';
 import 'features/update/update_notice.dart';
 
@@ -201,6 +202,7 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
             backendProvider.overrideWithValue(CoreBackend(core)),
             libraryBackendProvider.overrideWithValue(CoreLibraryBackend(core)),
             similarBackendProvider.overrideWithValue(CoreSimilarBackend(core)),
+            takeoutBackendProvider.overrideWithValue(CoreTakeoutBackend(core)),
             updateInstallerLauncherProvider.overrideWithValue(installUpdateAndExit),
           ],
           child: _app(AppShell(firstRunGuide: widget.firstRunGuide), navigatorKey: _navigatorKey),

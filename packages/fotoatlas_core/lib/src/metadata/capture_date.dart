@@ -8,6 +8,9 @@ enum DateSource {
   manual('manual'),
   exifOriginal('exif_original'),
   videoInternal('video_internal'),
+
+  /// `.json` do Google Takeout (`photoTakenTime`, em UTC).
+  takeout('takeout'),
   filename('filename'),
   filesystem('filesystem'),
   none('none');
@@ -18,7 +21,7 @@ enum DateSource {
   static DateSource fromSql(String? s) => values.firstWhere((v) => v.sql == s, orElse: () => none);
 
   /// Ordem padrão (a correção manual fica sempre acima de todas).
-  static const defaultPriority = [exifOriginal, videoInternal, filename, filesystem];
+  static const defaultPriority = [exifOriginal, videoInternal, takeout, filename, filesystem];
 }
 
 /// Confiança da hora (spec §8.1).
@@ -97,7 +100,13 @@ abstract final class TimeZones {
 /// fuso ou a data é UTC, o instante exato ([utcMs]).
 class DateCandidate {
   const DateCandidate({required this.source, this.wall, this.utcMs, this.offsetMin, this.dayOnly = false, this.detail})
-    : assert(wall != null || utcMs != null);
+    : assert(wall != null || utcMs != null || source == DateSource.takeout);
+
+  /// Marca sem data: o arquivo está numa pasta do Google Takeout mas não tem
+  /// `.json`; a hora fica "a confirmar" (condição do usuário, ADR 0025).
+  const DateCandidate.takeoutMissing() : this(source: DateSource.takeout, detail: 'sem .json');
+
+  bool get isMarker => wall == null && utcMs == null;
 
   final DateSource source;
   final WallTime? wall;
@@ -249,6 +258,9 @@ class DateStrategy {
   static const conflictTolerance = Duration(minutes: 2);
 
   ResolvedDate? resolve(List<DateCandidate> candidates) {
+    // Marca "sem .json do Takeout": não é data, só deixa a hora a confirmar.
+    final missingJson = candidates.any((c) => c.isMarker);
+    if (missingJson) candidates = [...candidates.where((c) => !c.isMarker)];
     if (candidates.isEmpty) return null;
     int rank(DateSource s) {
       final i = priority.indexOf(s);
@@ -284,6 +296,7 @@ class DateStrategy {
     // 1º de janeiro à meia-noite em ponto: é a data que câmeras e celulares
     // gravam com o relógio zerado. Fica como hora incerta ("Hora a confirmar").
     if (looksLikeClockReset(at.wall)) confidence = DateConfidence.low;
+    if (missingJson && chosen.source != DateSource.manual) confidence = DateConfidence.low;
     return ResolvedDate(
       utcMs: at.utcMs,
       wall: at.wall,
@@ -313,6 +326,8 @@ class DateStrategy {
     // Com fuso (EXIF) ou em UTC (vídeo): instante conhecido.
     DateSource.exifOriginal => c.offsetMin != null ? DateConfidence.high : DateConfidence.medium,
     DateSource.videoInternal => c.utcMs != null || c.offsetMin != null ? DateConfidence.high : DateConfidence.medium,
+    // Instante conhecido, mas o Google Fotos pode ter usado a data do envio.
+    DateSource.takeout => DateConfidence.medium,
     DateSource.filename => c.dayOnly ? DateConfidence.low : DateConfidence.medium,
     DateSource.filesystem => DateConfidence.low,
     DateSource.none => DateConfidence.none,

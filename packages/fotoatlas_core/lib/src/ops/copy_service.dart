@@ -14,6 +14,7 @@ import '../safe_io/source_reader.dart';
 import '../scan/entry_classifier.dart' show extensionOf;
 import '../sources/media_types.dart';
 import '../sources/sources_service.dart';
+import '../takeout/zip_pull.dart';
 import '../util/clock.dart';
 import '../util/crashpoint.dart';
 import '../util/uuid.dart';
@@ -419,10 +420,24 @@ class CopyService {
     void onBytes(int b) => _onItemProgress(op.id, name, b, item.expectedSize, 'copying');
     Uint8List srcSha;
     int bytes;
+    final zip = isPhone ? null : splitZipEntry(item.srcRelPath);
     if (isPhone) {
       final pulled = await _pullFromPhone(op, src, item, part, stop.future, onBytes);
       if (pulled is _Outcome) return pulled;
       (srcSha, bytes) = pulled as (Uint8List, int);
+    } else if (zip != null) {
+      // Extração do Takeout: a entrada sai do zip (aberto só para leitura)
+      // direto para o `.part`, com o CRC do zip conferido; daqui em diante é
+      // a mesma conferência e publicação de qualquer cópia.
+      switch (await pullZipEntry(joinNative(srcRoot!, zip.$1), zip.$2, part)) {
+        case ZipPullDone(:final sha256, bytes: final n):
+          (srcSha, bytes) = (sha256, n);
+          onBytes(n);
+        case ZipPullFailed(:final code, :final message):
+          deleteOwnPart(part);
+          await _transition(op.id, item.id, ItemState.copying, ItemState.failed, set: _err(code, message));
+          return const _Next();
+      }
     } else {
       final request = PumpRequest(
         sourcePath: joinNative(srcRoot!, item.srcRelPath),

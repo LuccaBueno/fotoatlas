@@ -10,6 +10,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart' show Archive, ArchiveFile, ZipEncoder;
 import 'package:path/path.dart' as p;
 
 import 'media_fixtures.dart';
@@ -552,4 +553,77 @@ void generateItemsDemo(String outDir) {
   write('iPhone/IMG_2002.MOV', mp4WithCreationTime(long.toUtc(), durationMs: 60000, salt: 22), long);
   final alone = DateTime(2024, 6, 3, 8);
   write('iPhone/IMG_3001.JPG', photo(alone, 'Apple', 'iPhone 13'), alone);
+}
+
+/// Demonstração do Google Takeout (Fase 9): "Takeout em pasta" e dois zips.
+///
+///     Pasta/Takeout/Google Fotos/Viagem 2023/
+///       IMG_0001.jpg + IMG_0001.jpg.supplemental-metadata.json  → data e local do .json
+///       IMG_0002(1).jpg + IMG_0002.jpg(1).json                   → duplicata "(1)"
+///       IMG_0003.jpg + IMG_0003-editado.jpg + IMG_0003.jpg.json   → a editada usa o .json da original
+///       sem_json.jpg                                              → hora a confirmar
+///       metadados.json                                            → do álbum (ignorado)
+///     Zips/takeout-20240101T000000Z-001.zip  → "Aniversário": 2 fotos e o .json de uma
+///     Zips/takeout-20240101T000000Z-002.zip  → o .json da outra foto
+///
+/// As fotos não têm data no EXIF: a data vem só do `.json` (julho de 2023 e
+/// março de 2024). Nada vem de fotos reais.
+void generateTakeoutDemo(String outDir) {
+  assertAllowedOutput(outDir);
+  final dir = Directory(outDir);
+  if (dir.existsSync() && dir.listSync().isNotEmpty) {
+    throw StateError('A pasta de saída precisa estar vazia: $outDir');
+  }
+  var n = 0;
+  List<int> photo() => jpegWithExif(ExifSpec(make: 'Google', model: 'Pixel 6', uniqueId: 'takeout-${n++}', color: n));
+  List<int> json(String title, DateTime utc, {double? lat, double? lon}) => utf8.encode(
+    jsonEncode({
+      'title': title,
+      'photoTakenTime': {'timestamp': '${utc.millisecondsSinceEpoch ~/ 1000}'},
+      'geoData': {'latitude': lat ?? 0.0, 'longitude': lon ?? 0.0, 'altitude': 0.0},
+      'url': 'https://photos.google.com/exemplo-sintetico',
+    }),
+  );
+  void write(String rel, List<int> bytes) {
+    final f = File(p.join(outDir, rel));
+    f.parent.createSync(recursive: true);
+    f.writeAsBytesSync(bytes);
+  }
+
+  const album = 'Pasta/Takeout/Google Fotos/Viagem 2023';
+  write('$album/IMG_0001.jpg', photo());
+  write(
+    '$album/IMG_0001.jpg.supplemental-metadata.json',
+    json('IMG_0001.jpg', DateTime.utc(2023, 7, 22, 13, 5), lat: -22.95, lon: -43.21),
+  );
+  write('$album/IMG_0002(1).jpg', photo());
+  write('$album/IMG_0002.jpg(1).json', json('IMG_0002.jpg', DateTime.utc(2023, 7, 22, 14, 30)));
+  final original = photo();
+  write('$album/IMG_0003.jpg', original);
+  write('$album/IMG_0003-editado.jpg', photo());
+  write('$album/IMG_0003.jpg.json', json('IMG_0003.jpg', DateTime.utc(2023, 7, 23, 9)));
+  write('$album/sem_json.jpg', photo());
+  write('$album/metadados.json', utf8.encode('{"title": "Viagem 2023", "description": ""}'));
+
+  List<int> zip(Map<String, List<int>> files) {
+    final a = Archive();
+    for (final MapEntry(:key, :value) in files.entries) {
+      a.addFile(ArchiveFile(key, value.length, value));
+    }
+    return ZipEncoder().encodeBytes(a);
+  }
+
+  const party = 'Takeout/Google Fotos/Aniversário';
+  write(
+    'Zips/takeout-20240101T000000Z-001.zip',
+    zip({
+      '$party/IMG_0101.jpg': photo(),
+      '$party/IMG_0101.jpg.json': json('IMG_0101.jpg', DateTime.utc(2024, 3, 9, 21, 15)),
+      '$party/IMG_0102.jpg': photo(),
+    }),
+  );
+  write(
+    'Zips/takeout-20240101T000000Z-002.zip',
+    zip({'$party/IMG_0102.jpg.json': json('IMG_0102.jpg', DateTime.utc(2024, 3, 9, 21, 40))}),
+  );
 }

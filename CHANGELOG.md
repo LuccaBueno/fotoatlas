@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.3.0-beta.3] — 2026-11-18 (pré-lançamento)
+
+### Adicionado
+- **Google Takeout em pasta:** os `.json` que acompanham as fotos do Google Fotos dão a data e o local de cada foto, **só no catálogo** (nenhuma foto é alterada). Reconhece os nomes do Takeout: `.supplemental-metadata.json`, nomes cortados, duplicatas `(1)` e fotos editadas (`-editado`), além do título de dentro do `.json`. A hora aparece como **do Google Fotos** (provável), e o local entra só quando a foto não tem o próprio. Foto ou vídeo numa pasta do Takeout **sem o seu `.json`** fica com **hora a confirmar**. `.json` que chegam depois (outra parte do Takeout) atualizam as datas sem ler as fotos de novo. ADR 0025.
+- **Extrair zip do Google Takeout…** (em **Mais opções** do dispositivo com os `takeout-….zip`): prévia com quantas fotos, vídeos e `.json` vão sair, e extração para uma pasta escolhida pela cópia segura (diário, CRC do zip e SHA-256 conferidos, nada sobrescrito). Os zips **só são lidos** e nunca são apagados; a mesma entrada repetida em duas partes sai uma vez só.
+- Catálogo na versão 10 (cópia `pre-migracao-v9-<data>.db` antes de migrar): tabela nova dos `.json` lidos e a origem de data "Google Fotos". A tabela de metadados é refeita uma vez com os mesmos dados (única exceção às migrações só aditivas; ADR 0025).
+- Demonstração: pasta "Google Takeout" (pasta extraída e dois zips) no `run-app.ps1 -DemoPersistente`.
+
 ## [1.3.0-beta.2] — 2026-11-18 (pré-lançamento)
 
 ### Adicionado

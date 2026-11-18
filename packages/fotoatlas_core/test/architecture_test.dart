@@ -84,6 +84,10 @@ const _allowed = {
   // A cópia segura usa só os wrappers acima.
   ('ops/copy_pump.dart', 'PartWriter'),
   ('ops/copy_pump.dart', '.create('), // PartWriter.create
+  // Extração do Takeout: a entrada do zip vai para um `.part` novo (CREATE_NEW),
+  // o mesmo passo da cópia; o zip só é lido (ADR 0025).
+  ('takeout/zip_pull.dart', 'PartWriter'),
+  ('takeout/zip_pull.dart', '.create('), // PartWriter.create
   ('ops/copy_service.dart', 'moveNoReplace'),
   ('ops/copy_service.dart', 'deleteOwnPart'),
   ('ops/copy_service.dart', 'ensureDirectory'),

@@ -302,16 +302,19 @@ class _Content extends ConsumerWidget {
             row('Codecs', [detail.videoCodec, detail.audioCodec].nonNulls.join(' / ').ifEmptyNull()),
             row('Software', detail.software),
             for (final c in detail.candidates)
-              row(
-                'Data (${dateSourceLabel(c.source)})',
-                [
-                  if (c.wall != null) formatWallDateTime(c.wall!),
-                  if (c.wall == null && c.utcMs != null)
-                    '${formatWallDateTime(DateTime.fromMillisecondsSinceEpoch(c.utcMs!, isUtc: true))} UTC',
-                  if (c.offsetMin != null) formatOffset(c.offsetMin),
-                  if (c.dayOnly) '(só o dia)',
-                ].join(' '),
-              ),
+              if (c.isMarker)
+                row('Google Fotos', 'Está numa pasta do Takeout sem o .json dela: a hora fica a confirmar.')
+              else
+                row(
+                  'Data (${dateSourceLabel(c.source)})',
+                  [
+                    if (c.wall != null) formatWallDateTime(c.wall!),
+                    if (c.wall == null && c.utcMs != null)
+                      '${formatWallDateTime(DateTime.fromMillisecondsSinceEpoch(c.utcMs!, isUtc: true))} UTC',
+                    if (c.offsetMin != null) formatOffset(c.offsetMin),
+                    if (c.dayOnly) '(só o dia)',
+                  ].join(' '),
+                ),
           ],
         ),
       ],

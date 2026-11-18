@@ -144,7 +144,7 @@ CREATE TABLE media_metadata (
   capture_local     TEXT,
   tz_offset_min     INTEGER,
   date_source       TEXT CHECK (date_source IN
-                      ('manual','exif_original','video_internal','filename','filesystem','none')),
+                      ('manual','exif_original','video_internal','takeout','filename','filesystem','none')),
   date_confidence   TEXT CHECK (date_confidence IN ('high','medium','low','none')),
   date_conflict     BOOLEAN NOT NULL DEFAULT 0,
   candidates_json   TEXT,
@@ -428,3 +428,18 @@ CREATE TABLE media_item_members (
   PRIMARY KEY (item_id, content_id)
 ) AS MediaItemMemberRow;
 CREATE INDEX ix_mim_content ON media_item_members(content_id);
+
+-- v10 (Fase 9): `.json` do Google Takeout lidos em modo leitura (ADR 0025).
+-- Datas e locais ficam só aqui e nas candidatas de data: o arquivo nunca muda.
+-- Relido se o tamanho ou a data do `.json` mudar.
+CREATE TABLE takeout_json (
+  instance_id   INTEGER NOT NULL PRIMARY KEY REFERENCES file_instances(id) ON DELETE CASCADE,
+  size_bytes    INTEGER NOT NULL,
+  mtime         INTEGER,
+  valid         INTEGER NOT NULL,   -- 1 = `.json` de foto do Takeout
+  title         TEXT,
+  taken_utc_ms  INTEGER,
+  lat           REAL,
+  lon           REAL,
+  read_at       INTEGER NOT NULL
+) AS TakeoutJsonRow;
