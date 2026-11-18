@@ -56,6 +56,7 @@ class PlannedMove {
     this.renamedForConflict = false,
     this.askConflict = false,
     this.sidecarOf,
+    this.groupOf,
     this.lowConfidenceDate = false,
     this.toConfirm = false,
   });
@@ -80,6 +81,10 @@ class PlannedMove {
 
   /// Caminho atual da foto/vídeo que este acompanhante segue.
   final String? sidecarOf;
+
+  /// Caminho atual da foto principal do item agrupado (RAW+JPEG, Live Photo)
+  /// que este arquivo acompanha.
+  final String? groupOf;
   final bool lowConfidenceDate;
 
   /// Vai para a pasta de "Hora a confirmar" (sem data ou fora de momentos).
@@ -204,8 +209,11 @@ class ReorgPreview {
   int get renamedForConflict => moves.where((m) => m.renamedForConflict).length;
   int get askConflicts => moves.where((m) => m.askConflict).length;
   int get sanitized => moves.where((m) => m.originalName != null).length;
-  int get toConfirm => moves.where((m) => m.toConfirm && m.sidecarOf == null).length;
+  int get toConfirm => moves.where((m) => m.toConfirm && m.sidecarOf == null && m.groupOf == null).length;
   int get lowConfidence => moves.where((m) => m.lowConfidenceDate && m.sidecarOf == null).length;
+
+  /// RAW e vídeos de Live Photo que vão junto com a foto principal.
+  int get grouped => moves.where((m) => m.groupOf != null).length;
   int get sidecars => moves.where((m) => m.sidecarOf != null).length;
 }
 

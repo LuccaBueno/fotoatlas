@@ -396,6 +396,13 @@ class ReorgPreviewView extends StatelessWidget {
             '${plural(p.sidecars, 'arquivo de edição (.xmp/.aae) vai', 'arquivos de edição (.xmp/.aae) vão')} junto '
             'com a foto.',
           ),
+        if (p.grouped > 0)
+          line(
+            Icons.layers_outlined,
+            '${plural(p.grouped, 'arquivo RAW ou vídeo de Live Photo vai', 'arquivos RAW ou vídeos de Live Photo vão')} '
+            'junto com a foto de que ${p.grouped == 1 ? 'faz' : 'fazem'} parte, para a mesma pasta e com o mesmo nome.',
+            key: const ValueKey('reorg-grouped'),
+          ),
         if (p.renamedForConflict > 0)
           line(
             Icons.drive_file_rename_outline,

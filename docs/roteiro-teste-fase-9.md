@@ -8,13 +8,13 @@ Comandos para o Windows PowerShell, com caminhos completos. Tudo usa **dados de 
 | --- | --- | --- |
 | 0. Pré-lançamentos (aviso e "Atualizar agora" só com versões estáveis) | `1.3.0-beta.1` | pronto para testar |
 | a. Fotos parecidas | `1.3.0-beta.1` | pronto para testar |
-| b. RAW+JPEG e Live Photos agrupados | `1.3.0-beta.2` | não iniciado |
+| b. RAW+JPEG e Live Photos agrupados | `1.3.0-beta.2` | pronto para testar |
 | c. Importação do Google Fotos (Takeout) | `1.3.0-beta.3` | não iniciado |
 | d. Mapa | `1.3.0-beta.4` | não iniciado |
 
 ## Antes de começar
 
-**Sobre o catálogo de verdade.** O FotoAtlas instalado (1.2.1) usa o catálogo em `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas`. As versões 1.3.0-beta acrescentam tabelas ao catálogo; um catálogo aberto por uma beta **não abre mais na 1.2.1** (ela recusa catálogo mais novo, sem modificá-lo). Antes de mudar, o FotoAtlas guarda uma cópia conferida em `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas\backups\pre-migracao-v7-<data>.db`. Por isso, este roteiro testa tudo com o catálogo da demonstração e **nunca** abre uma beta com o catálogo de verdade.
+**Sobre o catálogo de verdade.** O FotoAtlas instalado (1.2.1) usa o catálogo em `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas`. As versões 1.3.0-beta acrescentam tabelas ao catálogo; um catálogo aberto por uma beta **não abre mais na 1.2.1** (ela recusa catálogo mais novo, sem modificá-lo). Antes de mudar, o FotoAtlas guarda uma cópia conferida em `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas\backups\pre-migracao-v7-<data>.db` (ou `v8`, conforme a versão de onde vem). Por isso, este roteiro testa tudo com o catálogo da demonstração e **nunca** abre uma beta com o catálogo de verdade.
 
 **Pasta da demonstração:** `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente`. Para começar do zero, com o FotoAtlas fechado:
 ```powershell
@@ -108,9 +108,49 @@ Get-ChildItem -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_
 
 **Limitações conhecidas:** recortes grandes, fotos giradas ou espelhadas não são reconhecidas como parecidas. Fotos que estão só no celular entram na análise depois que a miniatura delas aparece na Biblioteca (a análise nunca lê do celular sozinha).
 
-## b. RAW+JPEG e Live Photos agrupados
+## b. RAW+JPEG e Live Photos agrupados (1.3.0-beta.2)
 
-_Não iniciado._
+Agrupar é **só visual, no catálogo**: nenhum arquivo muda. Copiar e reorganizar um item agrupado levam todos os arquivos dele juntos (a prévia mostra); a conferência, a comparação, o backup e a verificação continuam arquivo por arquivo.
+
+A pasta de demonstração `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Fotos agrupadas` é gerada sozinha na primeira abertura com `-DemoPersistente` (se você já abriu a demonstração antes desta versão, ela é criada na próxima abertura). As fotos são sintéticas, e o "RAW" é simulado (um arquivo `.DNG` com o conteúdo de um JPEG):
+
+| Pasta | Arquivos | O que deve acontecer |
+| --- | --- | --- |
+| `Câmera` | `IMG_1001.JPG` + `IMG_1001.DNG` | um item **RAW+JPEG** |
+| `Câmera` | `IMG_1002.JPG` + `IMG_1002.DNG` | um item **RAW+JPEG** |
+| `iPhone` | `IMG_2001.JPG` + `IMG_2001.MOV` (vídeo de 2,5 s) | um item **Live** |
+| `iPhone` | `IMG_2002.JPG` + `IMG_2002.MOV` (vídeo de 1 min) | dois itens separados (vídeo longo não é Live Photo) |
+| `iPhone` | `IMG_3001.JPG` | sozinha |
+
+**b.1. Cadastrar.** Abra a demonstração (comando em "Antes de começar", com `v1.3.0-beta.2`). Em **Dispositivos › Adicionar dispositivo › Escolher uma pasta…**, escolha `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Fotos agrupadas` e clique em **Escanear › Tudo**. Espere a conferência e a leitura das datas terminarem (Início).
+
+**b.2. Um item só.** Abra a **Biblioteca** e filtre pelo dispositivo "Fotos agrupadas". Devem aparecer **6 itens** (não 9): os dois JPEG da câmera com o selo **RAW+JPEG**, o `IMG_2001.JPG` com o selo **Live**, e sozinhos o `IMG_2002.JPG`, o vídeo `IMG_2002.MOV` e o `IMG_3001.JPG`. Passe o mouse sobre um selo: aparece "Foto e RAW tirados juntos (2 arquivos). Copiar ou reorganizar leva todos juntos."
+
+**b.3. Detalhes.** Clique no `IMG_1001.JPG`. No painel à direita, o cartão **RAW+JPEG: 2 arquivos** lista `IMG_1001.JPG (foto)` e `IMG_1001.DNG (RAW)`.
+
+**b.4. Filtro por tipo mostra cada arquivo.** Em **Tipo**, escolha **RAW**: aparecem os dois `.DNG` sozinhos. Tire o filtro.
+
+**b.5. Copiar leva o grupo.** Crie uma pasta vazia para ser o destino:
+```powershell
+New-Item -ItemType Directory -Path 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Destino agrupadas'
+```
+Cadastre-a como pasta (**Dispositivos › Adicionar dispositivo › Escolher uma pasta…**) e escaneie. Na Biblioteca, marque **só** o `IMG_1001.JPG` e o `IMG_2001.JPG` e clique em **Copiar para…**, com destino "Destino agrupadas". A prévia diz "Vai copiar 4 arquivos" e "2 arquivos vão junto com a foto de que fazem parte (RAW ou vídeo da Live Photo), para a mesma pasta. Nenhum deles estava marcado." Confirme e espere terminar em **Tarefas**. Confira que os 4 arquivos estão lado a lado:
+```powershell
+Get-ChildItem -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Destino agrupadas' -Recurse -File | Select-Object FullName, Length | Format-Table -AutoSize
+```
+
+**b.6. Reorganizar leva o grupo.** Em **Dispositivos**, no cartão "Fotos agrupadas", abra **Reorganizar…** com qualquer modelo por data. A prévia mostra "3 arquivos RAW ou vídeos de Live Photo vão junto com a foto de que fazem parte, para a mesma pasta e com o mesmo nome", e na árvore "depois" cada `.DNG`/`.MOV` está na mesma pasta do seu `.JPG`. Pode **Cancelar** (ou reorganizar e depois usar **Desfazer** em **Tarefas**).
+
+**b.7. Desagrupar.** Nos detalhes do `IMG_1002.JPG`, clique em **Desagrupar**. Aparece "Desagrupado: 2 arquivos aparecem sozinhos (só no catálogo)", e a Biblioteca passa a mostrar o `IMG_1002.DNG` separado. Feche e abra o FotoAtlas: continua separado (o grupo não volta sozinho).
+
+**b.8. Agrupar à mão.** Clique no `IMG_1002.JPG` (isso já o marca) e marque também a caixinha do `IMG_1002.DNG`. Na barra da seleção, clique em **Agrupar**: os dois voltam a ser um item, com o selo **Agrupado**.
+
+**b.9. Nada foi alterado.** A pasta "Fotos agrupadas" continua com os mesmos 9 arquivos, com as datas de junho de 2024 (se você não reorganizou no b.6):
+```powershell
+Get-ChildItem -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Fotos agrupadas' -Recurse -File | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize
+```
+
+**Limitações conhecidas:** só agrupa arquivos da mesma pasta. A Live Photo é reconhecida pelo identificador da Apple (fotos e vídeos de iPhone de verdade) ou pelo mesmo nome com um vídeo de até 5 s. Verificar um item agrupado pela Biblioteca verifica só a foto principal; a verificação do disco inteiro lê todos os arquivos.
 
 ## c. Importação do Google Fotos (Takeout)
 

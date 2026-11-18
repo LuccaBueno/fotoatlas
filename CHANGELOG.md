@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.3.0-beta.2] — 2026-11-18 (pré-lançamento)
+
+### Adicionado
+- **RAW+JPEG e Live Photos como um item só** na Biblioteca, com o selo **RAW+JPEG**, **Live** ou **Agrupado**. O FotoAtlas reconhece, na mesma pasta, a foto e o RAW com o mesmo nome, e a Live Photo pelo identificador da Apple (mesmo com nomes diferentes) ou pelo mesmo nome com um vídeo de até 5 s. É **só visual, no catálogo**: nenhum arquivo muda, e a conferência, a comparação, o backup e a verificação continuam arquivo por arquivo. ADR 0024.
+- **Copiar** um item agrupado leva todos os arquivos dele para a mesma pasta, com o mesmo sufixo se o nome já existir no destino. A prévia diz quantos vão junto e quantos não estavam marcados. **Reorganizar** leva o RAW e o vídeo junto com a foto, para a mesma pasta e com o mesmo nome final. A restauração de um arquivo danificado continua levando só ele.
+- Detalhes do item com a lista de arquivos e **Desagrupar** (o grupo não volta sozinho). **Agrupar** os itens marcados, pela barra da seleção.
+- A situação de backup de um item agrupado é a pior entre os arquivos dele: um RAW sem backup não fica escondido atrás de um JPEG com backup. Filtros por tipo, extensão e situação de backup mostram cada arquivo sozinho.
+- Catálogo na versão 9 (só acréscimos; cópia `pre-migracao-v8-<data>.db` antes de migrar). O ExifTool passa a ler também o `ContentIdentifier` (só leitura).
+- Demonstração: pasta "Fotos agrupadas" no `run-app.ps1 -DemoPersistente`. CLI: `items detect | list | split | group`.
+
 ## [1.3.0-beta.1] — 2026-11-15 (pré-lançamento)
 
 ### Adicionado

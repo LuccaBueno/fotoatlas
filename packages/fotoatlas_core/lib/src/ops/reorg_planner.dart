@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../catalog/catalog_database.dart';
+import '../items/media_items_service.dart';
 import '../platform/win32/kernel32.dart' show fileAttributeDirectory;
 import '../platform/win_fs.dart';
 import '../safe_io/dest_writer.dart' show tempDirName;
@@ -15,10 +16,13 @@ import 'template_data.dart';
 /// Monta a prévia da reorganização (spec §12): só lê o catálogo e atributos
 /// do disco (para achar nomes ocupados e pastas que já existem).
 class ReorgPlanner {
-  ReorgPlanner(this.db, this.sources);
+  ReorgPlanner(this.db, this.sources, {this.mediaItems});
 
   final CatalogDatabase db;
   final SourcesService sources;
+
+  /// Itens lógicos (RAW+JPEG, Live Photo); `null` = cada arquivo sozinho.
+  final MediaItemsService? mediaItems;
 
   /// Quantos arquivos cada pasta da árvore lista (as contagens são completas).
   static const filesPerNode = 200;
@@ -105,14 +109,66 @@ class ReorgPlanner {
       (sidecarsOf[owner.instanceId] ??= []).add((s, full != null));
     }
 
+    // Item lógico (RAW+JPEG, Live Photo): o RAW e o vídeo seguem a foto
+    // principal da mesma pasta (mesma pasta nova, mesmo nome base).
+    final secondary = mediaItems == null ? const <int, int>{} : await mediaItems!.secondaryToPrimary();
+    final byDirContent = <String, _Row>{};
+    for (final r in principals) {
+      if (r.contentId != null) byDirContent.putIfAbsent('${r.dir.toLowerCase()}|${r.contentId}', () => r);
+    }
+    final membersOf = <int, List<_Row>>{};
+    final leaders = <_Row>[];
+    for (final r in principals) {
+      final p = r.contentId == null ? null : secondary[r.contentId];
+      final owner = p == null ? null : byDirContent['${r.dir.toLowerCase()}|$p'];
+      if (owner != null && owner.instanceId != r.instanceId) {
+        (membersOf[owner.instanceId] ??= []).add(r);
+      } else {
+        leaders.add(r);
+      }
+    }
+
     final moves = <PlannedMove>[];
     var inPlace = 0, notReady = 0;
-    principals.sort((a, b) => a.relPath.toLowerCase().compareTo(b.relPath.toLowerCase()));
-    for (final r in principals) {
-      final followers = sidecarsOf[r.instanceId] ?? const [];
+
+    /// Acompanhantes (.xmp/.aae) seguem o nome final do dono.
+    void moveSidecars(_Row owner, String dir, String newName, bool toConfirm) {
+      for (final (s, withExt) in sidecarsOf[owner.instanceId] ?? const <(_Row, bool)>[]) {
+        final ext = s.name.substring(s.name.lastIndexOf('.'));
+        final follower = sanitizeName('${withExt ? newName : _stem(newName)}$ext');
+        var sTarget = dir.isEmpty ? follower : '$dir/$follower';
+        var sRenamed = false;
+        if (sTarget.toLowerCase() == s.relPath.toLowerCase()) continue;
+        if (taken(sTarget)) {
+          sTarget = freeName(dir, follower, 1);
+          sRenamed = true;
+        }
+        used.add(sTarget.toLowerCase());
+        moves.add(
+          PlannedMove(
+            instanceId: s.instanceId,
+            contentId: s.contentId,
+            srcRelPath: s.relPath,
+            dstRelPath: sTarget,
+            size: s.size,
+            mtime: s.mtime,
+            originalName: follower == s.name ? null : s.name,
+            renamedForConflict: sRenamed,
+            sidecarOf: owner.relPath,
+            toConfirm: toConfirm,
+          ),
+        );
+      }
+    }
+
+    int followersOf(_Row r) => (sidecarsOf[r.instanceId]?.length ?? 0);
+
+    leaders.sort((a, b) => a.relPath.toLowerCase().compareTo(b.relPath.toLowerCase()));
+    for (final r in leaders) {
+      final members = membersOf[r.instanceId] ?? const <_Row>[];
       if (usesDate && !r.metadataRead) {
-        notReady++;
-        otherFiles += followers.length;
+        notReady += 1 + members.length;
+        otherFiles += followersOf(r) + members.fold(0, (s, m) => s + followersOf(m));
         continue;
       }
       final vars = templateVarsFrom(
@@ -129,7 +185,8 @@ class ReorgPlanner {
       final safe = sanitizeName(r.name);
       final wanted = dir.isEmpty ? safe : '$dir/$safe';
       if (wanted.toLowerCase() == r.relPath.toLowerCase()) {
-        inPlace++;
+        // O grupo está na mesma pasta: fica todo onde está.
+        inPlace += 1 + members.length;
         continue;
       }
       var target = wanted;
@@ -161,31 +218,44 @@ class ReorgPlanner {
       );
       // Acompanhantes seguem o nome final da foto/vídeo.
       final newName = target.split('/').last;
-      for (final (s, withExt) in followers) {
-        final ext = s.name.substring(s.name.lastIndexOf('.'));
-        final follower = sanitizeName('${withExt ? newName : _stem(newName)}$ext');
-        var sTarget = dir.isEmpty ? follower : '$dir/$follower';
-        var sRenamed = false;
-        if (sTarget.toLowerCase() == s.relPath.toLowerCase()) continue;
-        if (taken(sTarget)) {
-          sTarget = freeName(dir, follower, 1);
-          sRenamed = true;
+      moveSidecars(r, dir, newName, toConfirm);
+      // Os outros arquivos do item: mesma pasta; com o mesmo nome base da
+      // foto, seguem o nome final dela (IMG_1_1.JPG → IMG_1_1.CR2).
+      for (final m in members) {
+        final ext = m.name.lastIndexOf('.') <= 0 ? '' : m.name.substring(m.name.lastIndexOf('.'));
+        final sameStem = _stem(m.name).toLowerCase() == _stem(r.name).toLowerCase();
+        final name = sanitizeName(sameStem ? '${_stem(newName)}$ext' : m.name);
+        var mTarget = dir.isEmpty ? name : '$dir/$name';
+        if (mTarget.toLowerCase() == m.relPath.toLowerCase()) {
+          inPlace++;
+          continue;
         }
-        used.add(sTarget.toLowerCase());
+        var mRenamed = false, mAsk = false;
+        if (taken(mTarget)) {
+          if (request.conflict == ConflictPolicy.ask) {
+            mAsk = true;
+          } else {
+            mTarget = freeName(dir, name, 1);
+            mRenamed = true;
+          }
+        }
+        used.add(mTarget.toLowerCase());
         moves.add(
           PlannedMove(
-            instanceId: s.instanceId,
-            contentId: s.contentId,
-            srcRelPath: s.relPath,
-            dstRelPath: sTarget,
-            size: s.size,
-            mtime: s.mtime,
-            originalName: follower == s.name ? null : s.name,
-            renamedForConflict: sRenamed,
-            sidecarOf: r.relPath,
+            instanceId: m.instanceId,
+            contentId: m.contentId,
+            srcRelPath: m.relPath,
+            dstRelPath: mTarget,
+            size: m.size,
+            mtime: m.mtime,
+            originalName: sanitizeName(m.name) == m.name ? null : m.name,
+            renamedForConflict: mRenamed,
+            askConflict: mAsk,
+            groupOf: r.relPath,
             toConfirm: toConfirm,
           ),
         );
+        moveSidecars(m, dir, mTarget.split('/').last, toConfirm);
       }
     }
 

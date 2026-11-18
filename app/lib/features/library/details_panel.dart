@@ -238,6 +238,10 @@ class _Content extends ConsumerWidget {
             subtitle: Text(plural(moment.itemCount, 'item', 'itens')),
           ),
         ],
+        if (detail.group case final group?) ...[
+          const SizedBox(height: 8),
+          _GroupCard(group: group, current: item.contentId),
+        ],
         const SizedBox(height: 8),
         Text('Onde está', style: theme.textTheme.titleSmall),
         const SizedBox(height: 4),
@@ -311,6 +315,78 @@ class _Content extends ConsumerWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Os arquivos de um item agrupado (RAW+JPEG, Live Photo) e "Desagrupar".
+class _GroupCard extends ConsumerWidget {
+  const _GroupCard({required this.group, required this.current});
+  final ItemGroup group;
+  final int current;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return Card(
+      key: const ValueKey('detail-group'),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(group.kind == MediaItemKind.livePhoto ? Icons.motion_photos_on_outlined : Icons.layers_outlined),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${groupKindShort(group.kind)}: ${plural(group.files.length, 'arquivo', 'arquivos')}',
+                    style: theme.textTheme.titleSmall,
+                  ),
+                ),
+              ],
+            ),
+            for (final (id, role, name) in group.files)
+              Padding(
+                padding: const EdgeInsets.only(left: 32, top: 2),
+                child: Text(
+                  '$name (${groupRoleLabel(role)})',
+                  style: id == current ? theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold) : null,
+                ),
+              ),
+            const SizedBox(height: 6),
+            Text(
+              'Aparecem como um item só. Copiar ou reorganizar leva todos juntos; a conferência e o backup continuam '
+              'arquivo por arquivo.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 6),
+            Tooltip(
+              message: 'Mostra cada arquivo sozinho na Biblioteca. Só muda o catálogo: nenhum arquivo é tocado.',
+              child: OutlinedButton.icon(
+                key: const ValueKey('split-item'),
+                onPressed: () async {
+                  await ref.read(libraryBackendProvider).splitItem(group.id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Desagrupado: ${plural(group.files.length, 'arquivo aparece', 'arquivos aparecem')} '
+                          'sozinho${group.files.length == 1 ? '' : 's'} (só no catálogo).',
+                        ),
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.call_split),
+                label: const Text('Desagrupar'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -444,8 +444,8 @@ class MetadataService {
           INSERT INTO media_metadata (content_id, capture_utc_ms, capture_local, tz_offset_min, date_source,
             date_confidence, date_conflict, candidates_json, make, model, lens, iso, aperture, exposure_s, focal_mm,
             width, height, orientation, lat, lon, duration_ms, fps, video_codec, audio_codec, bitrate, software,
-            extractor, extracted_at, body_serial, meta_status, meta_error)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            extractor, extracted_at, body_serial, meta_status, meta_error, content_identifier)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(content_id) DO UPDATE SET capture_utc_ms = excluded.capture_utc_ms,
             capture_local = excluded.capture_local, tz_offset_min = excluded.tz_offset_min,
             date_source = excluded.date_source, date_confidence = excluded.date_confidence,
@@ -456,7 +456,8 @@ class MetadataService {
             lat = excluded.lat, lon = excluded.lon, duration_ms = excluded.duration_ms, fps = excluded.fps,
             video_codec = excluded.video_codec, audio_codec = excluded.audio_codec, bitrate = excluded.bitrate,
             software = excluded.software, extractor = excluded.extractor, extracted_at = excluded.extracted_at,
-            body_serial = excluded.body_serial, meta_status = excluded.meta_status, meta_error = excluded.meta_error
+            body_serial = excluded.body_serial, meta_status = excluded.meta_status, meta_error = excluded.meta_error,
+            content_identifier = excluded.content_identifier
           ''',
           [
             t.contentId,
@@ -492,6 +493,7 @@ class MetadataService {
             meta?.serial,
             status,
             res?.error ?? notes[t.contentId],
+            meta?.contentIdentifier,
           ],
         );
         written.add(t.contentId);

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:fotoatlas_core/src/metadata/capture_date.dart';
 import 'package:fotoatlas_core/src/metadata/exiftool.dart';
 import 'package:fotoatlas_core/src/metadata/external_tools.dart';
+import 'package:fotoatlas_core/src/metadata/extracted.dart';
 import 'package:fotoatlas_fixtures/media_fixtures.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
@@ -18,6 +19,12 @@ void main() {
       expect(ExifTool.forbiddenOptions.map((o) => o.toLowerCase()), isNot(contains(a.toLowerCase())));
     }
     expect(Ffprobe.args, isNot(contains('-y')));
+  });
+
+  test('identificador da Live Photo: na foto (Apple) e no vídeo (Keys)', () {
+    expect(ExtractedMetadata.fromExifTool({'Apple:ContentIdentifier': 'A1B2-C3'}).contentIdentifier, 'A1B2-C3');
+    expect(ExtractedMetadata.fromExifTool({'Keys:ContentIdentifier': 'A1B2-C3'}).contentIdentifier, 'A1B2-C3');
+    expect(ExtractedMetadata.fromExifTool(const {}).contentIdentifier, isNull);
   });
 
   final tools = ExternalTools.locate();

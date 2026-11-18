@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 
 import '../catalog/catalog_database.dart';
 import '../coverage/coverage_service.dart';
+import '../items/media_items_service.dart';
 import '../metadata/capture_date.dart';
 import '../metadata/effective_dates.dart';
 import '../sources/media_types.dart';
@@ -68,7 +69,15 @@ class LibraryItem {
     this.sha256Hex,
     this.places = const [],
     this.provisional = false,
+    this.groupKind,
+    this.groupFiles = 0,
   });
+
+  /// Item agrupado (RAW+JPEG, Live Photo) de que este é a foto principal.
+  final MediaItemKind? groupKind;
+
+  /// Arquivos do item agrupado (0 = sozinho).
+  final int groupFiles;
 
   /// ID do conteúdo; negativo num item [provisional] (`-id` do arquivo).
   final int contentId;
@@ -152,10 +161,14 @@ class LibraryItemDetail {
     this.software,
     this.extractor,
     this.offsetMin,
+    this.group,
   });
 
   final LibraryItem item;
   final List<ItemLocation> locations;
+
+  /// O item agrupado a que este arquivo pertence (`null` = sozinho).
+  final ItemGroup? group;
 
   /// Todas as datas candidatas encontradas (com a origem).
   final List<DateCandidate> candidates;
@@ -180,6 +193,17 @@ class LibraryItemDetail {
   final String? software;
   final String? extractor;
   final int? offsetMin;
+}
+
+/// Um item agrupado, para o painel de detalhes (desagrupar).
+class ItemGroup {
+  const ItemGroup({required this.id, required this.kind, required this.primaryContentId, required this.files});
+  final int id;
+  final MediaItemKind kind;
+  final int primaryContentId;
+
+  /// (conteúdo, papel `photo`/`raw`/`video`, nome de uma cópia).
+  final List<(int, String, String)> files;
 }
 
 /// Contagens para os chips de filtro.
@@ -247,10 +271,32 @@ class LibraryService {
       "JOIN sources xs ON xs.id = x.source_id AND xs.forgotten_at IS NULL "
       "WHERE x.availability = 'present' AND x.content_id IS NOT NULL)";
 
+  /// Arquivos que acompanham a foto principal de um item agrupado (RAW,
+  /// vídeo da Live Photo): não aparecem sozinhos na grade.
+  static const _secondarySql =
+      'SELECT m.content_id FROM media_item_members m JOIN media_items i ON i.id = m.item_id '
+      'WHERE i.split_at IS NULL AND m.content_id <> i.primary_content_id';
+
+  static const _grouped = '$_base AND c.id NOT IN ($_secondarySql)';
+
+  /// Filtros por arquivo (tipo, extensão, backup) mostram cada arquivo
+  /// sozinho; os outros mostram o item agrupado uma vez só.
+  static String _from(LibraryFilter f) =>
+      f.conditions.any((c) => const {FilterKind.types, FilterKind.extensions, FilterKind.backup}.contains(c.kind))
+      ? _base
+      : _grouped;
+
   /// Avisa quando algo que muda a Biblioteca foi gravado.
   Stream<void> get changes => db
       .tableUpdates(
-        TableUpdateQuery.onAllTables([db.mediaMetadata, db.contents, db.fileInstances, db.moments, db.sources]),
+        TableUpdateQuery.onAllTables([
+          db.mediaMetadata,
+          db.contents,
+          db.fileInstances,
+          db.moments,
+          db.sources,
+          db.mediaItems,
+        ]),
       )
       .map((_) {});
 
@@ -289,7 +335,7 @@ class LibraryService {
           "SELECT group_concat(c.id || ',' || COALESCE(mm.eff_utc_ms, '') || ',' || "
           "COALESCE(replace(mm.eff_day, '-', ''), '') || ',' || COALESCE(mm.moment_id, ''), ';' "
           'ORDER BY (mm.eff_utc_ms IS NULL), mm.eff_utc_ms $dir, c.id $dir) AS idx, COUNT(*) AS n '
-          '$_base AND $where',
+          '${_from(filter)} AND $where',
           variables: vars,
         )
         .getSingle();
@@ -464,9 +510,8 @@ class LibraryService {
   /// Só a contagem (para os chips e o Início).
   Future<int> count(LibraryFilter filter) async {
     final (where, vars) = filter.toSql(simpleCopies: await _sourcesDisjoint());
-    return (await db.customSelect('SELECT COUNT(*) AS n $_base AND $where', variables: vars).getSingle()).read<int>(
-      'n',
-    );
+    return (await db.customSelect('SELECT COUNT(*) AS n ${_from(filter)} AND $where', variables: vars).getSingle())
+        .read<int>('n');
   }
 
   /// Detalhes de uma página de itens, na ordem de [ids].
@@ -502,23 +547,68 @@ class LibraryService {
           LEFT JOIN (${LibraryFilter.backupStatesSql(onlyIds: list)}) b ON b.content_id = c.id
           WHERE c.id IN ($list)
           ''').get();
-    final byId = {for (final r in rows) r.read<int>('id'): _item(r)};
+    final groups = await _groupsOf(list);
+    final byId = {for (final r in rows) r.read<int>('id'): _item(r, groups[r.read<int>('id')])};
     return [for (final id in ids) ?byId[id]];
   }
 
-  static LibraryItem _item(QueryRow r) => LibraryItem(
+  /// Itens agrupados cuja foto principal está em [list]: tipo, quantos
+  /// arquivos e a pior situação de backup entre eles (o RAW sem backup não
+  /// some atrás de um JPEG com backup).
+  Future<Map<int, (MediaItemKind, int, BackupState)>> _groupsOf(String list) async {
+    final rows = await db.customSelect('''
+      SELECT i.primary_content_id AS p, i.kind, m.content_id FROM media_items i
+      JOIN media_item_members m ON m.item_id = i.id
+      WHERE i.split_at IS NULL AND i.primary_content_id IN ($list)
+      ''').get();
+    if (rows.isEmpty) return const {};
+    final members = <int, List<int>>{};
+    final kinds = <int, MediaItemKind>{};
+    for (final r in rows) {
+      (members[r.read<int>('p')] ??= []).add(r.read<int>('content_id'));
+      kinds[r.read<int>('p')] = MediaItemKind.fromSql(r.read<String>('kind'));
+    }
+    final all = {for (final m in members.values) ...m}.join(',');
+    final states = {
+      for (final r
+          in await db
+              .customSelect('SELECT content_id, state FROM (${LibraryFilter.backupStatesSql(onlyIds: all)})')
+              .get())
+        r.read<int>('content_id'): _backup(r.readNullable<String>('state')),
+    };
+    int rank(BackupState s) => switch (s) {
+      BackupState.corrupt => -1,
+      BackupState.single => 0,
+      BackupState.unknown => 1,
+      BackupState.probable => 2,
+      BackupState.verified => 3,
+      BackupState.independent => 4,
+    };
+    return {
+      for (final MapEntry(key: p, value: ids) in members.entries)
+        p: (
+          kinds[p]!,
+          ids.length,
+          ids.map((id) => states[id] ?? BackupState.single).reduce((a, b) => rank(a) <= rank(b) ? a : b),
+        ),
+    };
+  }
+
+  static BackupState _backup(String? state) => switch (state) {
+    'independent' => BackupState.independent,
+    'verified' => BackupState.verified,
+    'single' => BackupState.single,
+    _ => BackupState.unknown,
+  };
+
+  static LibraryItem _item(QueryRow r, [(MediaItemKind, int, BackupState)? group]) => LibraryItem(
     contentId: r.read<int>('id'),
     name: r.readNullable<String>('name') ?? '',
     ext: r.readNullable<String>('ext') ?? '',
     mediaType: r.read<String>('media_type'),
     sizeBytes: r.read<int>('size_bytes'),
     copies: r.readNullable<int>('copies') ?? 0,
-    backup: switch (r.readNullable<String>('state')) {
-      'independent' => BackupState.independent,
-      'verified' => BackupState.verified,
-      'single' => BackupState.single,
-      _ => BackupState.unknown,
-    },
+    backup: group?.$3 ?? _backup(r.readNullable<String>('state')),
     local: parseWall(r.readNullable<String>('eff_local')),
     utcMs: r.readNullable<int>('eff_utc_ms'),
     confidence: DateConfidence.fromSql(r.readNullable<String>('eff_confidence')),
@@ -535,6 +625,8 @@ class LibraryService {
     metaError: r.readNullable<String>('meta_status') == 'error' ? r.readNullable<String>('meta_error') : null,
     sha256Hex: r.readNullable<String>('sha')?.toLowerCase(),
     places: r.readNullable<String>('places')?.split(String.fromCharCode(31)) ?? const [],
+    groupKind: group?.$1,
+    groupFiles: group?.$2 ?? 0,
   );
 
   static ItemLocation _location(QueryRow l) => ItemLocation(
@@ -611,6 +703,35 @@ class LibraryService {
       software: mm?.readNullable<String>('software'),
       extractor: mm?.readNullable<String>('extractor'),
       offsetMin: mm?.readNullable<int>('eff_offset_min'),
+      group: await _groupDetail(contentId),
+    );
+  }
+
+  Future<ItemGroup?> _groupDetail(int contentId) async {
+    final rows = await db
+        .customSelect(
+          '''
+          SELECT i.id, i.kind, i.primary_content_id, m.content_id, m.role,
+            (SELECT fi.name FROM file_instances fi WHERE fi.content_id = m.content_id AND fi.availability != 'missing'
+             ORDER BY fi.id LIMIT 1) AS name
+          FROM media_items i JOIN media_item_members m ON m.item_id = i.id
+          WHERE i.split_at IS NULL AND i.id IN (SELECT item_id FROM media_item_members WHERE content_id = ?)
+          ORDER BY i.id, m.content_id = i.primary_content_id DESC, m.role, m.content_id
+          ''',
+          variables: [Variable.withInt(contentId)],
+        )
+        .get();
+    if (rows.isEmpty) return null;
+    final first = rows.first;
+    return ItemGroup(
+      id: first.read<int>('id'),
+      kind: MediaItemKind.fromSql(first.read<String>('kind')),
+      primaryContentId: first.read<int>('primary_content_id'),
+      files: [
+        for (final r in rows)
+          if (r.read<int>('id') == first.read<int>('id'))
+            (r.read<int>('content_id'), r.read<String>('role'), r.readNullable<String>('name') ?? ''),
+      ],
     );
   }
 
@@ -620,11 +741,11 @@ class LibraryService {
     };
     final total = await count(LibraryFilter.empty);
     final years = await group<int>(
-      'SELECT mm.eff_year AS y, COUNT(*) AS n $_base AND mm.eff_year IS NOT NULL GROUP BY mm.eff_year',
+      'SELECT mm.eff_year AS y, COUNT(*) AS n $_grouped AND mm.eff_year IS NOT NULL GROUP BY mm.eff_year',
       (r) => r.read<int>('y'),
     );
     final cameras = await group<String>(
-      "SELECT COALESCE(mm.make, '') || char(1) || COALESCE(mm.model, '') AS k, COUNT(*) AS n $_base "
+      "SELECT COALESCE(mm.make, '') || char(1) || COALESCE(mm.model, '') AS k, COUNT(*) AS n $_grouped "
       'AND (mm.make IS NOT NULL OR mm.model IS NOT NULL) GROUP BY k',
       (r) => r.read<String>('k'),
     );
@@ -639,9 +760,9 @@ class LibraryService {
       (r) => r.read<String>('k'),
     );
     final (tc, tv) = const LibraryFilter([FilterCondition(FilterKind.toConfirm)]).toSql();
-    final toConfirm = (await db.customSelect('SELECT COUNT(*) AS n $_base AND $tc', variables: tv).getSingle())
+    final toConfirm = (await db.customSelect('SELECT COUNT(*) AS n $_grouped AND $tc', variables: tv).getSingle())
         .read<int>('n');
-    final noDate = (await db.customSelect('SELECT COUNT(*) AS n $_base AND mm.eff_utc_ms IS NULL').getSingle())
+    final noDate = (await db.customSelect('SELECT COUNT(*) AS n $_grouped AND mm.eff_utc_ms IS NULL').getSingle())
         .read<int>('n');
     final media = "('photo','raw','video')";
     final pendingContent =

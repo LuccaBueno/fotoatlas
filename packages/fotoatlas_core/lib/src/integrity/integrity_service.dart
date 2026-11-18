@@ -957,6 +957,8 @@ class IntegrityService {
       preferSourceIds: [from.sourceId],
       fileNames: {expected: problem.name},
       origin: 'restore',
+      // Restaura só o arquivo danificado, sem o resto do grupo.
+      keepGroups: false,
     );
   }
 

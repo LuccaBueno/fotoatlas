@@ -55,6 +55,7 @@ class CopyRequest {
     this.origin,
     this.toConfirmFolder = undatedFolder,
     this.fileNames = const {},
+    this.keepGroups = true,
   });
 
   /// Conteúdos escolhidos (Comparar ou Biblioteca).
@@ -80,6 +81,10 @@ class CopyRequest {
   /// Nome do arquivo no destino por conteúdo, no lugar do nome da origem
   /// (restaurar: o nome do arquivo danificado, com sufixo se ocupado).
   final Map<int, String> fileNames;
+
+  /// Copiar um arquivo de um item agrupado (RAW+JPEG, Live Photo) leva os
+  /// outros do grupo (`false` na restauração de um arquivo danificado).
+  final bool keepGroups;
 }
 
 /// Um arquivo da prévia.
@@ -98,10 +103,19 @@ class PlannedCopy {
     this.askConflict = false,
     this.lowConfidenceDate = false,
     this.undated = false,
+    this.groupedWith,
+    this.addedForGroup = false,
   });
 
   final int contentId;
   final int instanceId;
+
+  /// Nome da foto principal do grupo que este arquivo acompanha (RAW,
+  /// vídeo da Live Photo); `null` = sozinho ou o principal.
+  final String? groupedWith;
+
+  /// Não foi escolhido: entrou por fazer parte de um item agrupado.
+  final bool addedForGroup;
   final String srcSourceId;
   final String srcRelPath;
   final int size;
@@ -189,6 +203,12 @@ class CopyPreview {
   int get sanitized => items.where((i) => i.originalName != null).length;
   int get lowConfidence => items.where((i) => i.lowConfidenceDate).length;
   int get undated => items.where((i) => i.undated).length;
+
+  /// Arquivos que vão junto com a foto principal de um item agrupado.
+  int get grouped => items.where((i) => i.groupedWith != null).length;
+
+  /// Desses, os que não estavam na escolha.
+  int get addedForGroup => items.where((i) => i.addedForGroup).length;
 
   /// Espaço suficiente (ou desconhecido: a checagem por arquivo protege).
   bool get enoughSpace => freeBytes == null || freeBytes! >= totalBytes + reserveBytes;

@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 
 import '../catalog/catalog_database.dart';
 import '../devices/devices.dart';
+import '../items/media_items_service.dart';
 import '../platform/win32/kernel32.dart';
 import '../platform/win_fs.dart';
 import '../safe_io/dest_writer.dart';
@@ -36,8 +37,9 @@ class CopyService {
     FreeSpaceProbe? freeSpace,
     this.useIsolate = true,
     int reserveBytes = defaultReserveBytes,
+    MediaItemsService? mediaItems,
   }) : _freeSpace = freeSpace ?? diskFreeBytes,
-       planner = CopyPlanner(db, sources, freeSpace: freeSpace, reserveBytes: reserveBytes),
+       planner = CopyPlanner(db, sources, freeSpace: freeSpace, reserveBytes: reserveBytes, mediaItems: mediaItems),
        _reserve = reserveBytes;
 
   final CatalogDatabase db;

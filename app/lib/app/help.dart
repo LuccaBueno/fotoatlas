@@ -38,11 +38,18 @@ const helpTopics = [
       'Dar nome a um momento, juntar ou separar momentos (clique com o botão direito no cabeçalho).',
       'Corrigir o relógio de uma câmera que estava com a hora errada (Mais ações).',
       'Clicar num item para ver onde ele está, quando foi tirado e por qual câmera.',
+      'Ver a foto e o RAW (ou a Live Photo) como um item só; desagrupar nos detalhes ou agrupar itens marcados.',
     ],
     backupLegend: true,
     extraLegend: [
       (Icons.help_outline, 'hora incerta', 'Não dá para ter certeza da hora (ex.: veio só da data do arquivo).'),
       (Icons.play_arrow, 'vídeo', 'Mostra a duração do vídeo.'),
+      (
+        Icons.layers_outlined,
+        'RAW+JPEG / Agrupado',
+        'Vários arquivos da mesma foto: copiar ou reorganizar leva todos.',
+      ),
+      (Icons.motion_photos_on_outlined, 'Live', 'Live Photo: a foto e o vídeo curto juntos.'),
       (Icons.collections_outlined, 'momento', 'Fotos tiradas perto umas das outras, agrupadas sozinhas.'),
       (Icons.push_pin_outlined, 'momento fixo', 'Você deu nome, juntou ou separou: fica assim nos recálculos.'),
     ],

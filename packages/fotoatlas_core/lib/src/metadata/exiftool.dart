@@ -67,6 +67,8 @@ class ExifTool {
     '-AudioFormat',
     '-AvgBitrate',
     '-Software',
+    // Live Photo: o mesmo identificador na foto (HEIC/JPG) e no vídeo (MOV).
+    '-ContentIdentifier',
   ];
 
   /// Opções que gravariam algo: nunca podem aparecer (teste de arquitetura).

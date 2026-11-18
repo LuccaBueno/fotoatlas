@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 
 import '../catalog/catalog_database.dart';
+import '../items/media_items_service.dart';
 import '../platform/win32/kernel32.dart';
 import '../platform/win_fs.dart';
 import '../safe_io/dest_writer.dart' show ensureDirectory;
@@ -29,7 +30,8 @@ import 'reorg_planner.dart';
 /// na mesma transação. Nada é apagado: pastas que ficam vazias continuam lá
 /// até a pessoa pedir "Remover pastas vazias" (pasta por pasta, conferida).
 class ReorgService {
-  ReorgService(this.db, this.sources) : planner = ReorgPlanner(db, sources) {
+  ReorgService(this.db, this.sources, {MediaItemsService? mediaItems})
+    : planner = ReorgPlanner(db, sources, mediaItems: mediaItems) {
     journal = OperationJournal(db, onChange: _emitProgress);
   }
 

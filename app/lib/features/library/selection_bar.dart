@@ -124,6 +124,27 @@ class SelectionBar extends ConsumerWidget {
                 child: const Text('Corrigir a hora…'),
               ),
             ),
+            if (sel.length >= 2)
+              Tooltip(
+                message:
+                    'Mostra os itens marcados como um item só (ex.: a foto e o RAW tirados juntos). Copiar ou '
+                    'reorganizar passa a levar todos juntos. Só muda o catálogo; dá para desagrupar depois.',
+                child: OutlinedButton(
+                  key: const ValueKey('group-selection'),
+                  onPressed: () async {
+                    await backend.groupItems(sel.toList());
+                    c.clearSelection();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${plural(sel.length, 'item agrupado', 'itens agrupados')} (só no catálogo).'),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Agrupar'),
+                ),
+              ),
             Tooltip(
               message:
                   'Lê de novo as cópias dos itens marcados nos discos conectados e confere se continuam iguais. Só lê; '

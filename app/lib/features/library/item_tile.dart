@@ -133,6 +133,18 @@ class ItemTile extends ConsumerWidget {
                               : 'Vídeo de ${formatVideoLength(item.durationMs!)}',
                         ),
                       ),
+                    if (item != null && item.groupFiles > 1 && item.mediaType != 'video')
+                      Positioned(
+                        right: 4,
+                        bottom: 4,
+                        child: _Pill(
+                          icon: item.groupKind == MediaItemKind.livePhoto
+                              ? Icons.motion_photos_on_outlined
+                              : Icons.layers_outlined,
+                          text: groupKindShort(item.groupKind),
+                          tooltip: groupTooltip(item.groupKind, item.groupFiles),
+                        ),
+                      ),
                     if (item != null && item.provisional)
                       const Positioned(
                         left: 4,

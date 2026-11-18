@@ -99,3 +99,25 @@ String momentSubtitle(MomentView m, {int? visible}) {
   final count = visible != null && visible < m.itemCount ? '${formatInt(visible)} de $total' : total;
   return range.isEmpty ? count : '$count · $range';
 }
+
+/// Selo curto de um item agrupado.
+String groupKindShort(MediaItemKind? kind) => switch (kind) {
+  MediaItemKind.rawJpeg => 'RAW+JPEG',
+  MediaItemKind.livePhoto => 'Live',
+  _ => 'Agrupado',
+};
+
+/// Explicação do selo: quantos arquivos e o que acontece ao copiar.
+String groupTooltip(MediaItemKind? kind, int files) =>
+    '${switch (kind) {
+      MediaItemKind.rawJpeg => 'Foto e RAW tirados juntos',
+      MediaItemKind.livePhoto => 'Live Photo: a foto e o vídeo curto',
+      _ => 'Agrupado por você',
+    }} ($files arquivos). Copiar ou reorganizar leva todos juntos.';
+
+/// Papel de um arquivo dentro do item agrupado.
+String groupRoleLabel(String role) => switch (role) {
+  'raw' => 'RAW',
+  'video' => 'vídeo',
+  _ => 'foto',
+};

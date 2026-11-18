@@ -68,6 +68,10 @@ Comandos:
                                  Sugestões de fotos parecidas (nada é apagado nem alterado)
   similar dismiss ID ID…         "Não são parecidas" (só catálogo)
   similar restore                Mostra de novo as sugestões descartadas
+  items detect                   Agrupa RAW+JPEG e Live Photos (só catálogo; nenhum arquivo muda)
+  items list                     Itens agrupados e os arquivos de cada um
+  items split ITEM               Desagrupa (só catálogo; o grupo não volta sozinho)
+  items group ID ID…             Agrupa à mão (só catálogo)
   recover                        Roda a recuperação de cópias e reorganizações interrompidas
 
 FONTE pode ser o nome, o id ou o começo do id.
@@ -668,6 +672,40 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
 
     case ['similar', 'restore']:
       stdout.writeln('RESTORED pares=${await core.similar.restoreAllDismissed()}');
+      return 0;
+
+    case ['items', 'detect']:
+      stdout.writeln('ITEMS novos=${await core.items.detect()}');
+      return 0;
+
+    case ['items', 'list']:
+      final all = await core.items.all();
+      if (all.isEmpty) stdout.writeln('Nenhum item agrupado.');
+      for (final item in all) {
+        stdout.writeln('ITEM ${item.id} tipo=${item.kind.sql} arquivos=${item.members.length}');
+        for (final m in item.members) {
+          final where = await core.catalog.db
+              .customSelect(
+                'SELECT s.name, fi.rel_path FROM file_instances fi JOIN sources s ON s.id = fi.source_id '
+                'WHERE fi.content_id = ? ORDER BY fi.id LIMIT 1',
+                variables: [Variable.withInt(m.contentId)],
+              )
+              .getSingleOrNull();
+          stdout.writeln(
+            '  ${m.role} ${m.contentId} '
+            '${where == null ? '?' : '${where.read<String>('name')}:${where.read<String>('rel_path')}'}',
+          );
+        }
+      }
+      return 0;
+
+    case ['items', 'split', final item]:
+      await core.items.split(int.parse(item));
+      stdout.writeln('SPLIT $item');
+      return 0;
+
+    case ['items', 'group', ...final ids] when ids.length >= 2:
+      stdout.writeln('GROUPED ${await core.items.group([for (final id in ids) int.parse(id)])}');
       return 0;
 
     case ['backup'] || ['backup', 'now']:

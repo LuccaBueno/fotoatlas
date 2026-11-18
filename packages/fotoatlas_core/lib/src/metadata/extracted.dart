@@ -25,6 +25,7 @@ class ExtractedMetadata {
     this.audioCodec,
     this.bitrate,
     this.software,
+    this.contentIdentifier,
   });
 
   DateCandidate? exifDate;
@@ -49,6 +50,9 @@ class ExtractedMetadata {
   int? bitrate;
   String? software;
 
+  /// Live Photo: identificador comum à foto e ao vídeo (Apple `ContentIdentifier`).
+  String? contentIdentifier;
+
   /// Junta [other] (ex.: ffprobe) só onde este não tem valor.
   void fillFrom(ExtractedMetadata other) {
     exifDate ??= other.exifDate;
@@ -72,6 +76,7 @@ class ExtractedMetadata {
     audioCodec ??= other.audioCodec;
     bitrate ??= other.bitrate;
     software ??= other.software;
+    contentIdentifier ??= other.contentIdentifier;
   }
 
   /// Monta a partir de um objeto do `exiftool -json -n -G1`.
@@ -188,6 +193,12 @@ class ExtractedMetadata {
       audioCodec: str(['AudioFormat']),
       bitrate: integer(['AvgBitrate']),
       software: str(['IFD0:Software', 'Software']),
+      contentIdentifier: str([
+        'Apple:ContentIdentifier',
+        'Keys:ContentIdentifier',
+        'QuickTime:ContentIdentifier',
+        'ContentIdentifier',
+      ]),
     );
   }
 

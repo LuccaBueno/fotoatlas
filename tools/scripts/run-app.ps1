@@ -17,7 +17,8 @@
 #     para testar "Reorganizar…" (Fase 6), e a pasta "Integridade" ("HD fotos" e
 #     "HD cópia", com as mesmas fotos) para testar a verificação de integridade
 #     (Fase 7; o dano no disco é simulado com tools\scripts\demo-danificar.ps1),
-#     e a pasta "Fotos parecidas" (cenas sintéticas e variações; Fase 9).
+#     a pasta "Fotos parecidas" (cenas sintéticas e variações; Fase 9) e a pasta
+#     "Fotos agrupadas" (RAW+JPEG e Live Photos sintéticos; Fase 9).
 # As pastas temporárias (%TEMP%\fotoatlas_*) de -Demo/-CelularSimulado são
 # apagadas quando o app fecha.
 param([switch]$Demo, [switch]$CelularSimulado, [switch]$ManterDemo, [switch]$DemoPersistente)
@@ -108,6 +109,20 @@ try {
             Rename-Item -LiteralPath $gerando -NewName 'Fotos parecidas'
         }
         Write-Host "Fotos parecidas (cadastre como pasta): $parecidas"
+        # Fase 9: "Fotos agrupadas" (RAW+JPEG e Live Photos sintéticos) para os itens agrupados.
+        $agrupadas = Join-Path $pasta 'Fotos agrupadas'
+        if (-not (Test-Path -LiteralPath $agrupadas)) {
+            $gerando = Join-Path $pasta 'agrupadas_gerando'
+            if (Test-Path -LiteralPath $gerando) { Remove-Item -LiteralPath $gerando -Recurse -Force }
+            Push-Location (Join-Path $root 'tools\fixtures')
+            try {
+                dart pub get | Out-Null
+                dart run bin/gen_items_demo.dart --out $gerando | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw 'falha ao gerar a demonstração de fotos agrupadas' }
+            } finally { Pop-Location }
+            Rename-Item -LiteralPath $gerando -NewName 'Fotos agrupadas'
+        }
+        Write-Host "Fotos agrupadas (cadastre como pasta): $agrupadas"
         if ($CelularSimulado) {
             $celular = Join-Path $pasta 'celular'
             if (-not (Test-Path -LiteralPath $celular)) {

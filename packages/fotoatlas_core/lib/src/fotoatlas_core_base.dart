@@ -9,6 +9,7 @@ import 'devices/devices.dart';
 import 'hash/hash_service.dart';
 import 'helper/helper_client.dart';
 import 'integrity/integrity_service.dart';
+import 'items/media_items_service.dart';
 import 'library/library_service.dart';
 import 'metadata/dates_service.dart';
 import 'metadata/external_tools.dart';
@@ -47,6 +48,7 @@ class FotoAtlasCore {
     required this.reorg,
     required this.integrity,
     required this.similar,
+    required this.items,
     required this._lock,
   });
 
@@ -93,6 +95,10 @@ class FotoAtlasCore {
 
   /// Fotos parecidas (Fase 9): só sugestões, nada é tocado.
   final SimilarService similar;
+
+  /// Itens lógicos (Fase 9): RAW+JPEG e Live Photos como um item só na
+  /// Biblioteca. Só catálogo; cópia e reorganização levam o grupo todo.
+  final MediaItemsService items;
   final VolumeProvider volumes;
 
   /// `null` se o helper não foi encontrado ou não iniciou (o core segue
@@ -206,10 +212,17 @@ class FotoAtlasCore {
       // Regras de data novas: os momentos acompanham (em segundo plano).
       if (metadata.reresolvedOnInit) unawaited(moments.recompute().then((_) {}, onError: (Object _) {}));
       await sources.refreshConnectivity();
-      final copies = CopyService(catalog.db, sources, useIsolate: copyInIsolate, freeSpace: freeSpace);
+      final items = MediaItemsService(catalog.db);
+      final copies = CopyService(
+        catalog.db,
+        sources,
+        useIsolate: copyInIsolate,
+        freeSpace: freeSpace,
+        mediaItems: items,
+      );
       // Recuperação idempotente das cópias interrompidas (spec §11.2), antes
       // de qualquer outra tarefa: olha o disco e termina o que ficou no meio.
-      final reorg = ReorgService(catalog.db, sources);
+      final reorg = ReorgService(catalog.db, sources, mediaItems: items);
       final integrity = IntegrityService(
         catalog,
         sources,
@@ -268,6 +281,7 @@ class FotoAtlasCore {
         reorg: reorg,
         integrity: integrity,
         similar: similar,
+        items: items,
         lock: lock,
       );
       if (backupOnOpen) {
@@ -281,8 +295,14 @@ class FotoAtlasCore {
       // momentos, agrupando rajadas de mudanças.
       core._datesSub = metadata.datesChanged.listen((_) {
         core._momentsTimer?.cancel();
-        core._momentsTimer = Timer(const Duration(seconds: 2), () => moments.recompute().ignore());
+        core._momentsTimer = Timer(const Duration(seconds: 2), () {
+          moments.recompute().ignore();
+          // Metadados novos (duração, identificador da Live Photo): procura grupos.
+          items.detect().ignore();
+        });
       });
+      // Grupos que já dá para achar pelo nome (RAW+JPEG), sem esperar.
+      if (autoMetadata) items.detect().ignore();
       if (autoHash) hashes.enableAuto();
       if (autoMetadata) metadata.enableAuto();
       if (scheduleIntegrity) integrity.enableSchedule();
@@ -306,7 +326,9 @@ class FotoAtlasCore {
   Future<MomentsRecalc> settleDates() async {
     await metadata.waitIdle();
     _momentsTimer?.cancel();
-    return moments.recompute();
+    final recalc = await moments.recompute();
+    await items.detect();
+    return recalc;
   }
 
   /// O que está em andamento agora (para perguntar antes de fechar).
@@ -416,6 +438,7 @@ class FotoAtlasCore {
       step('hash', () => hashes.dispose(timeout: stepTimeout)),
       step('verify', () => integrity.dispose(timeout: stepTimeout)),
       step('similar', () => similar.dispose(timeout: stepTimeout)),
+      step('items', items.dispose),
       // Também fecha o ExifTool; um recálculo de momentos em andamento termina numa transação.
       step('metadata', () async {
         final ok = await metadata.dispose(timeout: stepTimeout);

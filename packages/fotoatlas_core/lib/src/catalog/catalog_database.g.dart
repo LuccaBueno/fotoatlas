@@ -5872,6 +5872,15 @@ class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow
     requiredDuringInsert: false,
     $customConstraints: 'REFERENCES moments(id)ON DELETE SET NULL',
   );
+  static const VerificationMeta _contentIdentifierMeta = const VerificationMeta('contentIdentifier');
+  late final GeneratedColumn<String> contentIdentifier = GeneratedColumn<String>(
+    'content_identifier',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   @override
   List<GeneratedColumn> get $columns => [
     contentId,
@@ -5917,6 +5926,7 @@ class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow
     effMinute,
     effWeekday,
     momentId,
+    contentIdentifier,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6068,6 +6078,12 @@ class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow
     if (data.containsKey('moment_id')) {
       context.handle(_momentIdMeta, momentId.isAcceptableOrUnknown(data['moment_id']!, _momentIdMeta));
     }
+    if (data.containsKey('content_identifier')) {
+      context.handle(
+        _contentIdentifierMeta,
+        contentIdentifier.isAcceptableOrUnknown(data['content_identifier']!, _contentIdentifierMeta),
+      );
+    }
     return context;
   }
 
@@ -6123,6 +6139,10 @@ class MediaMetadata extends Table with TableInfo<MediaMetadata, MediaMetadataRow
       effMinute: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}eff_minute']),
       effWeekday: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}eff_weekday']),
       momentId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}moment_id']),
+      contentIdentifier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_identifier'],
+      ),
     );
   }
 
@@ -6193,6 +6213,9 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
 
   /// 1 = segunda … 7 = domingo
   final int? momentId;
+
+  /// v9 (Fase 9): Live Photo — identificador comum à foto e ao vídeo (Apple ContentIdentifier).
+  final String? contentIdentifier;
   const MediaMetadataRow({
     required this.contentId,
     this.captureUtcMs,
@@ -6237,6 +6260,7 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
     this.effMinute,
     this.effWeekday,
     this.momentId,
+    this.contentIdentifier,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6364,6 +6388,9 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
     if (!nullToAbsent || momentId != null) {
       map['moment_id'] = Variable<int>(momentId);
     }
+    if (!nullToAbsent || contentIdentifier != null) {
+      map['content_identifier'] = Variable<String>(contentIdentifier);
+    }
     return map;
   }
 
@@ -6412,6 +6439,7 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
       effMinute: effMinute == null && nullToAbsent ? const Value.absent() : Value(effMinute),
       effWeekday: effWeekday == null && nullToAbsent ? const Value.absent() : Value(effWeekday),
       momentId: momentId == null && nullToAbsent ? const Value.absent() : Value(momentId),
+      contentIdentifier: contentIdentifier == null && nullToAbsent ? const Value.absent() : Value(contentIdentifier),
     );
   }
 
@@ -6461,6 +6489,7 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
       effMinute: serializer.fromJson<int?>(json['eff_minute']),
       effWeekday: serializer.fromJson<int?>(json['eff_weekday']),
       momentId: serializer.fromJson<int?>(json['moment_id']),
+      contentIdentifier: serializer.fromJson<String?>(json['content_identifier']),
     );
   }
   @override
@@ -6510,6 +6539,7 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
       'eff_minute': serializer.toJson<int?>(effMinute),
       'eff_weekday': serializer.toJson<int?>(effWeekday),
       'moment_id': serializer.toJson<int?>(momentId),
+      'content_identifier': serializer.toJson<String?>(contentIdentifier),
     };
   }
 
@@ -6557,6 +6587,7 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
     Value<int?> effMinute = const Value.absent(),
     Value<int?> effWeekday = const Value.absent(),
     Value<int?> momentId = const Value.absent(),
+    Value<String?> contentIdentifier = const Value.absent(),
   }) => MediaMetadataRow(
     contentId: contentId ?? this.contentId,
     captureUtcMs: captureUtcMs.present ? captureUtcMs.value : this.captureUtcMs,
@@ -6601,6 +6632,7 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
     effMinute: effMinute.present ? effMinute.value : this.effMinute,
     effWeekday: effWeekday.present ? effWeekday.value : this.effWeekday,
     momentId: momentId.present ? momentId.value : this.momentId,
+    contentIdentifier: contentIdentifier.present ? contentIdentifier.value : this.contentIdentifier,
   );
   MediaMetadataRow copyWithCompanion(MediaMetadataCompanion data) {
     return MediaMetadataRow(
@@ -6647,6 +6679,7 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
       effMinute: data.effMinute.present ? data.effMinute.value : this.effMinute,
       effWeekday: data.effWeekday.present ? data.effWeekday.value : this.effWeekday,
       momentId: data.momentId.present ? data.momentId.value : this.momentId,
+      contentIdentifier: data.contentIdentifier.present ? data.contentIdentifier.value : this.contentIdentifier,
     );
   }
 
@@ -6695,7 +6728,8 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
           ..write('effDay: $effDay, ')
           ..write('effMinute: $effMinute, ')
           ..write('effWeekday: $effWeekday, ')
-          ..write('momentId: $momentId')
+          ..write('momentId: $momentId, ')
+          ..write('contentIdentifier: $contentIdentifier')
           ..write(')'))
         .toString();
   }
@@ -6745,6 +6779,7 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
     effMinute,
     effWeekday,
     momentId,
+    contentIdentifier,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -6792,7 +6827,8 @@ class MediaMetadataRow extends DataClass implements Insertable<MediaMetadataRow>
           other.effDay == this.effDay &&
           other.effMinute == this.effMinute &&
           other.effWeekday == this.effWeekday &&
-          other.momentId == this.momentId);
+          other.momentId == this.momentId &&
+          other.contentIdentifier == this.contentIdentifier);
 }
 
 class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
@@ -6839,6 +6875,7 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
   final Value<int?> effMinute;
   final Value<int?> effWeekday;
   final Value<int?> momentId;
+  final Value<String?> contentIdentifier;
   const MediaMetadataCompanion({
     this.contentId = const Value.absent(),
     this.captureUtcMs = const Value.absent(),
@@ -6883,6 +6920,7 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
     this.effMinute = const Value.absent(),
     this.effWeekday = const Value.absent(),
     this.momentId = const Value.absent(),
+    this.contentIdentifier = const Value.absent(),
   });
   MediaMetadataCompanion.insert({
     this.contentId = const Value.absent(),
@@ -6928,6 +6966,7 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
     this.effMinute = const Value.absent(),
     this.effWeekday = const Value.absent(),
     this.momentId = const Value.absent(),
+    this.contentIdentifier = const Value.absent(),
   });
   static Insertable<MediaMetadataRow> custom({
     Expression<int>? contentId,
@@ -6973,6 +7012,7 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
     Expression<int>? effMinute,
     Expression<int>? effWeekday,
     Expression<int>? momentId,
+    Expression<String>? contentIdentifier,
   }) {
     return RawValuesInsertable({
       if (contentId != null) 'content_id': contentId,
@@ -7018,6 +7058,7 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
       if (effMinute != null) 'eff_minute': effMinute,
       if (effWeekday != null) 'eff_weekday': effWeekday,
       if (momentId != null) 'moment_id': momentId,
+      if (contentIdentifier != null) 'content_identifier': contentIdentifier,
     });
   }
 
@@ -7065,6 +7106,7 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
     Value<int?>? effMinute,
     Value<int?>? effWeekday,
     Value<int?>? momentId,
+    Value<String?>? contentIdentifier,
   }) {
     return MediaMetadataCompanion(
       contentId: contentId ?? this.contentId,
@@ -7110,6 +7152,7 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
       effMinute: effMinute ?? this.effMinute,
       effWeekday: effWeekday ?? this.effWeekday,
       momentId: momentId ?? this.momentId,
+      contentIdentifier: contentIdentifier ?? this.contentIdentifier,
     );
   }
 
@@ -7245,6 +7288,9 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
     if (momentId.present) {
       map['moment_id'] = Variable<int>(momentId.value);
     }
+    if (contentIdentifier.present) {
+      map['content_identifier'] = Variable<String>(contentIdentifier.value);
+    }
     return map;
   }
 
@@ -7293,7 +7339,8 @@ class MediaMetadataCompanion extends UpdateCompanion<MediaMetadataRow> {
           ..write('effDay: $effDay, ')
           ..write('effMinute: $effMinute, ')
           ..write('effWeekday: $effWeekday, ')
-          ..write('momentId: $momentId')
+          ..write('momentId: $momentId, ')
+          ..write('contentIdentifier: $contentIdentifier')
           ..write(')'))
         .toString();
   }
@@ -13222,6 +13269,583 @@ class VisualDismissalsCompanion extends UpdateCompanion<VisualDismissalRow> {
   }
 }
 
+class MediaItems extends Table with TableInfo<MediaItems, MediaItemRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  MediaItems(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (kind IN (\'raw_jpeg\', \'live_photo\', \'manual\'))',
+  );
+  static const VerificationMeta _primaryContentIdMeta = const VerificationMeta('primaryContentId');
+  late final GeneratedColumn<int> primaryContentId = GeneratedColumn<int>(
+    'primary_content_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES contents(id)',
+  );
+  static const VerificationMeta _originMeta = const VerificationMeta('origin');
+  late final GeneratedColumn<String> origin = GeneratedColumn<String>(
+    'origin',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (origin IN (\'auto\', \'manual\'))',
+  );
+  static const VerificationMeta _splitAtMeta = const VerificationMeta('splitAt');
+  late final GeneratedColumn<int> splitAt = GeneratedColumn<int>(
+    'split_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, kind, primaryContentId, origin, splitAt, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'media_items';
+  @override
+  VerificationContext validateIntegrity(Insertable<MediaItemRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('kind')) {
+      context.handle(_kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('primary_content_id')) {
+      context.handle(
+        _primaryContentIdMeta,
+        primaryContentId.isAcceptableOrUnknown(data['primary_content_id']!, _primaryContentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_primaryContentIdMeta);
+    }
+    if (data.containsKey('origin')) {
+      context.handle(_originMeta, origin.isAcceptableOrUnknown(data['origin']!, _originMeta));
+    } else if (isInserting) {
+      context.missing(_originMeta);
+    }
+    if (data.containsKey('split_at')) {
+      context.handle(_splitAtMeta, splitAt.isAcceptableOrUnknown(data['split_at']!, _splitAtMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MediaItemRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MediaItemRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      kind: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
+      primaryContentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}primary_content_id'],
+      )!,
+      origin: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}origin'])!,
+      splitAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}split_at']),
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  MediaItems createAlias(String alias) {
+    return MediaItems(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class MediaItemRow extends DataClass implements Insertable<MediaItemRow> {
+  final int id;
+  final String kind;
+  final int primaryContentId;
+  final String origin;
+  final int? splitAt;
+  final int createdAt;
+  const MediaItemRow({
+    required this.id,
+    required this.kind,
+    required this.primaryContentId,
+    required this.origin,
+    this.splitAt,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['kind'] = Variable<String>(kind);
+    map['primary_content_id'] = Variable<int>(primaryContentId);
+    map['origin'] = Variable<String>(origin);
+    if (!nullToAbsent || splitAt != null) {
+      map['split_at'] = Variable<int>(splitAt);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  MediaItemsCompanion toCompanion(bool nullToAbsent) {
+    return MediaItemsCompanion(
+      id: Value(id),
+      kind: Value(kind),
+      primaryContentId: Value(primaryContentId),
+      origin: Value(origin),
+      splitAt: splitAt == null && nullToAbsent ? const Value.absent() : Value(splitAt),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory MediaItemRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MediaItemRow(
+      id: serializer.fromJson<int>(json['id']),
+      kind: serializer.fromJson<String>(json['kind']),
+      primaryContentId: serializer.fromJson<int>(json['primary_content_id']),
+      origin: serializer.fromJson<String>(json['origin']),
+      splitAt: serializer.fromJson<int?>(json['split_at']),
+      createdAt: serializer.fromJson<int>(json['created_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'kind': serializer.toJson<String>(kind),
+      'primary_content_id': serializer.toJson<int>(primaryContentId),
+      'origin': serializer.toJson<String>(origin),
+      'split_at': serializer.toJson<int?>(splitAt),
+      'created_at': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  MediaItemRow copyWith({
+    int? id,
+    String? kind,
+    int? primaryContentId,
+    String? origin,
+    Value<int?> splitAt = const Value.absent(),
+    int? createdAt,
+  }) => MediaItemRow(
+    id: id ?? this.id,
+    kind: kind ?? this.kind,
+    primaryContentId: primaryContentId ?? this.primaryContentId,
+    origin: origin ?? this.origin,
+    splitAt: splitAt.present ? splitAt.value : this.splitAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  MediaItemRow copyWithCompanion(MediaItemsCompanion data) {
+    return MediaItemRow(
+      id: data.id.present ? data.id.value : this.id,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      primaryContentId: data.primaryContentId.present ? data.primaryContentId.value : this.primaryContentId,
+      origin: data.origin.present ? data.origin.value : this.origin,
+      splitAt: data.splitAt.present ? data.splitAt.value : this.splitAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaItemRow(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('primaryContentId: $primaryContentId, ')
+          ..write('origin: $origin, ')
+          ..write('splitAt: $splitAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, kind, primaryContentId, origin, splitAt, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MediaItemRow &&
+          other.id == this.id &&
+          other.kind == this.kind &&
+          other.primaryContentId == this.primaryContentId &&
+          other.origin == this.origin &&
+          other.splitAt == this.splitAt &&
+          other.createdAt == this.createdAt);
+}
+
+class MediaItemsCompanion extends UpdateCompanion<MediaItemRow> {
+  final Value<int> id;
+  final Value<String> kind;
+  final Value<int> primaryContentId;
+  final Value<String> origin;
+  final Value<int?> splitAt;
+  final Value<int> createdAt;
+  const MediaItemsCompanion({
+    this.id = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.primaryContentId = const Value.absent(),
+    this.origin = const Value.absent(),
+    this.splitAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  MediaItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required String kind,
+    required int primaryContentId,
+    required String origin,
+    this.splitAt = const Value.absent(),
+    required int createdAt,
+  }) : kind = Value(kind),
+       primaryContentId = Value(primaryContentId),
+       origin = Value(origin),
+       createdAt = Value(createdAt);
+  static Insertable<MediaItemRow> custom({
+    Expression<int>? id,
+    Expression<String>? kind,
+    Expression<int>? primaryContentId,
+    Expression<String>? origin,
+    Expression<int>? splitAt,
+    Expression<int>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (kind != null) 'kind': kind,
+      if (primaryContentId != null) 'primary_content_id': primaryContentId,
+      if (origin != null) 'origin': origin,
+      if (splitAt != null) 'split_at': splitAt,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  MediaItemsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? kind,
+    Value<int>? primaryContentId,
+    Value<String>? origin,
+    Value<int?>? splitAt,
+    Value<int>? createdAt,
+  }) {
+    return MediaItemsCompanion(
+      id: id ?? this.id,
+      kind: kind ?? this.kind,
+      primaryContentId: primaryContentId ?? this.primaryContentId,
+      origin: origin ?? this.origin,
+      splitAt: splitAt ?? this.splitAt,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (primaryContentId.present) {
+      map['primary_content_id'] = Variable<int>(primaryContentId.value);
+    }
+    if (origin.present) {
+      map['origin'] = Variable<String>(origin.value);
+    }
+    if (splitAt.present) {
+      map['split_at'] = Variable<int>(splitAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('primaryContentId: $primaryContentId, ')
+          ..write('origin: $origin, ')
+          ..write('splitAt: $splitAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class MediaItemMembers extends Table with TableInfo<MediaItemMembers, MediaItemMemberRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  MediaItemMembers(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  late final GeneratedColumn<int> itemId = GeneratedColumn<int>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES media_items(id)ON DELETE CASCADE',
+  );
+  static const VerificationMeta _contentIdMeta = const VerificationMeta('contentId');
+  late final GeneratedColumn<int> contentId = GeneratedColumn<int>(
+    'content_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES contents(id)',
+  );
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+    'role',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (role IN (\'photo\', \'raw\', \'video\'))',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [itemId, contentId, role];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'media_item_members';
+  @override
+  VerificationContext validateIntegrity(Insertable<MediaItemMemberRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('item_id')) {
+      context.handle(_itemIdMeta, itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta));
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('content_id')) {
+      context.handle(_contentIdMeta, contentId.isAcceptableOrUnknown(data['content_id']!, _contentIdMeta));
+    } else if (isInserting) {
+      context.missing(_contentIdMeta);
+    }
+    if (data.containsKey('role')) {
+      context.handle(_roleMeta, role.isAcceptableOrUnknown(data['role']!, _roleMeta));
+    } else if (isInserting) {
+      context.missing(_roleMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {itemId, contentId};
+  @override
+  MediaItemMemberRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MediaItemMemberRow(
+      itemId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}item_id'])!,
+      contentId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}content_id'])!,
+      role: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}role'])!,
+    );
+  }
+
+  @override
+  MediaItemMembers createAlias(String alias) {
+    return MediaItemMembers(attachedDatabase, alias);
+  }
+
+  @override
+  List<String> get customConstraints => const ['PRIMARY KEY(item_id, content_id)'];
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class MediaItemMemberRow extends DataClass implements Insertable<MediaItemMemberRow> {
+  final int itemId;
+  final int contentId;
+  final String role;
+  const MediaItemMemberRow({required this.itemId, required this.contentId, required this.role});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['item_id'] = Variable<int>(itemId);
+    map['content_id'] = Variable<int>(contentId);
+    map['role'] = Variable<String>(role);
+    return map;
+  }
+
+  MediaItemMembersCompanion toCompanion(bool nullToAbsent) {
+    return MediaItemMembersCompanion(itemId: Value(itemId), contentId: Value(contentId), role: Value(role));
+  }
+
+  factory MediaItemMemberRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MediaItemMemberRow(
+      itemId: serializer.fromJson<int>(json['item_id']),
+      contentId: serializer.fromJson<int>(json['content_id']),
+      role: serializer.fromJson<String>(json['role']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'item_id': serializer.toJson<int>(itemId),
+      'content_id': serializer.toJson<int>(contentId),
+      'role': serializer.toJson<String>(role),
+    };
+  }
+
+  MediaItemMemberRow copyWith({int? itemId, int? contentId, String? role}) => MediaItemMemberRow(
+    itemId: itemId ?? this.itemId,
+    contentId: contentId ?? this.contentId,
+    role: role ?? this.role,
+  );
+  MediaItemMemberRow copyWithCompanion(MediaItemMembersCompanion data) {
+    return MediaItemMemberRow(
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      contentId: data.contentId.present ? data.contentId.value : this.contentId,
+      role: data.role.present ? data.role.value : this.role,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaItemMemberRow(')
+          ..write('itemId: $itemId, ')
+          ..write('contentId: $contentId, ')
+          ..write('role: $role')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(itemId, contentId, role);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MediaItemMemberRow &&
+          other.itemId == this.itemId &&
+          other.contentId == this.contentId &&
+          other.role == this.role);
+}
+
+class MediaItemMembersCompanion extends UpdateCompanion<MediaItemMemberRow> {
+  final Value<int> itemId;
+  final Value<int> contentId;
+  final Value<String> role;
+  final Value<int> rowid;
+  const MediaItemMembersCompanion({
+    this.itemId = const Value.absent(),
+    this.contentId = const Value.absent(),
+    this.role = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MediaItemMembersCompanion.insert({
+    required int itemId,
+    required int contentId,
+    required String role,
+    this.rowid = const Value.absent(),
+  }) : itemId = Value(itemId),
+       contentId = Value(contentId),
+       role = Value(role);
+  static Insertable<MediaItemMemberRow> custom({
+    Expression<int>? itemId,
+    Expression<int>? contentId,
+    Expression<String>? role,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (itemId != null) 'item_id': itemId,
+      if (contentId != null) 'content_id': contentId,
+      if (role != null) 'role': role,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MediaItemMembersCompanion copyWith({
+    Value<int>? itemId,
+    Value<int>? contentId,
+    Value<String>? role,
+    Value<int>? rowid,
+  }) {
+    return MediaItemMembersCompanion(
+      itemId: itemId ?? this.itemId,
+      contentId: contentId ?? this.contentId,
+      role: role ?? this.role,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (itemId.present) {
+      map['item_id'] = Variable<int>(itemId.value);
+    }
+    if (contentId.present) {
+      map['content_id'] = Variable<int>(contentId.value);
+    }
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaItemMembersCompanion(')
+          ..write('itemId: $itemId, ')
+          ..write('contentId: $contentId, ')
+          ..write('role: $role, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$CatalogDatabase extends GeneratedDatabase {
   _$CatalogDatabase(QueryExecutor e) : super(e);
   $CatalogDatabaseManager get managers => $CatalogDatabaseManager(this);
@@ -13314,6 +13938,12 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
   late final MomentEdits momentEdits = MomentEdits(this);
   late final VisualHashes visualHashes = VisualHashes(this);
   late final VisualDismissals visualDismissals = VisualDismissals(this);
+  late final MediaItems mediaItems = MediaItems(this);
+  late final MediaItemMembers mediaItemMembers = MediaItemMembers(this);
+  late final Index ixMimContent = Index(
+    'ix_mim_content',
+    'CREATE INDEX ix_mim_content ON media_item_members (content_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
@@ -13368,6 +13998,9 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     momentEdits,
     visualHashes,
     visualDismissals,
+    mediaItems,
+    mediaItemMembers,
+    ixMimContent,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -13390,6 +14023,10 @@ abstract class _$CatalogDatabase extends GeneratedDatabase {
     WritePropagation(
       on: TableUpdateQuery.onTableName('tags', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('content_tags', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName('media_items', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('media_item_members', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -15637,6 +16274,33 @@ final class $ContentsReferences extends BaseReferences<_$CatalogDatabase, Conten
     final cache = $_typedResult.readTableOrNull(_visualHashesRefsTable($_db));
     return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<MediaItems, List<MediaItemRow>> _mediaItemsRefsTable(_$CatalogDatabase db) =>
+      MultiTypedResultKey.fromTable(db.mediaItems, aliasName: 'contents__id__media_items__primary_content_id');
+
+  $MediaItemsProcessedTableManager get mediaItemsRefs {
+    final manager = $MediaItemsTableManager(
+      $_db,
+      $_db.mediaItems,
+    ).filter((f) => f.primaryContentId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_mediaItemsRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<MediaItemMembers, List<MediaItemMemberRow>> _mediaItemMembersRefsTable(
+    _$CatalogDatabase db,
+  ) => MultiTypedResultKey.fromTable(db.mediaItemMembers, aliasName: 'contents__id__media_item_members__content_id');
+
+  $MediaItemMembersProcessedTableManager get mediaItemMembersRefs {
+    final manager = $MediaItemMembersTableManager(
+      $_db,
+      $_db.mediaItemMembers,
+    ).filter((f) => f.contentId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_mediaItemMembersRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $ContentsFilterComposer extends Composer<_$CatalogDatabase, Contents> {
@@ -15761,6 +16425,42 @@ class $ContentsFilterComposer extends Composer<_$CatalogDatabase, Contents> {
           $VisualHashesFilterComposer(
             $db: $db,
             $table: $db.visualHashes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> mediaItemsRefs(Expression<bool> Function($MediaItemsFilterComposer f) f) {
+    final $MediaItemsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.mediaItems,
+      getReferencedColumn: (t) => t.primaryContentId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaItemsFilterComposer(
+            $db: $db,
+            $table: $db.mediaItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> mediaItemMembersRefs(Expression<bool> Function($MediaItemMembersFilterComposer f) f) {
+    final $MediaItemMembersFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.mediaItemMembers,
+      getReferencedColumn: (t) => t.contentId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaItemMembersFilterComposer(
+            $db: $db,
+            $table: $db.mediaItemMembers,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
@@ -15918,6 +16618,44 @@ class $ContentsAnnotationComposer extends Composer<_$CatalogDatabase, Contents> 
     );
     return f(composer);
   }
+
+  Expression<T> mediaItemsRefs<T extends Object>(Expression<T> Function($MediaItemsAnnotationComposer a) f) {
+    final $MediaItemsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.mediaItems,
+      getReferencedColumn: (t) => t.primaryContentId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaItemsAnnotationComposer(
+            $db: $db,
+            $table: $db.mediaItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> mediaItemMembersRefs<T extends Object>(
+    Expression<T> Function($MediaItemMembersAnnotationComposer a) f,
+  ) {
+    final $MediaItemMembersAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.mediaItemMembers,
+      getReferencedColumn: (t) => t.contentId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaItemMembersAnnotationComposer(
+            $db: $db,
+            $table: $db.mediaItemMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $ContentsTableManager
@@ -15940,6 +16678,8 @@ class $ContentsTableManager
             bool contentTagsRefs,
             bool integrityChecksRefs,
             bool visualHashesRefs,
+            bool mediaItemsRefs,
+            bool mediaItemMembersRefs,
           })
         > {
   $ContentsTableManager(_$CatalogDatabase db, Contents table)
@@ -15988,6 +16728,8 @@ class $ContentsTableManager
                 contentTagsRefs = false,
                 integrityChecksRefs = false,
                 visualHashesRefs = false,
+                mediaItemsRefs = false,
+                mediaItemMembersRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -15998,6 +16740,8 @@ class $ContentsTableManager
                     if (contentTagsRefs) db.contentTags,
                     if (integrityChecksRefs) db.integrityChecks,
                     if (visualHashesRefs) db.visualHashes,
+                    if (mediaItemsRefs) db.mediaItems,
+                    if (mediaItemMembersRefs) db.mediaItemMembers,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -16056,6 +16800,24 @@ class $ContentsTableManager
                           referencedColumn: 'content_id',
                           typedResults: items,
                         ),
+                      if (mediaItemsRefs)
+                        await $_getPrefetchedDataByColumns<ContentRow, Contents, MediaItemRow, MediaItems>(
+                          currentTable: table,
+                          referencedTable: $ContentsReferences._mediaItemsRefsTable(db),
+                          managerFromTypedResult: (p0) => $ContentsReferences(db, table, p0).mediaItemsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'primary_content_id',
+                          typedResults: items,
+                        ),
+                      if (mediaItemMembersRefs)
+                        await $_getPrefetchedDataByColumns<ContentRow, Contents, MediaItemMemberRow, MediaItemMembers>(
+                          currentTable: table,
+                          referencedTable: $ContentsReferences._mediaItemMembersRefsTable(db),
+                          managerFromTypedResult: (p0) => $ContentsReferences(db, table, p0).mediaItemMembersRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'content_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -16083,6 +16845,8 @@ typedef $ContentsProcessedTableManager =
         bool contentTagsRefs,
         bool integrityChecksRefs,
         bool visualHashesRefs,
+        bool mediaItemsRefs,
+        bool mediaItemMembersRefs,
       })
     >;
 typedef $FileInstancesCreateCompanionBuilder = FileInstancesCompanion Function({
@@ -17748,6 +18512,7 @@ typedef $MediaMetadataCreateCompanionBuilder = MediaMetadataCompanion Function({
   Value<int?> effMinute,
   Value<int?> effWeekday,
   Value<int?> momentId,
+  Value<String?> contentIdentifier,
 });
 typedef $MediaMetadataUpdateCompanionBuilder = MediaMetadataCompanion Function({
   Value<int> contentId,
@@ -17793,6 +18558,7 @@ typedef $MediaMetadataUpdateCompanionBuilder = MediaMetadataCompanion Function({
   Value<int?> effMinute,
   Value<int?> effWeekday,
   Value<int?> momentId,
+  Value<String?> contentIdentifier,
 });
 
 final class $MediaMetadataReferences extends BaseReferences<_$CatalogDatabase, MediaMetadata, MediaMetadataRow> {
@@ -17955,6 +18721,9 @@ class $MediaMetadataFilterComposer extends Composer<_$CatalogDatabase, MediaMeta
 
   ColumnFilters<int> get effWeekday =>
       $composableBuilder(column: $table.effWeekday, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get contentIdentifier =>
+      $composableBuilder(column: $table.contentIdentifier, builder: (column) => ColumnFilters(column));
 
   $ContentsFilterComposer get contentId {
     final $ContentsFilterComposer composer = $composerBuilder(
@@ -18138,6 +18907,9 @@ class $MediaMetadataOrderingComposer extends Composer<_$CatalogDatabase, MediaMe
   ColumnOrderings<int> get effWeekday =>
       $composableBuilder(column: $table.effWeekday, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get contentIdentifier =>
+      $composableBuilder(column: $table.contentIdentifier, builder: (column) => ColumnOrderings(column));
+
   $ContentsOrderingComposer get contentId {
     final $ContentsOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -18286,6 +19058,9 @@ class $MediaMetadataAnnotationComposer extends Composer<_$CatalogDatabase, Media
 
   GeneratedColumn<int> get effWeekday => $composableBuilder(column: $table.effWeekday, builder: (column) => column);
 
+  GeneratedColumn<String> get contentIdentifier =>
+      $composableBuilder(column: $table.contentIdentifier, builder: (column) => column);
+
   $ContentsAnnotationComposer get contentId {
     final $ContentsAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -18409,6 +19184,7 @@ class $MediaMetadataTableManager
                 Value<int?> effMinute = const Value.absent(),
                 Value<int?> effWeekday = const Value.absent(),
                 Value<int?> momentId = const Value.absent(),
+                Value<String?> contentIdentifier = const Value.absent(),
               }) => MediaMetadataCompanion(
                 contentId: contentId,
                 captureUtcMs: captureUtcMs,
@@ -18453,6 +19229,7 @@ class $MediaMetadataTableManager
                 effMinute: effMinute,
                 effWeekday: effWeekday,
                 momentId: momentId,
+                contentIdentifier: contentIdentifier,
               ),
           createCompanionCallback:
               ({
@@ -18499,6 +19276,7 @@ class $MediaMetadataTableManager
                 Value<int?> effMinute = const Value.absent(),
                 Value<int?> effWeekday = const Value.absent(),
                 Value<int?> momentId = const Value.absent(),
+                Value<String?> contentIdentifier = const Value.absent(),
               }) => MediaMetadataCompanion.insert(
                 contentId: contentId,
                 captureUtcMs: captureUtcMs,
@@ -18543,6 +19321,7 @@ class $MediaMetadataTableManager
                 effMinute: effMinute,
                 effWeekday: effWeekday,
                 momentId: momentId,
+                contentIdentifier: contentIdentifier,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable<MediaMetadata, MediaMetadataRow>(table), $MediaMetadataReferences(db, table, e)))
@@ -23875,6 +24654,620 @@ typedef $VisualDismissalsProcessedTableManager =
       VisualDismissalRow,
       PrefetchHooks Function({bool contentA, bool contentB})
     >;
+typedef $MediaItemsCreateCompanionBuilder = MediaItemsCompanion Function({
+  Value<int> id,
+  required String kind,
+  required int primaryContentId,
+  required String origin,
+  Value<int?> splitAt,
+  required int createdAt,
+});
+typedef $MediaItemsUpdateCompanionBuilder = MediaItemsCompanion Function({
+  Value<int> id,
+  Value<String> kind,
+  Value<int> primaryContentId,
+  Value<String> origin,
+  Value<int?> splitAt,
+  Value<int> createdAt,
+});
+
+final class $MediaItemsReferences extends BaseReferences<_$CatalogDatabase, MediaItems, MediaItemRow> {
+  $MediaItemsReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static Contents _primaryContentIdTable(_$CatalogDatabase db) =>
+      db.contents.createAlias('media_items__primary_content_id__contents__id');
+
+  $ContentsProcessedTableManager get primaryContentId {
+    final $_column = $_itemColumn<int>('primary_content_id')!;
+
+    final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_primaryContentIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<MediaItemMembers, List<MediaItemMemberRow>> _mediaItemMembersRefsTable(
+    _$CatalogDatabase db,
+  ) => MultiTypedResultKey.fromTable(db.mediaItemMembers, aliasName: 'media_items__id__media_item_members__item_id');
+
+  $MediaItemMembersProcessedTableManager get mediaItemMembersRefs {
+    final manager = $MediaItemMembersTableManager(
+      $_db,
+      $_db.mediaItemMembers,
+    ).filter((f) => f.itemId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_mediaItemMembersRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $MediaItemsFilterComposer extends Composer<_$CatalogDatabase, MediaItems> {
+  $MediaItemsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get origin =>
+      $composableBuilder(column: $table.origin, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get splitAt =>
+      $composableBuilder(column: $table.splitAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $ContentsFilterComposer get primaryContentId {
+    final $ContentsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.primaryContentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsFilterComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> mediaItemMembersRefs(Expression<bool> Function($MediaItemMembersFilterComposer f) f) {
+    final $MediaItemMembersFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.mediaItemMembers,
+      getReferencedColumn: (t) => t.itemId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaItemMembersFilterComposer(
+            $db: $db,
+            $table: $db.mediaItemMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $MediaItemsOrderingComposer extends Composer<_$CatalogDatabase, MediaItems> {
+  $MediaItemsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get origin =>
+      $composableBuilder(column: $table.origin, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get splitAt =>
+      $composableBuilder(column: $table.splitAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $ContentsOrderingComposer get primaryContentId {
+    final $ContentsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.primaryContentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsOrderingComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $MediaItemsAnnotationComposer extends Composer<_$CatalogDatabase, MediaItems> {
+  $MediaItemsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get origin => $composableBuilder(column: $table.origin, builder: (column) => column);
+
+  GeneratedColumn<int> get splitAt => $composableBuilder(column: $table.splitAt, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $ContentsAnnotationComposer get primaryContentId {
+    final $ContentsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.primaryContentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsAnnotationComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> mediaItemMembersRefs<T extends Object>(
+    Expression<T> Function($MediaItemMembersAnnotationComposer a) f,
+  ) {
+    final $MediaItemMembersAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.mediaItemMembers,
+      getReferencedColumn: (t) => t.itemId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaItemMembersAnnotationComposer(
+            $db: $db,
+            $table: $db.mediaItemMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $MediaItemsTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          MediaItems,
+          MediaItemRow,
+          $MediaItemsFilterComposer,
+          $MediaItemsOrderingComposer,
+          $MediaItemsAnnotationComposer,
+          $MediaItemsCreateCompanionBuilder,
+          $MediaItemsUpdateCompanionBuilder,
+          (MediaItemRow, $MediaItemsReferences),
+          MediaItemRow,
+          PrefetchHooks Function({bool primaryContentId, bool mediaItemMembersRefs})
+        > {
+  $MediaItemsTableManager(_$CatalogDatabase db, MediaItems table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $MediaItemsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $MediaItemsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $MediaItemsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<int> primaryContentId = const Value.absent(),
+                Value<String> origin = const Value.absent(),
+                Value<int?> splitAt = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+              }) => MediaItemsCompanion(
+                id: id,
+                kind: kind,
+                primaryContentId: primaryContentId,
+                origin: origin,
+                splitAt: splitAt,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String kind,
+                required int primaryContentId,
+                required String origin,
+                Value<int?> splitAt = const Value.absent(),
+                required int createdAt,
+              }) => MediaItemsCompanion.insert(
+                id: id,
+                kind: kind,
+                primaryContentId: primaryContentId,
+                origin: origin,
+                splitAt: splitAt,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable<MediaItems, MediaItemRow>(table), $MediaItemsReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: ({primaryContentId = false, mediaItemMembersRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (mediaItemMembersRefs) db.mediaItemMembers],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (primaryContentId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.primaryContentId,
+                        referencedTable: $MediaItemsReferences._primaryContentIdTable(db),
+                        referencedColumn: $MediaItemsReferences._primaryContentIdTable(db).id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (mediaItemMembersRefs)
+                    await $_getPrefetchedDataByColumns<MediaItemRow, MediaItems, MediaItemMemberRow, MediaItemMembers>(
+                      currentTable: table,
+                      referencedTable: $MediaItemsReferences._mediaItemMembersRefsTable(db),
+                      managerFromTypedResult: (p0) => $MediaItemsReferences(db, table, p0).mediaItemMembersRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'item_id',
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $MediaItemsProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      MediaItems,
+      MediaItemRow,
+      $MediaItemsFilterComposer,
+      $MediaItemsOrderingComposer,
+      $MediaItemsAnnotationComposer,
+      $MediaItemsCreateCompanionBuilder,
+      $MediaItemsUpdateCompanionBuilder,
+      (MediaItemRow, $MediaItemsReferences),
+      MediaItemRow,
+      PrefetchHooks Function({bool primaryContentId, bool mediaItemMembersRefs})
+    >;
+typedef $MediaItemMembersCreateCompanionBuilder = MediaItemMembersCompanion Function({
+  required int itemId,
+  required int contentId,
+  required String role,
+  Value<int> rowid,
+});
+typedef $MediaItemMembersUpdateCompanionBuilder = MediaItemMembersCompanion Function({
+  Value<int> itemId,
+  Value<int> contentId,
+  Value<String> role,
+  Value<int> rowid,
+});
+
+final class $MediaItemMembersReferences
+    extends BaseReferences<_$CatalogDatabase, MediaItemMembers, MediaItemMemberRow> {
+  $MediaItemMembersReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MediaItems _itemIdTable(_$CatalogDatabase db) =>
+      db.mediaItems.createAlias('media_item_members__item_id__media_items__id');
+
+  $MediaItemsProcessedTableManager get itemId {
+    final $_column = $_itemColumn<int>('item_id')!;
+
+    final manager = $MediaItemsTableManager($_db, $_db.mediaItems).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static Contents _contentIdTable(_$CatalogDatabase db) =>
+      db.contents.createAlias('media_item_members__content_id__contents__id');
+
+  $ContentsProcessedTableManager get contentId {
+    final $_column = $_itemColumn<int>('content_id')!;
+
+    final manager = $ContentsTableManager($_db, $_db.contents).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contentIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $MediaItemMembersFilterComposer extends Composer<_$CatalogDatabase, MediaItemMembers> {
+  $MediaItemMembersFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get role => $composableBuilder(column: $table.role, builder: (column) => ColumnFilters(column));
+
+  $MediaItemsFilterComposer get itemId {
+    final $MediaItemsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.mediaItems,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaItemsFilterComposer(
+            $db: $db,
+            $table: $db.mediaItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ContentsFilterComposer get contentId {
+    final $ContentsFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsFilterComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $MediaItemMembersOrderingComposer extends Composer<_$CatalogDatabase, MediaItemMembers> {
+  $MediaItemMembersOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => ColumnOrderings(column));
+
+  $MediaItemsOrderingComposer get itemId {
+    final $MediaItemsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.mediaItems,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaItemsOrderingComposer(
+            $db: $db,
+            $table: $db.mediaItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ContentsOrderingComposer get contentId {
+    final $ContentsOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsOrderingComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $MediaItemMembersAnnotationComposer extends Composer<_$CatalogDatabase, MediaItemMembers> {
+  $MediaItemMembersAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get role => $composableBuilder(column: $table.role, builder: (column) => column);
+
+  $MediaItemsAnnotationComposer get itemId {
+    final $MediaItemsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.mediaItems,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $MediaItemsAnnotationComposer(
+            $db: $db,
+            $table: $db.mediaItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $ContentsAnnotationComposer get contentId {
+    final $ContentsAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contentId,
+      referencedTable: $db.contents,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $ContentsAnnotationComposer(
+            $db: $db,
+            $table: $db.contents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $MediaItemMembersTableManager
+    extends
+        RootTableManager<
+          _$CatalogDatabase,
+          MediaItemMembers,
+          MediaItemMemberRow,
+          $MediaItemMembersFilterComposer,
+          $MediaItemMembersOrderingComposer,
+          $MediaItemMembersAnnotationComposer,
+          $MediaItemMembersCreateCompanionBuilder,
+          $MediaItemMembersUpdateCompanionBuilder,
+          (MediaItemMemberRow, $MediaItemMembersReferences),
+          MediaItemMemberRow,
+          PrefetchHooks Function({bool itemId, bool contentId})
+        > {
+  $MediaItemMembersTableManager(_$CatalogDatabase db, MediaItemMembers table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $MediaItemMembersFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $MediaItemMembersOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $MediaItemMembersAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> itemId = const Value.absent(),
+            Value<int> contentId = const Value.absent(),
+            Value<String> role = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => MediaItemMembersCompanion(itemId: itemId, contentId: contentId, role: role, rowid: rowid),
+          createCompanionCallback: ({
+            required int itemId,
+            required int contentId,
+            required String role,
+            Value<int> rowid = const Value.absent(),
+          }) => MediaItemMembersCompanion.insert(itemId: itemId, contentId: contentId, role: role, rowid: rowid),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<MediaItemMembers, MediaItemMemberRow>(table),
+                  $MediaItemMembersReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({itemId = false, contentId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (itemId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.itemId,
+                        referencedTable: $MediaItemMembersReferences._itemIdTable(db),
+                        referencedColumn: $MediaItemMembersReferences._itemIdTable(db).id,
+                      ) as T;
+                    }
+                    if (contentId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.contentId,
+                        referencedTable: $MediaItemMembersReferences._contentIdTable(db),
+                        referencedColumn: $MediaItemMembersReferences._contentIdTable(db).id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $MediaItemMembersProcessedTableManager =
+    ProcessedTableManager<
+      _$CatalogDatabase,
+      MediaItemMembers,
+      MediaItemMemberRow,
+      $MediaItemMembersFilterComposer,
+      $MediaItemMembersOrderingComposer,
+      $MediaItemMembersAnnotationComposer,
+      $MediaItemMembersCreateCompanionBuilder,
+      $MediaItemMembersUpdateCompanionBuilder,
+      (MediaItemMemberRow, $MediaItemMembersReferences),
+      MediaItemMemberRow,
+      PrefetchHooks Function({bool itemId, bool contentId})
+    >;
 
 class $CatalogDatabaseManager {
   final _$CatalogDatabase _db;
@@ -23907,4 +25300,6 @@ class $CatalogDatabaseManager {
   $MomentEditsTableManager get momentEdits => $MomentEditsTableManager(_db, _db.momentEdits);
   $VisualHashesTableManager get visualHashes => $VisualHashesTableManager(_db, _db.visualHashes);
   $VisualDismissalsTableManager get visualDismissals => $VisualDismissalsTableManager(_db, _db.visualDismissals);
+  $MediaItemsTableManager get mediaItems => $MediaItemsTableManager(_db, _db.mediaItems);
+  $MediaItemMembersTableManager get mediaItemMembers => $MediaItemMembersTableManager(_db, _db.mediaItemMembers);
 }

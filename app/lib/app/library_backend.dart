@@ -39,6 +39,10 @@ abstract interface class LibraryBackend {
   Future<void> setManualDate(Iterable<int> ids, WallTime wall);
   Future<void> clearManualDate(Iterable<int> ids);
 
+  // Itens agrupados (RAW+JPEG, Live Photo): só catálogo.
+  Future<void> splitItem(int itemId);
+  Future<int> groupItems(List<int> contentIds);
+
   // Leitura de metadados.
   MetadataStatus get metadataStatus;
   Stream<MetadataStatus> watchMetadataStatus();
@@ -135,6 +139,12 @@ class CoreLibraryBackend implements LibraryBackend {
 
   @override
   Future<void> clearManualDate(Iterable<int> ids) => core.dates.clearManual(ids);
+
+  @override
+  Future<void> splitItem(int itemId) => core.items.split(itemId);
+
+  @override
+  Future<int> groupItems(List<int> contentIds) => core.items.group(contentIds);
 
   @override
   MetadataStatus get metadataStatus => core.metadata.current;

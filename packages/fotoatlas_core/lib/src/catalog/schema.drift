@@ -175,7 +175,9 @@ CREATE TABLE media_metadata (
   eff_day             TEXT,               -- 'AAAA-MM-DD' (hora local)
   eff_minute          INTEGER,            -- minuto do dia (0..1439), hora local
   eff_weekday         INTEGER,            -- 1 = segunda … 7 = domingo
-  moment_id           INTEGER REFERENCES moments(id) ON DELETE SET NULL
+  moment_id           INTEGER REFERENCES moments(id) ON DELETE SET NULL,
+  -- v9 (Fase 9): Live Photo — identificador comum à foto e ao vídeo (Apple ContentIdentifier).
+  content_identifier  TEXT
 ) AS MediaMetadataRow;
 CREATE INDEX ix_mm_capture ON media_metadata(capture_utc_ms);
 CREATE INDEX ix_mm_camera  ON media_metadata(make, model);
@@ -405,3 +407,24 @@ CREATE TABLE visual_dismissals (
   PRIMARY KEY (content_a, content_b),
   CHECK (content_a < content_b)
 ) AS VisualDismissalRow;
+
+-- v9 (Fase 9): item lógico — RAW+JPEG e Live Photo mostrados como um item só
+-- (ADR 0024). Só visual: cópia, comparação, reorganização e verificação
+-- continuam por arquivo; copiar/reorganizar o item leva todos os arquivos.
+-- split_at: o usuário desagrupou (o grupo não volta sozinho).
+CREATE TABLE media_items (
+  id                 INTEGER NOT NULL PRIMARY KEY,
+  kind               TEXT    NOT NULL CHECK (kind IN ('raw_jpeg','live_photo','manual')),
+  primary_content_id INTEGER NOT NULL REFERENCES contents(id),
+  origin             TEXT    NOT NULL CHECK (origin IN ('auto','manual')),
+  split_at           INTEGER,
+  created_at         INTEGER NOT NULL
+) AS MediaItemRow;
+
+CREATE TABLE media_item_members (
+  item_id    INTEGER NOT NULL REFERENCES media_items(id) ON DELETE CASCADE,
+  content_id INTEGER NOT NULL REFERENCES contents(id),
+  role       TEXT    NOT NULL CHECK (role IN ('photo','raw','video')),
+  PRIMARY KEY (item_id, content_id)
+) AS MediaItemMemberRow;
+CREATE INDEX ix_mim_content ON media_item_members(content_id);

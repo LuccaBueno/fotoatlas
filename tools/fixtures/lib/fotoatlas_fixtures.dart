@@ -511,3 +511,45 @@ void generateSimilarDemo(String outDir) {
   }
   File(p.join(outDir, 'Viagem', 'tela_preta.jpg')).writeAsBytesSync(flatJpeg(3, 3, 3));
 }
+
+/// Demonstração dos itens agrupados (Fase 9): RAW+JPEG e Live Photos.
+///
+///     Câmera/IMG_1001.JPG + IMG_1001.DNG   → RAW+JPEG
+///     Câmera/IMG_1002.JPG + IMG_1002.DNG   → RAW+JPEG
+///     iPhone/IMG_2001.JPG + IMG_2001.MOV   → Live Photo (vídeo de 2,5 s)
+///     iPhone/IMG_2002.JPG + IMG_2002.MOV   → sozinhos (vídeo de 1 min não é Live Photo)
+///     iPhone/IMG_3001.JPG                  → sozinha
+///
+/// O "RAW" é simulado: um arquivo com o conteúdo de um JPEG sintético e a
+/// extensão `.DNG` (o ExifTool lê a data dele). Nada vem de fotos reais.
+void generateItemsDemo(String outDir) {
+  assertAllowedOutput(outDir);
+  final dir = Directory(outDir);
+  if (dir.existsSync() && dir.listSync().isNotEmpty) {
+    throw StateError('A pasta de saída precisa estar vazia: $outDir');
+  }
+  void write(String rel, List<int> bytes, DateTime at) {
+    final f = File(p.join(outDir, rel));
+    f.parent.createSync(recursive: true);
+    f
+      ..writeAsBytesSync(bytes)
+      ..setLastModifiedSync(at);
+  }
+
+  var n = 0;
+  List<int> photo(DateTime at, String make, String model) =>
+      jpegWithExif(ExifSpec(dateTimeOriginal: at, make: make, model: model, uniqueId: 'itens-${n++}', color: n));
+
+  for (final (i, at) in [(1001, DateTime(2024, 6, 1, 10, 15)), (1002, DateTime(2024, 6, 1, 10, 16))]) {
+    write('Câmera/IMG_$i.JPG', photo(at, 'Canon', 'EOS R6'), at);
+    write('Câmera/IMG_$i.DNG', photo(at, 'Canon', 'EOS R6'), at);
+  }
+  final live = DateTime(2024, 6, 2, 18, 40);
+  write('iPhone/IMG_2001.JPG', photo(live, 'Apple', 'iPhone 13'), live);
+  write('iPhone/IMG_2001.MOV', mp4WithCreationTime(live.toUtc(), durationMs: 2500, salt: 21), live);
+  final long = DateTime(2024, 6, 2, 19);
+  write('iPhone/IMG_2002.JPG', photo(long, 'Apple', 'iPhone 13'), long);
+  write('iPhone/IMG_2002.MOV', mp4WithCreationTime(long.toUtc(), durationMs: 60000, salt: 22), long);
+  final alone = DateTime(2024, 6, 3, 8);
+  write('iPhone/IMG_3001.JPG', photo(alone, 'Apple', 'iPhone 13'), alone);
+}

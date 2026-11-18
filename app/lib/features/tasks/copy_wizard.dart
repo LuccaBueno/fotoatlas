@@ -411,6 +411,18 @@ class CopyPreviewView extends StatelessWidget {
               ),
             ),
         ],
+        if (p.grouped > 0)
+          line(
+            Icons.layers_outlined,
+            '${plural(p.grouped, 'arquivo vai', 'arquivos vão')} junto com a foto de que '
+            '${p.grouped == 1 ? 'faz' : 'fazem'} parte (RAW ou vídeo da Live Photo), para a mesma pasta.'
+            '${switch (p.addedForGroup) {
+              0 => '',
+              final n when n == p.grouped => n == 1 ? ' Ele não estava marcado.' : ' Nenhum deles estava marcado.',
+              final n => ' ${plural(n, 'deles não estava marcado', 'deles não estavam marcados')}.',
+            }}',
+            key: const ValueKey('copy-grouped'),
+          ),
         if (free != null)
           p.enoughSpace
               ? line(

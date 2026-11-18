@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../catalog/catalog_database.dart';
+import '../items/media_items_service.dart';
 import '../platform/win_fs.dart';
 import '../safe_io/source_reader.dart';
 import '../sources/sources_service.dart';
@@ -25,11 +26,19 @@ bool isFat(String? fileSystem) {
 /// Monta a prévia de uma cópia (spec §3.3, §11.1 passo 2). Só lê: catálogo e
 /// atributos de arquivos no destino (para achar conflitos de nome).
 class CopyPlanner {
-  CopyPlanner(this.db, this.sources, {FreeSpaceProbe? freeSpace, this.reserveBytes = defaultReserveBytes})
-    : freeSpace = freeSpace ?? diskFreeBytes;
+  CopyPlanner(
+    this.db,
+    this.sources, {
+    FreeSpaceProbe? freeSpace,
+    this.reserveBytes = defaultReserveBytes,
+    this.mediaItems,
+  }) : freeSpace = freeSpace ?? diskFreeBytes;
 
   final CatalogDatabase db;
   final SourcesService sources;
+
+  /// Itens lógicos (RAW+JPEG, Live Photo); `null` = cada arquivo sozinho.
+  final MediaItemsService? mediaItems;
   final FreeSpaceProbe freeSpace;
   final int reserveBytes;
 
@@ -48,15 +57,39 @@ class CopyPlanner {
     final destFolder = _cleanFolder(request.destFolder);
     final fat = isFat(dest.filesystem);
 
+    // Item lógico (RAW+JPEG, Live Photo): copiar um arquivo do grupo leva
+    // todos, e a prévia mostra quais entraram por isso.
+    final selected = request.contentIds.toSet();
+    final groupOf = <int, MediaItemView>{};
+    if (request.keepGroups && mediaItems != null) {
+      for (final item in await mediaItems!.itemsFor(selected)) {
+        for (final id in item.contentIds) {
+          groupOf.putIfAbsent(id, () => item);
+        }
+      }
+    }
+    final units = <List<int>>[];
+    final placed = <int>{};
+    for (final id in selected) {
+      if (placed.contains(id)) continue;
+      final g = groupOf[id];
+      final unit = g == null
+          ? [id]
+          : [g.primaryContentId, ...g.contentIds.where((c) => c != g.primaryContentId)].where(placed.add).toList();
+      placed.add(id);
+      if (unit.isNotEmpty) units.add(unit);
+    }
+    final allIds = [for (final u in units) ...u];
+
     final moments = templateUsesMoment(request.template) ? await loadMomentHeads(db) : const <int, MomentHead>{};
-    final rows = await _instances(request.contentIds, moments);
-    final there = await _contentsIn(request.destSourceId, request.contentIds);
+    final rows = await _instances(allIds, moments);
+    final there = await _contentsIn(request.destSourceId, allIds);
     final byContent = <int, List<_Row>>{};
     for (final r in rows) {
       byContent.putIfAbsent(r.contentId, () => []).add(r);
     }
 
-    final items = <PlannedCopy>[];
+    final planned = <PlannedCopy>[];
     final unavailable = <UnavailableCopy>[];
     final tooLarge = <UnavailableCopy>[];
     var alreadyThere = 0;
@@ -65,17 +98,18 @@ class CopyPlanner {
     final used = await _usedNames(request.destSourceId);
     final prefer = request.preferSourceIds.toSet();
 
-    for (final contentId in request.contentIds.toSet()) {
+    /// A origem escolhida para [contentId], ou `null` (já anotado o porquê).
+    _Row? pick(int contentId) {
       final candidates = byContent[contentId] ?? const <_Row>[];
       if (there.contains(contentId)) {
         alreadyThere++;
         alreadyBytes += candidates.isEmpty ? 0 : candidates.first.size;
-        continue;
+        return null;
       }
       final usable = candidates.where((r) => r.sourceId != request.destSourceId).toList();
       if (usable.isEmpty) {
         unavailable.add(UnavailableCopy(contentId, '?', 'Nenhuma cópia catalogada (o arquivo pode ter sumido).'));
-        continue;
+        return null;
       }
       final ready = usable.where((r) => r.availability == 'present' && _ready(r)).toList()
         ..sort((a, b) {
@@ -92,63 +126,80 @@ class CopyPlanner {
             ? 'Está só na nuvem (não foi baixado para o computador).'
             : 'Nenhuma origem com este arquivo está conectada (ex.: "${r.sourceName}").';
         unavailable.add(UnavailableCopy(contentId, r.name, why));
-        continue;
+        return null;
       }
       final src = ready.first;
       if (fat && src.size > fat32MaxFileSize) {
         tooLarge.add(
           UnavailableCopy(contentId, src.name, 'Maior que 4 GB: o disco de destino (FAT32) não aceita arquivos assim.'),
         );
-        continue;
+        return null;
       }
-      final vars = src.vars;
+      return src;
+    }
+
+    for (final unit in units) {
+      final picked = [for (final id in unit) (id, pick(id))];
+      final ready = [
+        for (final (id, src) in picked)
+          if (src != null) (id, src),
+      ];
+      if (ready.isEmpty) continue;
+      // O grupo fica junto: todos na pasta da foto principal (ou do primeiro
+      // que vai ser copiado) e, se um nome já existir, o mesmo sufixo em todos.
+      final lead = ready.first.$2;
+      final vars = lead.vars;
       final folder = [
         destFolder,
         renderFolder(request.template, vars, toConfirm: request.toConfirmFolder),
       ].where((s) => s.isNotEmpty).join('/');
-      final wanted = request.fileNames[contentId] ?? src.name;
-      final safeName = sanitizeName(wanted);
-      var candidate = folder.isEmpty ? safeName : '$folder/$safeName';
-      var renamed = false;
-      var ask = false;
-      if (_taken(candidate, used, root)) {
-        if (request.conflict == ConflictPolicy.ask) {
-          ask = true;
-        } else {
-          renamed = true;
-          for (var n = 1; ; n++) {
-            final next = folder.isEmpty ? withSuffix(safeName, n) : '$folder/${withSuffix(safeName, n)}';
-            if (!_taken(next, used, root)) {
-              candidate = next;
-              break;
-            }
-          }
-        }
+      final names = [
+        for (final (id, src) in ready)
+          (request.fileNames[id] ?? src.name, sanitizeName(request.fileNames[id] ?? src.name)),
+      ];
+      String at(String name, int n) {
+        final file = n == 0 ? name : withSuffix(name, n);
+        return folder.isEmpty ? file : '$folder/$file';
       }
-      used.add(candidate.toLowerCase());
-      items.add(
-        PlannedCopy(
-          contentId: contentId,
-          instanceId: src.instanceId,
-          srcSourceId: src.sourceId,
-          srcRelPath: src.relPath,
-          size: src.size,
-          sha256: src.sha256,
-          mtime: src.mtime,
-          dstRelPath: candidate,
-          originalName: safeName == wanted ? null : wanted,
-          renamedForConflict: renamed,
-          askConflict: ask,
-          lowConfidenceDate: vars.dated && src.confidence == 'low',
-          undated: templateUsesMoment(request.template)
-              ? !vars.inMoment
-              : !vars.dated && templateUsesDate(request.template),
-        ),
-      );
+
+      var suffix = 0;
+      final takenNow = [for (final (_, safe) in names) _taken(at(safe, 0), used, root)];
+      final ask = request.conflict == ConflictPolicy.ask;
+      if (!ask && takenNow.contains(true)) {
+        for (suffix = 1; names.any((n) => _taken(at(n.$2, suffix), used, root)); suffix++) {}
+      }
+      final primaryName = unit.length > 1 ? ready.first.$2.name : null;
+      for (var k = 0; k < ready.length; k++) {
+        final (contentId, src) = ready[k];
+        final (wanted, safeName) = names[k];
+        final candidate = at(safeName, ask ? 0 : suffix);
+        used.add(candidate.toLowerCase());
+        planned.add(
+          PlannedCopy(
+            contentId: contentId,
+            instanceId: src.instanceId,
+            srcSourceId: src.sourceId,
+            srcRelPath: src.relPath,
+            size: src.size,
+            sha256: src.sha256,
+            mtime: src.mtime,
+            dstRelPath: candidate,
+            originalName: safeName == wanted ? null : wanted,
+            renamedForConflict: !ask && suffix > 0,
+            askConflict: ask && takenNow[k],
+            lowConfidenceDate: vars.dated && lead.confidence == 'low',
+            undated: templateUsesMoment(request.template)
+                ? !vars.inMoment
+                : !vars.dated && templateUsesDate(request.template),
+            groupedWith: k == 0 ? null : primaryName,
+            addedForGroup: !selected.contains(contentId),
+          ),
+        );
+      }
     }
 
     final folders = <String, (int, int)>{};
-    for (final i in items) {
+    for (final i in planned) {
       final slash = i.dstRelPath.lastIndexOf('/');
       final dir = slash < 0 ? '' : i.dstRelPath.substring(0, slash);
       final (n, b) = folders[dir] ?? (0, 0);
@@ -162,7 +213,7 @@ class CopyPlanner {
       destName: dest.name,
       destDisplay: _display(dest, destFolder),
       destFileSystem: dest.filesystem,
-      items: items,
+      items: planned,
       alreadyThere: alreadyThere,
       alreadyThereBytes: alreadyBytes,
       unavailable: unavailable,

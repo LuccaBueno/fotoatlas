@@ -42,6 +42,7 @@ export 'src/settings/settings_store.dart';
 export 'src/sources/volumes.dart';
 export 'src/similar/similar_grouping.dart' show SimilarGroup, SimilarLevel, SimilarPair;
 export 'src/similar/similar_service.dart';
+export 'src/items/media_items_service.dart';
 export 'src/similar/visual_hash.dart' show VisualHash;
 export 'src/thumbs/thumbnail_service.dart' show ThumbnailService, exifThumbnail;
 export 'src/util/clock.dart' show fileTimeToDateTime;
