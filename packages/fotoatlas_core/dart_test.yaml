@@ -7,3 +7,9 @@ tags:
   # CI roda sozinho, depois dos outros (dart test -x perf; dart test -t perf).
   perf:
     timeout: 10x
+  # Grava ~4 GB de verdade (FAT32 recusando no meio da escrita, num VHD): na CI
+  # roda sozinho, no fim. Em paralelo, a gravação e o esvaziamento do cache
+  # travavam a E/S dos outros testes por mais de 1 min (run 44778741144) e
+  # deixavam o scan do teste de desempenho 11x mais lento (run 44774253106).
+  disco_pesado:
+    timeout: 10x

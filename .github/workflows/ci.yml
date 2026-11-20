@@ -82,12 +82,18 @@ jobs:
           FOTOATLAS_VHD_TESTS: "1"
           # Testes com ExifTool/ffprobe reais não podem ser pulados na CI.
           FOTOATLAS_REQUIRE_TOOLS: "1"
-        run: dart test -x perf --reporter expanded
+        run: dart test -x perf -x disco_pesado --reporter expanded
       # Sozinho: gerar 50 mil arquivos satura o disco do runner e atrasava os
       # outros testes (gravações com synchronous=FULL) até o limite de 30 s.
       - name: Core — testes de desempenho (50 mil e 100 mil arquivos)
         working-directory: packages/fotoatlas_core
         run: dart test -t perf --reporter expanded
+      # Sozinho e por último: grava ~4 GB de verdade num VHD FAT32 (ver dart_test.yaml).
+      - name: Core — teste que grava 4 GB (FAT32 em VHD)
+        working-directory: packages/fotoatlas_core
+        env:
+          FOTOATLAS_VHD_TESTS: "1"
+        run: dart test -t disco_pesado --reporter expanded
 
   app:
     name: App (Flutter Windows)

@@ -136,6 +136,8 @@ void main() {
     },
     skip: _enabled ? false : 'defina FOTOATLAS_VHD_TESTS=1 (exige administrador)',
     timeout: const Timeout(Duration(minutes: 10)),
+    // Grava ~4 GB no VHD: roda sozinho (ver dart_test.yaml).
+    tags: ['disco_pesado'],
   );
 
   test(

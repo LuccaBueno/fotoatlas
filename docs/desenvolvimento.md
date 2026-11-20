@@ -36,7 +36,7 @@ cd C:\dev\fotoatlas\tools\fixtures; dart pub get; dart test
 cd C:\dev\fotoatlas\app; flutter pub get; flutter analyze; flutter test
 ```
 
-Os testes do core marcados `slow` (50 mil arquivos, CLI) podem ser pulados com `dart test -x slow`. Os de desempenho (`perf`: geram 50 mil arquivos e saturam o disco) rodam sozinhos na CI, depois dos outros: `dart test -x perf` e depois `dart test -t perf`.
+Os testes do core marcados `slow` (50 mil arquivos, CLI) podem ser pulados com `dart test -x slow`. Os de desempenho (`perf`: geram 50 mil arquivos e saturam o disco) rodam sozinhos na CI, depois dos outros. O teste marcado `disco_pesado` (grava cerca de 4 GB num VHD FAT32; exige administrador e `FOTOATLAS_VHD_TESTS=1`) roda sozinho, por último: `dart test -x perf -x disco_pesado`, depois `dart test -t perf` e depois `dart test -t disco_pesado`.
 
 ## Instalador (Fase 8)
 
