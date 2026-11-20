@@ -1,6 +1,6 @@
 ﻿# ADR 0025 — Google Takeout: `.json` só no catálogo; zip extraído pela cópia segura
 
-- **Status:** aceita
+- **Status:** aceita (a exceção da migração foi aprovada pelo usuário em 2026-11-18)
 - **Data:** 2026-11-18
 
 ## Contexto

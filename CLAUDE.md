@@ -23,7 +23,7 @@ O usuário NÃO vai colar prompts longos. Ele vai dizer apenas coisas como **"co
 ### Portões de aprovação
 - **Etapa 0 (planejamento):** apresente o plano e **pare**. Só implemente depois do usuário dizer "aprovado".
 - **Início de cada fase:** mostre o plano da fase em até ~15 linhas e pergunte se pode seguir. Se o usuário disser "pode seguir direto" ou "sem parar", siga as fases sem pedir aprovação até que ele diga o contrário (registre isso no ROADMAP).
-- Sempre pare e pergunte antes de: adicionar dependência com licença diferente de MIT/BSD/Apache/LGPL, mudar o schema de forma incompatível, ou qualquer decisão que contrarie a especificação.
+- Sempre pare e pergunte antes de: adicionar dependência com licença diferente de MIT/BSD/Apache/LGPL/domínio público/CC0, mudar o schema de forma incompatível, ou qualquer decisão que contrarie a especificação.
 
 ---
 
