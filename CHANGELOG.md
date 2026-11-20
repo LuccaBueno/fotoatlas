@@ -13,6 +13,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - **Configurações › Mapa:** mapa online (OpenStreetMap), **desligado por padrão**. Ligar pede confirmação com o que é enviado (só a região do mapa que você olha e o endereço de internet do computador; nunca os locais das fotos, nomes de arquivos ou o catálogo). As imagens do mapa ficam só na memória.
 - Demonstração: pasta "Viagens (mapa)" (fotos sintéticas com local) no `run-app.ps1 -DemoPersistente`.
 - Teste de arquitetura: só a atualização e o mapa online acessam a internet.
+- CI: o teste que grava cerca de 4 GB num VHD FAT32 roda sozinho, depois dos de desempenho (em paralelo, travava a E/S dos outros testes).
 
 ## [1.3.0-beta.3] — 2026-11-18 (pré-lançamento)
 
