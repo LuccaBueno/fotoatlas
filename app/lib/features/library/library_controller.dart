@@ -6,7 +6,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 import '../../app/library_backend.dart';
 import '../../app/providers.dart';
 
-enum LibraryView { timeline, grid, list }
+enum LibraryView { timeline, grid, list, map }
 
 class LibraryState {
   LibraryState({

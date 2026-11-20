@@ -627,3 +627,54 @@ void generateTakeoutDemo(String outDir) {
     zip({'$party/IMG_0102.jpg.json': json('IMG_0102.jpg', DateTime.utc(2024, 3, 9, 21, 40))}),
   );
 }
+
+/// Demonstração do mapa (Fase 9): fotos sintéticas com local no EXIF.
+///
+///     Rio/        3 fotos perto do Cristo e de Copacabana (viram um grupo ao afastar)
+///     São Paulo/  2 fotos na Avenida Paulista
+///     Lisboa/     2 fotos
+///     Tóquio/     1 foto
+///     Fiji/       2 fotos, uma de cada lado da linha de data (179° L e 179° O)
+///     Sem local/  2 fotos sem GPS (não aparecem no mapa)
+///
+/// Locais públicos e conhecidos; nada vem de fotos reais.
+void generateMapDemo(String outDir) {
+  assertAllowedOutput(outDir);
+  final dir = Directory(outDir);
+  if (dir.existsSync() && dir.listSync().isNotEmpty) {
+    throw StateError('A pasta de saída precisa estar vazia: $outDir');
+  }
+  var n = 0;
+  void write(String rel, DateTime at, {double? lat, double? lon}) {
+    final f = File(p.join(outDir, rel));
+    f.parent.createSync(recursive: true);
+    f
+      ..writeAsBytesSync(
+        jpegWithExif(
+          ExifSpec(
+            dateTimeOriginal: at,
+            make: 'Apple',
+            model: 'iPhone 13',
+            lat: lat,
+            lon: lon,
+            uniqueId: 'mapa-${n++}',
+            color: n,
+          ),
+        ),
+      )
+      ..setLastModifiedSync(at);
+  }
+
+  write('Rio/IMG_4001.JPG', DateTime(2024, 1, 10, 9, 30), lat: -22.9519, lon: -43.2105);
+  write('Rio/IMG_4002.JPG', DateTime(2024, 1, 10, 9, 42), lat: -22.9522, lon: -43.2110);
+  write('Rio/IMG_4003.JPG', DateTime(2024, 1, 10, 16, 5), lat: -22.9711, lon: -43.1822);
+  write('São Paulo/IMG_4101.JPG', DateTime(2024, 2, 3, 11), lat: -23.5614, lon: -46.6559);
+  write('São Paulo/IMG_4102.JPG', DateTime(2024, 2, 3, 11, 20), lat: -23.5630, lon: -46.6543);
+  write('Lisboa/IMG_4201.JPG', DateTime(2024, 4, 20, 15), lat: 38.6916, lon: -9.2160);
+  write('Lisboa/IMG_4202.JPG', DateTime(2024, 4, 21, 10), lat: 38.7139, lon: -9.1334);
+  write('Tóquio/IMG_4301.JPG', DateTime(2024, 6, 8, 19), lat: 35.6586, lon: 139.7454);
+  write('Fiji/IMG_4401.JPG', DateTime(2024, 8, 1, 8), lat: -16.78, lon: 179.33);
+  write('Fiji/IMG_4402.JPG', DateTime(2024, 8, 2, 8), lat: -16.98, lon: -179.88);
+  write('Sem local/IMG_4501.JPG', DateTime(2024, 9, 1, 12));
+  write('Sem local/IMG_4502.JPG', DateTime(2024, 9, 2, 12));
+}

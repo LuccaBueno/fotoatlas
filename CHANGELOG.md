@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.3.0-beta.4] — 2026-11-20 (pré-lançamento)
+
+### Adicionado
+- **Mapa** na Biblioteca (ao lado de Lista): as fotos e os vídeos com local do filtro atual, agrupados pela proximidade, com o número de cada grupo. Roda do mouse, **+**/**−** e arrastar para navegar; clicar num grupo aproxima; clicar numa foto abre os detalhes; **Ver todos os locais** enquadra tudo. Diz quantos itens ficaram de fora por não ter local. ADR 0026.
+- **Ver as fotos desta área:** a área visível do mapa vira o filtro **Área do mapa** (também atravessando a linha de data, no Pacífico) e a Biblioteca volta para a linha do tempo. O filtro entra nos filtros salvos.
+- O mapa **funciona sem internet**, com contornos de países e estados embutidos (Natural Earth, domínio público). **Nenhum local sai do computador.**
+- **Configurações › Mapa:** mapa online (OpenStreetMap), **desligado por padrão**. Ligar pede confirmação com o que é enviado (só a região do mapa que você olha e o endereço de internet do computador; nunca os locais das fotos, nomes de arquivos ou o catálogo). As imagens do mapa ficam só na memória.
+- Demonstração: pasta "Viagens (mapa)" (fotos sintéticas com local) no `run-app.ps1 -DemoPersistente`.
+- Teste de arquitetura: só a atualização e o mapa online acessam a internet.
+
 ## [1.3.0-beta.3] — 2026-11-18 (pré-lançamento)
 
 ### Adicionado

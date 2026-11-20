@@ -149,7 +149,7 @@ fotoatlas/
 | Fsync | `FlushFileBuffers` (verificar se `RandomAccessFile.flush()` usa isso; se não, chamar via FFI) |
 | Caminhos longos | Prefixo `\\?\` onde necessário |
 | Hash perceptual | dHash/pHash sobre as miniaturas (fora do MVP) |
-| Mapa | `flutter_map`; tiles online só com consentimento, ou pacote offline (fora do MVP) |
+| Mapa | Desenho próprio, offline com contornos embutidos (Natural Earth); tiles online só com consentimento (ADR 0026) |
 
 Antes de adotar cada dependência, registrar um ADR em `docs/adr/` com alternativas, licença, manutenção e motivo da escolha.
 

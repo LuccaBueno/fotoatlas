@@ -13,6 +13,7 @@ import 'filter_bar.dart';
 import 'item_tile.dart';
 import 'library_controller.dart';
 import 'library_layout.dart';
+import 'library_map.dart';
 import 'library_strings.dart';
 import 'selection_bar.dart';
 
@@ -114,6 +115,12 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                               icon: Icon(Icons.view_list),
                               label: Text('Lista'),
                             ),
+                            ButtonSegment(
+                              value: LibraryView.map,
+                              tooltip: 'Fotos e vídeos com local, no mapa (sem internet, a menos que você ligue)',
+                              icon: Icon(Icons.map_outlined),
+                              label: Text('Mapa'),
+                            ),
                           ],
                           selected: {state.view},
                           onSelectionChanged: (s) => c.setView(s.first),
@@ -149,12 +156,18 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (wide && state.view != LibraryView.list && state.index.length > 0)
+                    if (wide &&
+                        state.view != LibraryView.list &&
+                        state.view != LibraryView.map &&
+                        state.index.length > 0)
                       SizedBox(
                         width: 210,
                         child: _NavigationTree(index: state.index, onJump: _jump),
                       ),
-                    if (wide && state.view != LibraryView.list && state.index.length > 0)
+                    if (wide &&
+                        state.view != LibraryView.list &&
+                        state.view != LibraryView.map &&
+                        state.index.length > 0)
                       const VerticalDivider(width: 1),
                     Expanded(child: _body(context, state)),
                     if (state.focused != null) ...[
@@ -193,6 +206,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
       );
     }
     if (state.view == LibraryView.list) return _ListBody(state: state);
+    if (state.view == LibraryView.map) return LibraryMapView(filter: state.filter, index: state.index);
     return LayoutBuilder(
       builder: (context, box) {
         const pad = 16.0;

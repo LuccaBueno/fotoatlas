@@ -8,6 +8,7 @@ import '../../l10n/format.dart';
 import '../integrity/integrity_ui.dart';
 import '../update/update_notice.dart';
 import 'dates_settings.dart';
+import 'map_settings.dart';
 
 /// Configurações: backup do catálogo, datas e verificação periódica (o disco
 /// principal fica no cartão do disco, em Dispositivos).
@@ -80,6 +81,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           const IntegritySettingsCard(),
           const SizedBox(height: 16),
           const UpdateSettingsCard(),
+          const SizedBox(height: 16),
+          const MapSettingsCard(),
           const SizedBox(height: 16),
           Card(
             child: Padding(

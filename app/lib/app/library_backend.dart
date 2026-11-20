@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 /// O que a Biblioteca, os momentos e as datas precisam do core (Fase 4).
@@ -42,6 +44,14 @@ abstract interface class LibraryBackend {
   // Itens agrupados (RAW+JPEG, Live Photo): só catálogo.
   Future<void> splitItem(int itemId);
   Future<int> groupItems(List<int> contentIds);
+
+  // Mapa: pontos do catálogo e, só com consentimento, imagens do OpenStreetMap.
+  Future<MapPoints> mapPoints(LibraryFilter filter);
+  Future<bool> onlineMapEnabled();
+  Future<void> setOnlineMapEnabled(bool enabled);
+
+  /// Imagem z/x/y do mapa online; `null` desligado, sem internet ou com erro.
+  Future<Uint8List?> mapTile(int z, int x, int y);
 
   // Leitura de metadados.
   MetadataStatus get metadataStatus;
@@ -145,6 +155,20 @@ class CoreLibraryBackend implements LibraryBackend {
 
   @override
   Future<int> groupItems(List<int> contentIds) => core.items.group(contentIds);
+
+  late final _tiles = OnlineMapTiles(SettingsStore(core.catalog.db));
+
+  @override
+  Future<MapPoints> mapPoints(LibraryFilter filter) => core.library.mapPoints(filter);
+
+  @override
+  Future<bool> onlineMapEnabled() => _tiles.isEnabled();
+
+  @override
+  Future<void> setOnlineMapEnabled(bool enabled) => _tiles.setEnabled(enabled);
+
+  @override
+  Future<Uint8List?> mapTile(int z, int x, int y) => _tiles.tile(z, x, y);
 
   @override
   MetadataStatus get metadataStatus => core.metadata.current;

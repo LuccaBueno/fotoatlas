@@ -258,6 +258,23 @@ void main() {
     expect(leaf, isEmpty);
   });
 
+  test('só a atualização e o mapa online acessam a internet', () {
+    // Tudo offline (spec §2.12): a atualização pergunta ao GitHub (ADR 0020) e
+    // o mapa online só busca imagens z/x/y depois do consentimento (ADR 0026).
+    final root = Directory(p.join('lib', 'src'));
+    final net = <String>[];
+    for (final file in root.listSync(recursive: true).whereType<File>()) {
+      if (!file.path.endsWith('.dart')) continue;
+      final src = file.readAsStringSync();
+      if (RegExp(r'\b(HttpClient|WebSocket|RawSocket|Socket\.connect|SecureSocket)\b').hasMatch(src)) {
+        net.add(p.relative(file.path, from: root.path).replaceAll(r'\', '/'));
+      }
+    }
+    expect(net.toSet(), {'update/update_check.dart', 'update/update_download.dart', 'map/map_tiles.dart'});
+    final tiles = File(p.join(root.path, 'map', 'map_tiles.dart')).readAsStringSync();
+    expect(tiles, contains('if (!_enabled ||'), reason: 'desligado, nenhum pedido');
+  });
+
   test('o core não depende de Flutter', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     expect(pubspec, isNot(contains('flutter')));

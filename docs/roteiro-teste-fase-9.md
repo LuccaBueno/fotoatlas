@@ -10,7 +10,7 @@ Comandos para o Windows PowerShell, com caminhos completos. Tudo usa **dados de 
 | a. Fotos parecidas | `1.3.0-beta.1` | pronto para testar |
 | b. RAW+JPEG e Live Photos agrupados | `1.3.0-beta.2` | pronto para testar |
 | c. Importação do Google Fotos (Takeout) | `1.3.0-beta.3` | pronto para testar |
-| d. Mapa | `1.3.0-beta.4` | não iniciado |
+| d. Mapa | `1.3.0-beta.4` | pronto para testar |
 
 ## Antes de começar
 
@@ -200,9 +200,44 @@ Não aparece nenhuma das duas informações.
 
 **Limitações conhecidas:** só os `takeout-….zip` aparecem para extrair. Pausar no meio de um vídeo grande do zip só pausa no fim daquele arquivo. A data do Google Fotos é "provável", não "confiável": às vezes o Google usa a data do envio.
 
-## d. Mapa
+## d. Mapa (1.3.0-beta.4)
 
-_Não iniciado._
+Na **Biblioteca › Mapa**, as fotos e os vídeos com local aparecem no mapa, agrupados pela proximidade. O mapa **funciona sem internet**, com os contornos de países e estados que vêm com o FotoAtlas (Natural Earth). **Nenhum local sai do computador** a menos que você ligue o mapa online (OpenStreetMap) em **Configurações › Mapa**, e ligar pede confirmação mostrando exatamente o que é enviado.
+
+A pasta de demonstração `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Viagens (mapa)` é gerada sozinha com `-DemoPersistente`. As fotos são sintéticas, com local gravado no EXIF:
+
+| Pasta | Fotos | Onde |
+| --- | --- | --- |
+| `Rio` | 3 | Cristo Redentor (2) e Copacabana |
+| `São Paulo` | 2 | Avenida Paulista |
+| `Lisboa` | 2 | Belém e centro |
+| `Tóquio` | 1 | Torre de Tóquio |
+| `Fiji` | 2 | uma de cada lado da linha de data (179° L e 179° O) |
+| `Sem local` | 2 | sem GPS: não aparecem no mapa |
+
+**d.1. Cadastrar.** Abra a demonstração (comando em "Antes de começar", com `v1.3.0-beta.4`). Cadastre a pasta `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Viagens (mapa)` (**Dispositivos › Adicionar dispositivo › Escolher uma pasta…**) e escaneie. Espere a conferência e a leitura das datas terminarem.
+
+**d.2. O mapa sem internet.** Na **Biblioteca**, filtre pelo dispositivo "Viagens (mapa)" e clique em **Mapa** (ao lado de Lista). Em cima: "10 fotos e vídeos com local · 2 sem local (não aparecem)". Embaixo, à direita: "Mapa sem internet: contornos de países e estados (Natural Earth)…". Aparecem os contornos dos países, com bolinhas: uma com **5** no Brasil (ou, conforme o tamanho da janela, **3** no Rio e **2** em São Paulo), uma com **2** em Lisboa, uma em Tóquio e as duas de Fiji, uma em cada ponta do mapa. Como o mapa dá a volta no mundo, com a janela larga os continentes se repetem nas laterais.
+
+**d.3. Aproximar e mover.** Use a roda do mouse (aproxima onde está o ponteiro), os botões **+** e **−** à direita, e arraste para mover. Ao aproximar o Brasil, os contornos dos estados aparecem e a bolinha de 5 se separa em Rio (3) e São Paulo (2). Clique numa bolinha com número: o mapa aproxima até ela. Aproximando o Rio, o Cristo (2) e Copacabana (1) se separam. **Ver todos os locais** (o terceiro botão) volta a mostrar tudo. Arrastar para os lados dá a volta no mundo.
+
+**d.4. Detalhes.** Clique numa bolinha sem número (uma foto só): abre o painel de detalhes daquela foto, com a **Localização**.
+
+**d.5. Filtrar pela área.** Enquadre só o Brasil e clique em **Ver as fotos desta área**: a Biblioteca volta para a **Linha do tempo** com "5 itens" e o chip **Área do mapa**. Clicar no chip volta ao mapa; o **x** do chip tira o filtro. Com a área, dá para salvar o filtro (**Filtros salvos › Salvar este filtro…**) e ele volta igual.
+
+**d.6. Linha de data.** Enquadre Fiji de modo que as duas fotos fiquem na tela (uma de cada lado da linha de data, no meio do Pacífico) e clique em **Ver as fotos desta área**: "2 itens".
+
+**d.7. Mapa online só com confirmação.** Em **Configurações › Mapa**, ligue **Usar o mapa online (OpenStreetMap)**. Aparece "Ligar o mapa online?" explicando o que vai e o que não vai (os locais das fotos, os nomes dos arquivos e o catálogo nunca são enviados). Clique em **Cancelar**: continua desligado. Ligue de novo e confirme com **Ligar o mapa online**. Volte ao **Mapa**: com internet, aparecem as ruas e cidades do OpenStreetMap e, embaixo, "© colaboradores do OpenStreetMap". Sem internet (por exemplo, com o Wi-Fi desligado), continuam aparecendo os contornos.
+
+**d.8. Desligar.** Volte em **Configurações › Mapa** e desligue: o **Mapa** volta a ser só os contornos, sem nenhum pedido à internet.
+
+**d.9. Nenhuma foto mudou.** O FotoAtlas só lê o local das fotos. Com o ExifTool baixado pelo projeto, a posição continua igual à que foi gerada:
+```powershell
+& 'C:\dev\fotoatlas\third_party\bin\exiftool\exiftool.exe' -GPSPosition -n 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Viagens (mapa)\Rio\IMG_4001.JPG'
+```
+Deve mostrar `-22.9519 -43.2105`.
+
+**Limitações conhecidas:** os contornos são simplificados (para achar onde as fotos foram tiradas, não para navegar); ruas e nomes de cidades só com o mapa online. As imagens do mapa online ficam só na memória e são baixadas de novo a cada abertura. Fotos sem local (muitas das recebidas por mensagem) não aparecem no mapa.
 
 ## Resultado
 

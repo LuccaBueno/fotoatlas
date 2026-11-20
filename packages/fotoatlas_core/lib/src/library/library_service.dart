@@ -195,6 +195,15 @@ class LibraryItemDetail {
   final int? offsetMin;
 }
 
+/// Pontos do mapa: conteúdo, latitude e longitude (mesma posição nos três).
+class MapPoints {
+  const MapPoints(this.ids, this.lat, this.lon);
+  final Int64List ids;
+  final Float64List lat;
+  final Float64List lon;
+  int get length => ids.length;
+}
+
 /// Um item agrupado, para o painel de detalhes (desagrupar).
 class ItemGroup {
   const ItemGroup({required this.id, required this.kind, required this.primaryContentId, required this.files});
@@ -505,6 +514,32 @@ class LibraryService {
       }
       i = j;
     }
+  }
+
+  /// Fotos e vídeos com local que o filtro encontra, para o mapa (só o
+  /// catálogo; nada sai do computador). Itens agrupados aparecem uma vez.
+  Future<MapPoints> mapPoints(LibraryFilter filter) async {
+    final (where, vars) = filter.toSql(simpleCopies: await _sourcesDisjoint());
+    final row = await db
+        .customSelect(
+          "SELECT group_concat(c.id || ',' || mm.lat || ',' || mm.lon, ';') AS pts, COUNT(*) AS n "
+          '${_from(filter)} AND mm.lat IS NOT NULL AND mm.lon IS NOT NULL AND $where',
+          variables: vars,
+        )
+        .getSingle();
+    final n = row.read<int>('n');
+    final ids = Int64List(n);
+    final lat = Float64List(n), lon = Float64List(n);
+    final text = row.readNullable<String>('pts') ?? '';
+    var i = 0;
+    for (final p in text.isEmpty ? const <String>[] : text.split(';')) {
+      final parts = p.split(',');
+      ids[i] = int.parse(parts[0]);
+      lat[i] = double.parse(parts[1]);
+      lon[i] = double.parse(parts[2]);
+      i++;
+    }
+    return MapPoints(ids, lat, lon);
   }
 
   /// Só a contagem (para os chips e o Início).

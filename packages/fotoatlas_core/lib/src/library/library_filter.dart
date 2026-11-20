@@ -72,6 +72,10 @@ enum FilterKind {
 
   /// Texto no nome, no caminho ou no nome do momento.
   text,
+
+  /// Área do mapa (valores: [sul, norte, oeste, leste] em graus; oeste > leste
+  /// atravessa a linha de data). Só fotos e vídeos com local.
+  area,
 }
 
 /// Períodos do dia pela hora local (spec §10).
@@ -285,6 +289,17 @@ class LibraryFilter {
         return '$mm.width * $mm.height >= ?';
       case FilterKind.duration:
         return '$mm.duration_ms IS NOT NULL AND ${range('$mm.duration_ms')}';
+      case FilterKind.area:
+        if (f.values.length != 4) return '0';
+        final [s, n, w, e] = [for (final v in f.values) (v as num).toDouble()];
+        vars
+          ..add(Variable.withReal(s))
+          ..add(Variable.withReal(n));
+        final lon = w <= e ? '$mm.lon BETWEEN ? AND ?' : '($mm.lon >= ? OR $mm.lon <= ?)';
+        vars
+          ..add(Variable.withReal(w))
+          ..add(Variable.withReal(e));
+        return '$mm.lat IS NOT NULL AND $mm.lat BETWEEN ? AND ? AND $lon';
       case FilterKind.gps:
         final has = f.values.isEmpty || f.values.first == true;
         return has ? '$mm.lat IS NOT NULL' : '$mm.lat IS NULL';

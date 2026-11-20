@@ -45,3 +45,4 @@ Modelo:
 | [0023](0023-fotos-parecidas.md) | Fotos parecidas: pHash + dHash das miniaturas em cache, níveis de confiança, só sugestões, nunca recodifica uma foto | aceita |
 | [0024](0024-itens-agrupados.md) | Itens agrupados: RAW+JPEG e Live Photos como um item só, só no catálogo; cópia e reorganização levam o grupo todo | aceita |
 | [0025](0025-google-takeout.md) | Google Takeout: datas e locais dos `.json` só no catálogo; zip extraído pela cópia segura; `media_metadata` refeita uma vez | aceita |
+| [0026](0026-mapa.md) | Mapa: offline com contornos do Natural Earth embutidos; OpenStreetMap só com consentimento em Configurações; filtro por área | aceita |

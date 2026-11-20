@@ -156,6 +156,18 @@ class FilterBar extends ConsumerWidget {
           'ativos',
           () => showDialog<void>(context: context, builder: (_) => const _MoreDialog()),
         ),
+        if (f.of(FilterKind.area) != null)
+          InputChip(
+            key: const ValueKey('chip-area'),
+            tooltip: _chipHelp['area'],
+            avatar: const Icon(Icons.map_outlined, size: 18),
+            label: const Text('Área do mapa'),
+            selected: true,
+            showCheckmark: false,
+            onPressed: () => c.setView(LibraryView.map),
+            onDeleted: () => c.setCondition(null, FilterKind.area),
+            deleteButtonTooltipMessage: 'Tirar este filtro',
+          ),
         if (!f.isEmpty) ...[
           ActionChip(
             key: const ValueKey('chip-advanced'),
@@ -674,6 +686,7 @@ String conditionLabel(FilterCondition c) => switch (c.kind) {
   FilterKind.backup => 'Backup: ${c.values.map((v) => backupStateLabel(BackupState.values.byName('$v'))).join(', ')}',
   FilterKind.metaError => 'Erro ao ler os dados',
   FilterKind.text => 'Texto: "${c.text}"',
+  FilterKind.area => 'Área do mapa',
 };
 
 /// Construtor avançado: todas (E) ou qualquer (OU) condição, cada uma com NÃO.
@@ -809,6 +822,7 @@ class _SavedFiltersMenu extends ConsumerWidget {
 
 /// Dica de cada chip de filtro, em linguagem simples.
 const _chipHelp = {
+  'area': 'Só as fotos e vídeos com local dentro da área escolhida no mapa. Clique para ver o mapa.',
   'year': 'Mostrar só as fotos e vídeos tirados nestes anos.',
   'source': 'Mostrar só o que tem cópia nestes dispositivos (celular, HD, pasta…).',
   'camera': 'Mostrar só o que foi tirado por estas câmeras ou celulares (pelos dados gravados na foto).',

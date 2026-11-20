@@ -16,6 +16,8 @@ export 'src/hash/hash_service.dart' show HashService, HashStatus;
 export 'src/helper/helper_client.dart' show HelperClient, HelperException, HelperStatus, HelperVolumeProvider;
 export 'src/library/library_filter.dart';
 export 'src/library/library_service.dart';
+export 'src/map/map_geo.dart';
+export 'src/map/map_tiles.dart';
 export 'src/metadata/capture_date.dart'
     show
         DateConfidence,
