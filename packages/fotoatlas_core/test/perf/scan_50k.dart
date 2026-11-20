@@ -30,13 +30,17 @@ void main() {
     genWatch.stop();
     final id = await env.addFolder('Fotos');
 
-    var maxLagMs = 0;
+    var maxLagMs = 0, maxLagAtMs = 0, over50 = 0;
     var ticks = 0;
     final tickWatch = Stopwatch()..start();
     var expected = 10;
     final timer = Timer.periodic(const Duration(milliseconds: 10), (_) {
       final lag = tickWatch.elapsedMilliseconds - expected;
-      if (lag > maxLagMs) maxLagMs = lag;
+      if (lag > maxLagMs) {
+        maxLagMs = lag;
+        maxLagAtMs = tickWatch.elapsedMilliseconds;
+      }
+      if (lag > 50) over50++;
       expected = tickWatch.elapsedMilliseconds + 10;
       ticks++;
     });
@@ -52,7 +56,9 @@ void main() {
     final report =
         'FASE1-EVIDENCIA geracao=${genWatch.elapsedMilliseconds}ms '
         'scan=${scanWatch.elapsedMilliseconds}ms arquivos=${result.filesSeen} '
-        'pastas=${result.dirsDone} eventos=$progressEvents ticks=$ticks atrasoMaximo=${maxLagMs}ms';
+        'pastas=${result.dirsDone} eventos=$progressEvents ticks=$ticks atrasoMaximo=${maxLagMs}ms '
+        // Para diagnosticar um atraso alto: quando foi (desde o início do scan) e quantos passaram de 50 ms.
+        'atrasoMaximoEm=${maxLagAtMs}ms atrasosAcimaDe50ms=$over50';
     stdout.writeln(report);
 
     expect(result.status, 'completed');
