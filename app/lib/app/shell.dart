@@ -49,6 +49,10 @@ const libraryDestination = 1;
 /// Índice do destino "Repetidos" (Limpar repetidos).
 const dedupeDestination = 5;
 
+/// Índices de "Parecidas" e "Configurações".
+const similarDestination = 4;
+const settingsDestination = 7;
+
 /// Navegação lateral com as 6 telas da spec (§3.2), "Parecidas" e "Repetidos" (Fase 9).
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, this.firstRunGuide = false});

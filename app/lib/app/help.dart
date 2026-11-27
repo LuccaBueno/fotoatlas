@@ -4,6 +4,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import '../l10n/strings.dart';
 import '../widgets/backup_state.dart';
+import 'ask.dart';
 import 'providers.dart';
 
 /// Ajuda curta de cada tela (botão "?"): o que é, o que dá para fazer e o
@@ -25,6 +26,7 @@ const helpTopics = [
     'Ver quantas fotos e vídeos estão sem backup (só em 1 lugar).',
     'Clicar num número (ex.: "sem backup") para ver esses arquivos na Biblioteca, já filtrados.',
     'Acompanhar a conferência do conteúdo e o escaneamento.',
+    'Fazer backup do celular com o assistente (passo a passo; dá para pausar e continuar).',
     'Ir direto para os dispositivos ou para a comparação.',
     'Ver avisos de arquivos possivelmente corrompidos e de discos que não são verificados há tempo.',
   ], backupLegend: true),
@@ -170,6 +172,8 @@ class HelpDialog extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const AskPanel(),
+              const Divider(height: 32),
               Text(topic.what),
               const SizedBox(height: 12),
               Text('O que dá para fazer', style: theme.textTheme.titleSmall),
@@ -216,7 +220,13 @@ class HelpDialog extends ConsumerWidget {
                     children: [
                       SizedBox(
                         width: 240,
-                        child: Row(children: [Icon(icon, size: 16), const SizedBox(width: 4), Text(name)]),
+                        child: Row(
+                          children: [
+                            Icon(icon, size: 16),
+                            const SizedBox(width: 4),
+                            Flexible(child: Text(name)),
+                          ],
+                        ),
                       ),
                       Expanded(child: Text(text, style: theme.textTheme.bodySmall)),
                     ],
@@ -227,6 +237,15 @@ class HelpDialog extends ConsumerWidget {
         ),
       ),
       actions: [
+        TextButton(
+          key: const ValueKey('help-promises'),
+          onPressed: () {
+            final host = Navigator.of(context).context;
+            Navigator.pop(context);
+            showPromises(host);
+          },
+          child: const Text('O que o FotoAtlas faz (e o que nunca faz)'),
+        ),
         TextButton(
           key: const ValueKey('reopen-guide'),
           onPressed: () {

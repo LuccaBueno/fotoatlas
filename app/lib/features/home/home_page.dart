@@ -10,6 +10,8 @@ import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
 import '../../widgets/connection_badge.dart';
 import '../../widgets/count_link.dart';
+import '../backup/phone_backup_store.dart';
+import '../backup/phone_backup_wizard.dart';
 import '../integrity/integrity_ui.dart';
 
 /// Início: as respostas às perguntas "o que eu tenho e onde está?" e "o que já
@@ -32,6 +34,8 @@ class HomePage extends ConsumerWidget {
                 padding: const EdgeInsets.all(24),
                 children: [
                   _Overview(sources: list),
+                  const SizedBox(height: 16),
+                  const PhoneBackupCard(),
                   const SizedBox(height: 16),
                   ..._alerts(context, list, progress),
                   _IntegrityAlerts(sources: list),
@@ -314,6 +318,13 @@ class _Welcome extends StatelessWidget {
                 icon: const Icon(Icons.add),
                 label: const Text('Adicionar dispositivo'),
               ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                key: const ValueKey('home-phone-backup'),
+                onPressed: () => showPhoneBackupWizard(context),
+                icon: const Icon(Icons.backup_outlined),
+                label: const Text('Fazer backup do celular'),
+              ),
             ],
           ),
         ),
@@ -387,6 +398,47 @@ class _IntegrityAlerts extends ConsumerWidget {
             ValueKey('alert-stale-${o.sourceId}'),
           ),
       ],
+    );
+  }
+}
+
+/// Destaque do Início: "Fazer backup do celular" (ou continuar o que ficou
+/// pela metade).
+class PhoneBackupCard extends ConsumerWidget {
+  const PhoneBackupCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final session = ref.watch(phoneBackupSessionProvider).value;
+    return Card(
+      color: theme.colorScheme.primaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Icon(Icons.phone_android, size: 40, color: theme.colorScheme.onPrimaryContainer),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                session == null
+                    ? 'Copie para um HD só as fotos e vídeos do celular que ainda não estão nele, passo a passo. '
+                          'Nada é apagado do celular.'
+                    : 'Há um backup do celular pela metade. Continue de onde parou.',
+                style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onPrimaryContainer),
+              ),
+            ),
+            const SizedBox(width: 16),
+            FilledButton.icon(
+              key: const ValueKey('home-phone-backup'),
+              style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18)),
+              onPressed: () => showPhoneBackupWizard(context),
+              icon: const Icon(Icons.backup_outlined),
+              label: Text(session == null ? 'Fazer backup do celular' : 'Continuar o backup do celular'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
