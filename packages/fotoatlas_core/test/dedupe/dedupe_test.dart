@@ -96,10 +96,23 @@ void main() {
     await s.dedupe.setKeepRule(KeepRule.oldest);
     expect(await s.dedupe.keepRule(), KeepRule.oldest);
     final photo = (await s.groups()).singleWhere((g) => g.mediaType == 'photo');
-    final oldest = [...photo.copies]..sort((x, y) => x.ctime!.compareTo(y.ctime!));
-    expect(photo.suggestedKeepId, oldest.first.instanceId);
+    // A sugerida tem a menor data de criação (cópias feitas no mesmo instante
+    // empatam; aí vale o desempate da pasta organizada, testado abaixo).
+    final first = photo.copies.map((c) => c.ctime!).reduce((a, b) => a < b ? a : b);
+    expect(photo.copies.singleWhere((c) => c.instanceId == photo.suggestedKeepId).ctime, first);
     expect(photo.reason, contains('mais antiga'));
     expect(KeepRule.values.map((r) => r.name), ['organized', 'oldest']);
+
+    // Desempate determinístico (função pura): mais antiga pela criação, depois
+    // pela modificação, depois a da pasta organizada.
+    DedupeCopy c(int id, String rel, int ctime, int mtime) =>
+        DedupeCopy(instanceId: id, relPath: rel, sizeBytes: 1, ctime: ctime, mtime: mtime);
+    expect(DedupeService.suggestKeep([c(1, 'b/x.jpg', 5, 1), c(2, 'a/x.jpg', 4, 9)], KeepRule.oldest).$1, 2);
+    expect(DedupeService.suggestKeep([c(1, 'b/x.jpg', 5, 2), c(2, 'a/x.jpg', 5, 1)], KeepRule.oldest).$1, 2);
+    expect(
+      DedupeService.suggestKeep([c(1, 'Bagunca/x (1).jpg', 5, 1), c(2, 'Fotos/2024/x.jpg', 5, 1)], KeepRule.oldest).$1,
+      2,
+    );
   });
 
   test('prévia: nada marcado não remove nada; o que sai, quantos e o espaço; a escolhida fica', () async {
