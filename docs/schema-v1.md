@@ -1,6 +1,6 @@
 ﻿# Schema SQLite v1 — FotoAtlas
 
-- Versão do schema: **3** (`PRAGMA user_version = 3`, gerido pelo drift). A v1 está descrita nas seções 1–6; as mudanças aditivas da v2 e da v3 estão nas seções 7 e 8.
+- Versão atual do schema: **11** (`PRAGMA user_version = 11`, gerido pelo drift). A v1 está descrita nas seções 1–6; as mudanças da v2 em diante, nas seções 7–16.
 - Data: 2026-10-26 (Etapa 0)
 - Identificadores em inglês; os rótulos em PT-BR ficam na UI.
 
@@ -620,3 +620,28 @@ CREATE TABLE takeout_json (
 ```
 
 **Exceção à regra das migrações aditivas:** o CHECK de `media_metadata.date_source` ganha `'takeout'`. Como o SQLite não muda um CHECK no lugar, a tabela `media_metadata` é refeita (`TableMigration` do drift) com os mesmos dados e índices, na mesma transação. Nenhuma outra tabela aponta para ela. O teste `v9 → v10` confere os dados, os índices e a origem nova.
+
+## 16. v11 (Fase 9, Limpar repetidos, 2026-11-27) — segunda exceção às migrações aditivas
+
+Migração `v10 → v11` numa transação, depois do backup `pre-migracao-v10-<data>.db`. ADR 0027 (aprovada pelo usuário em 2026-11-27).
+
+```sql
+-- operations.kind ganha 'dedupe_trash' ("Limpar repetidos": cópias repetidas no
+-- mesmo dispositivo mandadas para a Lixeira do Windows).
+kind TEXT NOT NULL CHECK (kind IN
+  ('copy','reorganize_move','undo','restore','catalog_backup_copy','dedupe_trash'))
+```
+
+**Exceção à regra das migrações aditivas:** como o SQLite não muda um CHECK no lugar, a tabela `operations` é refeita (`TableMigration` do drift) com os mesmos dados, na mesma transação. `operation_items`, `operation_events`, `integrity_checks` e `operations.undo_of` apontam para ela pelo nome, que não muda: as chaves estrangeiras ficam desligadas só durante a troca, `PRAGMA foreign_key_check` precisa vir vazio no fim (senão a migração falha e nada muda) e elas voltam a valer ao abrir. O teste `v10 → v11` confere o histórico (operações, itens, eventos, verificações), as referências e o tipo novo.
+
+Itens de uma limpeza (`operation_items`, sem colunas novas):
+
+| Coluna | Na limpeza de repetidos |
+|---|---|
+| `src_rel_path`, `src_instance_id` | O arquivo que vai para a Lixeira |
+| `dst_rel_path_planned` | A cópia que **fica** (o grupo) |
+| `expected_sha256` | O conteúdo do grupo; `src_sha256` = o conferido na hora |
+| `expected_size`, `expected_mtime` | Tamanho e data da prévia (depois, os conferidos na hora) |
+| `state` | `pending → publishing` (intenção gravada) `→ published` (foi para a Lixeira) ou `failed` (grupo pulado, com o motivo) |
+
+O arquivo que foi para a Lixeira fica no catálogo com `availability = 'missing'` (o próximo escaneamento o encontra de novo se for restaurado).

@@ -62,6 +62,10 @@
 | `write_refused` | Caminho de escrita fora das regras da seção 6 | não |
 | `already_exists` | Destino já existe (`CreateNew`) | não |
 | `changed_during_read` | Arquivo do celular mudou depois do scan ou durante a leitura (Fase 3) | não |
+| `changed` | `files.recycle`: o arquivo mudou (tamanho ou data) desde a conferência (Fase 9) | não |
+| `no_recycle_bin` | `files.recycle`: neste disco o Windows apagaria de vez (sem Lixeira); nada foi removido (Fase 9) | não |
+| `in_use` | `files.recycle`: o arquivo está aberto em outro programa (Fase 9) | sim |
+| `not_recycled` | `files.recycle`: o Windows não confirmou que o arquivo foi para a Lixeira (Fase 9) | não |
 | `internal` | Exceção inesperada (detalhes no stderr) | sim |
 
 ## 5. Métodos
@@ -170,6 +174,16 @@ Para testes e demonstração (o core repassa `FOTOATLAS_FAKE_DEVICES`). Cada `*.
 - O destino é conferido **antes** de ler a origem; arquivo de destino já existente: `already_exists` (nunca sobrescreve).
 - O core publica a miniatura renomeando o temporário (`<sha>_256.jpg.<id>.tmp` → `<sha>_256.jpg`) e apaga as leituras parciais (`_leitura/`) depois de usar.
 
+### 5.5. Lixeira — "Limpar repetidos" (Fase 9, ADR 0027)
+
+| Método | Params | Resultado |
+|---|---|---|
+| `files.recycle` | `{"path","expectedSize","expectedMtime"?}` | Manda **um** arquivo para a Lixeira do Windows pelo `IFileOperation` do Shell (`FOF_ALLOWUNDO` + `FOFX_RECYCLEONDELETE`, sem janelas, num thread STA); `{"recycled":true,"recycledPath"}` (onde o Windows guardou, para diagnóstico). |
+
+- Antes de chamar o Shell: caminho absoluto e sem `..`; só arquivo comum (pasta ou atalho: recusado); tamanho igual a `expectedSize` e data de modificação igual a `expectedMtime` (FILETIME em string decimal), senão `changed`.
+- **Nunca apaga de vez:** o ouvinte do Shell (`IFileOperationProgressSink`) recusa no `PreDeleteItem` qualquer item sem `TSF_DELETE_RECYCLE_IF_POSSIBLE` (unidade sem Lixeira, rede, arquivo maior que a Lixeira, Lixeira desligada): `no_recycle_bin`, e o arquivo fica. Só responde `recycled` se o Windows devolver o item criado na Lixeira (`PostDeleteItem`).
+- O core só chama `files.recycle` depois de reconferir o SHA-256 do arquivo e da cópia que fica, e de gravar a intenção no diário.
+
 ## 6. Regras de escrita do helper (defesa em profundidade)
 
 O helper **recusa** (`write_refused`) qualquer escrita que não cumpra todas as regras:
@@ -177,7 +191,7 @@ O helper **recusa** (`write_refused`) qualquer escrita que não cumpra todas as 
 1. `devices.pullToFile`: `destPath` absoluto, com componente de pasta `.fotoatlas-tmp`, terminando em `.part` e sem `..` após a normalização.
 2. `thumbnails.get` e `devices.readHead`: `outPath` dentro do `--cache-dir` recebido na inicialização (`--cache-dir`, a pasta de miniaturas do core).
 3. Sempre `FileMode.CreateNew` (nunca sobrescreve) e `FileShare.None` durante a escrita.
-4. Nenhum método abre arquivo de origem com acesso de escrita; nenhum método apaga, move ou renomeia.
+4. Nenhum método abre arquivo de origem com acesso de escrita; nenhum método apaga, move ou renomeia — a única exceção é `files.recycle` (§5.5), que só manda para a **Lixeira** e recusa a remoção definitiva.
 
 Testes do helper (`dotnet test`) cobrem cada regra de recusa.
 

@@ -11,6 +11,7 @@ Comandos para o Windows PowerShell, com caminhos completos. Tudo usa **dados de 
 | b. RAW+JPEG e Live Photos agrupados | `1.3.0-beta.2` | pronto para testar |
 | c. Importação do Google Fotos (Takeout) | `1.3.0-beta.3` | pronto para testar |
 | d. Mapa | `1.3.0-beta.4` | pronto para testar |
+| e. Limpar repetidos e números clicáveis | `1.3.0-beta.5` | pronto para testar |
 
 ## Antes de começar
 
@@ -238,6 +239,60 @@ A pasta de demonstração `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_p
 Deve mostrar `-22.9519 -43.2105`.
 
 **Limitações conhecidas:** os contornos são simplificados (para achar onde as fotos foram tiradas, não para navegar); ruas e nomes de cidades só com o mapa online. As imagens do mapa online ficam só na memória e são baixadas de novo a cada abertura. Fotos sem local (muitas das recebidas por mensagem) não aparecem no mapa.
+
+## e. Limpar repetidos e números clicáveis (1.3.0-beta.5)
+
+A pasta de demonstração `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Repetidos` é gerada sozinha na primeira abertura com `-DemoPersistente`. Ela tem 8 fotos sintéticas (desenhos coloridos, nada de fotos reais), com 4 conteúdos diferentes:
+
+| Conteúdo | Cópias | Onde |
+| --- | --- | --- |
+| Praia | 3 | `Fotos\2024\2024-07 Praia\IMG_0101.JPG`, `Downloads\IMG_0101.JPG`, `WhatsApp Images\IMG_0101 (1).JPG` |
+| Festa | 2 | `Backup antigo\Festa\IMG_0201.JPG` (criada primeiro) e `Fotos\2024\2024-08 Festa\IMG_0201.JPG` |
+| Viagem | 2 | `Fotos\2024\2024-09 Viagem\IMG_0301.JPG` e `Cópia de segurança\IMG_0301 - Cópia.JPG` |
+| Viagem (outra) | 1 | `Fotos\2024\2024-09 Viagem\IMG_0302.JPG` (única: nunca aparece) |
+
+**Atenção:** este item **manda arquivos da demonstração para a Lixeira do Windows** de verdade (só da pasta acima). No fim, o passo e.12 mostra como restaurá-los ou esvaziá-los.
+
+**e.1. Abrir e cadastrar.** Abra a demonstração (comando em "Antes de começar", com `v1.3.0-beta.5`). Antes de mudar, o FotoAtlas guarda `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\catalogo\backups\pre-migracao-v10-<data>.db` (o catálogo passa para a versão 11). Cadastre a pasta `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Repetidos` (**Dispositivos › Adicionar dispositivo › Escolher uma pasta…**) e escaneie. Espere a conferência terminar.
+
+**e.2. Números clicáveis no cartão.** No cartão "Repetidos" em **Dispositivos**, passe o mouse sobre "7 arquivos com cópia conferida": o cursor vira a mãozinha e aparece a dica **Ver estes arquivos**. Clique: abre a **Biblioteca** com o dispositivo "Repetidos" e o filtro **Situação: Tem cópia conferida** — aparecem 3 itens (Praia, Festa, Viagem; cada conteúdo uma vez). O **x** do filtro tira a situação. Volte a **Dispositivos** e clique em "1 arquivo sem backup (só em 1 lugar)": aparece só `IMG_0302.JPG`. Faça o mesmo no **Início** (os números do quadro "O que já tem backup…" e o "sem backup" de cada dispositivo): abrem a Biblioteca filtrada pela mesma situação (no quadro geral, de todos os dispositivos).
+
+**e.3. A tela nova.** Volte a **Dispositivos** e clique em "4 arquivos repetidos": abre **Repetidos** (menu lateral, logo abaixo de Parecidas) já no dispositivo "Repetidos". No rodapé: "3 grupos de repetidos. Nenhum marcado: nada vai sair." e o botão **Revisar e enviar para a Lixeira…** desligado. Nenhum grupo vem marcado.
+
+**e.4. As cópias lado a lado.** Cada grupo mostra todas as cópias, com a miniatura, **Nome**, **Caminho completo**, **Pasta**, **Modificado em**, **Tamanho** e **Resolução**. Em cada grupo uma cópia está com **Fica esta** (a sugerida) e o porquê ("Sugerida: está numa pasta organizada por data."). Clique em **Abrir a foto** numa cópia: abre no visualizador de fotos do Windows. Clique em **Mostrar na pasta**: abre o Explorador com o arquivo selecionado. Feche os dois.
+
+**e.5. A regra da sugestão.** Em **Sugerir que fique**, escolha **A mais antiga**: no grupo da Festa, **Fica esta** passa para `Backup antigo › Festa › IMG_0201.JPG` (criada primeiro). Volte para **A da pasta mais organizada**. Feche e abra o FotoAtlas: a regra escolhida continua.
+
+**e.6. Trocar qual fica e marcar um grupo.** No grupo da Praia, clique em **Ficar com esta** na cópia de `Downloads` e marque **Limpar este grupo** (a caixa do grupo). As outras duas cópias mostram **Vai para a Lixeira**; o rodapé diz "1 de 3 grupos marcados — 2 arquivos iriam para a Lixeira (…)". Clique em **Desmarcar todos**: volta "Nenhum marcado".
+
+**e.7. Um grupo por vez.** Clique em **Um grupo por vez**: "Grupo 1 de 3". Use **Não mexer e ir para o próximo** no primeiro e **Limpar este grupo e ir para o próximo** no segundo; as setas voltam e avançam. Clique em **Todos os grupos** e depois em **Aceitar as sugestões de todos**: "3 de 3 grupos marcados — 4 arquivos iriam para a Lixeira".
+
+**e.8. A prévia não remove nada.** Clique em **Revisar e enviar para a Lixeira…**. A janela lista os 4 arquivos (cada um com "Fica: …"), diz quantos e quanto espaço libera. O botão **Enviar 4 arquivos para a Lixeira** só liga depois de marcar **Entendi…**. Clique em **Voltar** e confira que os 8 arquivos continuam:
+```powershell
+(Get-ChildItem -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Repetidos' -Recurse -File).Count
+```
+Deve mostrar `8`.
+
+**e.9. Arquivo alterado entre a prévia e a remoção.** Abra a prévia de novo (**Revisar e enviar para a Lixeira…**) e, **com ela aberta**, mude uma das cópias que sairiam, numa janela do PowerShell:
+```powershell
+Add-Content -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Repetidos\Downloads\IMG_0101.JPG' -Value 'alterado'
+```
+Volte ao FotoAtlas, marque **Entendi…** e clique em **Enviar 4 arquivos para a Lixeira**. Aparece "Limpeza iniciada…". Em **Tarefas**, o cartão "Limpeza de repetidos em "Repetidos"" termina com "Concluída, com grupos que ficaram como estavam": "2 arquivos foram para a Lixeira · 2 arquivos ficaram no lugar". Em **Ver os arquivos**, os dois da Praia dizem "Grupo pulado: "Downloads › IMG_0101.JPG" mudou desde a prévia. Nada deste grupo foi para a Lixeira agora."
+
+**e.10. O que foi para a Lixeira.** Confira na pasta (devem sobrar 6 arquivos: os 3 da Praia, as 2 organizadas da Festa e da Viagem e a única):
+```powershell
+Get-ChildItem -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\Repetidos' -Recurse -File | Select-Object FullName
+```
+E abra a Lixeira do Windows: estão lá `IMG_0201.JPG` (de `Backup antigo\Festa`) e `IMG_0301 - Cópia.JPG`.
+```powershell
+Start-Process 'shell:RecycleBinFolder'
+```
+
+**e.11. Relatório.** Em **Tarefas**, no cartão da limpeza, clique em **Exportar relatório (CSV)** e salve em `C:\Users\Lucca-PC\Downloads\fotoatlas-limpeza-repetidos.csv`. Abra no Excel: uma linha por arquivo, com grupo, situação ("foi para a Lixeira" ou "ficou (não removido)"), o arquivo, a **cópia que ficou**, tamanho, SHA-256 e motivo.
+
+**e.12. Depois de escanear de novo; restaurar.** Em **Dispositivos**, escaneie "Repetidos" de novo e espere a conferência. Em **Repetidos** sobra 1 grupo (a Praia, agora com 2 cópias: a organizada e a do WhatsApp; a de `Downloads` mudou e é única). Se quiser, limpe-o como antes. Para desfazer, na Lixeira do Windows selecione os arquivos e clique em **Restaurar** (voltam para as pastas de antes); um novo escaneamento os encontra de novo. Ou esvazie só estes arquivos da Lixeira.
+
+**Limitações conhecidas:** pendrive e cartão de memória ficam de fora (no Windows eles não têm Lixeira); se a Lixeira de um disco estiver desligada, nada sai dele e o motivo aparece em Tarefas. Celular nunca entra. O FotoAtlas não restaura sozinho: é pela Lixeira do Windows. Fechar o app no meio de uma limpeza não perde nada (é testado automaticamente matando o processo em cada passo); com 4 arquivos ela termina rápido demais para testar à mão.
 
 ## Resultado
 

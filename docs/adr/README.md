@@ -46,3 +46,4 @@ Modelo:
 | [0024](0024-itens-agrupados.md) | Itens agrupados: RAW+JPEG e Live Photos como um item só, só no catálogo; cópia e reorganização levam o grupo todo | aceita |
 | [0025](0025-google-takeout.md) | Google Takeout: datas e locais dos `.json` só no catálogo; zip extraído pela cópia segura; `media_metadata` refeita uma vez | aceita |
 | [0026](0026-mapa.md) | Mapa: offline com contornos do Natural Earth embutidos; OpenStreetMap só com consentimento em Configurações; filtro por área | aceita |
+| [0027](0027-limpar-repetidos.md) | Limpar repetidos: mesmo conteúdo no mesmo dispositivo, reconferido na hora, só para a Lixeira (helper recusa remoção definitiva); `operations` refeita na v11 | aceita |

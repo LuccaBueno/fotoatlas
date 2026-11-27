@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.3.0-beta.5] — 2026-11-27 (pré-lançamento)
+
+### Adicionado
+- **Limpar repetidos** (nova tela **Repetidos**): arquivos com exatamente o mesmo conteúdo guardados mais de uma vez no **mesmo** dispositivo. Cada grupo mostra todas as cópias lado a lado — miniatura grande, nome, caminho completo, pasta, data, tamanho e resolução —, com **Abrir a foto** (visualizador do Windows) e **Mostrar na pasta** (Explorador com o arquivo selecionado). ADR 0027.
+- O FotoAtlas **sugere qual cópia fica** — **a da pasta mais organizada** (pasta de data, sem "(1)" ou "cópia" no nome, caminho mais curto) ou **a mais antiga**, você escolhe a regra — e você troca qual fica ou deixa o grupo de fora. Dá para revisar **um grupo por vez** ou **aceitar as sugestões de todos**; **nenhum grupo vem marcado**.
+- Antes de remover: **prévia** com a lista do que sai, quantos e o espaço liberado, e confirmação explícita ("Entendi"). Na hora, o **SHA-256** da cópia que fica e de cada uma que sai é conferido de novo; se algo mudou (ou é o mesmo arquivo com outro nome), **aquele grupo é pulado e avisado**.
+- O que sai vai **sempre para a Lixeira do Windows** (dá para restaurar por lá), nunca é apagado de vez: se o Windows fosse apagar de vez (disco sem Lixeira), nada sai. Celular, pendrive e cartão de memória nunca entram; nada é feito entre dispositivos diferentes; uma cópia de cada conteúdo sempre fica.
+- Cada limpeza fica no diário e em **Tarefas** (pausar, continuar, cancelar o resto, tentar de novo os que ficaram, arquivo por arquivo com o motivo) e tem **relatório CSV** com o que saiu e qual cópia ficou. Fechar o app no meio não perde nada: ao abrir de novo, o FotoAtlas confere no disco o que já foi para a Lixeira e continua de onde parou.
+- Catálogo na versão 11 (cópia `pre-migracao-v10-<data>.db` antes de migrar): a tabela de operações é refeita uma vez com os mesmos dados para aceitar o tipo novo (segunda exceção às migrações só aditivas, aprovada; ADR 0027). Um catálogo aberto pela 1.3.0-beta.5 não abre mais nas betas anteriores.
+- **Números clicáveis** nos cartões dos dispositivos e no Início: "N arquivos sem backup", "N com cópia conferida" e as outras situações abrem a **Biblioteca já filtrada** por aquele dispositivo e situação (filtro novo **Situação**, que conta exatamente como os cartões, inclusive arquivos ainda não conferidos); "N arquivos repetidos" abre **Limpar repetidos** naquele dispositivo; "possivelmente corrompido" abre Tarefas. Cursor de mão e a dica **Ver estes arquivos**.
+- Demonstração: pasta "Repetidos" (a mesma foto sintética em vários lugares) no `run-app.ps1 -DemoPersistente`. CLI: `dedupe sources | groups | plan | start | resume | retry | export`.
+- Testes: Lixeira real do Windows com arquivos sintéticos (e unidade `subst` sem Lixeira, onde nada sai), arquivo alterado entre a prévia e a remoção, link físico, e a CLI morta em cada ponto da limpeza e no meio da recuperação.
+
 ## [1.3.0-beta.4] — 2026-11-20 (pré-lançamento)
 
 ### Adicionado

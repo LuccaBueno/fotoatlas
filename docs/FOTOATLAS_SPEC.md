@@ -36,7 +36,7 @@ O FotoAtlas existe para responder a quatro perguntas:
 1. **Segurança antes de desempenho.** Preservar os arquivos é mais importante que velocidade ou economia de espaço.
 2. **Analisar nunca modifica.** Escanear, catalogar, comparar e encontrar duplicatas são operações somente leitura. Os arquivos de origem são abertos sempre em modo leitura.
 3. **Importar = copiar.** Nada é movido entre dispositivos automaticamente.
-4. **Nada é excluído automaticamente.** Duplicatas, filtros e regras produzem seleções, nunca exclusões.
+4. **Nada é excluído automaticamente.** Duplicatas, filtros e regras produzem seleções, nunca exclusões. (Fase 9, a pedido do usuário: "Limpar repetidos" manda cópias repetidas no mesmo dispositivo **para a Lixeira do Windows**, só depois de a pessoa ver, escolher e confirmar, com o conteúdo reconferido na hora; nunca a última cópia — §9 e ADR 0027.)
 5. **Nunca sobrescrever.** Conflitos de nome geram um novo nome ou pedem decisão do usuário.
 6. **Prévia antes de agir.** Toda operação que grava em disco mostra antes o que vai acontecer e exige confirmação.
 7. **Toda gravação passa por um diário persistente** e pode ser recuperada após queda de energia, travamento ou desconexão.
@@ -261,6 +261,13 @@ Os caminhos são guardados **relativos à raiz da fonte**, para que a troca da l
   - A comparação é somente leitura (regra 2).
 - Espaço ocupado por duplicatas, por fonte.
 - **Duplicatas visuais** (perceptuais) ficam fora do MVP. Quando entrarem, serão só sugestões com comparação lado a lado. (Entraram na Fase 9, versão 1.3.0-beta.1: tela "Parecidas", com nível de confiança; o app nunca altera a qualidade de uma foto — ADR 0023.)
+- **Limpar repetidos** (Fase 9, versão 1.3.0-beta.5, ADR 0027): arquivos com o mesmo conteúdo (SHA-256) no **mesmo** dispositivo.
+  - Tela "Repetidos": cada grupo com todas as cópias lado a lado (miniatura grande, nome, caminho completo, pasta, data, tamanho, resolução), "Abrir a foto" (visualizador do Windows) e "Mostrar na pasta" (Explorador com o arquivo selecionado).
+  - O app sugere qual cópia fica (regra configurável: a da pasta mais organizada/caminho mais curto, ou a mais antiga); a pessoa troca qual fica ou não mexe no grupo. Revisão grupo por grupo ou "Aceitar as sugestões de todos"; **por padrão nenhum grupo vem marcado**.
+  - Antes de remover: prévia com a lista do que sai, quantidade e espaço liberado, confirmação explícita e **reconferência do SHA-256** da cópia que fica e das que saem, na hora; se algo mudou (ou é o mesmo arquivo físico com outro nome), aquele grupo é pulado e avisado.
+  - Remoção **sempre para a Lixeira do Windows**, nunca definitiva (o helper recusa quando o Windows apagaria de vez), registrada no diário e em Tarefas, com relatório CSV (o que saiu e qual cópia ficou). Recuperação idempotente após interrupção.
+  - Nunca remove a última cópia de um conteúdo; nunca mexe em celular, pendrive ou cartão de memória (sem Lixeira no Windows); nunca age entre dispositivos diferentes.
+- **Números clicáveis** (Fase 9, 1.3.0-beta.5): nos cartões dos dispositivos e no Início, cada número de situação de backup abre a Biblioteca já filtrada por aquele dispositivo (no Início geral, todos) e situação — com a mesma contagem dos cartões, inclusive arquivos ainda não conferidos; "N arquivos repetidos" abre "Limpar repetidos" daquele dispositivo. Cursor de mão e a dica "Ver estes arquivos".
 
 ---
 
