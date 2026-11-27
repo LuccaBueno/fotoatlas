@@ -78,14 +78,14 @@ A interface precisa ser **fácil, útil, completa e, acima de tudo, intuitiva**.
 - Tema claro e escuro, atalhos de teclado e boa legibilidade.
 - **Ajuda sempre à mão** (ajuste de 2026-10-29):
   - **dica (tooltip)** em todo ícone, selo, chip e botão, em linguagem simples e com o caso concreto quando houver (ex.: selo vermelho → "Sem backup: este arquivo só existe em 'Pixel de Teste'");
-  - **botão "?"** fixo na navegação lateral, abrindo um painel curto da tela aberta: o que ela é, o que dá para fazer e o significado das cores e dos selos;
+  - **botão "?"** fixo na navegação lateral, abrindo um painel curto da tela aberta: o que ela é, o que dá para fazer e o significado das cores e dos selos; (Fase 9: no topo, "Pergunte ao FotoAtlas" — busca numa base de perguntas e respostas embutida, offline, com um botão para a tela ou ação certa — e a página "O que o FotoAtlas faz (e o que nunca faz)"; ADR 0028.)
   - **guia de primeira execução** em 3–4 passos (adicionar dispositivo → escanear → ver o que não tem backup → comparar), que pode ser pulado e reaberto pelo "?".
 - Nomes de filtro que não se confundem ("Horário do dia" × "Hora confiável?"); "NÃO" explicado como "Mostrar tudo, menos os marcados"; contagens com unidade ("3 fotos e vídeos").
 - Momento sem nome recebe um nome descritivo ("Sábado de manhã"); momento de um instante mostra uma hora só ("09:00"). As opções do momento abrem por um botão visível e pelo clique direito no cabeçalho.
 
 ### 3.2. Telas principais (navegação lateral)
 
-1. **Início.** Painel com as respostas às 4 perguntas, alertas ("HD antigo não é verificado há 6 meses") e atalhos para as tarefas mais comuns.
+1. **Início.** Painel com as respostas às 4 perguntas, alertas ("HD antigo não é verificado há 6 meses") e atalhos para as tarefas mais comuns. (Fase 9, 1.3.0-beta.6: destaque "Fazer backup do celular", um assistente de 6 passos — escolher, HD inteiro, ler o celular, comparar, onde guardar, copiar — que pode ser pausado e continuado; ADR 0028.)
 2. **Biblioteca.** Galeria em grade e em lista, filtros, seleção e painel de detalhes com todas as localizações conhecidas do item.
    - **Linha do tempo única** pela **data e hora real da captura (até os segundos)**, intercalando fotos e vídeos de todos os dispositivos (celular, câmera, HD) numa só sequência — ex.: a foto da câmera às 14:03:12 aparece entre as do celular de 14:02:50 e 14:05:01. Navegação por ano → mês → dia → **momento**. Conteúdo idêntico em vários lugares aparece uma vez.
    - **Momentos**: grupos automáticos de fotos próximas no tempo (§8), com nome editável; o usuário pode **nomear, juntar e separar** momentos. Isso só muda o catálogo, nunca os arquivos.

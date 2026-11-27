@@ -47,3 +47,4 @@ Modelo:
 | [0025](0025-google-takeout.md) | Google Takeout: datas e locais dos `.json` só no catálogo; zip extraído pela cópia segura; `media_metadata` refeita uma vez | aceita |
 | [0026](0026-mapa.md) | Mapa: offline com contornos do Natural Earth embutidos; OpenStreetMap só com consentimento em Configurações; filtro por área | aceita |
 | [0027](0027-limpar-repetidos.md) | Limpar repetidos: mesmo conteúdo no mesmo dispositivo, reconferido na hora, só para a Lixeira (helper recusa remoção definitiva); `operations` refeita na v11 | aceita |
+| [0028](0028-backup-do-celular-e-perguntas.md) | Backup do celular em um assistente (reaproveita escaneamento, comparação e cópia segura; sessão retomável) e "Pergunte ao FotoAtlas" (base offline) | aceita |

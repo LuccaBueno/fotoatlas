@@ -12,6 +12,8 @@ Comandos para o Windows PowerShell, com caminhos completos. Tudo usa **dados de 
 | c. Importação do Google Fotos (Takeout) | `1.3.0-beta.3` | pronto para testar |
 | d. Mapa | `1.3.0-beta.4` | pronto para testar |
 | e. Limpar repetidos e números clicáveis | `1.3.0-beta.5` | pronto para testar |
+| f. Backup do celular em um assistente | `1.3.0-beta.6` | pronto para testar |
+| g. Pergunte ao FotoAtlas | `1.3.0-beta.6` | pronto para testar |
 
 ## Antes de começar
 
@@ -293,6 +295,60 @@ Start-Process 'shell:RecycleBinFolder'
 **e.12. Depois de escanear de novo; restaurar.** Em **Dispositivos**, escaneie "Repetidos" de novo e espere a conferência. Em **Repetidos** sobra 1 grupo (a Praia, agora com 2 cópias: a organizada e a do WhatsApp; a de `Downloads` mudou e é única). Se quiser, limpe-o como antes. Para desfazer, na Lixeira do Windows selecione os arquivos e clique em **Restaurar** (voltam para as pastas de antes); um novo escaneamento os encontra de novo. Ou esvazie só estes arquivos da Lixeira.
 
 **Limitações conhecidas:** pendrive e cartão de memória ficam de fora (no Windows eles não têm Lixeira); se a Lixeira de um disco estiver desligada, nada sai dele e o motivo aparece em Tarefas. Celular nunca entra. O FotoAtlas não restaura sozinho: é pela Lixeira do Windows. Fechar o app no meio de uma limpeza não perde nada (é testado automaticamente matando o processo em cada passo); com 4 arquivos ela termina rápido demais para testar à mão.
+
+## f. Backup do celular em um assistente (1.3.0-beta.6)
+
+Usa o **celular simulado** "Pixel" e a pasta "HD" da demonstração (fotos sintéticas). O Pixel simulado lê devagar (3 s por arquivo), o que dá tempo de pausar no meio. Abra a demonstração com o celular simulado (na `v1.3.0-beta.6`):
+```powershell
+cd C:\dev\fotoatlas
+git fetch --tags
+git checkout v1.3.0-beta.6
+powershell -ExecutionPolicy Bypass -File C:\dev\fotoatlas\tools\scripts\run-app.ps1 -DemoPersistente -CelularSimulado
+```
+
+**f.1. Preparar o "HD".** Em **Dispositivos › Adicionar dispositivo › Escolher uma pasta…**, cadastre `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\celular\HD` (não escaneie ainda). Se o Pixel já estiver cadastrado de testes anteriores, tudo bem.
+
+**f.2. O botão do Início.** No **Início**, logo abaixo do resumo, há o destaque **Fazer backup do celular**. Clique. O assistente mostra à esquerda os 6 passos e, no alto, "Nada é apagado do celular…".
+
+**f.3. Passo 1 — escolher.** Aparecem os celulares conectados ("Pixel de Teste (simulado)"; se ainda não estiver cadastrado: "Conectado — vai ser cadastrado agora") e os HDs. Escolha o "Pixel de Teste" e o "HD" e clique em **Continuar**.
+
+**f.4. Passo 2 — conhecer o HD inteiro.** Como o HD não foi escaneado por inteiro, aparece a explicação "Antes de copiar, preciso conhecer o HD "HD" inteiro. Senão posso copiar fotos que você já tem nele…" e o botão **Escanear "HD"**. Clique: o escaneamento e a conferência aparecem com o progresso; no fim, "está pronto". **Continuar**.
+
+**f.5. Passo 3 — ler o celular, e pausar no meio.** Clique em **Escanear "Pixel de Teste"**. Durante a conferência aparecem "Conferindo o conteúdo de "Pixel de Teste": N de M arquivos · faltam cerca de …". Clique em **Pausar e continuar depois**: o assistente fecha e o Início passa a mostrar **Continuar o backup do celular**. Feche o FotoAtlas, abra de novo (mesmo comando) e clique em **Continuar o backup do celular**: ele volta no passo 3. Escaneie de novo, espere terminar e clique em **Continuar**.
+
+**f.6. Passo 4 — comparar.** Aparece "3 fotos do celular já estão no HD (não serão copiadas) · 3 fotos ainda não estão (…)", com miniaturas de exemplo (passe o mouse para ver o caminho). **Ver a lista completa** mostra os 3: `IMG_20240502_120000.jpg`, `IMG-20240504-WA0001.jpg` e `Screenshot_20240505-180000.png`. Feche e clique em **Continuar**.
+
+**f.7. Passo 5 — onde guardar.** A pasta sugerida é **Backup do celular** e a organização marcada é **Manter as pastas do celular (recomendado)**. Em "Como vai ficar no HD" aparece o desenho: `HD › Backup do celular › …` com as pastas do celular e quantos arquivos vão em cada uma. Troque para **Por ano e mês** e veja o desenho mudar; volte para **Manter as pastas do celular** e clique em **Continuar**.
+
+**f.8. Passo 6 — prévia e cópia.** "Vou copiar 3 fotos e vídeos (…) de "Pixel de Teste" para "HD › Backup do celular"", com o espaço livre. Clique em **Copiar 3 arquivos**: o progresso aparece (dá para **Pausar a cópia** e **Continuar a cópia**). No fim: "Pronto: 3 arquivos copiados e conferidos." Clique em **Exportar relatório (CSV)** se quiser (salve em `C:\Users\Lucca-PC\Downloads`).
+
+**f.9. Comparar de novo.** Clique em **Comparar de novo**: "Sim, 100%: tudo do celular está no HD." Clique em **Terminar**: o Início volta a mostrar **Fazer backup do celular**. Em **Tarefas**, a cópia aparece no histórico. Confira que nada saiu do celular simulado (os arquivos continuam lá):
+```powershell
+Get-ChildItem -LiteralPath 'C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente\celular\HD\Backup do celular' -Recurse -File | Select-Object FullName
+```
+Deve listar os 3 arquivos copiados, dentro das mesmas pastas do celular.
+
+**f.10. Fazer de novo.** Abra **Fazer backup do celular** outra vez com o mesmo "Pixel de Teste" e "HD": no passo 4 aparece "Sim, 100%: tudo do celular já está no HD. Não há nada para copiar." e o botão vira **Terminar**.
+
+## g. Pergunte ao FotoAtlas (1.3.0-beta.6)
+
+**g.1. A busca no "?".** Em qualquer tela, clique no **?** (embaixo, no menu lateral). No alto da ajuda há **Pergunte ao FotoAtlas**, com "As respostas vêm do próprio app, sem internet." Digite cada pergunta e confira a resposta e o botão:
+
+| Pergunta | Resposta (título) | Botão leva para |
+| --- | --- | --- |
+| como faço backup do celular? | Como faço backup do celular? | o assistente (**Fazer backup do celular**) |
+| o app apaga alguma coisa? | O app apaga alguma coisa? | a página "O que o FotoAtlas faz (e o que nunca faz)" |
+| o que é cópia conferida? | O que é "cópia conferida"? | Início |
+| por que meu resultado está incompleto? | Por que meu resultado está incompleto? | Comparar |
+| como desfazer uma reorganização? | Como desfazer uma reorganização? | Tarefas |
+
+Clique no botão de cada resposta: a ajuda fecha e abre a tela certa.
+
+**g.2. Outras palavras.** Experimente "fotos duplicadas", "manda minhas fotos pra internet?", "Google Fotos", "data errada", "celular não aparece": cada uma traz uma resposta com botão. Algo sem sentido (por exemplo, "xyzw") mostra "Não encontrei uma resposta para isso…" com sugestões de palavras.
+
+**g.3. Sem internet.** Desligue o Wi-Fi (ou tire o cabo de rede) e repita uma pergunta: a resposta aparece igual.
+
+**g.4. O que o FotoAtlas faz (e o que nunca faz).** No **?**, clique em **O que o FotoAtlas faz (e o que nunca faz)**: duas listas, "O que ele faz" e "O que ele nunca faz" (nunca apaga nada sozinho nem do celular, nunca sobrescreve, nunca muda a qualidade de uma foto, nunca envia suas fotos para a internet…).
 
 ## Resultado
 

@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.3.0-beta.6] — 2026-11-27 (pré-lançamento)
+
+### Adicionado
+- **Fazer backup do celular** (destaque no Início, também na tela de boas-vindas): um assistente que faz tudo em sequência e explica cada passo. 1) escolher o celular e o HD entre os conectados (um novo é cadastrado na hora); 2) se o HD não foi escaneado por inteiro, explica por quê ("senão posso copiar fotos que você já tem") e escaneia; 3) lê e confere o celular, com o tempo estimado; 4) compara celular × HD inteiro pelo conteúdo: "X fotos do celular já estão no HD (não serão copiadas) · Y ainda não estão (Z GB)", com miniaturas de exemplo e a lista completa; 5) pasta de destino (sugere "Backup do celular") e organização ("Manter as pastas do celular" como padrão), com o desenho de como vai ficar; 6) prévia, confirmação e cópia segura, relatório e **Comparar de novo** até "Sim, 100%". **Pausar e continuar depois** a qualquer momento (o Início mostra "Continuar o backup do celular", mesmo depois de fechar o app). Nada é apagado do celular. ADR 0028.
+- **Pergunte ao FotoAtlas** no "?" de cada tela: digite uma dúvida ("como faço backup do celular?", "o app apaga alguma coisa?", "o que é cópia conferida?", "por que meu resultado está incompleto?", "como desfazer uma reorganização?"…) e a resposta, em linguagem simples, vem de uma base embutida no app — **sem internet**, nada é enviado. Cada resposta tem um botão que leva direto à tela ou ação certa.
+- **O que o FotoAtlas faz (e o que nunca faz)**: página com as regras do app em palavras simples, pelo "?".
+- Sem mudança no catálogo (continua na versão 11).
+
 ## [1.3.0-beta.5] — 2026-11-27 (pré-lançamento)
 
 ### Adicionado
