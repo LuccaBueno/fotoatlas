@@ -192,6 +192,9 @@ class HelperDeviceBackend implements DeviceBackend {
 
   @override
   Future<List<DeviceInfo>> list() => _guard(() async {
+    // Logo depois de abrir (ou se o helper caiu e está voltando), espera o
+    // reinício automático em vez de dizer que não há leitura de celulares.
+    await client.waitReady();
     final result = await client.call('devices.list');
     return [
       for (final d in result['devices'] as List<Object?>? ?? const [])

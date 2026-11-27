@@ -127,6 +127,11 @@ Future<void> main(List<String> arguments) async {
     stderr.writeln('Erro: $e');
   } on CatalogTooNewException catch (e) {
     stderr.writeln('Erro: $e');
+  } on DeviceException catch (e) {
+    stderr.writeln('Erro: ${e.message}');
+    // Diagnóstico: por que o helper caiu (código de saída e as últimas mensagens dele).
+    final why = core?.helper?.lastFailure;
+    if (why != null) stderr.writeln(why);
   }
   await core?.close();
   exit(1);

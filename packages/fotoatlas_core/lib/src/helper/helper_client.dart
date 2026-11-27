@@ -102,15 +102,33 @@ class HelperClient {
     _process = process;
     _pid = process.pid;
     process.stdout.transform(utf8.decoder).transform(const LineSplitter()).listen(_onLine, onError: (_) {});
-    process.stderr.drain<void>().ignore();
+    // Guarda o fim do stderr: quando o helper cai, [lastFailure] diz por quê.
+    final stderrTail = StringBuffer();
+    process.stderr.transform(utf8.decoder).listen((s) {
+      stderrTail.write(s);
+      if (stderrTail.length > 4096) {
+        final keep = stderrTail.toString().substring(stderrTail.length - 2048);
+        stderrTail
+          ..clear()
+          ..write(keep);
+      }
+    }, onError: (_) {});
     // Escrever para um helper que acabou de morrer falha no `done` do stdin;
     // isso já aparece como saída do processo (`_onExit`), não como erro solto.
     process.stdin.done.ignore();
-    process.exitCode.then((_) => _onExit(process));
+    process.exitCode.then((code) {
+      if (_process == process && !_closing) {
+        _lastFailure =
+            'O helper saiu com o código $code.${stderrTail.isEmpty ? '' : ' Últimas mensagens: ${stderrTail.toString().trim()}'}';
+      }
+      _onExit(process);
+    });
 
     try {
       await hello.future.timeout(const Duration(seconds: 15));
     } on TimeoutException {
+      _lastFailure =
+          'O helper não respondeu ao iniciar em 15 s.${stderrTail.isEmpty ? '' : ' Últimas mensagens: ${stderrTail.toString().trim()}'}';
       process.kill();
       throw HelperException('helper_crashed', 'O helper não respondeu ao iniciar.', retryable: true);
     }
@@ -280,6 +298,27 @@ class HelperClient {
     for (final c in pending.values) {
       if (!c.isCompleted) c.completeError(error);
     }
+  }
+
+  String? _lastFailure;
+
+  /// Por que o helper caiu da última vez (código de saída e o fim do stderr),
+  /// para diagnóstico na CLI e nos testes; `null` se nunca caiu.
+  String? get lastFailure => _lastFailure;
+
+  /// Espera o helper ficar pronto se ele está iniciando ou reiniciando
+  /// (até [timeout]). `false` se parado, encerrando ou se o prazo acabar.
+  Future<bool> waitReady({Duration timeout = const Duration(seconds: 20)}) async {
+    if (_status == HelperStatus.ready) return true;
+    if (_closing || _status == HelperStatus.stopped) return false;
+    try {
+      await statusChanges.firstWhere((s) => s == HelperStatus.ready || s == HelperStatus.stopped).timeout(timeout);
+    } on TimeoutException {
+      return false;
+    } on StateError {
+      return false;
+    }
+    return _status == HelperStatus.ready;
   }
 
   void _setStatus(HelperStatus status) {

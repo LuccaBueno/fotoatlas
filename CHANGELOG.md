@@ -12,6 +12,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 - **O que o FotoAtlas faz (e o que nunca faz)**: página com as regras do app em palavras simples, pelo "?".
 - Sem mudança no catálogo (continua na versão 11).
 
+### Corrigido
+- Listar celulares logo depois de o componente de dispositivos (helper) cair espera ele voltar sozinho, em vez de dizer na hora que não há leitura de celulares. Quando ele cai, o motivo (código de saída e as últimas mensagens) fica guardado e a CLI mostra.
+
 ## [1.3.0-beta.5] — 2026-11-27 (pré-lançamento)
 
 ### Adicionado

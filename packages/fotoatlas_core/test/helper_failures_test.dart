@@ -139,4 +139,21 @@ void main() {
     });
     expect(uncaught, isEmpty);
   });
+
+  test('helper cai logo antes de listar celulares: a lista espera ele voltar; o motivo fica guardado', () async {
+    final uncaught = await uncaughtIn(() async {
+      final helper = fakeClient('phone-stuck');
+      final core = await open(helper);
+      expect(helper.lastFailure, isNull);
+      // O helper cai (como numa máquina sobrecarregada) logo antes do pedido.
+      Process.killPid(helper.pid!);
+      await until(() => helper.status != HelperStatus.ready);
+      final devices = await core.sources.listDevices();
+      expect(devices, isNotEmpty, reason: 'esperou o reinício automático em vez de falhar');
+      expect(helper.restarts, 1);
+      expect(helper.lastFailure, startsWith('O helper saiu com o código'));
+      await core.close();
+    });
+    expect(uncaught, isEmpty);
+  });
 }
