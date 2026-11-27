@@ -6,6 +6,7 @@ import '../../app/providers.dart';
 import '../../app/shell.dart' show tasksDestination;
 import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
+import '../../widgets/count_link.dart';
 import '../../widgets/backup_state.dart';
 import '../../widgets/connection_badge.dart';
 import '../integrity/integrity_ui.dart';
@@ -392,7 +393,11 @@ class _CoverageLine extends ConsumerWidget {
                   key: ValueKey('corrupt-$sourceId'),
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    BackupStateBadge(state, count: c.counts.filesIn(state)),
+                    BackupStateBadge(
+                      state,
+                      count: c.counts.filesIn(state),
+                      onTap: () => openCoverageFiltered(ref, state, sourceId: sourceId),
+                    ),
                     Text(' — ', style: TextStyle(color: backupStateColor(context, state))),
                     InkWell(
                       key: ValueKey('corrupt-open-$sourceId'),
@@ -409,7 +414,12 @@ class _CoverageLine extends ConsumerWidget {
                   ],
                 )
               else
-                BackupStateBadge(state, count: c.counts.filesIn(state)),
+                BackupStateBadge(
+                  state,
+                  key: ValueKey('count-${state.name}-$sourceId'),
+                  count: c.counts.filesIn(state),
+                  onTap: () => openCoverageFiltered(ref, state, sourceId: sourceId),
+                ),
           if (c.counts.verifiedUncertainDisk > 0)
             Tooltip(
               message: verifiedHint(c.counts.filesIn(BackupState.verified), c.counts.verifiedUncertainDisk),
@@ -424,9 +434,13 @@ class _CoverageLine extends ConsumerWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           if (c.duplicateFiles > 0)
-            Text(
-              '${plural(c.duplicateFiles, 'arquivo repetido', 'arquivos repetidos')} (${formatBytes(c.duplicateBytes)})',
-              style: Theme.of(context).textTheme.bodySmall,
+            CountLink(
+              key: ValueKey('count-duplicates-$sourceId'),
+              onTap: () => openDedupeFor(ref, sourceId),
+              child: Text(
+                '${plural(c.duplicateFiles, 'arquivo repetido', 'arquivos repetidos')} (${formatBytes(c.duplicateBytes)})',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(decoration: TextDecoration.underline),
+              ),
             ),
         ],
       ),

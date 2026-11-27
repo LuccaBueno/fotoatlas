@@ -153,6 +153,8 @@ internal sealed class ProtocolHost(
                 return await PullToFileAsync(id, parameters, ct);
             case "thumbnails.get":
                 return await ThumbnailAsync(parameters, ct);
+            case "files.recycle":
+                return await RecycleAsync(parameters, ct);
             default:
                 throw new HelperException("bad_request", $"Método desconhecido: '{method}'.");
         }
@@ -332,6 +334,24 @@ internal sealed class ProtocolHost(
         }
         return new JsonObject { ["width"] = width, ["height"] = height, ["bytes"] = jpeg.Length };
     }
+    /// <summary>
+    /// "Limpar repetidos" (docs/protocolo-helper.md §5.5, ADR 0027): um arquivo para a Lixeira do Windows, nunca
+    /// apagado de vez. O core já conferiu o conteúdo; aqui só confere tamanho e data.
+    /// </summary>
+    private static async Task<JsonNode> RecycleAsync(JsonObject parameters, CancellationToken ct)
+    {
+        var path = RequiredString(parameters, "path");
+        if (parameters["expectedSize"]?.GetValueKind() != JsonValueKind.Number)
+        {
+            throw new HelperException("bad_request", "Parâmetro 'expectedSize' (número) ausente.");
+        }
+        var size = parameters["expectedSize"]!.GetValue<long>();
+        long? mtime = parameters["expectedMtime"]?.GetValueKind() == JsonValueKind.String
+            && long.TryParse(parameters["expectedMtime"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : null;
+        var result = await Task.Run(() => Files.Recycler.Recycle(path, size, mtime), ct);
+        return new JsonObject { ["recycled"] = true, ["recycledPath"] = result.RecycledPath };
+    }
+
     private void EmitError(string? id, string code, string message, bool retryable) =>
         Emit(new JsonObject
         {

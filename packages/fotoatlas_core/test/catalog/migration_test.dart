@@ -13,16 +13,16 @@ import '../support/temp.dart';
 void main() {
   final verifier = SchemaVerifier(GeneratedHelper());
 
-  test('v1 a v9 → v10: schema final igual ao de um catálogo novo', () async {
-    for (final from in [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+  test('v1 a v10 → v11: schema final igual ao de um catálogo novo', () async {
+    for (final from in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
       final schema = await verifier.schemaAt(from);
       final db = CatalogDatabase(schema.newConnection());
-      await verifier.migrateAndValidate(db, 10);
+      await verifier.migrateAndValidate(db, 11);
       await db.close();
     }
   });
 
-  test('v1 → v10 pelo Catalog.open: backup antes, dados preservados, colunas novas', () async {
+  test('v1 → v11 pelo Catalog.open: backup antes, dados preservados, colunas novas', () async {
     final home = await createTestTemp();
     final path = p.join(home.path, 'catalog.db');
     final schema = await verifier.schemaAt(1);
@@ -42,7 +42,7 @@ void main() {
     final catalog = await Catalog.open(path);
     addTearDown(catalog.close);
     final db = catalog.db;
-    expect((await db.customSelect('PRAGMA user_version').getSingle()).data.values.single, 10);
+    expect((await db.customSelect('PRAGMA user_version').getSingle()).data.values.single, 11);
     final row = await db.customSelect('SELECT name, hash_error, device_object_id FROM file_instances').getSingle();
     expect(row.read<String>('name'), 'a.jpg');
     expect(row.readNullable<String>('hash_error'), isNull);
@@ -272,5 +272,82 @@ void main() {
     expect(await db.select(db.takeoutJson).get(), isEmpty);
     final backups = Directory(p.join(home.path, 'backups')).listSync().map((f) => p.basename(f.path));
     expect(backups.where((n) => n.startsWith('pre-migracao-v9-')), hasLength(1));
+  });
+
+  test('v10 → v11: operations refeita com o histórico inteiro; "Limpar repetidos" aceito', () async {
+    final home = await createTestTemp();
+    final path = p.join(home.path, 'catalog.db');
+    final schema = await verifier.schemaAt(10);
+    schema.rawDatabase
+      ..execute(
+        "INSERT INTO sources (id, name, kind, root_rel_path, connected, created_at, updated_at) "
+        "VALUES ('s1', 'HD', 'external_hd', '', 0, 1, 1)",
+      )
+      ..execute(
+        "INSERT INTO file_instances (id, source_id, rel_path, dir_rel_path, name, ext, size_bytes) "
+        "VALUES (7, 's1', 'a.jpg', '', 'a.jpg', 'jpg', 10)",
+      )
+      ..execute(
+        'INSERT INTO operations (id, kind, status, dest_source_id, params_json, summary_json, created_at) '
+        "VALUES ('op1', 'reorganize_move', 'completed', 's1', '{\"folder\":\"\"}', '{\"published\":1}', 5)",
+      )
+      ..execute(
+        'INSERT INTO operations (id, kind, status, dest_source_id, undo_of, created_at) '
+        "VALUES ('op2', 'undo', 'completed', 's1', 'op1', 6)",
+      )
+      ..execute(
+        'INSERT INTO operation_items (id, operation_id, seq, src_source_id, src_rel_path, src_instance_id, '
+        'expected_size, dst_source_id, dst_rel_path_planned, state, updated_at) '
+        "VALUES (3, 'op1', 1, 's1', 'b.jpg', 7, 10, 's1', 'a.jpg', 'published', 5)",
+      )
+      ..execute("INSERT INTO operation_events (operation_id, item_id, at, message) VALUES ('op1', 3, 5, 'Movido.')")
+      ..execute(
+        "INSERT INTO integrity_checks (instance_id, operation_id, checked_at, result) VALUES (7, 'op1', 5, 'unchanged')",
+      )
+      ..execute('PRAGMA user_version = 10')
+      ..execute('VACUUM INTO ?', [path]);
+    schema.rawDatabase.close();
+
+    final catalog = await Catalog.open(path);
+    addTearDown(catalog.close);
+    final db = catalog.db;
+    final ops = await db
+        .customSelect('SELECT id, kind, status, params_json, summary_json, undo_of FROM operations ORDER BY id')
+        .get();
+    expect(ops.map((r) => r.data), [
+      {
+        'id': 'op1',
+        'kind': 'reorganize_move',
+        'status': 'completed',
+        'params_json': '{"folder":""}',
+        'summary_json': '{"published":1}',
+        'undo_of': null,
+      },
+      {'id': 'op2', 'kind': 'undo', 'status': 'completed', 'params_json': null, 'summary_json': null, 'undo_of': 'op1'},
+    ]);
+    expect((await db.customSelect('SELECT COUNT(*) AS n FROM operation_items').getSingle()).read<int>('n'), 1);
+    expect((await db.customSelect('SELECT COUNT(*) AS n FROM operation_events').getSingle()).read<int>('n'), 1);
+    expect((await db.customSelect('SELECT COUNT(*) AS n FROM integrity_checks').getSingle()).read<int>('n'), 1);
+    // As chaves estrangeiras voltaram a valer e continuam apontando para operations.
+    expect((await db.customSelect('PRAGMA foreign_keys').getSingle()).data.values.single, 1);
+    expect(await db.customSelect('PRAGMA foreign_key_check').get(), isEmpty);
+    await expectLater(
+      db.customStatement(
+        'INSERT INTO operation_items (operation_id, seq, src_source_id, src_rel_path, expected_size, dst_source_id, '
+        "dst_rel_path_planned, state, updated_at) VALUES ('nao-existe', 1, 's1', 'x', 1, 's1', 'x', 'pending', 1)",
+      ),
+      throwsA(anything),
+    );
+    await db.customStatement(
+      "INSERT INTO operations (id, kind, status, created_at) VALUES ('op3', 'dedupe_trash', 'confirmed', 7)",
+    );
+    await expectLater(
+      db.customStatement(
+        "INSERT INTO operations (id, kind, status, created_at) VALUES ('op4', 'apagar', 'confirmed', 7)",
+      ),
+      throwsA(anything),
+    );
+    final backups = Directory(p.join(home.path, 'backups')).listSync().map((f) => p.basename(f.path));
+    expect(backups.where((n) => n.startsWith('pre-migracao-v10-')), hasLength(1));
   });
 }

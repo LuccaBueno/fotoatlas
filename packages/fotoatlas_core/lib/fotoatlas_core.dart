@@ -9,6 +9,8 @@ export 'src/catalog/catalog_database.dart' show CatalogDatabase, ScanRow, Source
 export 'src/compare/compare_service.dart';
 export 'src/compare/scope.dart';
 export 'src/coverage/coverage_service.dart';
+export 'src/dedupe/dedupe_models.dart';
+export 'src/dedupe/dedupe_service.dart' show DedupeService;
 export 'src/devices/devices.dart';
 export 'src/fotoatlas_core_base.dart';
 export 'src/hash/hash_engine.dart' show HashPriority;
@@ -40,6 +42,7 @@ export 'src/scan/scan_service.dart' show ScanService;
 export 'src/sources/identity.dart';
 export 'src/sources/media_types.dart';
 export 'src/sources/sources_service.dart';
+export 'src/safe_io/recycle_bin.dart';
 export 'src/settings/settings_store.dart';
 export 'src/sources/volumes.dart';
 export 'src/similar/similar_grouping.dart' show SimilarGroup, SimilarLevel, SimilarPair;

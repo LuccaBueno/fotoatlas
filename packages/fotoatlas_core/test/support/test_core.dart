@@ -10,7 +10,17 @@ import 'temp.dart';
 
 /// Ambiente de teste: catálogo em temp + um "volume" simulado (pasta real).
 class TestEnv {
-  TestEnv._(this.temp, this.core, this.volumes, this.volumeDir, this._isolate, this._tools, this._freeSpace);
+  TestEnv._(
+    this.temp,
+    this.core,
+    this.volumes,
+    this.volumeDir,
+    this._isolate,
+    this._tools,
+    this._freeSpace,
+    this._recycleBin,
+  );
+  final RecycleBin? _recycleBin;
   final FreeSpaceProbe? _freeSpace;
   final ExternalTools? _tools;
 
@@ -29,6 +39,7 @@ class TestEnv {
     ExternalTools? tools,
     FreeSpaceProbe? freeSpace,
     bool recover = true,
+    RecycleBin? recycleBin,
   }) async {
     final temp = await createTestTemp();
     final volumeDir = Directory(p.join(temp.path, 'volume_e'))..createSync();
@@ -47,8 +58,9 @@ class TestEnv {
       verifyInIsolate: isolate,
       freeSpace: freeSpace,
       recover: recover,
+      recycleBin: recycleBin,
     );
-    final env = TestEnv._(temp, core, provider, volumeDir, isolate, tools, freeSpace);
+    final env = TestEnv._(temp, core, provider, volumeDir, isolate, tools, freeSpace, recycleBin);
     addTearDown(env.close);
     return env;
   }
@@ -69,6 +81,7 @@ class TestEnv {
       verifyInIsolate: _isolate,
       freeSpace: _freeSpace,
       recover: recover,
+      recycleBin: _recycleBin,
     );
   }
 

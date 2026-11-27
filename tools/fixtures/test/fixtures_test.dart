@@ -107,4 +107,22 @@ void main() {
     expect(contents, hasLength(11));
     expect(() => generateSimilarDemo(a), throwsStateError);
   });
+
+  test('repetidos: as mesmas fotos em lugares diferentes, determinísticas', () {
+    final a = p.join(temp.path, 'repetidos_a');
+    final b = p.join(temp.path, 'repetidos_b');
+    generateDedupeDemo(a);
+    generateDedupeDemo(b);
+    final files = Directory(a).listSync(recursive: true).whereType<File>().toList();
+    expect(files, hasLength(8));
+    final copies = <String, int>{};
+    for (final f in files) {
+      final twin = File(p.join(b, p.relative(f.path, from: a)));
+      expect(f.readAsBytesSync(), twin.readAsBytesSync(), reason: p.relative(f.path, from: a));
+      final key = base64Encode(f.readAsBytesSync());
+      copies[key] = (copies[key] ?? 0) + 1;
+    }
+    expect(copies.values.toList()..sort(), [1, 2, 2, 3]);
+    expect(() => generateDedupeDemo(a), throwsStateError);
+  });
 }

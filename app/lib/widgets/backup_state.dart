@@ -6,6 +6,7 @@ import '../app/providers.dart';
 import '../app/theme.dart';
 import '../l10n/format.dart';
 import '../l10n/strings.dart';
+import 'count_link.dart';
 
 IconData backupStateIcon(BackupState s) => switch (s) {
   BackupState.single => Icons.error_outline,
@@ -30,13 +31,34 @@ Color backupStateColor(BuildContext context, BackupState s) {
 
 /// Cor + ícone + texto (nunca só cor).
 class BackupStateBadge extends StatelessWidget {
-  const BackupStateBadge(this.state, {super.key, this.count});
+  const BackupStateBadge(this.state, {super.key, this.count, this.onTap});
   final BackupState state;
   final int? count;
+
+  /// Número clicável: cursor de mão e a dica "Ver estes arquivos".
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final color = backupStateColor(context, state);
+    final badge = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(backupStateIcon(state), size: 16, color: color),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            count == null ? backupStateLabel(state) : backupStateCount(state, count!),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: color,
+              decoration: onTap == null ? null : TextDecoration.underline,
+              decorationColor: color,
+            ),
+          ),
+        ),
+      ],
+    );
+    if (onTap != null) return CountLink(onTap: onTap!, child: badge);
     return Tooltip(
       message: backupStateHint(state),
       child: Row(

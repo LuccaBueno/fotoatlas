@@ -61,6 +61,7 @@ class CloseConfirmDialog extends StatelessWidget {
   static IconData _icon(RunningTaskKind kind) => switch (kind) {
     RunningTaskKind.copy => Icons.copy_all,
     RunningTaskKind.reorganize => Icons.drive_file_move_outline,
+    RunningTaskKind.dedupe => Icons.cleaning_services_outlined,
     RunningTaskKind.scan => Icons.search,
     RunningTaskKind.hash => Icons.fact_check_outlined,
     RunningTaskKind.metadata => Icons.event_note_outlined,
@@ -79,6 +80,7 @@ String runningTaskLabel(RunningTask t) => switch (t.kind) {
     'Verificando a integridade (só lendo) — ${formatInt(t.done)} de ${plural(t.total, 'arquivo', 'arquivos')}',
   RunningTaskKind.verify => 'Verificando a integridade (só lendo)',
   RunningTaskKind.reorganize => 'Reorganizando pastas (cada arquivo movido fica registrado)',
+  RunningTaskKind.dedupe => 'Limpando repetidos (o que já foi para a Lixeira fica registrado)',
   RunningTaskKind.scan =>
     'Escaneando "${t.sourceName ?? 'dispositivo'}" — '
         '${plural(t.done, 'arquivo encontrado', 'arquivos encontrados')} até agora',

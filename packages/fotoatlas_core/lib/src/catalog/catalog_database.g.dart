@@ -7743,8 +7743,7 @@ class Operations extends Table with TableInfo<Operations, OperationRow> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints:
-        'NOT NULL CHECK (kind IN (\'copy\', \'reorganize_move\', \'undo\', \'restore\', \'catalog_backup_copy\'))',
+    $customConstraints: 'NOT NULL CHECK (kind IN (\'copy\', \'reorganize_move\', \'undo\', \'restore\', \'catalog_backup_copy\', \'dedupe_trash\'))',
   );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   late final GeneratedColumn<String> status = GeneratedColumn<String>(

@@ -40,6 +40,10 @@ const _writeApis = [
   // Fase 6: remover pasta vazia (só pasta sem nada dentro, a pedido).
   'removeDirectory',
   'removeEmptyFolder',
+  // Fase 9: "Limpar repetidos" — só para a Lixeira do Windows (ADR 0027).
+  '.recycle(',
+  'files.recycle',
+  'FolderRecycleBin(',
 ];
 
 /// (arquivo relativo a lib/src, API) permitidos, com o motivo.
@@ -101,6 +105,14 @@ const _allowed = {
   ('safe_io/empty_dir.dart', 'removeDirectory'),
   ('safe_io/empty_dir.dart', 'RemoveDirectory'),
   ('safe_io/empty_dir.dart', 'removeEmptyFolder'),
+  // Fase 9 — "Limpar repetidos" (ADR 0027): a única remoção de arquivo de usuário,
+  // sempre para a Lixeira (helper files.recycle), depois da reconferência do SHA-256.
+  ('safe_io/recycle_bin.dart', 'files.recycle'),
+  // Lixeira de teste: move para uma pasta fotoatlas_test* no temporário (só testes e --test-recycle-dir).
+  ('safe_io/recycle_bin.dart', 'moveNoReplace'),
+  ('safe_io/recycle_bin.dart', 'FolderRecycleBin('),
+  ('safe_io/recycle_bin.dart', 'createSync'), // a própria pasta de teste
+  ('dedupe/dedupe_service.dart', '.recycle('),
   // Backup do catálogo: publicação sem sobrescrever na pasta do catálogo.
   ('catalog/catalog_backup.dart', 'moveNoReplace'),
   // Backup do catálogo: pasta backups/ e rotação dos próprios backups (nunca arquivos de usuário).
@@ -196,6 +208,37 @@ void main() {
     final reorg = File(p.join('lib', 'src', 'ops', 'reorg_service.dart')).readAsStringSync();
     for (final api in ['deleteOwnPart', 'deleteFile', 'DeleteFile', 'deleteSync', '.delete(']) {
       expect(reorg, isNot(contains(api)));
+    }
+  });
+
+  test('"Limpar repetidos" só manda para a Lixeira, depois de reconferir e com a intenção no diário', () {
+    final src = File(p.join('lib', 'src', 'dedupe', 'dedupe_service.dart')).readAsStringSync();
+    // Nenhuma remoção definitiva, nenhum mover/copiar: só a Lixeira.
+    for (final api in ['deleteFile', 'DeleteFile', 'deleteSync', '.delete(', 'moveNoReplace', 'removeDirectory']) {
+      expect(src, isNot(contains(api)), reason: api);
+    }
+    expect(src.split('.recycle(').length - 1, 1, reason: 'um único ponto manda para a Lixeira');
+    final group = RegExp(r'Future<String\?> _runGroup\([\s\S]*?\n  \}\n').firstMatch(src)!.group(0)!;
+    final recycle = group.indexOf('.recycle(');
+    // A cópia que fica e cada uma que sai são conferidas (SHA-256 e arquivo físico) antes.
+    expect(group.indexOf('final keepHash = await _hash(keepPath)'), lessThan(recycle));
+    expect(group.indexOf('final h = await _hash(path)'), lessThan(recycle));
+    expect(group.indexOf('identity == keepIdentity'), lessThan(recycle));
+    // A intenção vai para o diário antes de mexer no disco.
+    expect(group.lastIndexOf('ItemState.publishing,', recycle), greaterThan(0));
+    // A Lixeira de verdade recusa remoção definitiva (helper, ADR 0027).
+    final helper = File(p.join('..', '..', 'native', 'fotoatlas_helper', 'FotoAtlas.Helper', 'Files', 'Recycler.cs'))
+        .readAsStringSync();
+    expect(helper, contains('TsfDeleteRecycleIfPossible) != 0) return 0;'));
+    expect(helper, contains('"no_recycle_bin"'));
+    // O helper não apaga nada de outro jeito.
+    for (final cs in Directory(
+      p.join('..', '..', 'native', 'fotoatlas_helper', 'FotoAtlas.Helper'),
+    ).listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.cs'))) {
+      final text = cs.readAsStringSync();
+      for (final api in ['File.Delete(', 'Directory.Delete(', 'DeleteFileW', '.Delete(']) {
+        expect(text, isNot(contains(api)), reason: '${cs.path}: $api');
+      }
     }
   });
 

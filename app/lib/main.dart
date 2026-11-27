@@ -12,6 +12,7 @@ import 'app/demo_mode.dart';
 import 'app/library_backend.dart';
 import 'app/providers.dart';
 import 'app/shell.dart';
+import 'app/dedupe_backend.dart';
 import 'app/similar_backend.dart';
 import 'app/takeout_backend.dart';
 import 'app/theme.dart';
@@ -202,6 +203,7 @@ class FotoAtlasAppState extends State<FotoAtlasApp> {
             backendProvider.overrideWithValue(CoreBackend(core)),
             libraryBackendProvider.overrideWithValue(CoreLibraryBackend(core)),
             similarBackendProvider.overrideWithValue(CoreSimilarBackend(core)),
+            dedupeBackendProvider.overrideWithValue(CoreDedupeBackend(core)),
             takeoutBackendProvider.overrideWithValue(CoreTakeoutBackend(core)),
             updateInstallerLauncherProvider.overrideWithValue(installUpdateAndExit),
           ],

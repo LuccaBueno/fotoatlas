@@ -9,6 +9,7 @@ import '../../app/providers.dart';
 import '../../app/theme.dart';
 import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
+import '../dedupe/dedupe_task_card.dart';
 import '../integrity/integrity_ui.dart';
 import '../reorg/reorg_card.dart';
 
@@ -57,9 +58,9 @@ class TasksPage extends ConsumerWidget {
               Text('Tarefas', style: theme.textTheme.headlineSmall),
               const SizedBox(height: 4),
               Text(
-                'Cópias e reorganizações em andamento e o histórico de tudo o que o FotoAtlas gravou ou moveu. Toda '
-                'cópia é conferida pelo conteúdo antes de aparecer no destino; nada é sobrescrito nem apagado, e uma '
-                'reorganização pode ser desfeita.',
+                'Cópias, reorganizações e limpezas em andamento e o histórico de tudo o que o FotoAtlas gravou, moveu '
+                'ou mandou para a Lixeira. Toda cópia é conferida pelo conteúdo antes de aparecer no destino; nada é '
+                'sobrescrito nem apagado de vez, e uma reorganização pode ser desfeita.',
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
@@ -95,9 +96,11 @@ class TasksPage extends ConsumerWidget {
   }
 }
 
-Widget _card(OperationView o, List<OperationView> all) => o.kind == 'copy'
-    ? OperationCard(key: ValueKey('op-${o.id}'), op: o)
-    : ReorgOperationCard(key: ValueKey('op-${o.id}'), op: o, all: all);
+Widget _card(OperationView o, List<OperationView> all) => switch (o.kind) {
+  'copy' => OperationCard(key: ValueKey('op-${o.id}'), op: o),
+  dedupeOpKind => DedupeOperationCard(key: ValueKey('op-${o.id}'), op: o),
+  _ => ReorgOperationCard(key: ValueKey('op-${o.id}'), op: o, all: all),
+};
 
 class OperationCard extends ConsumerStatefulWidget {
   const OperationCard({super.key, required this.op});
@@ -294,6 +297,7 @@ Future<void> exportOperationReport(BuildContext context, WidgetRef ref, Operatio
   final kind = switch (o.kind) {
     'reorganize_move' => 'reorganizacao',
     'undo' => 'desfazer',
+    dedupeOpKind => 'limpeza-repetidos',
     _ => 'copia',
   };
   final location = await getSaveLocation(

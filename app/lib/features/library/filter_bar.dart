@@ -5,6 +5,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 import '../../app/providers.dart';
 import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
+import '../../widgets/backup_state.dart';
 import 'library_controller.dart';
 import 'library_strings.dart';
 
@@ -166,6 +167,17 @@ class FilterBar extends ConsumerWidget {
             showCheckmark: false,
             onPressed: () => c.setView(LibraryView.map),
             onDeleted: () => c.setCondition(null, FilterKind.area),
+            deleteButtonTooltipMessage: 'Tirar este filtro',
+          ),
+        // Vindo de um número clicável (cartão do dispositivo ou Início).
+        if (f.of(FilterKind.coverage) case final cov?)
+          InputChip(
+            key: const ValueKey('chip-coverage'),
+            avatar: Icon(backupStateIcon(BackupState.values.byName('${cov.values.first}')), size: 18),
+            label: Text(conditionLabel(cov)),
+            selected: true,
+            showCheckmark: false,
+            onDeleted: () => c.setCondition(null, FilterKind.coverage),
             deleteButtonTooltipMessage: 'Tirar este filtro',
           ),
         if (!f.isEmpty) ...[
@@ -687,6 +699,8 @@ String conditionLabel(FilterCondition c) => switch (c.kind) {
   FilterKind.metaError => 'Erro ao ler os dados',
   FilterKind.text => 'Texto: "${c.text}"',
   FilterKind.area => 'Área do mapa',
+  FilterKind.coverage =>
+    'Situação: ${c.values.map((v) => backupStateLabel(BackupState.values.byName('$v'))).join(', ')}',
 };
 
 /// Construtor avançado: todas (E) ou qualquer (OU) condição, cada uma com NÃO.

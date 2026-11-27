@@ -1,4 +1,4 @@
--- Schema do catálogo (v4). Fonte da verdade: docs/schema-v1.md (v1 + §7, mudanças da v2, v3 e v4).
+-- Schema do catálogo (v11). Fonte da verdade: docs/schema-v1.md (v1 + §7 em diante).
 -- Datas do app: ms Unix UTC. mtime/ctime: FILETIME bruto (100 ns desde 1601).
 
 CREATE TABLE app_meta (
@@ -196,10 +196,12 @@ CREATE TABLE date_corrections (
 ) AS DateCorrectionRow;
 CREATE INDEX ix_dc_content ON date_corrections(content_id) WHERE superseded_at IS NULL;
 
+-- v11 (Fase 9): kind 'dedupe_trash' = "Limpar repetidos" (ADR 0027); a tabela foi refeita
+-- com os mesmos dados para o CHECK aceitar o tipo novo.
 CREATE TABLE operations (
   id               TEXT NOT NULL PRIMARY KEY,
   kind             TEXT NOT NULL CHECK (kind IN
-                     ('copy','reorganize_move','undo','restore','catalog_backup_copy')),
+                     ('copy','reorganize_move','undo','restore','catalog_backup_copy','dedupe_trash')),
   status           TEXT NOT NULL CHECK (status IN
                      ('planned','confirmed','running','paused','completed',
                       'completed_with_errors','cancelled','needs_attention')),

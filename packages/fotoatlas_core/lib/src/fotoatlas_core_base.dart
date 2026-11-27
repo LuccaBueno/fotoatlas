@@ -5,6 +5,7 @@ import 'catalog/catalog.dart';
 import 'catalog/catalog_backup.dart';
 import 'compare/compare_service.dart';
 import 'coverage/coverage_service.dart';
+import 'dedupe/dedupe_service.dart';
 import 'devices/devices.dart';
 import 'hash/hash_service.dart';
 import 'helper/helper_client.dart';
@@ -18,6 +19,7 @@ import 'metadata/moments_service.dart';
 import 'ops/copy_planner.dart';
 import 'ops/copy_service.dart';
 import 'ops/reorg_service.dart';
+import 'safe_io/recycle_bin.dart';
 import 'scan/scan_service.dart';
 import 'sources/sources_service.dart';
 import 'sources/volumes.dart';
@@ -51,6 +53,7 @@ class FotoAtlasCore {
     required this.similar,
     required this.items,
     required this.takeoutZips,
+    required this.dedupe,
     required this._lock,
   });
 
@@ -104,6 +107,10 @@ class FotoAtlasCore {
 
   /// Zips do Google Takeout: extração pela cópia segura (só lê o zip).
   final TakeoutZips takeoutZips;
+
+  /// "Limpar repetidos" (Fase 9): cópias idênticas no mesmo dispositivo, para
+  /// a Lixeira do Windows, só com prévia e confirmação (ADR 0027).
+  final DedupeService dedupe;
   final VolumeProvider volumes;
 
   /// `null` se o helper não foi encontrado ou não iniciou (o core segue
@@ -133,6 +140,8 @@ class FotoAtlasCore {
   /// - [autoMetadata]: lê os metadados sozinho depois da conferência e quando
   ///   uma fonte conecta (o app liga).
   /// - [scheduleIntegrity]: liga a verificação periódica leve (o app liga).
+  /// - [recycleBin]: Lixeira explícita (testes). Sem ela, a do helper; sem
+  ///   helper, "Limpar repetidos" fica indisponível.
   /// - [autoSimilar]: calcula as impressões visuais sozinho, cedendo a vez às
   ///   outras tarefas (o app liga).
   static Future<FotoAtlasCore> open({
@@ -157,6 +166,7 @@ class FotoAtlasCore {
     bool verifyInIsolate = true,
     bool scheduleIntegrity = false,
     bool autoSimilar = false,
+    RecycleBin? recycleBin,
   }) async {
     final resolvedPaths = paths ?? CorePaths.fromEnvironment();
     Directory(resolvedPaths.dataDir).createSync(recursive: true);
@@ -228,6 +238,13 @@ class FotoAtlasCore {
       // Recuperação idempotente das cópias interrompidas (spec §11.2), antes
       // de qualquer outra tarefa: olha o disco e termina o que ficou no meio.
       final reorg = ReorgService(catalog.db, sources, mediaItems: items);
+      final dedupe = DedupeService(
+        catalog.db,
+        sources,
+        scans,
+        recycleBin: recycleBin ?? (helper == null ? null : HelperRecycleBin(helper)),
+        useIsolate: verifyInIsolate,
+      );
       final integrity = IntegrityService(
         catalog,
         sources,
@@ -238,12 +255,14 @@ class FotoAtlasCore {
             hashes.isRunning ||
             metadata.isRunning ||
             copies.isRunning ||
-            reorg.isRunning,
+            reorg.isRunning ||
+            dedupe.isRunning,
       );
       await integrity.recover();
       if (recover) {
         await copies.recoverAll();
         await reorg.recoverAll();
+        await dedupe.recoverAll();
       }
       if (monitor) sources.startMonitoring();
       final thumbnails = ThumbnailService(
@@ -264,6 +283,7 @@ class FotoAtlasCore {
             metadata.isRunning ||
             copies.isRunning ||
             reorg.isRunning ||
+            dedupe.isRunning ||
             integrity.isRunning,
       );
       final core = FotoAtlasCore._(
@@ -288,6 +308,7 @@ class FotoAtlasCore {
         similar: similar,
         items: items,
         takeoutZips: TakeoutZips(catalog.db, sources, freeSpace: freeSpace),
+        dedupe: dedupe,
         lock: lock,
       );
       if (backupOnOpen) {
@@ -345,6 +366,7 @@ class FotoAtlasCore {
       tasks.add(RunningTask(RunningTaskKind.copy, done: c?.itemsDone ?? 0, total: c?.itemsTotal ?? 0));
     }
     if (reorg.isRunning) tasks.add(const RunningTask(RunningTaskKind.reorganize));
+    if (dedupe.isRunning) tasks.add(const RunningTask(RunningTaskKind.dedupe));
     if (integrity.isRunning) {
       final v = integrity.current;
       tasks.add(RunningTask(RunningTaskKind.verify, done: v?.filesDone ?? 0, total: v?.filesTotal ?? 0));
@@ -396,6 +418,8 @@ class FotoAtlasCore {
       if (copies.isRunning)
         ShutdownStep('copy', 'Pausando a cópia (o arquivo do momento volta para a fila; nada se perde)'),
       if (reorg.isRunning) ShutdownStep('reorg', 'Pausando a reorganização (cada arquivo já movido fica registrado)'),
+      if (dedupe.isRunning)
+        ShutdownStep('dedupe', 'Pausando a limpeza de repetidos (o que já foi para a Lixeira fica registrado)'),
       if (runningScans > 0)
         ShutdownStep(
           'scan',
@@ -440,6 +464,7 @@ class FotoAtlasCore {
     await Future.wait([
       step('copy', () => copies.dispose(timeout: stepTimeout)),
       step('reorg', () => reorg.dispose(timeout: stepTimeout)),
+      step('dedupe', () => dedupe.dispose(timeout: stepTimeout)),
       step('scan', () => scans.dispose(timeout: stepTimeout)),
       step('hash', () => hashes.dispose(timeout: stepTimeout)),
       step('verify', () => integrity.dispose(timeout: stepTimeout)),
@@ -476,7 +501,7 @@ class ShutdownStep {
   bool timedOut = false;
 }
 
-enum RunningTaskKind { copy, reorganize, scan, hash, metadata, backup, verify }
+enum RunningTaskKind { copy, reorganize, dedupe, scan, hash, metadata, backup, verify }
 
 /// Uma tarefa em andamento. [done]/[total]: arquivos encontrados (scan) ou
 /// conferidos (conferência); `total` 0 = desconhecido.

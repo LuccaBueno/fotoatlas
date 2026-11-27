@@ -20,7 +20,8 @@
 #     a pasta "Fotos parecidas" (cenas sintéticas e variações; Fase 9) e a pasta
 #     "Fotos agrupadas" (RAW+JPEG e Live Photos sintéticos; Fase 9) e a pasta
 #     "Google Takeout" (pasta extraída e zips sintéticos; Fase 9) e a pasta
-#     "Viagens (mapa)" (fotos sintéticas com local no EXIF; Fase 9).
+#     "Viagens (mapa)" (fotos sintéticas com local no EXIF; Fase 9) e a pasta
+#     "Repetidos" (a mesma foto sintética em vários lugares; Fase 9).
 # As pastas temporárias (%TEMP%\fotoatlas_*) de -Demo/-CelularSimulado são
 # apagadas quando o app fecha.
 param([switch]$Demo, [switch]$CelularSimulado, [switch]$ManterDemo, [switch]$DemoPersistente)
@@ -153,6 +154,20 @@ try {
             Rename-Item -LiteralPath $gerando -NewName 'Viagens (mapa)'
         }
         Write-Host "Viagens (mapa) (cadastre como pasta): $viagens"
+        # Fase 9: "Repetidos" (a mesma foto em vários lugares) para o "Limpar repetidos".
+        $repetidos = Join-Path $pasta 'Repetidos'
+        if (-not (Test-Path -LiteralPath $repetidos)) {
+            $gerando = Join-Path $pasta 'repetidos_gerando'
+            if (Test-Path -LiteralPath $gerando) { Remove-Item -LiteralPath $gerando -Recurse -Force }
+            Push-Location (Join-Path $root 'tools\fixtures')
+            try {
+                dart pub get | Out-Null
+                dart run bin/gen_dedupe_demo.dart --out $gerando | Out-Null
+                if ($LASTEXITCODE -ne 0) { throw 'falha ao gerar a demonstração dos repetidos' }
+            } finally { Pop-Location }
+            Rename-Item -LiteralPath $gerando -NewName 'Repetidos'
+        }
+        Write-Host "Repetidos (cadastre como pasta): $repetidos"
         if ($CelularSimulado) {
             $celular = Join-Path $pasta 'celular'
             if (-not (Test-Path -LiteralPath $celular)) {

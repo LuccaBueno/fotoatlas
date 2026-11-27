@@ -313,7 +313,8 @@ class CoreBackend implements AppBackend {
       core.copies.items(operationId, states: states, limit: limit);
 
   @override
-  Future<String> exportOperation(String operationId) => core.copies.exportCsv(operationId);
+  Future<String> exportOperation(String operationId) async =>
+      await core.dedupe.isDedupe(operationId) ? core.dedupe.exportCsv(operationId) : core.copies.exportCsv(operationId);
 
   @override
   Future<List<TempLeftover>?> tempLeftovers(String destSourceId) => core.copies.tempLeftovers(destSourceId);

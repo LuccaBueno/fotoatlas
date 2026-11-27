@@ -374,7 +374,7 @@ class LibraryService {
 
   // --- Itens provisórios ("conferindo…") -------------------------------------
 
-  static const _provisionalKinds = {FilterKind.sources, FilterKind.types, FilterKind.extensions};
+  static const _provisionalKinds = {FilterKind.sources, FilterKind.types, FilterKind.extensions, FilterKind.coverage};
 
   static const _provisionalSql =
       'SELECT fi.id, fi.source_id, fi.name, fi.ext, fi.size_bytes, fi.mtime, s.name AS source_name '
@@ -390,6 +390,20 @@ class LibraryService {
     if (filter.any || filter.conditions.any((c) => !_provisionalKinds.contains(c.kind))) return const [];
     final rows = await db.customSelect('$_provisionalSql AND fi.ext IN ${MediaTypes.sqlList(MediaTypes.media)}').get();
     if (rows.isEmpty) return const [];
+    // Situação de backup (como nos cartões): a mesma classificação da cobertura.
+    final states = filter.conditions.where((c) => c.kind == FilterKind.coverage).toList();
+    final inState = <int, Set<String>>{};
+    if (states.isNotEmpty) {
+      for (final r
+          in await db
+              .customSelect(
+                'WITH ${CoverageService.instancesCte(mediaOnly: true)} SELECT id, state FROM classified '
+                "WHERE content_id IS NULL OR hash_status != 'done'",
+              )
+              .get()) {
+        (inState[r.read<int>('id')] ??= {}).add(r.read<String>('state'));
+      }
+    }
     final strategy = _strategy();
     final out = <_Provisional>[];
     for (final r in rows) {
@@ -401,6 +415,7 @@ class LibraryService {
         final hit = switch (c.kind) {
           FilterKind.sources => c.values.map((v) => '$v').contains(source),
           FilterKind.types => c.values.map((v) => '$v').contains(type),
+          FilterKind.coverage => c.values.map((v) => '$v').any((inState[r.read<int>('id')] ?? const {}).contains),
           _ => c.values.map((v) => '$v'.toLowerCase()).contains(ext),
         };
         if (hit == c.negate) keep = false;

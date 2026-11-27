@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 
+import '../coverage/coverage_service.dart';
+
 /// Tipos de condição dos filtros da Biblioteca (spec §10).
 enum FilterKind {
   /// Anos (valores: int).
@@ -76,6 +78,11 @@ enum FilterKind {
   /// Área do mapa (valores: [sul, norte, oeste, leste] em graus; oeste > leste
   /// atravessa a linha de data). Só fotos e vídeos com local.
   area,
+
+  /// Situação de backup exatamente como nos cartões e no Início
+  /// ([BackupState] pelo nome: single, probable, verified, independent,
+  /// unknown), inclusive arquivos ainda não conferidos. Fase 9.
+  coverage,
 }
 
 /// Períodos do dia pela hora local (spec §10).
@@ -305,6 +312,10 @@ class LibraryFilter {
         return has ? '$mm.lat IS NOT NULL' : '$mm.lat IS NULL';
       case FilterKind.backup:
         return '$c.id IN (SELECT content_id FROM (${backupStatesSql(simpleCopies: simpleCopies)}) WHERE state IN ${_in(f.values, vars)})';
+      case FilterKind.coverage:
+        // Conferidos; os ainda não conferidos entram como itens provisórios.
+        return '$c.id IN (WITH ${CoverageService.instancesCte(mediaOnly: true)} SELECT content_id FROM classified '
+            "WHERE content_id IS NOT NULL AND hash_status = 'done' AND state IN ${_in(f.values, vars)})";
       case FilterKind.metaError:
         return "$mm.meta_status = 'error'";
       case FilterKind.text:

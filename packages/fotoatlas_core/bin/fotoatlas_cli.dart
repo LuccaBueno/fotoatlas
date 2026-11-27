@@ -72,13 +72,21 @@ Comandos:
   items list                     Itens agrupados e os arquivos de cada um
   items split ITEM               Desagrupa (só catálogo; o grupo não volta sozinho)
   items group ID ID…             Agrupa à mão (só catálogo)
-  recover                        Roda a recuperação de cópias e reorganizações interrompidas
-
+  dedupe sources                 Dispositivos com arquivos repetidos (mesmo conteúdo)
+  dedupe groups FONTE [--rule organized|oldest]
+                                 Grupos de repetidos e a cópia sugerida para ficar (só lê)
+  dedupe plan FONTE --all|--group ID[:FICA]… [--rule R]
+                                 Prévia do que iria para a Lixeira (só lê; nada vem marcado)
+  dedupe start FONTE (…) --yes   Manda as outras cópias para a Lixeira do Windows, conferindo
+                                 de novo cada grupo (Ctrl+C pausa)
+  dedupe resume|retry|export OP  Continua, tenta de novo os grupos pulados ou exporta (CSV)
+  recover                        Roda a recuperação de cópias, reorganizações e limpezas interrompidas
 FONTE pode ser o nome, o id ou o começo do id.
 ESCOPO/LADO: "FONTE[:pasta/sub]" separados por "+" (ex.: "HD:Fotos/2020+Celular"),
   ou "@NOME" para um escopo salvo. --type: photo,raw,video,other.
 --list: missing (padrão), only-b, both, unverified-a, unverified-b.
 --home (ou FOTOATLAS_HOME) troca a pasta do catálogo.
+--test-recycle-dir PASTA (só testes): a "Lixeira" vira uma pasta fotoatlas_test* no temporário.
 FOTOATLAS_FAKE_DEVICES=PASTA mostra celulares simulados (testes e demonstração).
 ''';
 
@@ -91,6 +99,12 @@ Future<void> main(List<String> arguments) async {
     args.removeRange(homeIndex, homeIndex + 2);
   }
   final noHelper = args.remove('--no-helper');
+  String? testRecycleDir;
+  final recycleIndex = args.indexOf('--test-recycle-dir');
+  if (recycleIndex >= 0 && recycleIndex + 1 < args.length) {
+    testRecycleDir = args[recycleIndex + 1];
+    args.removeRange(recycleIndex, recycleIndex + 2);
+  }
   if (args.isEmpty || args.first == 'help' || args.contains('--help')) {
     stdout.write(_usage);
     exit(args.isEmpty ? 64 : 0);
@@ -99,7 +113,11 @@ Future<void> main(List<String> arguments) async {
   FotoAtlasCore? core;
   try {
     final paths = home != null ? CorePaths(dataDir: home, localDir: '$home\\local') : CorePaths.fromEnvironment();
-    core = await FotoAtlasCore.open(paths: paths, useHelper: !noHelper);
+    core = await FotoAtlasCore.open(
+      paths: paths,
+      useHelper: !noHelper,
+      recycleBin: testRecycleDir == null ? null : FolderRecycleBin(testRecycleDir),
+    );
     final code = await _run(core, args);
     await core.close();
     exit(code);
@@ -418,6 +436,74 @@ Future<int> _run(FotoAtlasCore core, List<String> args) async {
       final report = await core.copies.recoverAll();
       stdout.writeln('RECOVER $report');
       stdout.writeln('RECOVER_REORG ${await core.reorg.recoverAll()}');
+      stdout.writeln('RECOVER_DEDUPE ${await core.dedupe.recoverAll()}');
+      return 0;
+
+    case ['dedupe', 'sources']:
+      for (final s in await core.dedupe.summaries()) {
+        stdout.writeln(
+          'SOURCE ${s.name} grupos=${s.groups} sobram=${s.extraFiles} bytes=${s.reclaimableBytes}'
+          '${s.blocker == null ? '' : ' — ${s.blocker}'}',
+        );
+      }
+      return 0;
+
+    case ['dedupe', 'groups', final spec, ...final rest]:
+      final source = await _findSource(core, spec);
+      final rule = _option(rest, '--rule') == 'oldest' ? KeepRule.oldest : null;
+      for (final g in await core.dedupe.groups(source, rule: rule)) {
+        stdout.writeln('GROUP ${g.contentId} copias=${g.copies.length} bytes=${g.sizeBytes} — ${g.reason}');
+        for (final c in g.copies) {
+          stdout.writeln('  ${c.instanceId == g.suggestedKeepId ? 'FICA' : 'sai '} ${c.instanceId} ${c.relPath}');
+        }
+      }
+      return 0;
+
+    case ['dedupe', ('plan' || 'start') && final mode, final spec, ...final rest]:
+      final source = await _findSource(core, spec);
+      final rule = _option(rest, '--rule') == 'oldest' ? KeepRule.oldest : null;
+      final groups = await core.dedupe.groups(source, rule: rule);
+      // Nada vem marcado: --all aceita as sugestões; --group ID[:FICA] escolhe um grupo.
+      final choices = <DedupeChoice>[
+        if (rest.contains('--all'))
+          for (final g in groups) DedupeChoice(g.contentId, g.suggestedKeepId),
+      ];
+      for (var i = 0; i < rest.length - 1; i++) {
+        if (rest[i] != '--group') continue;
+        final [id, ...keep] = rest[i + 1].split(':');
+        final g = groups.where((g) => g.contentId == int.parse(id)).firstOrNull;
+        if (g == null) throw SourceException('Grupo $id não encontrado.');
+        choices.add(DedupeChoice(g.contentId, keep.isEmpty ? g.suggestedKeepId : int.parse(keep.single)));
+      }
+      final preview = await core.dedupe.preview(source, choices);
+      stdout.writeln(
+        'PREVIEW grupos=${preview.groups} arquivos=${preview.files} bytes=${preview.bytes} '
+        'pulados=${preview.skipped.length} pode_comecar=${preview.canStart}'
+        '${preview.blocker == null ? '' : ' — ${preview.blocker}'}',
+      );
+      for (final r in preview.removals) {
+        stdout.writeln('  ${r.relPath} -> Lixeira (fica ${r.keepRelPath})');
+      }
+      if (mode == 'plan') return 0;
+      if (!rest.contains('--yes')) {
+        stderr.writeln('Confirme com --yes para mandar para a Lixeira.');
+        return 2;
+      }
+      if (!preview.canStart) return 1;
+      return _followDedupe(core, await core.dedupe.start(preview));
+
+    case ['dedupe', 'resume', final op]:
+      final id = await _findOperation(core, op);
+      await core.dedupe.resume(id);
+      return _followDedupe(core, id);
+
+    case ['dedupe', 'retry', final op]:
+      final id = await _findOperation(core, op);
+      stdout.writeln('RETRY ${await core.dedupe.retryFailed(id)}');
+      return _followDedupe(core, id);
+
+    case ['dedupe', 'export', final op]:
+      stdout.write(await core.dedupe.exportCsv(await _findOperation(core, op)));
       return 0;
 
     case ['reorg', ('plan' || 'start') && final mode, final spec, ...final rest]:
@@ -846,6 +932,22 @@ Future<int> _followReorg(FotoAtlasCore core, String id) async {
   stdout.writeln(
     'REORG ${o.id} ${o.kind} ${o.status} movidos=${o.published} deixados=${o.skipped} falhas=${o.failed} '
     'atencao=${o.needsAttention} faltam=${o.remaining}${o.pauseReason == null ? '' : ' — ${o.pauseReason}'}',
+  );
+  return o.status == OpStatus.completed || o.status == OpStatus.paused ? 0 : 1;
+}
+
+Future<int> _followDedupe(FotoAtlasCore core, String id) async {
+  stdout.writeln('OPERATION $id');
+  final sigint = ProcessSignal.sigint.watch().listen((_) {
+    stdout.writeln('Pausando…');
+    core.dedupe.pause(id);
+  });
+  await core.dedupe.waitIdle();
+  await sigint.cancel();
+  final o = (await core.copies.view(id))!;
+  stdout.writeln(
+    'DEDUPE ${o.id} ${o.status} lixeira=${o.published} ficaram=${o.failed} faltam=${o.remaining}'
+    '${o.pauseReason == null ? '' : ' — ${o.pauseReason}'}',
   );
   return o.status == OpStatus.completed || o.status == OpStatus.paused ? 0 : 1;
 }

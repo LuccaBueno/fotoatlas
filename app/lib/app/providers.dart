@@ -5,6 +5,7 @@ import 'package:fotoatlas_core/fotoatlas_core.dart';
 
 import 'backend.dart';
 import 'library_backend.dart';
+import 'dedupe_backend.dart';
 import 'similar_backend.dart';
 import 'takeout_backend.dart';
 
@@ -153,6 +154,35 @@ final integrityOverviewProvider = StreamProvider<List<SourceIntegrity>>(
 final integrityScheduleProvider = FutureProvider<IntegritySchedule>(
   (ref) => ref.watch(backendProvider).integritySchedule(),
 );
+
+/// "Limpar repetidos" (Fase 9). Sobrescrito em `main.dart`.
+final dedupeBackendProvider = Provider<DedupeBackend>(
+  (ref) => throw UnimplementedError('dedupeBackendProvider não configurado'),
+);
+
+/// Avisos de mudança para a tela Repetidos, agrupados (no máximo um a cada 700 ms).
+final dedupeChangesProvider = StreamProvider<int>((ref) {
+  final backend = ref.watch(dedupeBackendProvider);
+  final controller = StreamController<int>();
+  var n = 0;
+  Timer? timer;
+  final sub = backend.changes().listen((_) {
+    timer ??= Timer(const Duration(milliseconds: 700), () {
+      timer = null;
+      controller.add(++n);
+    });
+  });
+  controller.add(n);
+  ref.onDispose(() {
+    timer?.cancel();
+    sub.cancel();
+    controller.close();
+  });
+  return controller.stream;
+});
+
+/// Progresso da limpeza em andamento.
+final dedupeProgressProvider = StreamProvider<CopyProgress>((ref) => ref.watch(dedupeBackendProvider).progress);
 
 /// Fotos parecidas (Fase 9). Sobrescrito em `main.dart`.
 /// Zips do Google Takeout (Fase 9). Sobrescrito em `main.dart`.

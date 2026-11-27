@@ -9,6 +9,7 @@ import '../../l10n/format.dart';
 import '../../l10n/strings.dart';
 import '../../widgets/backup_state.dart';
 import '../../widgets/connection_badge.dart';
+import '../../widgets/count_link.dart';
 import '../integrity/integrity_ui.dart';
 
 /// Início: as respostas às perguntas "o que eu tenho e onde está?" e "o que já
@@ -152,7 +153,12 @@ class _PerSource extends ConsumerWidget {
                 children: [
                   ConnectionBadge(s.state),
                   if (coverage?.perSource[s.id] case final c? when c.counts.filesIn(BackupState.single) > 0)
-                    BackupStateBadge(BackupState.single, count: c.counts.filesIn(BackupState.single)),
+                    BackupStateBadge(
+                      BackupState.single,
+                      key: ValueKey('home-single-${s.id}'),
+                      count: c.counts.filesIn(BackupState.single),
+                      onTap: () => openCoverageFiltered(ref, BackupState.single, sourceId: s.id),
+                    ),
                 ],
               ),
               trailing: Text(
@@ -209,9 +215,14 @@ class _CoveragePanel extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                '${backupStateCount(state, report.overall.filesIn(state))} '
-                                '(${formatBytes(report.overall.bytesIn(state))})',
+                              CountLink(
+                                key: ValueKey('home-count-${state.name}'),
+                                onTap: () => openCoverageFiltered(ref, state),
+                                child: Text(
+                                  '${backupStateCount(state, report.overall.filesIn(state))} '
+                                  '(${formatBytes(report.overall.bytesIn(state))})',
+                                  style: const TextStyle(decoration: TextDecoration.underline),
+                                ),
                               ),
                               Text(
                                 state == BackupState.verified

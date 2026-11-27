@@ -83,6 +83,21 @@ class SourceFile {
     );
   });
 
+  /// Identidade física do arquivo (número de série do volume + índice do
+  /// arquivo, `GetFileInformationByHandle`): dois caminhos com a mesma
+  /// identidade são o **mesmo** arquivo (maiúsculas diferentes, link físico).
+  String identity() => using((arena) {
+    final data = arena<Uint8>(byHandleFileInformationSize);
+    if (getFileInformationByHandle(_handle, data) == 0) {
+      throw Win32Exception('GetFileInformationByHandle', getLastError(), path);
+    }
+    final bd = ByteData.sublistView(data.asTypedList(byHandleFileInformationSize));
+    final serial = bd.getUint32(28, Endian.little);
+    final high = bd.getUint32(44, Endian.little);
+    final low = bd.getUint32(48, Endian.little);
+    return '${serial.toRadixString(16)}:${high.toRadixString(16)}:${low.toRadixString(16)}';
+  });
+
   /// Lê até [length] bytes em [buffer]. Devolve 0 no fim do arquivo.
   int read(Pointer<Uint8> buffer, int length) => using((arena) {
     final read = arena<Uint32>();

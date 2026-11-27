@@ -9,7 +9,7 @@ part 'catalog_database.g.dart';
 class CatalogDatabase extends _$CatalogDatabase {
   CatalogDatabase(super.e);
 
-  static const int currentSchemaVersion = 10;
+  static const int currentSchemaVersion = 11;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -90,6 +90,23 @@ class CatalogDatabase extends _$CatalogDatabase {
         // pre-migracao feito antes). Nenhuma outra tabela aponta para ela.
         await m.alterTable(TableMigration(mediaMetadata));
       }
+      if (from < 11) {
+        // Segunda exceção (ADR 0027, aprovada pelo usuário): o CHECK de
+        // operations.kind ganha 'dedupe_trash' ("Limpar repetidos"). A tabela é
+        // refeita com os mesmos dados; operation_items, operation_events,
+        // integrity_checks e o próprio undo_of apontam para ela pelo nome, que
+        // não muda. O alterTable desliga as chaves estrangeiras só durante a
+        // troca; a conferência abaixo garante que nenhuma referência quebrou.
+        await m.alterTable(TableMigration(operations));
+        final broken = await customSelect('PRAGMA foreign_key_check').get();
+        if (broken.isNotEmpty) {
+          throw StateError('Migração v11: ${broken.length} referência(s) quebrada(s) depois de refazer operations.');
+        }
+      }
+    },
+    beforeOpen: (details) async {
+      // O alterTable pode ter desligado as chaves estrangeiras nesta conexão.
+      if (details.hadUpgrade) await customStatement('PRAGMA foreign_keys = ON');
     },
   );
 }

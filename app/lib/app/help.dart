@@ -23,6 +23,7 @@ class HelpTopic {
 const helpTopics = [
   HelpTopic('Início', 'Um resumo do que tem e do que não tem backup em todos os seus dispositivos.', [
     'Ver quantas fotos e vídeos estão sem backup (só em 1 lugar).',
+    'Clicar num número (ex.: "sem backup") para ver esses arquivos na Biblioteca, já filtrados.',
     'Acompanhar a conferência do conteúdo e o escaneamento.',
     'Ir direto para os dispositivos ou para a comparação.',
     'Ver avisos de arquivos possivelmente corrompidos e de discos que não são verificados há tempo.',
@@ -101,8 +102,28 @@ const helpTopics = [
     ],
   ),
   HelpTopic(
+    'Limpar repetidos',
+    'Arquivos com exatamente o mesmo conteúdo guardados mais de uma vez no mesmo dispositivo. Nada sai sem você ver e '
+        'confirmar, e o que sai vai para a Lixeira do Windows (dá para restaurar por lá). Uma cópia de cada sempre fica.',
+    [
+      'Escolher o dispositivo e ver cada grupo com todas as cópias lado a lado: nome, caminho, pasta, data, tamanho e '
+          'resolução.',
+      'Abrir a foto no visualizador do Windows ou mostrar o arquivo na pasta.',
+      'Escolher qual cópia fica (o FotoAtlas sugere: a da pasta mais organizada ou a mais antiga, você escolhe a '
+          'regra) e marcar os grupos para limpar — um por vez ou aceitando todas as sugestões.',
+      'Ver a prévia (o que vai para a Lixeira, quantos e quanto espaço libera) e confirmar.',
+      'Na hora, o FotoAtlas confere o conteúdo de novo; se algo mudou, aquele grupo fica como está e você é avisado.',
+      'Acompanhar em Tarefas e exportar o relatório (o que saiu e qual cópia ficou).',
+    ],
+    extraLegend: [
+      (Icons.check_circle_outline, 'Fica', 'A cópia que continua onde está.'),
+      (Icons.delete_outline, 'Vai para a Lixeira', 'Só nos grupos que você marcou, depois da sua confirmação.'),
+    ],
+  ),
+  HelpTopic(
     'Tarefas',
-    'Cópias, reorganizações e verificações em andamento e o histórico de tudo o que o FotoAtlas gravou ou moveu.',
+    'Cópias, reorganizações, limpezas e verificações em andamento e o histórico de tudo o que o FotoAtlas gravou, '
+        'moveu ou mandou para a Lixeira.',
     [
       'Acompanhar, pausar, continuar ou cancelar uma cópia (o que já foi copiado fica).',
       'Decidir o que fazer quando um nome já existe no destino.',

@@ -678,3 +678,49 @@ void generateMapDemo(String outDir) {
   write('Sem local/IMG_4501.JPG', DateTime(2024, 9, 1, 12));
   write('Sem local/IMG_4502.JPG', DateTime(2024, 9, 2, 12));
 }
+
+/// Demonstração do "Limpar repetidos" (Fase 9): a mesma foto guardada mais de
+/// uma vez na mesma pasta cadastrada, em lugares organizados e bagunçados.
+///
+///     Praia: Fotos/2024/2024-07 Praia/IMG_0101.JPG + Downloads/IMG_0101.JPG
+///            + WhatsApp Images/IMG_0101 (1).JPG               → 3 cópias
+///     Festa: Backup antigo/Festa/IMG_0201.JPG (criada primeiro: "a mais antiga")
+///            + Fotos/2024/2024-08 Festa/IMG_0201.JPG           → 2 cópias
+///     Viagem: Fotos/2024/2024-09 Viagem/IMG_0301.JPG
+///            + Cópia de segurança/IMG_0301 - Cópia.JPG         → 2 cópias
+///     Fotos/2024/2024-09 Viagem/IMG_0302.JPG                   → única
+///
+/// Cada conteúdo é um JPEG sintético diferente; nada vem de fotos reais.
+void generateDedupeDemo(String outDir) {
+  assertAllowedOutput(outDir);
+  final dir = Directory(outDir);
+  if (dir.existsSync() && dir.listSync().isNotEmpty) {
+    throw StateError('A pasta de saída precisa estar vazia: $outDir');
+  }
+  Uint8List photo(int n, DateTime at) => jpegWithExif(
+    ExifSpec(dateTimeOriginal: at, make: 'Samsung', model: 'Galaxy S21', color: n, uniqueId: 'repetida-$n'),
+  );
+  final praia = DateTime(2024, 7, 13, 10, 5);
+  final festa = DateTime(2024, 8, 24, 21, 40);
+  final viagem = DateTime(2024, 9, 2, 15, 12);
+  final contents = {1: photo(1, praia), 2: photo(2, festa), 3: photo(3, viagem), 4: photo(4, viagem)};
+  // Na ordem de criação: a cópia do "Backup antigo" é criada antes da organizada.
+  for (final (rel, n, at) in [
+    ('Backup antigo/Festa/IMG_0201.JPG', 2, festa),
+    ('Fotos/2024/2024-07 Praia/IMG_0101.JPG', 1, praia),
+    ('Fotos/2024/2024-08 Festa/IMG_0201.JPG', 2, festa),
+    ('Fotos/2024/2024-09 Viagem/IMG_0301.JPG', 3, viagem),
+    ('Fotos/2024/2024-09 Viagem/IMG_0302.JPG', 4, viagem),
+    ('Downloads/IMG_0101.JPG', 1, praia),
+    ('WhatsApp Images/IMG_0101 (1).JPG', 1, praia),
+    ('Cópia de segurança/IMG_0301 - Cópia.JPG', 3, viagem),
+  ]) {
+    final f = File(p.join(outDir, rel));
+    f.parent.createSync(recursive: true);
+    f
+      ..writeAsBytesSync(contents[n]!)
+      ..setLastModifiedSync(at);
+    // Datas de criação diferentes entre as cópias (a regra "a mais antiga").
+    sleep(const Duration(milliseconds: 20));
+  }
+}

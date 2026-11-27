@@ -104,7 +104,9 @@ class CoverageService {
 
   final CatalogDatabase db;
 
-  static String _instancesCte({required bool mediaOnly}) =>
+  /// CTE `classified`: cada arquivo presente com a situação de backup (`state`)
+  /// da cobertura. Também usado pelo filtro da Biblioteca [FilterKind.coverage].
+  static String instancesCte({required bool mediaOnly}) =>
       '''
       inst AS MATERIALIZED (
         SELECT fi.id, fi.source_id, fi.content_id, fi.size_bytes, lower(fi.name) AS lname, fi.hash_status,
@@ -165,7 +167,7 @@ class CoverageService {
 
   /// Relatório completo. [mediaOnly]: só fotos, RAW e vídeos (padrão).
   Future<CoverageReport> report({bool mediaOnly = true}) async {
-    final cte = _instancesCte(mediaOnly: mediaOnly);
+    final cte = instancesCte(mediaOnly: mediaOnly);
     // Geral: conteúdo conferido conta uma vez; não conferido conta por arquivo físico.
     final overallRows = await db
         .customSelect(
@@ -304,7 +306,7 @@ class CoverageService {
   Future<Map<String, BackupState>> statesForSource(String sourceId, {bool mediaOnly = false}) async {
     final rows = await db
         .customSelect(
-          'WITH ${_instancesCte(mediaOnly: mediaOnly)} '
+          'WITH ${instancesCte(mediaOnly: mediaOnly)} '
           'SELECT fi.rel_path, c.state FROM classified c JOIN file_instances fi ON fi.id = c.id WHERE c.source_id = ?',
           variables: [Variable.withString(sourceId)],
           readsFrom: {db.fileInstances, db.sources, db.physicalDisks},
