@@ -30,12 +30,14 @@ internal static class Program
         var cacheDir = ArgValue(args, "--cache-dir");
         var host = new ProtocolHost(stdin, stdout, new VolumeEnumerator(), Console.Error, devices, cacheDir);
 
-        var waiters = new List<Task> { host.RunAsync(), host.ShutdownRequested };
+        // Confere o processo pai antes do hello: o cliente não pode ver "pronto"
+        // de um helper que vai sair em seguida.
+        Task? parentExit = null;
         if (int.TryParse(ArgValue(args, "--parent-pid"), out var parentPid))
         {
             try
             {
-                waiters.Add(Process.GetProcessById(parentPid).WaitForExitAsync());
+                parentExit = Process.GetProcessById(parentPid).WaitForExitAsync();
             }
             catch (ArgumentException)
             {
@@ -43,6 +45,9 @@ internal static class Program
                 return 3;
             }
         }
+
+        var waiters = new List<Task> { host.RunAsync(), host.ShutdownRequested };
+        if (parentExit is not null) waiters.Add(parentExit);
 
         // Encerra no EOF do stdin, em system.shutdown ou quando o processo pai morre.
         await Task.WhenAny(waiters);
