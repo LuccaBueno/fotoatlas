@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.3.0-beta.7] — 2026-11-28 (pré-lançamento)
+
+Traz tudo da `1.3.0-beta.6` e a correção abaixo, que também sai sozinha na `1.2.2` estável (ramo `release/1.2.x`). Sem mudança no catálogo (continua na versão 11). Roteiro de teste: item h de `docs\roteiro-teste-fase-9.md`.
+
 ### Corrigido
 - O componente de dispositivos (helper) volta sozinho depois de cair. Antes, cada reinício recebia o número do processo errado e encerrava na hora. Por isso, uma queda deixava os celulares e as miniaturas sem leitura até fechar o app. O helper também volta a se encerrar quando o FotoAtlas é finalizado à força, em vez de ficar aberto sozinho.
 - Teste de desempenho do scan: um processo de referência mede, ao mesmo tempo, as paradas da própria máquina, e só o atraso que é do app conta no limite de 100 ms, que não mudou.

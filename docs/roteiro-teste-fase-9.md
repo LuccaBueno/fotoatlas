@@ -14,21 +14,24 @@ Comandos para o Windows PowerShell, com caminhos completos. Tudo usa **dados de 
 | e. Limpar repetidos e números clicáveis | `1.3.0-beta.5` | pronto para testar |
 | f. Backup do celular em um assistente | `1.3.0-beta.6` | pronto para testar |
 | g. Pergunte ao FotoAtlas | `1.3.0-beta.6` | pronto para testar |
+| h. O componente dos celulares volta sozinho depois de cair | `1.3.0-beta.7` | pronto para testar |
+
+**Para o teste de dezembro, use a `1.3.0-beta.7`:** ela traz tudo da tabela e corrige uma falha das betas anteriores (e da 1.2.1). Se o componente que lê os celulares caísse, ele não voltava mais até fechar o FotoAtlas. Nos comandos abaixo, onde estiver `v1.3.0-beta.N`, pode usar `v1.3.0-beta.7`.
 
 ## Antes de começar
 
-**Sobre o catálogo de verdade.** O FotoAtlas instalado (1.2.1) usa o catálogo em `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas`. As versões 1.3.0-beta acrescentam tabelas ao catálogo; um catálogo aberto por uma beta **não abre mais na 1.2.1** (ela recusa catálogo mais novo, sem modificá-lo). Antes de mudar, o FotoAtlas guarda uma cópia conferida em `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas\backups\pre-migracao-v7-<data>.db` (ou `v8`, conforme a versão de onde vem). Por isso, este roteiro testa tudo com o catálogo da demonstração e **nunca** abre uma beta com o catálogo de verdade.
+**Sobre o catálogo de verdade.** O FotoAtlas instalado (1.2.1 ou 1.2.2) usa o catálogo em `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas`. As versões 1.3.0-beta acrescentam tabelas ao catálogo; um catálogo aberto por uma beta **não abre mais na 1.2.x** (ela recusa catálogo mais novo, sem modificá-lo). Antes de mudar, o FotoAtlas guarda uma cópia conferida em `C:\Users\Lucca-PC\AppData\Roaming\FotoAtlas\backups\pre-migracao-v7-<data>.db` (ou `v8`, conforme a versão de onde vem). Por isso, este roteiro testa tudo com o catálogo da demonstração e **nunca** abre uma beta com o catálogo de verdade.
 
 **Pasta da demonstração:** `C:\Users\Lucca-PC\AppData\Local\Temp\fotoatlas_demo_persistente`. Para começar do zero, com o FotoAtlas fechado:
 ```powershell
 powershell -ExecutionPolicy Bypass -File C:\dev\fotoatlas\tools\scripts\clean-temp.ps1
 ```
 
-**Abrir a demonstração a partir do código** (na versão do pré-lançamento que você quer testar; troque `v1.3.0-beta.1` pela mais nova da tabela acima):
+**Abrir a demonstração a partir do código** (na `v1.3.0-beta.7`, a mais nova, que traz todos os itens):
 ```powershell
 cd C:\dev\fotoatlas
 git fetch --tags
-git checkout v1.3.0-beta.1
+git checkout v1.3.0-beta.7
 powershell -ExecutionPolicy Bypass -File C:\dev\fotoatlas\tools\scripts\run-app.ps1 -DemoPersistente
 ```
 No fim de todo o teste, volte para a versão em desenvolvimento:
@@ -39,13 +42,13 @@ git checkout main
 
 ## 0. Pré-lançamentos
 
-**0.1. O FotoAtlas instalado não oferece pré-lançamento.** Abra o FotoAtlas 1.2.1 pelo menu Iniciar, vá em **Configurações › Atualizações** e clique em **Procurar atualização agora**. Mesmo com as betas publicadas, a resposta deve ser "Você já tem a versão mais nova (1.2.1)." e nenhuma faixa de versão nova aparece no topo. Feche o FotoAtlas.
+**0.1. O FotoAtlas instalado não oferece pré-lançamento.** Abra o FotoAtlas instalado (1.2.1 ou 1.2.2) pelo menu Iniciar, vá em **Configurações › Atualizações** e clique em **Procurar atualização agora**. Mesmo com as betas publicadas, a resposta deve ser "Você já tem a versão mais nova (1.2.1)." e nenhuma faixa de versão nova aparece no topo. Feche o FotoAtlas.
 
 **0.2. As betas estão marcadas como pré-lançamento no GitHub:**
 ```powershell
 Start-Process 'https://github.com/LuccaBueno/fotoatlas/releases'
 ```
-Cada `v1.3.0-beta.N` aparece com a etiqueta **Pre-release**, com o instalador `FotoAtlas-1.3.0-beta.N-instalador.exe` e o `.sha256`. A "Latest" continua sendo a `v1.2.1`.
+Cada `v1.3.0-beta.N` aparece com a etiqueta **Pre-release**, com o instalador `FotoAtlas-1.3.0-beta.N-instalador.exe` e o `.sha256`. A "Latest" continua sendo a estável mais nova (`v1.2.1`, ou `v1.2.2` depois de publicada).
 
 **0.3. O instalador da beta, sem tocar no catálogo de verdade** (opcional; troca o FotoAtlas instalado pela beta — no fim deste passo você reinstala a 1.2.1). Baixe o instalador e o `.sha256` da beta mais nova para `C:\Users\Lucca-PC\Downloads` e confira:
 ```powershell
@@ -298,11 +301,11 @@ Start-Process 'shell:RecycleBinFolder'
 
 ## f. Backup do celular em um assistente (1.3.0-beta.6)
 
-Usa o **celular simulado** "Pixel" e a pasta "HD" da demonstração (fotos sintéticas). O Pixel simulado lê devagar (3 s por arquivo), o que dá tempo de pausar no meio. Abra a demonstração com o celular simulado (na `v1.3.0-beta.6`):
+Usa o **celular simulado** "Pixel" e a pasta "HD" da demonstração (fotos sintéticas). O Pixel simulado lê devagar (3 s por arquivo), o que dá tempo de pausar no meio. Abra a demonstração com o celular simulado (na `v1.3.0-beta.7`):
 ```powershell
 cd C:\dev\fotoatlas
 git fetch --tags
-git checkout v1.3.0-beta.6
+git checkout v1.3.0-beta.7
 powershell -ExecutionPolicy Bypass -File C:\dev\fotoatlas\tools\scripts\run-app.ps1 -DemoPersistente -CelularSimulado
 ```
 
@@ -349,6 +352,32 @@ Clique no botão de cada resposta: a ajuda fecha e abre a tela certa.
 **g.3. Sem internet.** Desligue o Wi-Fi (ou tire o cabo de rede) e repita uma pergunta: a resposta aparece igual.
 
 **g.4. O que o FotoAtlas faz (e o que nunca faz).** No **?**, clique em **O que o FotoAtlas faz (e o que nunca faz)**: duas listas, "O que ele faz" e "O que ele nunca faz" (nunca apaga nada sozinho nem do celular, nunca sobrescreve, nunca muda a qualidade de uma foto, nunca envia suas fotos para a internet…).
+
+## h. O componente dos celulares volta sozinho depois de cair (1.3.0-beta.7)
+
+Usa só os processos da demonstração (os que rodam a partir de `C:\dev\fotoatlas`); o FotoAtlas instalado não é tocado. Abra a demonstração com o celular simulado (na `v1.3.0-beta.7`):
+```powershell
+cd C:\dev\fotoatlas
+git fetch --tags
+git checkout v1.3.0-beta.7
+powershell -ExecutionPolicy Bypass -File C:\dev\fotoatlas\tools\scripts\run-app.ps1 -DemoPersistente -CelularSimulado
+```
+
+**h.1. Derrubar o componente.** Em **Dispositivos**, o "Pixel de Teste (simulado)" aparece. Num **outro** PowerShell, finalize o componente da demonstração:
+```powershell
+Get-Process fotoatlas_helper -ErrorAction SilentlyContinue | Where-Object { $_.Path -like 'C:\dev\fotoatlas\*' } | Stop-Process
+```
+No FotoAtlas aparece o aviso "A leitura de dispositivos parou inesperadamente e está sendo reiniciada…", e o Pixel pode aparecer como desconectado por um instante. Em poucos segundos, sem você mexer em nada, o "Pixel de Teste" volta a aparecer em **Dispositivos** e dá para escaneá-lo. Nas betas anteriores ele não voltava mais até fechar o FotoAtlas. Confira que há de novo um componente rodando:
+```powershell
+Get-Process fotoatlas_helper -ErrorAction SilentlyContinue | Where-Object { $_.Path -like 'C:\dev\fotoatlas\*' } | Select-Object Id, StartTime
+```
+Deve aparecer uma linha, com o horário de agora.
+
+**h.2. Finalizar o FotoAtlas à força.** Ainda no outro PowerShell, finalize o FotoAtlas da demonstração (como se ele travasse):
+```powershell
+Get-Process fotoatlas -ErrorAction SilentlyContinue | Where-Object { $_.Path -like 'C:\dev\fotoatlas\*' } | Stop-Process
+```
+Espere 5 segundos e rode de novo o segundo comando do h.1: não deve aparecer nada (o componente também se encerrou, em vez de ficar aberto sozinho). Abra a demonstração de novo com o mesmo comando: tudo continua como estava.
 
 ## Resultado
 
