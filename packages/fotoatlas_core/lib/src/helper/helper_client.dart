@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:io' as io show pid;
 
 import 'package:path/path.dart' as p;
 
@@ -94,8 +95,9 @@ class HelperClient {
       ...arguments,
       '--protocol',
       '$helperProtocolVersion',
+      // O PID deste processo (dart:io), não o getter [pid] (o do helper anterior).
       '--parent-pid',
-      '$pid',
+      '${io.pid}',
       if (cacheDir != null) ...['--cache-dir', cacheDir!],
     ];
     final process = await Process.start(executable, args);

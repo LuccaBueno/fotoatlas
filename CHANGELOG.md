@@ -4,6 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e
 
 ## [Não lançado]
 
+## [1.2.2] — 2026-11-28
+
+### Corrigido
+- O componente de dispositivos (helper) volta sozinho depois de cair. Antes, cada reinício recebia o número do processo errado e encerrava na hora, e uma queda deixava os celulares sem leitura até fechar o FotoAtlas. O helper também volta a se encerrar quando o FotoAtlas é finalizado à força, em vez de ficar aberto sozinho. Causa: o `--parent-pid` usava o getter `pid` do `HelperClient` (o PID do helper anterior) no lugar do `pid` do `dart:io`, desde a 0.4.0. Só esta correção; nenhuma função nova.
+
 ## [1.2.1] — 2026-11-14
 
 ### Corrigido

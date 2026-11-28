@@ -296,6 +296,11 @@ Pedido do usuário (2026-11-14): resolver a pendência do teste de desempenho do
 - [ ] Teste de desempenho 5× seguidas localmente e CI 3× seguidas, todos verdes
 - [ ] Release `v1.2.1` no GitHub, com o instalador, o `.sha256` e as notas de versão
 
+## Versão 1.2.2 (2026-11-28, ramo `release/1.2.x` a partir da `v1.2.1`)
+Pedido do usuário (2026-11-28): a correção do `--parent-pid` na versão estável, sem as funções da Fase 9. O registro completo fica no ROADMAP do `main` (item 9.g, CI do commit af4c7aa).
+- [x] `HelperClient` passa o `pid` do `dart:io`; o helper confere o processo pai antes do `hello`; teste com o helper real (falha na 1.2.1 com `--parent-pid null`, passa com a correção)
+- [ ] CI verde no ramo e release `v1.2.2` no GitHub, com o instalador, o `.sha256` e as notas aprovadas pelo usuário
+
 ## Fase 9+ — Avançados
 - [ ] Item lógico (RAW+JPEG, Live Photos) · duplicatas visuais · mapa · IA local · Google Takeout
 

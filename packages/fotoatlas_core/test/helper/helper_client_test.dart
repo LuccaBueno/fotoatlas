@@ -103,4 +103,36 @@ void main() {
     expect(boot.guidPath, startsWith(r'\\?\Volume{'));
     expect(boot.physicalDisks, isNotEmpty);
   }, skip: realHelper == null ? 'helper não compilado (dotnet build em native/fotoatlas_helper)' : false);
+
+  // O helper real confere o --parent-pid ao iniciar. Ele já recebeu o PID do
+  // helper anterior (morto) e cada reinício saía com o código 3 (runs
+  // 46059361792 e 46086029651: "Processo pai 6480 não existe").
+  test('helper real: recebe o PID deste processo e volta depois de cair', () async {
+    final client = HelperClient(executable: realHelper!, maxBackoff: const Duration(seconds: 1));
+    addTearDown(client.close);
+    await client.start();
+    final parentArg = RegExp('--parent-pid $pid\\b');
+    expect(await helperCommandLine(client.pid!), matches(parentArg));
+
+    final first = client.pid!;
+    Process.killPid(first);
+    await waitForStatus(client, HelperStatus.restarting);
+    await waitForStatus(client, HelperStatus.ready);
+    // O hello sai antes da checagem do processo pai: "pronto" sozinho não
+    // prova que o helper novo ficou vivo; o pedido e a linha de comando provam.
+    expect((await HelperVolumeProvider(client).list()).where((v) => v.isBoot), hasLength(1));
+    expect(client.restarts, 1);
+    expect(client.pid, isNot(first));
+    expect(await helperCommandLine(client.pid!), matches(parentArg));
+  }, skip: realHelper == null ? 'helper não compilado (dotnet build em native/fotoatlas_helper)' : false);
+}
+
+/// Linha de comando de um processo (Windows), para conferir os argumentos.
+Future<String> helperCommandLine(int processId) async {
+  final r = await Process.run('powershell.exe', [
+    '-NoProfile',
+    '-Command',
+    '(Get-CimInstance Win32_Process -Filter "ProcessId=$processId").CommandLine',
+  ]);
+  return '${r.stdout}';
 }
