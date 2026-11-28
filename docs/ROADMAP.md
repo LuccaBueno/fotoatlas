@@ -338,7 +338,8 @@ Condições do usuário (2026-11-15):
     - CI 3× verde no commit 79d79cf (run 46101196660, tentativas 1–3): atraso máximo do scan 16, 16 e 22 ms; referência 22, 0 e 0 ms; `atrasoDoApp` 0, 0 e 22 ms.
 - [x] (pedido do usuário em 2026-11-28) O bug do `--parent-pid` está na estável: `git tag --contains 087c628` lista da `v0.4.0` à `v1.3.0-beta.6`, inclusive a **`v1.2.1`** (o código da tag passa `'$pid'`, com o getter `int? get pid` na linha 63). O teste novo, rodado no código da 1.2.1, falha com `--parent-pid null`.
   - `1.3.0-beta.7` (pré-lançamento): a beta.6 com a correção do helper e a referência do teste de desempenho. O roteiro `docs\roteiro-teste-fase-9.md` passa a indicar a beta.7 para o teste de dezembro, com o item h novo (derrubar o componente e finalizar o app à força, só com os processos da demonstração).
-  - `1.2.2` (estável): ramo `release/1.2.x` a partir da `v1.2.1`, só com a correção (commit 8d945e2: `io.pid`, conferência do processo pai antes do `hello`, teste com o helper real); local verde (helper 56, core 262, app 102). Notas mostradas ao usuário antes de publicar.
+  - Pré-lançamento `v1.3.0-beta.7` publicado (2026-11-28, tag no commit 2dd7974; CI verde no run 46105101040, e o código da correção 3× verde no run 46101196660). SHA-256 das notas, do GitHub, do `.sha256` e do download novo iguais (b727f261…628a); `releases/latest` continua `v1.2.1`.
+  - `1.2.2` (estável): ramo `release/1.2.x` a partir da `v1.2.1`, só com a correção (commit 8d945e2: `io.pid`, conferência do processo pai antes do `hello`, teste com o helper real); local verde (helper 56, core 262, app 102); CI verde no ramo (run 46104584476); instalador `FotoAtlas-1.2.2-instalador.exe` gerado (ed9c09b2…87c1). **Aguardando o usuário aprovar as notas para publicar.**
 - [ ] 9.h Teste do usuário (dezembro) com a `1.3.0-beta.7` e `docs\roteiro-teste-fase-9.md` e release `1.3.0` estável
 
 ---
